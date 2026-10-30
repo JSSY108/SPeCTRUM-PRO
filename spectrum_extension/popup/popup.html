@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPeCTRUM PRO — Course, Activities & Attendance Hub</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+  <!-- ========================================================================
+       SURFACE B: EXTENSION POPUP (520px × 600px)
+       Strictly a fast list-feed. No left rail, no calendar grid, no kanban.
+       ======================================================================== -->
+  <div class="popup-container popup-only" id="popup-surface-container">
+    <!-- Header (Image 4) -->
+    <header class="popup-header">
+      <div class="popup-logo" id="header-popup-logo">
+        <div class="brand-logo-container" id="header-logo-container">
+          <svg class="header-brand-logo-svg stage-settled" viewBox="0 0 200 200" id="popup-header-brand-svg">
+            <polygon class="art-tri" points="100,36.4 32.7,149.5 167.3,149.5" stroke-width="2" />
+            <line class="art-subline" x1="35.7" y1="145.9" x2="164.3" y2="145.9" stroke-width="2" />
+            <polygon class="art-beam art-beam-incident" points="0.2,141.4 50.9,124.6 49.3,120.0 -0.2,140.2" />
+            <circle class="flash-spark" cx="50.1" cy="122.3" r="5" fill="#FFFFFF" />
+            <path class="art-score-track laser-score-top" pathLength="100" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" d="M 50.1 120.7 L 100.7 105.4 L 75.6 87.4 L 122.4 71.1" stroke-width="2.3" />
+            <path class="art-score-track laser-score-bot" pathLength="100" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" d="M 50.1 123.9 L 129.9 111.6 L 98.6 91.1 L 123.7 78.2" stroke-width="2.3" />
+            <line class="art-score-cap cap-score-exit" stroke="#FFFFFF" stroke-linecap="round" x1="122.4" y1="71.1" x2="123.7" y2="78.2" stroke-width="2.3" />
+            <polygon class="art-poly art-score-poly" points="50.1,120.7 100.7,105.4 75.6,87.4 122.4,71.1 123.7,78.2 98.6,91.1 129.9,111.6 50.1,123.9" stroke-width="2.3" />
+            <polygon class="art-beam art-beam-ray1" points="122.8,72.1 200.1,39.8 199.9,39.2 122.0,70.1" />
+            <polygon class="art-beam art-beam-ray2" points="123.1,75.9 200.1,51.7 199.9,50.9 122.7,74.3" />
+            <polygon class="art-beam art-beam-ray3" points="124.1,79.9 200.1,64.4 199.9,63.6 123.7,78.3" />
+          </svg>
+        </div>
+        <h1>SPeCTRUM PRO</h1>
+        <span class="version-tag">v3.0</span>
+      </div>
+      <div class="popup-header-actions" style="display:flex;align-items:center;gap:6px;">
+        <button type="button" id="btn-refresh-activities" class="btn-wireframe" title="Synchronize all courses & activities">
+          <svg class="icon-svg" viewBox="0 0 24 24" style="width:12px;height:12px;"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+          <span id="btn-refresh-activities-label">Sync</span>
+        </button>
+        <button id="btn-open-tab" class="btn-wireframe" title="Open in Full Tab Workspace">
+          <span>⤢ [Full Screen]</span>
+        </button>
+        <button type="button" id="btn-close-popup" class="btn-close-clean" title="Close" style="background:transparent;border:none;font-size:15px;color:var(--text-secondary);cursor:pointer;padding:2px 4px;line-height:1;">✕</button>
+      </div>
+    </header>
+
+    <!-- Primary Tabs Nav + By: Date | Course Toggle (Unified Single Row) -->
+    <nav class="primary-tabs-nav" id="popup-primary-tabs">
+      <div class="primary-tabs-left">
+        <button class="primary-tab-btn active tab-btn" data-tab="tab-activities">Activities</button>
+        <button class="primary-tab-btn tab-btn" data-tab="tab-materials">Materials</button>
+        <button class="primary-tab-btn tab-btn" data-tab="tab-filters">Preferences</button>
+        <button class="primary-tab-btn tab-btn" data-tab="tab-support">Tip Jar ☕</button>
+      </div>
+      <div class="primary-tabs-right">
+        <div class="grouping-toggle" id="popup-grouping-toggle">
+          <span class="label">By:</span>
+          <button type="button" class="group-toggle-link active" id="btn-group-date" title="Group by Date">Date</button>
+          <span>|</span>
+          <button type="button" class="group-toggle-link" id="btn-group-course" title="Group by Course">Course</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hidden compatibility bridge for search, sorting & legacy hooks -->
+    <div style="display:none;">
+      <div class="popup-subtoolbar" id="popup-subtoolbar">
+        <div class="radio-pills-group" id="popup-radio-pills">
+          <button type="button" class="radio-pill-btn active sub-tab-btn" data-sub="sub-announcements" data-activity-type="notice">
+            <span>Notice</span>
+            <span id="count-sub-ann">0</span>
+          </button>
+          <button type="button" class="radio-pill-btn sub-tab-btn" data-sub="sub-assignments" data-activity-type="tutorial">
+            <span>Tutorial</span>
+            <span id="count-sub-assign">0</span>
+          </button>
+          <button type="button" class="radio-pill-btn sub-tab-btn" data-sub="sub-attendance" data-activity-type="attendance">
+            <span>Attendance</span>
+            <span id="count-sub-att">0</span>
+          </button>
+        </div>
+        <div class="sorting-toggle" id="popup-sorting-toggle">
+          <button type="button" class="sort-toggle-link active" id="btn-sort-newest">Newest</button>
+          <button type="button" class="sort-toggle-link" id="btn-sort-oldest">Oldest</button>
+        </div>
+      </div>
+      <input type="text" id="activities-search-input" placeholder="Search...">
+      <button id="btn-clear-activities-search">✕</button>
+      <span id="activities-cache-badge">⚡ Cached</span>
+      <span id="kpi-announcements-count">0</span>
+      <span id="kpi-pending-count">0</span>
+      <span id="kpi-overdue-count">0</span>
+      <span id="kpi-active-att-count">0</span>
+      <button id="kpi-announcements-card"></button>
+      <button id="kpi-pending-card"></button>
+      <button id="kpi-overdue-card"></button>
+      <button id="kpi-active-att-card"></button>
+      <button id="btn-mode-timeline"></button>
+      <button id="btn-mode-calendar"></button>
+      <button id="btn-mode-bycourse"></button>
+      <input type="date" id="date-range-start">
+      <input type="date" id="date-range-end">
+      <input type="date" id="date-anchor-input">
+      <select id="course-scope-select"><option value="active" selected>Active Sem</option><option value="all">All Sems</option></select>
+      <button id="btn-auto-take-attendance"></button>
+      <div id="occ-multi-alert"></div>
+      <input type="checkbox" id="chk-cal-tasks" checked>
+      <input type="checkbox" id="chk-cal-att" checked>
+      <input type="checkbox" id="chk-cal-ann" checked>
+      <input type="checkbox" id="chk-tl-tasks" checked>
+      <input type="checkbox" id="chk-tl-att" checked>
+      <input type="checkbox" id="chk-tl-ann" checked>
+    </div>
+
+    <!-- Main Popup Content Body -->
+    <main class="popup-body">
+      <!-- JS-driven Rail Tooltip Overlay (position:fixed, escapes overflow clipping) -->
+      <div id="rail-tooltip-overlay"></div>
+      <!-- TAB 1: Activities (Split Sticky-Date Scroll or Course-Grouped) -->
+      <section id="tab-activities" class="tab-content active" style="width:100%;height:100%;display:flex;">
+        <!-- Split Sticky Scroll View (Active when By: Date) -->
+        <div class="split-date-container" id="popup-split-container">
+          <!-- Left Sidebar Rail (86px Collapsed -> 192px Expanded Mini-Calendar) -->
+          <aside class="split-date-sticky-box popup-sidebar-rail" id="popup-sticky-date-box">
+            <!-- 1. COLLAPSED STREAMLINED RAIL -->
+            <div class="rail-collapsed-view" id="rail-collapsed-view">
+              <!-- Anchored Date Card (Accordion Trigger) -->
+              <div class="sticky-date-card accordion-trigger" id="popup-date-card-trigger" title="Click to expand Monthly Mini-Calendar">
+                <span class="sticky-date-day" id="sticky-box-day">21</span>
+                <span class="sticky-date-month" id="sticky-box-month">OCT</span>
+                <div class="sticky-date-bottom-row">
+                  <span class="sticky-date-weekday" id="sticky-box-weekday">WED</span>
+                  <span class="sticky-date-semweek" id="sticky-box-semweek">WK 03</span>
+                </div>
+                <div class="date-card-accordion-arrow" title="Expand Calendar">▾</div>
+              </div>
+
+              <!-- View Mode Toggles (Timeline, Grid, List) with high-contrast tooltips -->
+              <div class="rail-view-modes" id="rail-view-modes">
+                <button type="button" class="rail-mode-btn active has-rail-tooltip" id="btn-rail-timeline" data-tooltip="[ Timeline ]" title="Timeline Stream">
+                  <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M7 12h10"/><path d="M12 7v10"/></svg>
+                </button>
+                <button type="button" class="rail-mode-btn has-rail-tooltip" id="btn-rail-calendar" data-tooltip="[ Calendar ]" title="Expand Calendar">
+                  <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                </button>
+                <button type="button" class="rail-mode-btn has-rail-tooltip" id="btn-rail-list" data-tooltip="[ List ]" title="Group by Course">
+                  <svg class="icon-svg" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                </button>
+              </div>
+
+              <!-- Activity Filter Buttons (Notice, Tutorial, Attendance) with badges & tooltips -->
+              <div class="rail-activity-filters" id="rail-activity-filters">
+                <button type="button" class="rail-activity-btn active has-rail-tooltip" id="rail-btn-notice" data-sub="sub-announcements" data-tooltip="[ Notices (20) ]">
+                  <svg class="icon-svg icon-notice" viewBox="0 0 24 24"><path d="M3 11l16-5v12L3 13v-2z"/><path d="M10 15v5"/></svg>
+                  <span class="rail-badge-counter badge-ann" id="rail-count-ann">20</span>
+                </button>
+                <button type="button" class="rail-activity-btn has-rail-tooltip" id="rail-btn-tutorial" data-sub="sub-assignments" data-tooltip="[ Tutorials (25) ]">
+                  <svg class="icon-svg icon-assignment" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+                  <span class="rail-badge-counter badge-assign" id="rail-count-assign">25</span>
+                </button>
+                <button type="button" class="rail-activity-btn has-rail-tooltip" id="rail-btn-attendance" data-sub="sub-attendance" data-tooltip="[ Attendance (4) ]">
+                  <svg class="icon-svg icon-attendance" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 5-5"/></svg>
+                  <span class="rail-badge-counter badge-att" id="rail-count-att">4</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. EXPANDED MONTHLY MINI-CALENDAR VIEW -->
+            <div class="rail-expanded-view" id="rail-expanded-view" style="display:none;">
+              <!-- Black Header Box -->
+              <div class="cal-exp-header-box" id="cal-exp-header-box">
+                <div class="cal-exp-top-row">
+                  <span class="cal-exp-title">CALENDAR EXPANDED</span>
+                  <button type="button" class="cal-exp-collapse-btn" id="btn-header-collapse-cal" title="Collapse calendar">▴</button>
+                </div>
+                <div class="cal-exp-main-date" id="cal-exp-main-date">21 OCT 2026 WED</div>
+                <div class="cal-exp-sub-row">
+                  <span class="cal-exp-semweek" id="cal-exp-semweek">SEM WK 03</span>
+                  <span class="cal-exp-selected-tag">Selected</span>
+                </div>
+              </div>
+
+              <!-- Monthly Mini-Calendar Content -->
+              <div class="mini-cal-card" id="mini-cal-card">
+                <!-- Month & Academic Week Nav -->
+                <div class="mini-cal-nav-row">
+                  <div class="mini-cal-nav-left">
+                    <span class="mini-cal-month-title" id="mini-cal-month-title">OCT 2026</span>
+                    <span class="mini-cal-week-badge" id="mini-cal-week-badge">W03</span>
+                  </div>
+                  <div class="mini-cal-nav-arrows">
+                    <button type="button" class="mini-cal-arrow-btn" id="btn-mini-cal-prev" title="Previous Month">&lt;</button>
+                    <button type="button" class="mini-cal-arrow-btn" id="btn-mini-cal-next" title="Next Month">&gt;</button>
+                  </div>
+                </div>
+
+                <!-- Segmented Indicator Toggle (Dots vs Count) -->
+                <div class="mini-cal-toggle-row">
+                  <span class="mini-cal-mode-label" id="mini-cal-mode-label">Option 1: Dot indicators</span>
+                  <div class="mini-cal-segmented-control">
+                    <button type="button" class="seg-btn active" id="btn-seg-dots">Dots</button>
+                    <button type="button" class="seg-btn" id="btn-seg-count">Count</button>
+                  </div>
+                </div>
+
+                <!-- Day of Week Headers -->
+                <div class="mini-cal-day-headers">
+                  <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+                </div>
+
+                <!-- Calendar Days Grid (Rendered Dynamically) -->
+                <div class="mini-cal-days-grid" id="mini-cal-days-grid"></div>
+
+                <!-- Semantic Color Legend -->
+                <div class="mini-cal-legend">
+                  <span class="legend-item"><span class="legend-dot dot-notice"></span>Notice</span>
+                  <span class="legend-item"><span class="legend-dot dot-tutorial"></span>Tutorial</span>
+                  <span class="legend-item"><span class="legend-dot dot-attendance"></span>Attendance</span>
+                </div>
+
+                <!-- Contextual Summary Chip -->
+                <div class="mini-cal-summary-chip" id="mini-cal-summary-chip">
+                  <span class="chip-text" id="mini-cal-chip-text">21 OCT: 4 items active</span>
+                  <span class="chip-status" id="mini-cal-chip-status">Filtered</span>
+                </div>
+
+                <!-- Calendar Foot Actions -->
+                <div class="mini-cal-foot-actions">
+                  <button type="button" class="mini-cal-action-btn" id="btn-mini-cal-today">● Today</button>
+                  <button type="button" class="mini-cal-action-btn" id="btn-mini-cal-collapse-bottom">^ Collapse</button>
+                </div>
+              </div>
+
+              <!-- Docked Activity Filter Buttons Below Calendar -->
+              <div class="rail-docked-filters" id="rail-docked-filters">
+                <button type="button" class="dock-filter-btn active has-rail-tooltip" id="dock-btn-notice" data-sub="sub-announcements" data-tooltip="[ Notices ]">
+                  <svg class="icon-svg icon-notice" viewBox="0 0 24 24"><path d="M3 11l16-5v12L3 13v-2z"/><path d="M10 15v5"/></svg>
+                  <span class="dock-badge badge-ann" id="dock-count-ann">20</span>
+                </button>
+                <button type="button" class="dock-filter-btn has-rail-tooltip" id="dock-btn-tutorial" data-sub="sub-assignments" data-tooltip="[ Tutorials ]">
+                  <svg class="icon-svg icon-assignment" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+                  <span class="dock-badge badge-assign" id="dock-count-assign">25</span>
+                </button>
+                <button type="button" class="dock-filter-btn has-rail-tooltip" id="dock-btn-attendance" data-sub="sub-attendance" data-tooltip="[ Attendance ]">
+                  <svg class="icon-svg icon-attendance" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 5-5"/></svg>
+                  <span class="dock-badge badge-att" id="dock-count-att">4</span>
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Right Scrollable Stream of Cards -->
+          <div class="split-cards-stream" id="popup-cards-stream">
+            <!-- Active Date Filter Bar Header (Visible when a calendar date is filtered) -->
+            <div class="popup-date-filter-bar" id="popup-date-filter-bar" style="display:none;">
+              <div class="date-filter-info">
+                <span class="date-filter-bullet">●</span>
+                <span class="date-filter-label" id="popup-date-filter-label">WED, 21 OCT 2026 (4 activities scheduled)</span>
+              </div>
+              <button type="button" class="date-filter-reset-link" id="btn-reset-date-filter">Show All</button>
+            </div>
+
+            <!-- Container for filtered date activities -->
+            <div id="date-filtered-activities-list" class="activities-list" style="display:none;flex-direction:column;gap:8px;"></div>
+            <!-- Activities Live Fetch/Sync Progress Card -->
+            <div id="activities-progress-card" class="fetch-progress-card activities-progress-card" style="display:none;margin:8px 8px 12px 8px;">
+              <div class="fetch-progress-header">
+                <div class="fetch-progress-title-wrap">
+                  <div class="fetch-spinner-pulse" style="background:#FFFFFF;box-shadow:0 0 0 0 rgba(255, 255, 255, 0.7);"></div>
+                  <span class="fetch-progress-title" id="activities-loading-title">SYNCING ACTIVITIES & ATTENDANCE</span>
+                </div>
+                <span class="fetch-progress-percent" id="activities-progress-percent" style="color:#FFFFFF;">0%</span>
+              </div>
+              <div class="fetch-progress-bar-wrap">
+                <div class="fetch-progress-bar-fill" id="activities-progress-bar-fill" style="width:0%;background:#FFFFFF;box-shadow:0 0 10px rgba(255,255,255,0.7);"></div>
+              </div>
+              <div class="fetch-progress-meta">
+                <span class="fetch-progress-current" id="activities-loading-text">Connecting to SPeCTRUM...</span>
+                <span class="fetch-progress-count" id="activities-progress-count">Initializing...</span>
+              </div>
+            </div>
+
+            <!-- Active Sub-sections Rendered Inside Stream -->
+            <div id="announcements-loading" class="wireframe-pill" style="display:none;margin:12px auto;">Loading notices...</div>
+            <div id="announcements-list" class="activities-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+
+            <div id="assignments-loading" class="wireframe-pill" style="display:none;margin:12px auto;">Loading tasks...</div>
+            <div id="assignments-list" class="activities-list" style="display:none;flex-direction:column;gap:8px;"></div>
+
+            <div id="attendance-loading" class="wireframe-pill" style="display:none;margin:12px auto;">Loading attendance...</div>
+
+            <!-- Attendance Dedicated Filter Deck (Course, Date, Time / Status + Fast Targeted Sync) -->
+            <div id="attendance-filter-bar" class="attendance-filter-bar" style="display:none;">
+              <div class="att-filter-row">
+                <!-- Course Filter -->
+                <div class="att-filter-control">
+                  <span class="att-filter-icon" title="Filter by specific course">📚</span>
+                  <select id="att-filter-course" class="att-filter-select" title="Filter by specific course">
+                    <option value="all">All Enrolled Courses</option>
+                  </select>
+                </div>
+
+                <!-- Date Filter -->
+                <div class="att-filter-control">
+                  <span class="att-filter-icon" title="Filter by date">📅</span>
+                  <select id="att-filter-date" class="att-filter-select" title="Filter by date">
+                    <option value="all">All Dates</option>
+                    <option value="today">Today Only</option>
+                    <option value="custom">Pick Date...</option>
+                  </select>
+                  <input type="date" id="att-filter-date-picker" class="att-date-picker-input" style="display:none;" title="Select specific date">
+                </div>
+
+                <!-- Status / Time Slot Filter -->
+                <div class="att-filter-control">
+                  <span class="att-filter-icon" title="Filter by session status">⏱️</span>
+                  <select id="att-filter-status" class="att-filter-select" title="Filter by status or session time">
+                    <option value="all">All Sessions</option>
+                    <option value="active-now">🟢 Active Now</option>
+                    <option value="upcoming">⏳ Scheduled</option>
+                    <option value="present">✔ Present</option>
+                  </select>
+                </div>
+
+                <!-- Fast Targeted Single-Course Sync Button -->
+                <button type="button" id="btn-sync-filtered-att" class="btn-wireframe btn-sync-att" title="Fast fetch: only sync selected course in ~500ms">
+                  <svg class="icon-svg" viewBox="0 0 24 24" style="width:11px;height:11px;" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                  <span id="btn-sync-filtered-att-text">Sync Course</span>
+                </button>
+              </div>
+
+              <!-- Auto-Attendance Daemon Live Status & Manual Trigger -->
+              <div class="att-daemon-row" id="att-daemon-row">
+                <div class="att-daemon-status-wrap">
+                  <span class="att-daemon-dot" id="att-daemon-dot">●</span>
+                  <span class="att-daemon-label" id="att-daemon-label">Auto-Attendance: ACTIVE (15m)</span>
+                  <span class="att-daemon-time" id="att-daemon-time">· Initializing...</span>
+                </div>
+                <button type="button" id="btn-quick-auto-take" class="btn-quick-auto-take" title="Check & auto-take attendance right now">
+                  <svg class="icon-svg" viewBox="0 0 24 24" style="width:11px;height:11px;" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                  <span id="btn-quick-auto-take-text">Auto-Take Now</span>
+                </button>
+              </div>
+            </div>
+
+            <div id="attendance-list" class="activities-list" style="display:none;flex-direction:column;gap:8px;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: Course Materials (Dedicated Material Repository) -->
+      <section id="tab-materials" class="tab-content materials-pane" style="display:none;">
+        <div class="materials-workspace-layout">
+          <!-- Main Materials Explorer Pane -->
+          <div class="materials-explorer-pane">
+            <!-- Filter Toolbar -->
+            <div class="mat-filter-toolbar">
+              <div class="mat-search-wrap">
+                <svg class="icon-svg mat-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="text" id="filter-search-input" class="mat-search-input" placeholder="Filter files by key">
+                <span class="mat-shortcut-badge">⌘F</span>
+                <button type="button" id="btn-clear-search" class="mat-clear-btn" style="display:none;">✕</button>
+              </div>
+
+              <!-- Extension Filter Pills -->
+              <div class="mat-ext-pills" id="mat-ext-pills">
+                <button type="button" class="mat-ext-pill active" data-ext="ALL">ALL</button>
+                <button type="button" class="mat-ext-pill" data-ext="PDF">.PDF</button>
+                <button type="button" class="mat-ext-pill" data-ext="PPTX">.PPTX</button>
+                <button type="button" class="mat-ext-pill" data-ext="ZIP">.ZIP</button>
+                <button type="button" class="mat-ext-pill" data-ext="DOCX">.DOCX</button>
+                <button type="button" class="mat-ext-pill" data-ext="IPYNB">.IPYNB</button>
+              </div>
+
+              <!-- Sort Order Dropdown -->
+              <div class="mat-order-dropdown-wrap">
+                <select id="mat-sort-select" class="mat-sort-select">
+                  <option value="name">ORDER: File Name (A-Z)</option>
+                  <option value="latest">ORDER: Moodle Order</option>
+                </select>
+              </div>
+
+              <!-- Collapse / Expand All Button -->
+              <button id="btn-toggle-expand-all" class="btn-wireframe mat-expand-btn" type="button" title="Expand or collapse all courses and sections">
+                <svg class="icon-svg icon-expand-all" viewBox="0 0 24 24" style="width:12px;height:12px;"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>
+                <span id="btn-toggle-expand-label">Expand All</span>
+              </button>
+
+              <!-- Rescan Button -->
+              <button id="btn-rescan" class="btn-wireframe mat-rescan-btn" type="button" title="Rescan course materials">
+                <svg class="icon-svg" viewBox="0 0 24 24" style="width:12px;height:12px;"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                <span id="btn-rescan-label">Rescan</span>
+              </button>
+            </div>
+
+
+            <div id="not-on-spectrum" class="wireframe-pill" style="display:none;border-color:var(--signal-urgent);color:var(--signal-urgent);margin:10px auto;">
+              Please open spectrum.um.edu.my to fetch your courses.
+            </div>
+
+            <!-- Hierarchical Course Tree / List Container -->
+            <div id="course-tree" class="course-tree-container">
+              <!-- Rendered via JavaScript -->
+            </div>
+
+            <!-- Download Progress Bar -->
+            <div id="progress-container" style="display:none;padding:10px 14px;background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:var(--radius-sm);margin:8px 16px;">
+              <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;">
+                <span id="progress-status-label">Downloading...</span>
+                <span id="progress-percent">0%</span>
+              </div>
+              <div style="height:4px;background:var(--bg-subtle);border-radius:2px;overflow:hidden;margin:6px 0;">
+                <div id="progress-bar-fill" style="width:0%;height:100%;background:var(--bg-primary-cta);transition:width 0.2s;"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);">
+                <span id="progress-current-file">Preparing...</span>
+                <span id="progress-file-count">0 / 0</span>
+              </div>
+            </div>
+
+            <!-- Sticky Bottom Action Bar -->
+            <div class="mat-bottom-action-bar">
+              <div class="mat-bottom-left">
+                <span class="mat-selection-label">Selected: <b id="selected-count">0 files</b></span>
+                <span class="mat-divider">|</span>
+                <button type="button" id="btn-clear-selection" class="mat-link-action">Clear Selection</button>
+              </div>
+              <div class="mat-bottom-right">
+                <button type="button" id="btn-mark-all-synced" class="btn-wireframe" style="padding:5px 12px;font-size:11px;font-weight:600;">Mark All as Synced</button>
+                <button id="btn-download-zip" class="btn-cta-solid" style="padding:6px 14px;font-size:11px;font-weight:700;">
+                  <svg class="icon-svg" viewBox="0 0 24 24" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span id="btn-download-text">Download Selected (.zip)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Academic Footer Line -->
+            <div class="mat-subfooter-line">
+              <span class="mat-subfooter-text">SPeCTRUM PRO v2.4.0 · UM E-LEARNING BRIDGE · ACADEMIC BUILD 8831</span>
+              <span class="mat-subfooter-integrity">● Client Storage Integrity Verified (SHA-256 Valid)</span>
+            </div>
+          </div>
+
+          <!-- Resizer Splitter between Explorer and Inspector -->
+          <div class="inspector-resizer" id="inspector-resizer" style="display:none;" title="Drag to resize · Double-click to toggle 50% split">
+            <div class="inspector-resizer-handle"></div>
+          </div>
+
+          <!-- Right File Inspector Drawer -->
+          <aside class="file-inspector-pane" id="file-inspector-pane" style="display:none;">
+            <div class="inspector-header">
+              <div class="inspector-title-group">
+                <span class="inspector-title">DOCUMENT DETAILS</span>
+                <span class="inspector-filetype-badge" id="insp-type-badge">PDF</span>
+              </div>
+              <div class="inspector-header-actions">
+                <button type="button" id="btn-toggle-expand-inspector" class="btn-inspector-action" title="Toggle 50% split view (拉到中间)">
+                  <svg class="icon-svg" viewBox="0 0 24 24" style="width:13px;height:13px;"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button type="button" id="btn-close-inspector" class="modal-close-btn" title="Close Inspector">✕</button>
+              </div>
+            </div>
+
+            <div class="inspector-body">
+              <!-- Blue Card: ONLY Course Name & File Name -->
+              <div class="insp-preview-card" id="insp-preview-card">
+                <div class="insp-slide-subject" id="insp-slide-subject">Database Systems & Modeling</div>
+                <div class="insp-slide-heading" id="insp-slide-heading">Boyce-Codd Normal Form (BCNF)</div>
+              </div>
+
+              <!-- Small Preview Tab with Full Reader Button -->
+              <div class="insp-preview-tab-card" id="insp-preview-tab-card">
+                <div class="insp-preview-tab-bar">
+                  <div class="insp-preview-tab-label">
+                    <svg class="icon-svg" viewBox="0 0 24 24" style="width:12px;height:12px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <span>Preview</span>
+                  </div>
+                  <a href="#" target="_blank" id="insp-open-reader-btn" class="insp-reader-cta-btn" title="Open full reader in new tab">
+                    <span>Full Reader</span>
+                    <svg class="icon-svg" viewBox="0 0 24 24" style="width:11px;height:11px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  </a>
+                </div>
+                <div class="insp-mini-preview-frame" id="insp-mini-preview-frame">
+                  <!-- Dynamic Content Area (PDF canvas, image, or placeholder) -->
+                  <div class="insp-preview-content-area" id="insp-preview-content-area">
+                    <!-- 1. PDF Canvas Preview -->
+                    <div class="insp-canvas-wrap" id="insp-canvas-wrap" style="display:none;" title="Click to open Full Reader">
+                      <canvas id="insp-preview-canvas" class="insp-preview-canvas"></canvas>
+                      <span id="insp-preview-page-pill" class="insp-preview-page-pill">Page 1</span>
+                    </div>
+
+                    <!-- 2. Image Preview -->
+                    <img id="insp-preview-img" class="insp-preview-img" src="" alt="Preview" style="display:none;" />
+
+                    <!-- 3. Text / HTML Snippet Preview -->
+                    <div id="insp-preview-text" class="insp-preview-text" style="display:none;"></div>
+
+                    <!-- 4. Loading State -->
+                    <div class="insp-preview-loading" id="insp-preview-loading" style="display:none;">
+                      <div class="insp-loading-spinner"></div>
+                      <span class="insp-loading-label">Loading preview...</span>
+                    </div>
+
+                    <!-- 5. Fallback Placeholder -->
+                    <div class="insp-preview-placeholder" id="insp-preview-placeholder">
+                      <div id="insp-placeholder-badge" class="insp-placeholder-badge" style="display:none;">PDF</div>
+                      <svg class="icon-svg" id="insp-placeholder-icon" viewBox="0 0 24 24" style="width:30px;height:30px;color:var(--text-muted);margin-bottom:8px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                      <span id="insp-preview-filename" style="font-weight:600;font-size:11px;color:var(--text-secondary);text-align:center;word-break:break-word;max-width:260px;">Document Preview</span>
+                      <span id="insp-preview-subtext" style="font-size:10px;color:var(--text-muted);margin-top:4px;">Click Full Reader to view entire document</span>
+                    </div>
+                  </div>
+
+                  <!-- Side hover chevron buttons -->
+                  <button type="button" class="insp-side-nav-btn prev-btn" id="insp-side-prev-btn" title="Previous page (Left arrow)" style="display:none;">
+                    <svg viewBox="0 0 24 24" class="icon-svg" style="width:16px;height:16px;"><polyline points="15 18 9 12 15 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                  <button type="button" class="insp-side-nav-btn next-btn" id="insp-side-next-btn" title="Next page (Right arrow)" style="display:none;">
+                    <svg viewBox="0 0 24 24" class="icon-svg" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+
+                  <!-- Floating bottom page nav pill -->
+                  <div class="insp-page-nav-bar" id="insp-page-nav-bar" style="display:none;">
+                    <button type="button" class="insp-page-nav-btn" id="insp-page-prev-btn" title="Previous page (Left arrow)">
+                      <svg viewBox="0 0 24 24" class="icon-svg" style="width:12px;height:12px;"><polyline points="15 18 9 12 15 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <span class="insp-page-nav-counter" id="insp-page-counter">1 / 1</span>
+                    <button type="button" class="insp-page-nav-btn" id="insp-page-next-btn" title="Next page (Right arrow)">
+                      <svg viewBox="0 0 24 24" class="icon-svg" style="width:12px;height:12px;"><polyline points="9 18 15 12 9 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Only the Download Button -->
+              <div class="insp-actions-group">
+                <button type="button" id="insp-download-file-btn" class="btn-cta-solid insp-main-cta">
+                  <svg class="icon-svg" viewBox="0 0 24 24" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span id="insp-download-text">Download Local Copy (.pdf)</span>
+                </button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- TAB 3: Preferences -->
+      <section id="tab-filters" class="tab-content preferences-pane" style="display:none;">
+        
+        <!-- CARD 1: OCCURRENCE (OCC) SETTINGS -->
+        <div class="pref-card">
+          <div class="pref-card-header">
+            <div class="pref-card-title-wrap">
+              <span class="pref-bullet pref-bullet-black">●</span>
+              <h3 class="pref-card-title">OCCURRENCE (OCC) SETTINGS</h3>
+            </div>
+            <span class="pref-badge pref-badge-subtle">ST-01</span>
+          </div>
+          <p class="pref-card-desc">Specify cohort occurrence filters for selective biometric check-ins.</p>
+
+          <!-- Default Academic OCC Cohort Box -->
+          <div class="pref-row-box pref-default-occ-box">
+            <div class="pref-row-text">
+              <div class="pref-row-title">Default Academic OCC Cohort</div>
+              <div class="pref-row-subtitle">Fallback for unmapped modules</div>
+            </div>
+            <div class="pref-stepper">
+              <button type="button" id="btn-default-occ-minus" class="stepper-btn" aria-label="Decrease Default OCC">−</button>
+              <input type="text" id="default-occ-input" class="stepper-input" value="4" maxlength="3" inputmode="numeric">
+              <button type="button" id="btn-default-occ-plus" class="stepper-btn" aria-label="Increase Default OCC">+</button>
+            </div>
+          </div>
+
+          <!-- Per-Course Overrides Subhead -->
+          <div class="pref-subhead-row">
+            <span class="pref-subhead-title">PER-COURSE ENROLLED OVERRIDES</span>
+            <button type="button" id="btn-reset-all-occ" class="pref-link-btn">Reset All</button>
+          </div>
+          <div id="reset-occ-status" class="pref-status-toast" style="display:none;">✔ All OCC preferences cleared!</div>
+
+          <!-- Per-Course List Container -->
+          <div id="occ-courses-table" class="pref-courses-list">
+            <!-- Dynamically populated via renderOccPreferencesTable() -->
+          </div>
+        </div>
+
+        <!-- CARD 2: ATTENDANCE AUTOMATION -->
+        <div class="pref-card">
+          <div class="pref-card-header">
+            <div class="pref-card-title-wrap">
+              <span class="pref-bullet pref-bullet-green" id="pref-auto-att-bullet">●</span>
+              <h3 class="pref-card-title">ATTENDANCE AUTOMATION</h3>
+            </div>
+            <span class="pref-badge pref-badge-active" id="pref-auto-att-badge">DAEMON ACTIVE</span>
+          </div>
+
+          <!-- Automation Row Box -->
+          <div class="pref-row-box pref-automation-box">
+            <div class="pref-automation-left">
+              <div class="pref-icon-box">
+                <svg viewBox="0 0 24 24" class="pref-icon-svg" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </div>
+              <div class="pref-row-text">
+                <div class="pref-row-title">Enable auto-attendance check</div>
+                <div class="pref-row-subtitle" id="pref-auto-att-sub">Runs periodically in background and marks attendance</div>
+              </div>
+            </div>
+            <label class="pref-switch">
+              <input type="checkbox" id="chk-auto-attendance" checked>
+              <span class="pref-switch-slider"></span>
+            </label>
+          </div>
+
+          <!-- Interval Sub-Row -->
+          <div class="pref-interval-row">
+            <span class="pref-interval-label">Validation Cadence:</span>
+            <select id="sel-attendance-interval" class="pref-select">
+              <option value="10">Every 10 minutes</option>
+              <option value="15" selected>Every 15 minutes (Standard)</option>
+              <option value="30">Every 30 minutes</option>
+              <option value="60">Every 1 hour</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- CARD 3: HIDDEN DUPLICATE ATTENDANCES -->
+        <div class="pref-card" id="group-hidden-attendance">
+          <div class="pref-card-header">
+            <div class="pref-card-title-wrap">
+              <span class="pref-bullet pref-bullet-black">●</span>
+              <h3 class="pref-card-title">HIDDEN DUPLICATE ATTENDANCES</h3>
+            </div>
+            <span class="pref-badge pref-badge-subtle">REDUNDANCY</span>
+          </div>
+          <p class="pref-card-desc">Redundant slots filtered from daily timeline view.</p>
+
+          <!-- Hidden Activities Summary Box -->
+          <div class="pref-row-box pref-hidden-summary-box">
+            <span id="pref-hidden-count" class="pref-mono-title">0 Hidden Activities</span>
+            <button type="button" id="btn-restore-all-att" class="pref-wireframe-btn">Restore All</button>
+          </div>
+
+          <!-- List of Hidden Activities -->
+          <div id="hidden-att-list" class="pref-hidden-list">
+            <!-- Dynamically populated via renderHiddenAttendanceSettings() -->
+          </div>
+        </div>
+
+
+        <!-- STICKY ACTION FOOTER BAR -->
+        <div class="pref-sticky-footer">
+          <div class="pref-footer-left">
+            <button id="btn-clear-cache" class="pref-btn-clear" type="button">
+              <svg viewBox="0 0 24 24" class="footer-icon-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              <span>Clear Cache</span>
+            </button>
+            <span id="pref-storage-size" class="pref-storage-size">42.4 KB</span>
+          </div>
+          <div class="pref-footer-right">
+            <span id="pref-storage-status" class="pref-badge-ok">SP-Storage OK</span>
+            <button id="btn-save-settings" class="pref-btn-save" type="button">
+              <svg viewBox="0 0 24 24" class="footer-icon-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              <span>Save Preferences</span>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- TAB 4: Tip Jar -->
+      <section id="tab-support" class="tab-content tipjar-pane" style="display:none;">
+        <div class="tipjar-card">
+          <span style="font-size:28px;">☕</span>
+          <h3 style="font-size:15px;font-weight:800;">Support SPeCTRUM PRO</h3>
+          <p style="font-size:11.5px;color:var(--text-secondary);line-height:1.4;">Built with ❤️ by a fellow UM student to save coursemates from repetitive clicking and missing attendance.</p>
+          <img id="qr-image" class="tipjar-qr" src="../icons/duitnow_qr.png" alt="DuitNow QR">
+          <p style="font-size:10.5px;color:var(--text-muted);">Scan with MAE, Touch 'n Go, or any Malaysian banking app.</p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Status Bar (Image 4) -->
+    <footer class="popup-status-bar">
+      <div class="status-left">
+        <svg class="icon-svg" viewBox="0 0 24 24" style="width:12px;height:12px;color:var(--text-muted);"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>SYNCED <span id="status-sync-time">--:--:--</span></span>
+      </div>
+      <div class="status-right" id="connection-status">
+        <span class="pulse-dot"></span>
+        <span id="status-indicator-text">ONLINE SYNC</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ========================================================================
+       SURFACE A: FULL-TAB WORKSPACE (100vw × 100vh)
+       Triggered when isFullTab === true (.is-full-tab on body)
+       ======================================================================== -->
+  <div class="fulltab-only" style="width:100%;height:100%;display:flex;flex-direction:column;">
+    <!-- Minimalist Top Bar (Image 1) -->
+    <header class="fulltab-top-header">
+      <div class="header-left-group" id="fulltab-header-logo">
+        <div class="brand-logo-container" id="fulltab-logo-container">
+          <svg class="header-brand-logo-svg stage-settled" viewBox="0 0 200 200" id="fulltab-header-brand-svg">
+            <polygon class="art-tri" points="100,36.4 32.7,149.5 167.3,149.5" stroke-width="2" />
+            <line class="art-subline" x1="35.7" y1="145.9" x2="164.3" y2="145.9" stroke-width="2" />
+            <polygon class="art-beam art-beam-incident" points="0.2,141.4 50.9,124.6 49.3,120.0 -0.2,140.2" />
+            <circle class="flash-spark" cx="50.1" cy="122.3" r="5" fill="#FFFFFF" />
+            <path class="art-score-track laser-score-top" pathLength="100" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" d="M 50.1 120.7 L 100.7 105.4 L 75.6 87.4 L 122.4 71.1" stroke-width="2.3" />
+            <path class="art-score-track laser-score-bot" pathLength="100" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" d="M 50.1 123.9 L 129.9 111.6 L 98.6 91.1 L 123.7 78.2" stroke-width="2.3" />
+            <line class="art-score-cap cap-score-exit" stroke="#FFFFFF" stroke-linecap="round" x1="122.4" y1="71.1" x2="123.7" y2="78.2" stroke-width="2.3" />
+            <polygon class="art-poly art-score-poly" points="50.1,120.7 100.7,105.4 75.6,87.4 122.4,71.1 123.7,78.2 98.6,91.1 129.9,111.6 50.1,123.9" stroke-width="2.3" />
+            <polygon class="art-beam art-beam-ray1" points="122.8,72.1 200.1,39.8 199.9,39.2 122.0,70.1" />
+            <polygon class="art-beam art-beam-ray2" points="123.1,75.9 200.1,51.7 199.9,50.9 122.7,74.3" />
+            <polygon class="art-beam art-beam-ray3" points="124.1,79.9 200.1,64.4 199.9,63.6 123.7,78.3" />
+          </svg>
+        </div>
+        <span class="header-app-title">SPeCTRUM PRO</span>
+        <span class="header-sem-badge" id="fulltab-sem-badge">SEM II · 2024-25</span>
+      </div>
+
+      <div class="header-center-title">
+        <div class="cal-nav-controls" style="display:inline-flex;align-items:center;gap:6px;">
+          <button id="btn-cal-prev" class="btn-wireframe" title="Previous Month" style="padding:2px 7px;border-radius:6px;display:flex;align-items:center;">
+            <svg class="icon-svg" viewBox="0 0 24 24" style="width:12px;height:12px;"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <span class="header-month-heading" id="fulltab-month-heading">OCTOBER 2026</span>
+          <button id="btn-cal-next" class="btn-wireframe" title="Next Month" style="padding:2px 7px;border-radius:6px;display:flex;align-items:center;">
+            <svg class="icon-svg" viewBox="0 0 24 24" style="width:12px;height:12px;"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <button id="btn-cal-today" class="btn-wireframe" style="padding:2px 8px;font-size:11px;border-radius:6px;">Today</button>
+        </div>
+        <span class="header-week-pill" id="fulltab-week-pill">SEM II · WK 07-09</span>
+      </div>
+
+      <div class="header-right-actions">
+        <!-- Live Auto-Attendance Daemon Status & Quick Trigger (Full Tab Header) -->
+        <div class="fulltab-daemon-widget" id="fulltab-daemon-widget" title="Background Attendance Monitor">
+          <div class="fulltab-daemon-info">
+            <span class="fulltab-daemon-dot" id="fulltab-daemon-dot">●</span>
+            <span class="fulltab-daemon-label" id="fulltab-daemon-label">Auto-Attendance: ACTIVE (15m)</span>
+            <span class="fulltab-daemon-time" id="fulltab-daemon-time">· Initializing...</span>
+          </div>
+          <button type="button" id="btn-fulltab-quick-auto-take" class="btn-fulltab-quick-take" title="Check & auto-take open attendances right now">
+            <svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            <span id="btn-fulltab-quick-auto-take-text">Auto-Take Now</span>
+          </button>
+        </div>
+
+        <button id="btn-fulltab-sync" class="btn-wireframe" title="Synchronize all courses & activities">
+          <svg class="icon-svg" viewBox="0 0 24 24" style="width:13px;height:13px;"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+          <span>Sync</span>
+        </button>
+        <button id="btn-fulltab-diag" class="btn-wireframe" title="Toggle Live Diagnostic Log">
+          <span>Diagnostics</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Full-Tab Workspace Layout: Left Rail + Viewports -->
+    <div class="fulltab-workspace">
+      <!-- Left Rail (60px width) -->
+      <aside class="left-rail">
+        <!-- Top Utilities -->
+        <div class="rail-top-utilities">
+          <button id="rail-btn-pref" class="rail-btn-icon" aria-label="Preferences">
+            <svg class="icon-svg" viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span class="rail-expand-label">Preferences</span>
+          </button>
+          <button id="rail-btn-mat" class="rail-btn-icon" aria-label="Course Materials">
+            <svg class="icon-svg" viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+            <span class="rail-expand-label">Materials</span>
+          </button>
+        </div>
+
+        <!-- Middle Stadium Pill (Multi-Select Checklist - User Spec Image) -->
+        <div class="rail-checklist-stadium">
+          <button id="rail-toggle-assign" class="rail-toggle-pill active" data-filter="assignment" aria-label="Toggle Assignments / Tasks">
+            <svg class="icon-svg icon-assignment" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+            <span class="rail-expand-label">Tasks</span>
+          </button>
+          <button id="rail-toggle-att" class="rail-toggle-pill active" data-filter="attendance" aria-label="Toggle Attendance Sessions">
+            <svg class="icon-svg icon-attendance" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 5-5"/></svg>
+            <span class="rail-expand-label">Attendance</span>
+          </button>
+          <button id="rail-toggle-notice" class="rail-toggle-pill active" data-filter="notice" aria-label="Toggle Notices / Announcements">
+            <svg class="icon-svg icon-notice" viewBox="0 0 24 24"><path d="M3 11l16-5v12L3 13v-2z"/><path d="M10 15v5"/></svg>
+            <span class="rail-expand-label">Notices</span>
+          </button>
+        </div>
+
+        <!-- Bottom Mode Switcher Stadium (Matching User Spec Image) -->
+        <div class="rail-mode-switcher">
+          <div class="rail-mode-menu">
+            <button id="rail-mode-timeline" class="rail-mode-item" data-mode="timeline" aria-label="Timeline Mode">
+              <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M15 9h6"/><path d="M15 15h6"/><path d="M3 9h6"/></svg>
+              <span class="rail-expand-label">Timeline</span>
+            </button>
+            <button id="rail-mode-calendar" class="rail-mode-item active" data-mode="calendar" aria-label="Calendar Mode">
+              <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+              <span class="rail-expand-label">Calendar</span>
+            </button>
+            <button id="rail-mode-list" class="rail-mode-item" data-mode="list" aria-label="List View Mode">
+              <svg class="icon-svg" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1.5" fill="currentColor"/><circle cx="3.5" cy="12" r="1.5" fill="currentColor"/><circle cx="3.5" cy="18" r="1.5" fill="currentColor"/></svg>
+              <span class="rail-expand-label">List View</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Viewports -->
+      <main class="fulltab-main-viewport">
+        <!-- Full-Tab Activities Sync Progress Card -->
+        <div id="fulltab-activities-progress-card" class="fetch-progress-card activities-progress-card fulltab-activities-progress-card" style="display:none;margin:16px 24px 0 24px;">
+          <div class="fetch-progress-header">
+            <div class="fetch-progress-title-wrap">
+              <div class="fetch-spinner-pulse" style="background:#FFFFFF;box-shadow:0 0 0 0 rgba(255, 255, 255, 0.7);"></div>
+              <span class="fetch-progress-title" id="fulltab-activities-loading-title">SYNCING ACTIVITIES & ATTENDANCE</span>
+            </div>
+            <span class="fetch-progress-percent" id="fulltab-activities-progress-percent" style="color:#FFFFFF;">0%</span>
+          </div>
+          <div class="fetch-progress-bar-wrap">
+            <div class="fetch-progress-bar-fill" id="fulltab-activities-progress-bar-fill" style="width:0%;background:#FFFFFF;box-shadow:0 0 10px rgba(255,255,255,0.7);"></div>
+          </div>
+          <div class="fetch-progress-meta">
+            <span class="fetch-progress-current" id="fulltab-activities-loading-text">Connecting to SPeCTRUM...</span>
+            <span class="fetch-progress-count" id="fulltab-activities-progress-count">Initializing...</span>
+          </div>
+        </div>
+
+        <!-- VIEW 1: Calendar Grid & Master-Detail (Spec 4.1) -->
+        <div id="calendar-section" class="calendar-view-wrapper" style="display:flex;">
+          <div class="cal-main-pane">
+            <!-- 7-Column Grid Header -->
+            <div class="cal-weekdays-row" id="cal-weekdays-header">
+              <div class="cal-weekday-cell" data-day-col="0">Mon</div>
+              <div class="cal-weekday-cell" data-day-col="1">Tue</div>
+              <div class="cal-weekday-cell" data-day-col="2">Wed</div>
+              <div class="cal-weekday-cell" data-day-col="3">Thu</div>
+              <div class="cal-weekday-cell" data-day-col="4">Fri</div>
+              <div class="cal-weekday-cell" data-day-col="5">Sat</div>
+              <div class="cal-weekday-cell" data-day-col="6">Sun</div>
+            </div>
+
+            <!-- Calendar Cells -->
+            <div id="cal-grid" class="cal-cells-grid"></div>
+          </div>
+
+          <!-- Master-Detail 35% Right Details Sidebar -->
+          <aside class="cal-detail-sidebar" id="cal-detail-sidebar" style="display:none;">
+            <div class="cal-sidebar-header">
+              <div>
+                <div class="cal-sidebar-title" id="cal-sidebar-date-title">Date</div>
+                <div id="cal-sidebar-item-count" style="font-size:10.5px;color:var(--text-muted);">0 items</div>
+              </div>
+              <button id="btn-close-cal-sidebar" class="modal-close-btn" title="Close Sidebar">✕</button>
+            </div>
+            <div class="cal-sidebar-content" id="cal-sidebar-cards-list"></div>
+          </aside>
+        </div>
+
+        <!-- VIEW 2: Timeline Kanban (Horizontal Scroll Board) -->
+        <div id="timeline-visualizer-section" class="timeline-kanban-wrapper" style="display:none;">
+          <div class="timeline-kanban-track" id="timeline-scroll-wrapper">
+            <div id="timeline-track" style="display:flex;gap:16px;min-width:100%;width:max-content;height:100%;"></div>
+          </div>
+        </div>
+
+        <!-- VIEW 3: Full-Tab Centered List Mode -->
+        <div id="fulllist-wrapper" class="fulllist-wrapper" style="display:none;">
+          <div class="fulllist-centered-container">
+            <aside class="fulllist-sticky-date-col">
+              <!-- Sticky Date Pane (Active in By Date Mode) -->
+              <div id="fulllist-side-date-pane" style="display:flex;flex-direction:column;gap:10px;width:100%;">
+                <div class="sticky-date-card fulllist-main-date-card" id="fulllist-sticky-card" style="padding:16px;">
+                  <span class="sticky-date-day" id="fulllist-box-day">--</span>
+                  <span class="sticky-date-month" id="fulllist-box-month">---</span>
+                  <span class="sticky-date-weekday" id="fulllist-box-weekday">---</span>
+                  <span class="sticky-date-semweek" id="fulllist-box-semweek">SEM WK --</span>
+                </div>
+
+                <!-- Day Navigation Controls Under Date Card -->
+                <div class="fulllist-side-nav">
+                  <button type="button" class="fulllist-side-btn" id="fulllist-side-prev" title="Previous Day (Arrow Left / Scroll Up)">
+                    <span class="side-btn-icon">‹</span>
+                    <span class="side-btn-text">Prev</span>
+                  </button>
+                  <button type="button" class="fulllist-side-btn btn-today" id="fulllist-side-today" title="Jump to Today">
+                    <span class="side-btn-icon">📅</span>
+                    <span class="side-btn-text">Today</span>
+                  </button>
+                  <button type="button" class="fulllist-side-btn" id="fulllist-side-next" title="Next Day (Arrow Right / Scroll Down)">
+                    <span class="side-btn-text">Next</span>
+                    <span class="side-btn-icon">›</span>
+                  </button>
+                </div>
+
+                <!-- Jump to Next/Previous Activity Day -->
+                <div class="fulllist-side-events-nav">
+                  <button type="button" class="fulllist-jump-act-btn" id="fulllist-side-prev-act" title="Previous Day with Activities">⏮ Prev Event</button>
+                  <button type="button" class="fulllist-jump-act-btn" id="fulllist-side-next-act" title="Next Day with Activities">Next Event ⏭</button>
+                </div>
+              </div>
+
+              <!-- Sticky Course Navigator Pane (Active in By Course Mode) -->
+              <div id="fulllist-side-course-pane" style="display:none;flex-direction:column;gap:10px;width:100%;">
+                <div class="sticky-date-card fulllist-main-date-card" style="padding:16px;">
+                  <span class="sticky-date-day" id="fulllist-course-count">0</span>
+                  <span class="sticky-date-month">COURSES</span>
+                  <span class="sticky-date-weekday" id="fulllist-course-items-count">0 Activities</span>
+                  <span class="sticky-date-semweek">COURSE GROUPING</span>
+                </div>
+                <div id="fulllist-course-jump-list" style="display:flex;flex-direction:column;gap:5px;width:100%;max-height:380px;overflow-y:auto;padding-right:2px;"></div>
+              </div>
+            </aside>
+
+            <div class="fulllist-card-feed" id="fulllist-cards-feed">
+              <!-- Full-Tab List Mode Top Controls Toolbar -->
+              <div class="fulllist-top-toolbar" id="fulllist-top-toolbar">
+                <div class="fulllist-toolbar-left" style="display:flex;align-items:center;gap:12px;">
+                  <div class="grouping-toggle" id="fulllist-grouping-toggle">
+                    <span class="label" style="font-weight:600;">By:</span>
+                    <button type="button" class="group-toggle-link active" id="btn-fulllist-group-date" title="View by Date">Date</button>
+                    <span>|</span>
+                    <button type="button" class="group-toggle-link" id="btn-fulllist-group-course" title="View by Course">Course</button>
+                  </div>
+                  <span style="color:var(--border-hairline);user-select:none;">·</span>
+                  <div class="sorting-toggle" id="fulllist-sorting-toggle">
+                    <span class="label" style="font-weight:600;">Sort:</span>
+                    <button type="button" class="sort-toggle-link active" id="btn-fulllist-sort-newest" title="Newest first">Newest</button>
+                    <span>|</span>
+                    <button type="button" class="sort-toggle-link" id="btn-fulllist-sort-oldest" title="Oldest first">Oldest</button>
+                  </div>
+                </div>
+                <div class="fulllist-toolbar-right" id="fulllist-toolbar-summary" style="font-size:11px;color:var(--text-muted);font-weight:600;letter-spacing:0.3px;">
+                  ACTIVITIES LIST
+                </div>
+              </div>
+              <div id="fulllist-feed-body" style="display:flex;flex-direction:column;gap:12px;"></div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODALS: Announcement Reader, PIN Entry, OCC Setup, Diagnostics
+       ======================================================================== -->
+  <!-- Announcement Reader Modal -->
+  <div id="announcement-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <span id="modal-ann-course-badge" class="wireframe-pill">COURSE</span>
+            <span id="modal-ann-date" style="font-size:10.5px;color:var(--text-muted);">Date</span>
+          </div>
+          <h3 id="modal-ann-title">Announcement Title</h3>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">
+            👤 <span id="modal-ann-author">Lecturer</span>
+          </div>
+        </div>
+        <button id="btn-close-ann-modal" class="modal-close-btn">✕</button>
+      </div>
+      <div id="modal-ann-content" class="modal-body"></div>
+      <div class="modal-footer">
+        <a id="modal-ann-link" href="#" target="_blank" class="btn-wireframe">View on SPeCTRUM ↗</a>
+        <button id="btn-dismiss-ann-modal" class="btn-cta-solid">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attendance PIN Entry Modal -->
+  <div id="pin-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-card" style="max-width:380px;">
+      <div class="modal-header">
+        <h3 id="pin-modal-title">Enter Attendance PIN / Password</h3>
+        <button id="btn-close-pin-modal" class="modal-close-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="pin-modal-desc" style="font-size:11.5px;color:var(--text-secondary);margin-bottom:12px;">This session requires a PIN or password provided by the lecturer.</p>
+        <input type="text" id="att-pin-input" placeholder="Enter attendance PIN / Password..." style="width:100%;font-size:13px;" autocomplete="off">
+        <p id="pin-modal-error" style="color:var(--signal-urgent);font-size:11px;margin-top:6px;display:none;"></p>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-cancel-pin" class="btn-wireframe">Cancel</button>
+        <button id="btn-submit-pin" class="btn-cta-solid">Submit Attendance</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mandatory OCC Setup Modal -->
+  <div id="occ-setup-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="occ-modal-title">⚡ Set OCC Numbers for Your Courses</h3>
+        <button id="btn-close-occ-modal" class="modal-close-btn" style="display:none;">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:11.5px;line-height:1.45;margin-bottom:12px;">Enter your Tutorial/Lab Occurrence (OCC) group for each course so SPeCTRUM PRO tracks the correct attendance sessions.</p>
+        <div style="background:var(--bg-subtle);border:1px solid var(--border-hairline);border-radius:var(--radius-xs);padding:8px;margin-bottom:12px;">
+          <div style="font-size:10.5px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">Quick Fill All Courses:</div>
+          <div id="quick-occ-pills" style="display:flex;flex-wrap:wrap;gap:4px;">
+            <button type="button" class="btn-wireframe btn-occ-quick" data-occ="1">OCC 1</button>
+            <button type="button" class="btn-wireframe btn-occ-quick" data-occ="2">OCC 2</button>
+            <button type="button" class="btn-wireframe btn-occ-quick" data-occ="3">OCC 3</button>
+            <button type="button" class="btn-wireframe btn-occ-quick" data-occ="4">OCC 4</button>
+            <button type="button" class="btn-wireframe btn-occ-quick" data-occ="5">OCC 5</button>
+            <button type="button" class="btn-wireframe btn-occ-quick" data-occ="6">OCC 6</button>
+            <button type="button" class="btn-wireframe btn-occ-quick" data-occ="7">OCC 7</button>
+            <button type="button" class="btn-wireframe btn-occ-quick" data-occ="8">OCC 8</button>
+          </div>
+        </div>
+        <div id="occ-modal-course-list" style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;"></div>
+        <p id="occ-modal-error" style="color:var(--signal-urgent);font-size:11px;margin-top:6px;display:none;"></p>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-save-occ-modal" class="btn-cta-solid" style="width:100%;justify-content:center;">Save OCCs & Fetch Activities</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Diagnostics Console -->
+  <div class="diag-panel" id="diag-panel" style="display:none;position:fixed;bottom:10px;right:10px;left:70px;z-index:900;">
+    <div class="diag-header" id="diag-header-toggle">
+      <span>Live Sync Diagnostics & Debug Log</span>
+      <div style="display:flex;gap:6px;">
+        <button type="button" id="btn-hard-sync" class="btn-wireframe" style="padding:1px 6px;">🧹 Clear & Rescan</button>
+        <button type="button" id="btn-copy-diag-log" class="btn-wireframe" style="padding:1px 6px;">📋 Copy</button>
+        <button type="button" id="btn-clear-diag-log" class="btn-wireframe" style="padding:1px 6px;">Clear</button>
+        <button type="button" id="btn-close-diag-panel" class="modal-close-btn" style="padding:0 4px;">✕</button>
+      </div>
+    </div>
+    <div class="diag-body" id="diag-body">
+      <div style="display:flex;gap:12px;margin-bottom:6px;font-size:10px;">
+        <span id="diag-badge-session">Session: Checking...</span>
+        <span id="diag-badge-courses">Courses: 0</span>
+        <span id="diag-badge-att">Attendance: 0</span>
+      </div>
+      <pre id="diag-log-view" style="white-space:pre-wrap;line-height:1.4;">Diagnostic log ready.</pre>
+    </div>
+  </div>
+
+  <!-- Cinematic Glassmorphism Sync HUD Overlay (Option 3) -->
+  <div id="sync-cinematic-overlay" class="sync-cinematic-overlay" style="display:none;opacity:0;">
+    <div class="sync-cinematic-card">
+      <div class="sync-cinematic-prism-stage">
+        <svg class="header-brand-logo-svg stage-fetching sync-cinematic-prism-svg" viewBox="0 0 200 200" id="sync-hud-prism-svg">
+          <polygon class="art-tri" points="100,36.4 32.7,149.5 167.3,149.5" stroke-width="2" />
+          <line class="art-subline" x1="35.7" y1="145.9" x2="164.3" y2="145.9" stroke-width="2" />
+          <polygon class="art-beam art-beam-incident" points="0.2,141.4 50.9,124.6 49.3,120.0 -0.2,140.2" />
+          <circle class="flash-spark" cx="50.1" cy="122.3" r="5" fill="#FFFFFF" />
+          <path class="art-score-track laser-score-top" pathLength="100" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" d="M 50.1 120.7 L 100.7 105.4 L 75.6 87.4 L 122.4 71.1" stroke-width="2.3" />
+          <path class="art-score-track laser-score-bot" pathLength="100" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" d="M 50.1 123.9 L 129.9 111.6 L 98.6 91.1 L 123.7 78.2" stroke-width="2.3" />
+          <line class="art-score-cap cap-score-exit" stroke="#FFFFFF" stroke-linecap="round" x1="122.4" y1="71.1" x2="123.7" y2="78.2" stroke-width="2.3" />
+          <polygon class="art-poly art-score-poly" points="50.1,120.7 100.7,105.4 75.6,87.4 122.4,71.1 123.7,78.2 98.6,91.1 129.9,111.6 50.1,123.9" stroke-width="2.3" />
+          <polygon class="art-beam art-beam-ray1" points="122.8,72.1 200.1,39.8 199.9,39.2 122.0,70.1" />
+          <polygon class="art-beam art-beam-ray2" points="123.1,75.9 200.1,51.7 199.9,50.9 122.7,74.3" />
+          <polygon class="art-beam art-beam-ray3" points="124.1,79.9 200.1,64.4 199.9,63.6 123.7,78.3" />
+        </svg>
+      </div>
+
+      <!-- Sync Title & Progress Bar -->
+      <div class="sync-cinematic-header">
+        <span class="sync-cinematic-title" id="sync-hud-title">SYNCING ACTIVITIES & ATTENDANCE</span>
+        <span class="sync-cinematic-percent" id="sync-hud-percent">0%</span>
+      </div>
+
+      <div class="sync-cinematic-bar-wrap">
+        <div class="sync-cinematic-bar-fill" id="sync-hud-bar-fill" style="width:0%;"></div>
+      </div>
+
+      <!-- Description Under (As Requested) -->
+      <div class="sync-cinematic-desc-wrap">
+        <div class="sync-cinematic-current" id="sync-hud-current">Connecting to SPeCTRUM...</div>
+        <div class="sync-cinematic-sub" id="sync-hud-sub">Initializing...</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../libs/jszip.min.js"></script>
+  <script src="../libs/pdf.min.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+{
+  "manifest_version": 3,
+  "name": "SPeCTRUM Pro - UM Course Material Downloader",
+  "version": "1.0.0",
+  "description": "1-click download lecture notes, slides (PDF, PPTX) from Universiti Malaya SPeCTRUM LMS, organized by course and week.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "SPeCTRUM Pro Downloader",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "permissions": [
+    "storage",
+    "downloads",
+    "activeTab",
+    "scripting",
+    "alarms",
+    "notifications",
+    "cookies"
+  ],
+  "host_permissions": [
+    "*://spectrum.um.edu.my/*",
+    "https://login.microsoftonline.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://spectrum.um.edu.my/*"
+      ],
+      "js": [
+        "libs/jszip.min.js",
+        "scripts/content.js"
+      ],
+      "css": [
+        "scripts/content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "scripts/background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/*",
+        "libs/*"
+      ],
+      "matches": [
+        "*://spectrum.um.edu.my/*"
+      ]
+    }
+  ]
+}
