@@ -9022,3 +9022,123 @@ body:not(.is-full-tab) .sync-cinematic-current {
   }
 }
 
+/* ==========================================================================
+   FULL-TAB BY-COURSE MODE & NAVIGATOR (Spec 5.1)
+   - Matches Popup By-Course Monograms & Chronological Spine View
+   ========================================================================== */
+.fulllist-course-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  width: 100%;
+  text-align: left;
+  box-sizing: border-box;
+  text-decoration: none;
+  margin-bottom: 6px;
+}
+
+.fulllist-course-nav-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+.fulllist-course-nav-item.active {
+  background: #18181B !important;
+  color: #FFFFFF !important;
+  border-color: #18181B !important;
+}
+
+[data-theme="dark"] .fulllist-course-nav-item.active {
+  background: #FAFAFA !important;
+  color: #18181B !important;
+  border-color: #FAFAFA !important;
+}
+
+.course-nav-monogram {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  flex-shrink: 0;
+  border: 1px solid var(--border-hairline);
+}
+
+.fulllist-course-nav-item.active .course-nav-monogram {
+  background: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+  border-color: transparent;
+}
+
+[data-theme="dark"] .fulllist-course-nav-item.active .course-nav-monogram {
+  background: rgba(0, 0, 0, 0.12);
+  color: #18181B;
+}
+
+.course-nav-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.course-nav-code {
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.course-nav-occ {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+}
+
+.fulllist-course-nav-item.active .course-nav-occ {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .fulllist-course-nav-item.active .course-nav-occ {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.course-nav-badge {
+  font-size: 10.5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-hairline);
+}
+
+.fulllist-course-nav-item.active .course-nav-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+  border-color: transparent;
+}
+
+[data-theme="dark"] .fulllist-course-nav-item.active .course-nav-badge {
+  background: rgba(0, 0, 0, 0.1);
+  color: #18181B;
+}
+
+

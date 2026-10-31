@@ -1284,9 +1284,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       renderCalendarView(calCurrentYear, calCurrentMonth);
     } else if (mode === 'list') {
       if (listSec) listSec.style.display = 'flex';
+      fullListGroupingMode = 'course';
       fullListCurrentDate = new Date();
       if (monthHeading) {
-        monthHeading.textContent = fullListCurrentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+        monthHeading.textContent = 'BY COURSE · ACADEMIC FEED';
       }
       renderFullListMode(fullListCurrentDate, 1);
     } else if (mode === 'timetable') {
@@ -1454,6 +1455,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   let selectedCourseFilterCode = null;
 
   function isActivityActive(type) {
+    if (document.body && document.body.classList.contains('is-full-tab')) {
+      if (type === 'notice') {
+        const btn = document.getElementById('rail-toggle-notice');
+        if (btn) return btn.classList.contains('active');
+      } else if (type === 'tutorial' || type === 'assignment') {
+        const btn = document.getElementById('rail-toggle-assign');
+        if (btn) return btn.classList.contains('active');
+      } else if (type === 'attendance') {
+        const btn = document.getElementById('rail-toggle-att');
+        if (btn) return btn.classList.contains('active');
+      }
+    }
     const map = {
       notice: 'dock-btn-notice',
       tutorial: 'dock-btn-tutorial',
@@ -2311,20 +2324,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     const groups = Array.from(document.querySelectorAll('.spine-date-group')).filter(g => g.offsetParent !== null);
     if (!groups.length) return;
 
-    const stream = document.getElementById('popup-cards-stream') || document.querySelector('.split-cards-stream');
+    const fulllistWrap = document.getElementById('fulllist-wrapper');
+    const isFullTabList = fulllistWrap && fulllistWrap.style.display !== 'none';
+    const stream = isFullTabList ? fulllistWrap : (document.getElementById('popup-cards-stream') || document.querySelector('.split-cards-stream'));
     const streamRect = stream ? stream.getBoundingClientRect() : { top: 0, height: window.innerHeight };
-    const focalLine = streamRect.top + 70;
+    const focalLine = streamRect.top + 80;
 
-    let activeGroup = null;
+    let activeGroup = groups[0];
     for (const g of groups) {
-      const r = g.getBoundingClientRect();
-      if (r.bottom >= focalLine) {
+      const header = g.querySelector('.spine-node-header') || g;
+      const hr = header.getBoundingClientRect();
+      if (hr.top <= focalLine) {
         activeGroup = g;
+      } else {
         break;
       }
     }
 
-    if (stream && (stream.scrollTop + stream.clientHeight >= stream.scrollHeight - 15)) {
+    if (stream && (stream.scrollTop + stream.clientHeight >= stream.scrollHeight - 20)) {
       activeGroup = groups[groups.length - 1];
     }
 
@@ -3739,6 +3756,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fCourse = document.getElementById('btn-fulllist-group-course');
     if (fDate) fDate.classList.toggle('active', fullListGroupingMode === 'date');
     if (fCourse) fCourse.classList.toggle('active', fullListGroupingMode === 'course');
+
+    const monthHeading = document.getElementById('fulltab-month-heading');
+    if (monthHeading && currentFullTabMode === 'list') {
+      monthHeading.textContent = (fullListGroupingMode === 'course')
+        ? 'BY COURSE · ACADEMIC FEED'
+        : (fullListCurrentDate || new Date()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+    }
 
     // Update popup sticky box
     const stickyBox = document.getElementById('popup-sticky-date-box');
@@ -7203,180 +7227,344 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (fullListGroupingMode === 'course') {
       // ----------------------------------------------------
-      // Full-Tab List Mode: Grouped By Course
+      // Full-Tab List Mode: Focused By Course (Exact Popup By-Course Architecture)
       // ----------------------------------------------------
       if (sideDatePane) sideDatePane.style.display = 'none';
       if (sideCoursePane) sideCoursePane.style.display = 'flex';
 
-      const courseMap = new Map();
+      const courses = getPopupCoursesList();
+      let cInfo = courses.find(c => 
+        (selectedCourseFilterId && String(c.courseId) === String(selectedCourseFilterId)) ||
+        (selectedCourseFilterCode && c.courseCode === selectedCourseFilterCode)
+      );
 
-      // 1. Assignments
-      if (showTasks) {
-        assignmentsData.forEach(assign => {
-          const cid = String(assign.courseId || 'general');
-          if (!courseMap.has(cid)) {
-            courseMap.set(cid, {
-              courseId: cid,
-              courseCode: assign.courseCode || assign.courseName || 'Course',
-              courseName: assign.courseName || '',
-              items: []
-            });
-          }
-          courseMap.get(cid).items.push({
-            type: 'task',
-            id: assign.id,
-            obj: assign,
-            timestamp: getItemTimestamp(assign, 'assignment')
-          });
-        });
+      // Default to first course if none selected
+      if (!cInfo && courses.length > 0) {
+        cInfo = courses[0];
+        selectedCourseFilterId = cInfo.courseId;
+        selectedCourseFilterCode = cInfo.courseCode;
       }
 
-      // 2. Attendance
-      if (showAtt) {
-        attendancesData.forEach(att => {
-          if (isAttendanceHidden(att)) return;
-          const cid = String(att.courseId || 'general');
-          if (!courseMap.has(cid)) {
-            courseMap.set(cid, {
-              courseId: cid,
-              courseCode: att.courseCode || att.courseName || 'Course',
-              courseName: att.courseName || '',
-              userOcc: att.userOcc || courseOccs[cid] || defaultOcc || '',
-              detectedOccs: Array.isArray(att.detectedOccs) ? [...att.detectedOccs] : [],
-              items: []
-            });
-          }
-          const grp = courseMap.get(cid);
-          if (!grp.userOcc && (att.userOcc || courseOccs[cid])) {
-            grp.userOcc = att.userOcc || courseOccs[cid];
-          }
-          if (Array.isArray(att.detectedOccs)) {
-            att.detectedOccs.forEach(o => {
-              if (!grp.detectedOccs.includes(o)) grp.detectedOccs.push(o);
-            });
-          }
-          grp.items.push({
-            type: 'att',
-            id: att.id,
-            obj: att,
-            timestamp: getItemTimestamp(att, 'attendance')
-          });
-        });
-      }
+      // Compute activity counts for each course for navigator badges
+      const courseCountsMap = new Map();
+      let totalAllActivities = 0;
 
-      // 3. Announcements
-      if (showAnn) {
-        announcementsData.forEach(ann => {
-          const cid = String(ann.courseId || 'general');
-          if (!courseMap.has(cid)) {
-            courseMap.set(cid, {
-              courseId: cid,
-              courseCode: ann.courseCode || ann.courseName || 'Course',
-              courseName: ann.courseName || '',
-              items: []
-            });
-          }
-          courseMap.get(cid).items.push({
-            type: 'ann',
-            id: ann.id,
-            obj: ann,
-            timestamp: getItemTimestamp(ann, 'announcement')
-          });
-        });
-      }
-
-      // Sort items within each course group according to currentSortOrder
-      const sortedEntries = Array.from(courseMap.entries()).map(([cid, group]) => {
-        group.items.sort((a, b) => {
-          // Open active session comes first
-          if (a.obj?.activeSession && !b.obj?.activeSession) return -1;
-          if (!a.obj?.activeSession && b.obj?.activeSession) return 1;
-
-          const tA = a.timestamp || 0;
-          const tB = b.timestamp || 0;
-          if (tA > 0 && tB > 0) {
-            return currentSortOrder === 'newest' ? (tB - tA) : (tA - tB);
-          } else if (tA > 0) return -1;
-          else if (tB > 0) return 1;
-          return 0;
-        });
-        return [cid, group];
+      courses.forEach(c => {
+        const cAnns = announcementsData.filter(a => isActivityForCourse(a, c)).length;
+        const cAssigns = assignmentsData.filter(a => isActivityForCourse(a, c) && ((typeof isAssignmentMatchingOcc === 'function') ? isAssignmentMatchingOcc(a, c.userOcc) : true)).length;
+        const cAtt = attendancesData.filter(a => (typeof isAttendanceHidden !== 'function' || !isAttendanceHidden(a)) && isActivityForCourse(a, c)).length;
+        const count = cAnns + cAssigns + cAtt;
+        courseCountsMap.set(String(c.courseId), count);
+        totalAllActivities += count;
       });
 
-      // Sort course groups by their top activity
-      sortedEntries.sort((a, b) => {
-        const hasOpenA = a[1].items.some(it => it.obj?.activeSession != null);
-        const hasOpenB = b[1].items.some(it => it.obj?.activeSession != null);
-        if (hasOpenA && !hasOpenB) return -1;
-        if (!hasOpenA && hasOpenB) return 1;
-
-        const topA = a[1].items[0]?.timestamp || 0;
-        const topB = b[1].items[0]?.timestamp || 0;
-        return currentSortOrder === 'newest' ? (topB - topA) : (topA - topB);
-      });
-
-      let totalActivitiesCount = 0;
-      sortedEntries.forEach(([, g]) => { totalActivitiesCount += g.items.length; });
-
-      if (summaryEl) summaryEl.textContent = `${sortedEntries.length} COURSES · ${totalActivitiesCount} ACTIVITIES`;
-
-      // Update Side Course Pane
+      // Update Side Course Pane (Course count & navigator jump items)
       const courseCountEl = document.getElementById('fulllist-course-count');
       const courseItemsEl = document.getElementById('fulllist-course-items-count');
       const courseJumpList = document.getElementById('fulllist-course-jump-list');
-      if (courseCountEl) courseCountEl.textContent = sortedEntries.length;
-      if (courseItemsEl) courseItemsEl.textContent = `${totalActivitiesCount} Activities`;
+      if (courseCountEl) courseCountEl.textContent = courses.length;
+      if (courseItemsEl) courseItemsEl.textContent = `${totalAllActivities} Activities`;
+      if (summaryEl) summaryEl.textContent = `${courses.length} COURSES · ${totalAllActivities} ACTIVITIES`;
+
       if (courseJumpList) {
-        courseJumpList.innerHTML = sortedEntries.map(([cid, g]) => `
-          <a class="fulllist-course-jump-item" href="#fulllist-cgroup-${cid}">
-            <span>${escapeHtml(g.courseCode || 'Course')}</span>
-            <span class="badge-count" style="font-size:9.5px;">${g.items.length}</span>
-          </a>
-        `).join('');
+        courseJumpList.innerHTML = courses.map(c => {
+          const isSel = (cInfo && (String(cInfo.courseId) === String(c.courseId) || cInfo.courseCode === c.courseCode));
+          const monogram = (typeof generateCourseAcronym === 'function') ? generateCourseAcronym(c.courseName, c.courseCode) : (c.courseCode || 'CO').slice(0, 3).toUpperCase();
+          const occClean = c.userOcc ? String(c.userOcc).replace(/^occ\s*/i, '').trim() : '';
+          const cCount = courseCountsMap.get(String(c.courseId)) || 0;
+          return `
+            <button type="button" class="fulllist-course-nav-item ${isSel ? 'active' : ''}" data-course-id="${escapeHtml(String(c.courseId))}" data-course-code="${escapeHtml(c.courseCode || '')}">
+              <span class="course-nav-monogram">${escapeHtml(monogram)}</span>
+              <div class="course-nav-text">
+                <span class="course-nav-code">${escapeHtml(c.courseCode || 'Course')}</span>
+                ${occClean ? `<span class="course-nav-occ">OCC ${escapeHtml(occClean)}</span>` : ''}
+              </div>
+              <span class="course-nav-badge">${cCount}</span>
+            </button>
+          `;
+        }).join('');
+
+        courseJumpList.querySelectorAll('.fulllist-course-nav-item').forEach(item => {
+          item.addEventListener('click', () => {
+            selectedCourseFilterId = item.dataset.courseId;
+            selectedCourseFilterCode = item.dataset.courseCode;
+            renderFullListMode();
+          });
+        });
       }
 
-      if (sortedEntries.length === 0) {
+      if (!cInfo) {
         feedBody.innerHTML = `
           <div class="fulllist-empty-day-card">
             <div class="empty-day-icon">📚</div>
-            <div class="empty-day-title">No course activities match active filters</div>
-            <div class="empty-day-sub">Enable tasks, attendance, or notices on the left rail stadium pill to view them here.</div>
+            <div class="empty-day-title">No courses available</div>
+            <div class="empty-day-sub">Sync SPeCTRUM or enroll in courses to view activities here.</div>
           </div>
         `;
         return;
       }
 
-      feedBody.innerHTML = sortedEntries.map(([cid, group]) => {
-        const cleanCourse = cleanDisplayCourseName(group.courseName, group.courseCode);
-        const userOcc = group.userOcc;
-        const hasOpen = group.items.some(it => it.obj?.activeSession != null);
-        return `
-          <div class="course-group-card expanded" id="fulllist-cgroup-${cid}" style="margin-bottom:12px;">
-            <div class="course-group-header">
-              <div class="course-group-info">
-                <span class="course-group-code">${escapeHtml(group.courseCode || 'Course')}</span>
-                ${cleanCourse ? `<span class="course-group-title">${escapeHtml(cleanCourse)}</span>` : ''}
-              </div>
-              <div class="course-group-meta">
-                ${hasOpen ? '<span class="att-open-pulse"><span class="dot"></span> OPEN NOW</span>' : ''}
-                ${userOcc ? `<span class="occ-tag-pill">OCC ${escapeHtml(userOcc)}</span>` : ''}
-                <span class="badge-count">${group.items.length} activities</span>
-                <span class="course-group-chevron">▼</span>
-              </div>
+      // Gather activities for selected course cInfo based on active activity toggles
+      const showNotice = isActivityActive('notice');
+      const showTasks = isActivityActive('tutorial');
+      const showAtt = isActivityActive('attendance');
+
+      const matchedAnns = showNotice ? announcementsData.filter(a => isActivityForCourse(a, cInfo)) : [];
+      const matchedAssigns = showTasks ? assignmentsData.filter(a => {
+        if (!isActivityForCourse(a, cInfo)) return false;
+        return (typeof isAssignmentMatchingOcc === 'function') ? isAssignmentMatchingOcc(a, cInfo.userOcc) : true;
+      }) : [];
+      const matchedAtt = showAtt ? attendancesData.filter(a => {
+        if (typeof isAttendanceHidden === 'function' && isAttendanceHidden(a)) return false;
+        return isActivityForCourse(a, cInfo);
+      }) : [];
+
+      const todayKey = formatDateKey(new Date());
+      const nowZero = new Date();
+      nowZero.setHours(0, 0, 0, 0);
+      const nowTime = nowZero.getTime();
+      const allEvents = [];
+
+      // 1. Assignments
+      matchedAssigns.forEach(assign => {
+        let d = assign.dueDate ? (assign.dueDate instanceof Date ? assign.dueDate : new Date(assign.dueDate)) : null;
+        if (!d || isNaN(d.getTime())) d = new Date();
+        allEvents.push({
+          type: 'assignment',
+          date: d,
+          dateKey: formatDateKey(d),
+          data: assign
+        });
+      });
+
+      // 2. Attendance
+      matchedAtt.forEach(att => {
+        const typeInfo = getAttendanceTypeInfo(att, att.attTitle || '');
+        let sessionsAdded = 0;
+
+        if (att.activeSession) {
+          allEvents.push({
+            type: 'attendance',
+            date: new Date(),
+            dateKey: todayKey,
+            data: {
+              att,
+              isLive: true,
+              title: cleanSessionDesc(att.activeSession.desc || att.attTitle || 'Active Class Session', typeInfo.label),
+              timeStr: extractOnlyTime(att.activeSession.time || '') || 'Active Now',
+              isVerified: false,
+              statusLabel: att.activeSession.requiresPassword ? '🔑 PIN Required' : '🟢 Active Session',
+              takeUrl: att.activeSession.takeUrl || att.attUrl,
+              requiresPassword: att.activeSession.requiresPassword,
+              sesskey: att.activeSession.sesskey,
+              statusId: att.activeSession.presentStatusId,
+              subType: att.subType || ''
+            }
+          });
+          sessionsAdded++;
+        }
+
+        if (Array.isArray(att.sessions) && att.sessions.length > 0) {
+          att.sessions.forEach(sess => {
+            if (sess.isToday && att.activeSession) return;
+            const rawD = sess.date;
+            const d = (rawD instanceof Date && !isNaN(rawD.getTime()))
+              ? rawD
+              : (rawD && !isNaN(new Date(rawD).getTime()) ? new Date(rawD) : (sess.dateKey ? new Date(sess.dateKey + 'T12:00:00') : null));
+
+            if (d && !isNaN(d.getTime())) {
+              const sessTypeInfo = getAttendanceTypeInfo(att, sess.desc || '');
+              const sessTitle = cleanSessionDesc(sess.desc || att.attTitle || 'Class Session', sessTypeInfo.label);
+              const onlyTime = extractOnlyTime(sess.dateStr || '') || (sess.time || 'Class Time');
+
+              allEvents.push({
+                type: 'attendance',
+                date: d,
+                dateKey: sess.dateKey || formatDateKey(d),
+                data: {
+                  att,
+                  isLive: false,
+                  session: sess,
+                  title: sessTitle,
+                  timeStr: onlyTime,
+                  isVerified: Boolean(sess.isPresent || sess.statusType === 'present'),
+                  statusType: sess.statusType,
+                  statusLabel: sess.statusLabel || (sess.isPresent ? 'Verified 100% ✓' : (sess.isFuture ? 'Scheduled' : 'Past Session')),
+                  takeUrl: att.attUrl,
+                  subType: att.subType || ''
+                }
+              });
+              sessionsAdded++;
+            }
+          });
+        } else if (att.nextSession && sessionsAdded === 0) {
+          const nextSess = att.nextSession;
+          const rawD = nextSess.date;
+          const d = (rawD instanceof Date && !isNaN(rawD.getTime()))
+            ? rawD
+            : (rawD && !isNaN(new Date(rawD).getTime()) ? new Date(rawD) : (nextSess.dateKey ? new Date(nextSess.dateKey + 'T12:00:00') : null));
+
+          if (d && !isNaN(d.getTime())) {
+            const sessTypeInfo = getAttendanceTypeInfo(att, nextSess.desc || '');
+            const sessTitle = cleanSessionDesc(nextSess.desc || att.attTitle || 'Class Session', sessTypeInfo.label);
+            const onlyTime = extractOnlyTime(nextSess.time || nextSess.dateStr || '') || 'Class Time';
+
+            allEvents.push({
+              type: 'attendance',
+              date: d,
+              dateKey: nextSess.dateKey || formatDateKey(d),
+              data: {
+                att,
+                isLive: false,
+                session: nextSess,
+                title: sessTitle,
+                timeStr: onlyTime,
+                isVerified: false,
+                statusType: 'scheduled',
+                statusLabel: 'Scheduled',
+                takeUrl: att.attUrl,
+                subType: att.subType || ''
+              }
+            });
+            sessionsAdded++;
+          }
+        }
+      });
+
+      // 3. Announcements
+      matchedAnns.forEach(ann => {
+        let d = ann.timestamp ? (ann.timestamp instanceof Date ? ann.timestamp : new Date(ann.timestamp)) : null;
+        if (!d || isNaN(d.getTime())) d = new Date();
+        allEvents.push({
+          type: 'notice',
+          date: d,
+          dateKey: formatDateKey(d),
+          data: ann
+        });
+      });
+
+      // Focused Scope Bar Header
+      let occClean = cInfo.userOcc ? String(cInfo.userOcc).replace(/^occ\s*/i, '').trim() : '';
+      const scopeBarHtml = `
+        <div class="popup-focused-scope-bar" style="margin-bottom:16px;">
+          <div class="scope-bar-top-row">
+            <div class="scope-bar-breadcrumb">
+              <span class="scope-crumb-label">COURSES /</span>
+              <span class="scope-crumb-code">${escapeHtml(cInfo.courseCode)}</span>
+              ${occClean ? `<span class="scope-crumb-sep">·</span><span class="scope-crumb-occ">OCC ${escapeHtml(occClean)}</span>` : ''}
             </div>
-            <div class="course-group-body">
-              ${group.items.map(it => {
-                if (it.type === 'task') return renderAssignmentCardHtml(it.obj);
-                if (it.type === 'att') return renderAttendanceCardHtml(it.obj);
-                return renderAnnouncementCardHtml(it.obj);
-              }).join('')}
+          </div>
+          <div class="scope-bar-title-row">
+            <div class="popup-focused-scope-name">${escapeHtml(cleanDisplayCourseName(cInfo.courseName, cInfo.courseCode))}</div>
+          </div>
+        </div>
+      `;
+
+      if (allEvents.length === 0) {
+        feedBody.innerHTML = `
+          ${scopeBarHtml}
+          <div class="fulllist-empty-day-card">
+            <div class="empty-day-icon">☕</div>
+            <div class="empty-day-title">No activities matching this course</div>
+            <div class="empty-day-sub">Check your filter settings on the left rail or sync SPeCTRUM.</div>
+          </div>
+        `;
+        return;
+      }
+
+      // Group events by dateKey
+      const groupsMap = new Map();
+      allEvents.forEach(ev => {
+        if (!groupsMap.has(ev.dateKey)) {
+          groupsMap.set(ev.dateKey, {
+            dateKey: ev.dateKey,
+            date: ev.date,
+            events: []
+          });
+        }
+        groupsMap.get(ev.dateKey).events.push(ev);
+      });
+
+      // Chronological spine sort:
+      // 1. TODAY group first (if any)
+      // 2. Upcoming dates: sorted ASCENDING (nearest first)
+      // 3. Past dates: sorted DESCENDING (most recent first)
+      const groups = Array.from(groupsMap.values()).sort((a, b) => {
+        const aIsToday = (a.dateKey === todayKey);
+        const bIsToday = (b.dateKey === todayKey);
+        if (aIsToday) return -1;
+        if (bIsToday) return 1;
+
+        const aTime = a.date.getTime();
+        const bTime = b.date.getTime();
+        const aIsFuture = (aTime >= nowTime);
+        const bIsFuture = (bTime >= nowTime);
+
+        if (aIsFuture && !bIsFuture) return -1;
+        if (!aIsFuture && bIsFuture) return 1;
+
+        if (aIsFuture && bIsFuture) {
+          return currentSortOrder === 'oldest' ? (bTime - aTime) : (aTime - bTime);
+        }
+        return currentSortOrder === 'oldest' ? (aTime - bTime) : (bTime - aTime);
+      });
+
+      let spineHtml = '<div class="chronological-spine-timeline">';
+
+      groups.forEach(group => {
+        const isToday = (group.dateKey === todayKey);
+        const isFuture = (group.date.getTime() >= nowTime);
+        const d = group.date;
+        const day = String(d.getDate()).padStart(2, '0');
+        const mon = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+        const wd = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+
+        const titleHtml = isToday 
+          ? `TODAY <span class="spine-node-date">${day} ${mon}</span>` 
+          : `${day} ${mon} ${wd}`;
+        const dotClass = isToday ? 'spine-node-dot is-today' : 'spine-node-dot';
+
+        // Sort cards within group: assignments (1), attendance (2), notices (3)
+        const sortedEvents = group.events.sort((a, b) => {
+          const order = { assignment: 1, attendance: 2, notice: 3 };
+          return (order[a.type] || 9) - (order[b.type] || 9);
+        });
+
+        const cardsHtml = sortedEvents.map(ev => {
+          if (ev.type === 'assignment') return renderScopedAssignmentCard(ev.data);
+          if (ev.type === 'attendance') return renderScopedAttendanceCard(ev.data);
+          if (ev.type === 'notice') return renderScopedNoticeCard(ev.data);
+          return '';
+        }).join('');
+
+        spineHtml += `
+          <div class="spine-date-group ${isToday ? 'group-today' : ''}">
+            <div class="spine-node-header">
+              <span class="${dotClass}"></span>
+              <div class="spine-node-title">${titleHtml}</div>
+            </div>
+            <div class="spine-date-cards">
+              ${cardsHtml}
             </div>
           </div>
         `;
-      }).join('');
+      });
 
-      attachCourseGroupToggle(feedBody);
+      spineHtml += '</div>';
+      feedBody.innerHTML = scopeBarHtml + spineHtml;
+
       attachAttendanceActions(feedBody);
+
+      const fulllistWrap = document.getElementById('fulllist-wrapper');
+      if (fulllistWrap && !fulllistWrap._hasFullListScrollListener) {
+        fulllistWrap._hasFullListScrollListener = true;
+        fulllistWrap.addEventListener('scroll', updateActiveSpineNode, { passive: true });
+        fulllistWrap.addEventListener('wheel', () => requestAnimationFrame(updateActiveSpineNode), { passive: true });
+        window.addEventListener('scroll', updateActiveSpineNode, { passive: true });
+      }
+
+      requestAnimationFrame(updateActiveSpineNode);
+      setTimeout(updateActiveSpineNode, 50);
 
     } else {
       // ----------------------------------------------------
@@ -7455,9 +7643,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
       } else {
         cardsHtml = dayEvents.map(ev => {
-          if (ev.type === 'task' || ev.type === 'assignment') return renderAssignmentCardHtml(ev.obj || ev);
-          if (ev.type === 'att' || ev.type === 'attendance') return renderTimelineAttendanceCardHtml(ev);
-          return renderAnnouncementCardHtml(ev.obj || ev);
+          if (ev.type === 'task' || ev.type === 'assignment') return renderScopedAssignmentCard(ev.obj || ev);
+          if (ev.type === 'att' || ev.type === 'attendance') return renderScopedAttendanceCard(ev.obj || ev);
+          return renderScopedNoticeCard(ev.obj || ev);
         }).join('');
       }
 
