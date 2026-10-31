@@ -217,9 +217,62 @@ async function handleFormAttendanceSubmit(formAction, fields, takeUrl) {
 // Notification click handler
 chrome.notifications.onClicked.addListener((notificationId) => {
   if (notificationId.startsWith('attendance_')) {
-    chrome.tabs.create({ url: chrome.runtime.getURL('popup/popup.html?tab=tab-activities&sub=attendance') });
+    chrome.tabs.create({ url: chrome.runtime.getURL('popup/popup.html?mode=full&tab=tab-activities&sub=attendance') });
   }
 });
+
+// Helper: Synchronize submission state into cachedAttendances & lastAttendanceSubmissions
+async function recordAttendanceSuccess(courseId, session, todayStr, courseName = '') {
+  try {
+    const store = await chrome.storage.local.get({ cachedAttendances: [], lastAttendanceSubmissions: {} });
+    const allAtts = store.cachedAttendances || [];
+    const submissions = store.lastAttendanceSubmissions || {};
+    const sessionKey = `${courseId}_${session.sessid || session.takeUrl}`;
+    submissions[sessionKey] = todayStr;
+    submissions[`course_${courseId}`] = todayStr;
+
+    const targets = allAtts.filter(a => String(a.courseId) === String(courseId) || (session.takeUrl && a.attUrl && session.takeUrl.includes(a.attUrl)));
+    targets.forEach(target => {
+      target.lastRecordedStatus = 'Present';
+      target.activeSession = null;
+      if (Array.isArray(target.sessions)) {
+        target.sessions.forEach(s => {
+          const sKey = s.dateKey || (s.date ? new Date(s.date).toISOString().slice(0, 10) : '');
+          if (sKey === todayStr || (session.sessid && String(s.sessid) === String(session.sessid))) {
+            s.isPresent = true;
+            s.statusType = 'present';
+            s.statusLabel = '✔ Present';
+            s.isFuture = false;
+          }
+        });
+      }
+      if (target.nextSession) {
+        const nsKey = target.nextSession.dateKey || (target.nextSession.date ? new Date(target.nextSession.date).toISOString().slice(0, 10) : '');
+        if (nsKey === todayStr) {
+          target.nextSession.isPresent = true;
+          target.nextSession.statusType = 'present';
+          target.nextSession.statusLabel = '✔ Present';
+          target.nextSession.isFuture = false;
+        }
+      }
+    });
+
+    await chrome.storage.local.set({
+      lastAttendanceSubmissions: submissions,
+      cachedAttendances: allAtts
+    });
+
+    showDesktopNotification(
+      `attendance_success_${sessionKey}`,
+      `✅ Attendance Recorded (Present)!`,
+      `Successfully marked attendance for ${courseName || 'your course'}!`
+    );
+
+    try { chrome.runtime.sendMessage({ type: 'DATA_UPDATED' }); } catch (e) {}
+  } catch (err) {
+    console.warn('[SPeCTRUM Pro] Failed to record attendance success in cache:', err);
+  }
+}
 
 // Run background attendance check across enrolled courses
 async function runBackgroundAttendanceCheck() {
@@ -260,7 +313,7 @@ async function runBackgroundAttendanceCheck() {
         const cCourseId = String(ca.courseId || '');
         const cSessionKey = `${cCourseId}_${cSess.sessid || cSess.takeUrl}`;
         const todayStr = new Date().toISOString().slice(0, 10);
-        if (recordedSubmissions[cSessionKey] === todayStr) continue;
+        if (recordedSubmissions[cSessionKey] === todayStr || recordedSubmissions[`course_${cCourseId}`] === todayStr) continue;
 
         if (cSess.requiresPassword) {
           requiredPins++;
@@ -273,33 +326,127 @@ async function runBackgroundAttendanceCheck() {
           const success = await submitAttendance(cSess.takeUrl, cSess.presentStatusId, cSess.sesskey);
           if (success) {
             newlySubmitted++;
-            recordedSubmissions[cSessionKey] = todayStr;
-            await chrome.storage.local.set({ lastAttendanceSubmissions: recordedSubmissions });
-            showDesktopNotification(
-              `attendance_success_${cSessionKey}`,
-              `✅ Attendance Recorded (Present)!`,
-              `Successfully marked attendance for ${ca.courseName || 'your course'}!`
-            );
-            try { chrome.runtime.sendMessage({ type: 'DATA_UPDATED' }); } catch (e) {}
+            await recordAttendanceSuccess(cCourseId, cSess, todayStr, ca.courseName || ca.courseCode);
           }
         }
       }
     }
 
-    for (const course of courses) {
+    // Smart Proximity Prioritization: Sort courses so classes closest to current time are scanned first!
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const attByCourseId = new Map();
+    cachedAtts.forEach(ca => {
+      if (ca && ca.courseId) {
+        const cid = String(ca.courseId);
+        if (!attByCourseId.has(cid)) attByCourseId.set(cid, []);
+        attByCourseId.get(cid).push(ca);
+      }
+    });
+
+    function getCourseProximityScore(courseId) {
+      const cid = String(courseId);
+      const courseAttList = attByCourseId.get(cid) || [];
+      if (courseAttList.length === 0) return 5000; // Unscanned course, check after priority
+
+      // If active session exists, top priority (Score: 0)
+      for (const ca of courseAttList) {
+        if (ca.activeSession && ca.activeSession.takeUrl) {
+          const sKey = `${cid}_${ca.activeSession.sessid || ca.activeSession.takeUrl}`;
+          if (recordedSubmissions[sKey] !== todayStr) return 0;
+        }
+      }
+
+      const allSessions = [];
+      courseAttList.forEach(ca => {
+        if (Array.isArray(ca.sessions)) allSessions.push(...ca.sessions);
+      });
+
+      const todaySessions = allSessions.filter(s => {
+        const sKey = s.dateKey || (s.date ? new Date(s.date).toISOString().slice(0, 10) : '');
+        return sKey === todayStr || s.isToday;
+      });
+
+      if (todaySessions.length === 0) return 9000; // No class today
+
+      const unsubmitted = todaySessions.filter(s => {
+        if (s.isPresent) return false;
+        const sKey = `${cid}_${s.sessid || s.takeUrl || s.dateKey || ''}`;
+        return recordedSubmissions[sKey] !== todayStr;
+      });
+
+      if (unsubmitted.length === 0) return 8000; // All today's sessions attended
+
+      // Calculate minutes difference from class start time
+      let minDiff = 4000;
+      for (const s of unsubmitted) {
+        const rawTime = s.dateStr || s.time || '';
+        const match = rawTime.match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?\s*(?:[-–—~]|to)\s*(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/i) ||
+                      rawTime.match(/(\d{1,2}):(\d{2})\s*(?:[-–—~]|to)\s*(\d{1,2}):(\d{2})/);
+        if (match) {
+          let startH = parseInt(match[1], 10);
+          let startM = parseInt(match[2] || '0', 10);
+          let startAmpm = (match[3] || '').toUpperCase();
+          let endH = parseInt(match[4], 10);
+          let endM = parseInt(match[5] || '0', 10);
+          let endAmpm = (match[6] || '').toUpperCase();
+
+          if (!startAmpm && endAmpm) {
+            startAmpm = (startH <= endH) ? endAmpm : (endAmpm === 'PM' ? 'AM' : 'PM');
+          }
+          if (startAmpm === 'PM' && startH < 12) startH += 12;
+          if (startAmpm === 'AM' && startH === 12) startH = 0;
+          if (endAmpm === 'PM' && endH < 12) endH += 12;
+          if (endAmpm === 'AM' && endH === 12) endH = 0;
+
+          const startMin = startH * 60 + startM;
+          const endMin = endH * 60 + endM;
+
+          // Inside class session or within 20m before start: Top priority
+          if (currentMinutes >= startMin - 20 && currentMinutes <= endMin + 15) {
+            minDiff = Math.min(minDiff, Math.abs(currentMinutes - startMin));
+          } else if (currentMinutes < startMin) {
+            minDiff = Math.min(minDiff, (startMin - currentMinutes) + 100);
+          } else {
+            minDiff = Math.min(minDiff, (currentMinutes - endMin) + 600);
+          }
+        } else {
+          minDiff = Math.min(minDiff, 1500);
+        }
+      }
+      return minDiff;
+    }
+
+    // Sort: Classes closest to now appear first
+    const prioritizedCourses = [...courses].sort((a, b) => getCourseProximityScore(a.id) - getCourseProximityScore(b.id));
+
+    for (const course of prioritizedCourses) {
       if (!course.id) continue;
       const courseId = String(course.id);
       const userOcc = stored.courseOccs[courseId] || '';
 
+      // Skip courses that have already been marked present today or have no class
+      const score = getCourseProximityScore(courseId);
+      if (score >= 8000) continue;
+
       try {
-        const attendanceInfo = await checkCourseAttendance(courseId, course.name, userOcc, hiddenAttendanceIds);
+        const courseAttList = attByCourseId.get(courseId) || [];
+        const knownUrls = [];
+        courseAttList.forEach(ca => {
+          if (ca.attUrl && !knownUrls.includes(ca.attUrl)) knownUrls.push(ca.attUrl);
+          if (ca.activeSession && ca.activeSession.takeUrl && !knownUrls.includes(ca.activeSession.takeUrl)) {
+            knownUrls.push(ca.activeSession.takeUrl);
+          }
+        });
+        const attendanceInfo = await checkCourseAttendance(courseId, course.name, userOcc, hiddenAttendanceIds, knownUrls);
         if (!attendanceInfo || !attendanceInfo.activeSession) continue;
 
         const session = attendanceInfo.activeSession;
         const sessionKey = `${courseId}_${session.sessid || session.takeUrl}`;
 
         // Don't re-submit if already handled today
-        const todayStr = new Date().toISOString().slice(0, 10);
         if (recordedSubmissions[sessionKey] === todayStr) {
           continue;
         }
@@ -316,18 +463,7 @@ async function runBackgroundAttendanceCheck() {
           const success = await submitAttendance(session.takeUrl, session.presentStatusId, session.sesskey);
           if (success) {
             newlySubmitted++;
-            recordedSubmissions[sessionKey] = todayStr;
-            await chrome.storage.local.set({ lastAttendanceSubmissions: recordedSubmissions });
-
-            showDesktopNotification(
-              `attendance_success_${sessionKey}`,
-              `✅ Attendance Recorded (Present)!`,
-              `Successfully marked attendance for ${course.name}!`
-            );
-
-            try {
-              chrome.runtime.sendMessage({ type: 'DATA_UPDATED' });
-            } catch (e) {}
+            await recordAttendanceSuccess(courseId, session, todayStr, course.name || course.code);
           }
         }
       } catch (err) {
@@ -344,7 +480,7 @@ async function runBackgroundAttendanceCheck() {
 }
 
 // Check attendance page for active sessions
-async function checkCourseAttendance(courseId, courseName, userOcc, hiddenAttendanceIds = []) {
+async function checkCourseAttendance(courseId, courseName, userOcc, hiddenAttendanceIds = [], knownAttUrls = []) {
   const attLinks = [];
 
   function addBackgroundAttUrl(rawUrl) {
@@ -369,7 +505,115 @@ async function checkCourseAttendance(courseId, courseName, userOcc, hiddenAttend
     }
   }
 
-  // Strategy 1: Check /course/overview.php?id=${courseId} (Activities Overview)
+  // Pre-seed known URLs from cache if available (Fast Path!)
+  if (Array.isArray(knownAttUrls) && knownAttUrls.length > 0) {
+    knownAttUrls.forEach(u => addBackgroundAttUrl(u));
+  }
+
+  async function inspectLinks(links) {
+    for (const attUrl of links) {
+      try {
+        const fullAttUrl = attUrl.startsWith('http') ? attUrl : `https://spectrum.um.edu.my${attUrl}`;
+        const idMatch = fullAttUrl.match(/id=(\d+)/);
+        const cmid = idMatch ? idMatch[1] : '';
+        const attId = `att_${courseId}_${cmid}`;
+        if (hiddenAttendanceIds.includes(cmid) || hiddenAttendanceIds.includes(attId) || (idMatch && hiddenAttendanceIds.includes(idMatch[1]))) {
+          continue;
+        }
+        const attRes = await fetch(fullAttUrl, { credentials: 'include' });
+        if (!attRes.ok || attRes.url.includes('/login/')) continue;
+        const attHtml = await attRes.text();
+
+        // Check if there is an active "Submit attendance" link (matches attendance.php, take.php, or sessid= with both single and double quotes)
+        const takeMatch = attHtml.match(/href=["']([^"']*(?:attendance\.php\?sessid=\d+|take\.php\?sessid=\d+|\bsessid=\d+)[^"']*)["'][^>]*>([^<]*)/i);
+        if (!takeMatch) continue;
+
+        const rawTakeUrl = takeMatch[1].replace(/&amp;/g, '&');
+        let fullTakeUrl = rawTakeUrl;
+        if (fullTakeUrl.startsWith('attendance.php') || fullTakeUrl.startsWith('take.php')) {
+          fullTakeUrl = `https://spectrum.um.edu.my/mod/attendance/${fullTakeUrl}`;
+        } else if (fullTakeUrl.startsWith('/')) {
+          fullTakeUrl = `https://spectrum.um.edu.my${fullTakeUrl}`;
+        } else if (!fullTakeUrl.startsWith('http')) {
+          fullTakeUrl = `https://spectrum.um.edu.my/mod/attendance/${fullTakeUrl}`;
+        }
+        const sessidMatch = fullTakeUrl.match(/sessid=(\d+)/);
+        const sessid = sessidMatch ? sessidMatch[1] : '';
+
+        // Check OCC matching: if user specified an OCC and session/page has OCC labels
+        if (userOcc) {
+          const occMatch = attHtml.match(new RegExp(`\\bocc\\s*0*${userOcc}\\b`, 'i'));
+          const hasOtherOcc = attHtml.match(/\bocc\s*0*([1-9]\d*)\b/i);
+          if (hasOtherOcc && !occMatch) {
+            continue;
+          }
+        }
+
+        // Inspect the take attendance form
+        const formRes = await fetch(fullTakeUrl, { credentials: 'include' });
+        if (!formRes.ok || formRes.url.includes('/login/')) continue;
+        const formHtml = await formRes.text();
+
+        const sesskeyMatch = formHtml.match(/name="sesskey"\s+value="([^"]+)"/) || attHtml.match(/sesskey=([a-zA-Z0-9]+)/);
+        const sesskey = sesskeyMatch ? sesskeyMatch[1] : '';
+
+        // Extract only the attendance form HTML containing status radio options
+        let formSnippet = '';
+        const formMatches = formHtml.match(/<form[\s\S]*?<\/form>/gi) || [];
+        for (const f of formMatches) {
+          if (f.includes('name="status"') || f.includes('attendance.php') || f.includes('take.php')) {
+            formSnippet = f;
+            break;
+          }
+        }
+        if (!formSnippet && formMatches.length > 0) {
+          formSnippet = formMatches[0];
+        }
+
+        // A password/PIN input must exist INSIDE the attendance form itself, not in page navigation or login modals!
+        const hasPasswordInput = formSnippet
+          ? (/<input[^>]+(?:type=["']password["']|name=["'](?:studentpassword|password|qrpass)["'])/i.test(formSnippet))
+          : false;
+
+        // Find radio option for "Present"
+        let presentStatusId = '';
+        const targetHtml = formSnippet || formHtml;
+        const radioRegex = /<input[^>]+type="radio"[^>]+name="status"[^>]+value="(\d+)"[^>]*>([\s\S]*?)<\/label>/gi;
+        let rMatch;
+        while ((rMatch = radioRegex.exec(targetHtml)) !== null) {
+          const val = rMatch[1];
+          const label = rMatch[2];
+          if (/present|hadir/i.test(label) || !presentStatusId) {
+            presentStatusId = val;
+            if (/present|hadir/i.test(label)) break;
+          }
+        }
+        if (!presentStatusId) {
+          const rMatch = targetHtml.match(/<input[^>]+type="radio"[^>]+name="status"[^>]+value="(\d+)"/i);
+          if (rMatch) presentStatusId = rMatch[1];
+        }
+
+        return {
+          activeSession: {
+            takeUrl: fullTakeUrl,
+            sessid,
+            sesskey,
+            requiresPassword: hasPasswordInput,
+            presentStatusId
+          }
+        };
+      } catch (e) {}
+    }
+    return null;
+  }
+
+  // Fast-path: Check direct known links first!
+  if (attLinks.length > 0) {
+    const directResult = await inspectLinks(attLinks);
+    if (directResult) return directResult;
+  }
+
+  // Fallback: If no direct URLs known or not found on direct link, crawl course pages
   try {
     const ovUrl = `https://spectrum.um.edu.my/course/overview.php?id=${courseId}`;
     const ovRes = await fetch(ovUrl, { credentials: 'include' });
@@ -383,7 +627,6 @@ async function checkCourseAttendance(courseId, courseName, userOcc, hiddenAttend
     }
   } catch (e) {}
 
-  // Strategy 2: Check /mod/attendance/index.php?id=${courseId}
   try {
     const indexUrl = `https://spectrum.um.edu.my/mod/attendance/index.php?id=${courseId}`;
     const idxRes = await fetch(indexUrl, { credentials: 'include' });
@@ -397,20 +640,16 @@ async function checkCourseAttendance(courseId, courseName, userOcc, hiddenAttend
     }
   } catch (e) {}
 
-  // Strategy 3: Check course view page (sidelist & activity items)
   try {
     const courseUrl = `https://spectrum.um.edu.my/course/view.php?id=${courseId}`;
     const res = await fetch(courseUrl, { credentials: 'include' });
     if (res.ok && !res.url.includes('/login/')) {
       const html = await res.text();
-      
-      // Match sidelist anchors or items
       const sideRegex = /(?:class=["'][^"']*courseindex[^"']*["'][^>]*>[\s\S]*?)?href=["'](#(?:coursecontentcollapse|module-)\d+)["'][^>]*>(?:[\s\S]*?)(?:Attendance|Kehadiran|Kedatangan)/gi;
       let sMatch;
       while ((sMatch = sideRegex.exec(html)) !== null) {
         addBackgroundAttUrl(sMatch[1]);
       }
-
       const regex = /href=["']([^"']*(?:\/mod\/attendance\/(?:view|take)\.php\?id=\d+)[^"']*)["']/gi;
       let match;
       while ((match = regex.exec(html)) !== null) {
@@ -421,100 +660,7 @@ async function checkCourseAttendance(courseId, courseName, userOcc, hiddenAttend
 
   if (attLinks.length === 0) return null;
 
-  // Inspect each attendance link
-  for (const attUrl of attLinks) {
-    const fullAttUrl = attUrl.startsWith('http') ? attUrl : `https://spectrum.um.edu.my${attUrl}`;
-    const idMatch = fullAttUrl.match(/id=(\d+)/);
-    const cmid = idMatch ? idMatch[1] : '';
-    const attId = `att_${courseId}_${cmid}`;
-    if (hiddenAttendanceIds.includes(cmid) || hiddenAttendanceIds.includes(attId) || (idMatch && hiddenAttendanceIds.includes(idMatch[1]))) {
-      continue;
-    }
-    const attRes = await fetch(fullAttUrl, { credentials: 'include' });
-    const attHtml = await attRes.text();
-
-    // Check if there is an active "Submit attendance" link (matches attendance.php, take.php, or sessid= with both single and double quotes)
-    const takeMatch = attHtml.match(/href=["']([^"']*(?:attendance\.php\?sessid=\d+|take\.php\?sessid=\d+|\bsessid=\d+)[^"']*)["'][^>]*>([^<]*)/i);
-    if (!takeMatch) continue;
-
-    const rawTakeUrl = takeMatch[1].replace(/&amp;/g, '&');
-    let fullTakeUrl = rawTakeUrl;
-    if (fullTakeUrl.startsWith('attendance.php') || fullTakeUrl.startsWith('take.php')) {
-      fullTakeUrl = `https://spectrum.um.edu.my/mod/attendance/${fullTakeUrl}`;
-    } else if (fullTakeUrl.startsWith('/')) {
-      fullTakeUrl = `https://spectrum.um.edu.my${fullTakeUrl}`;
-    } else if (!fullTakeUrl.startsWith('http')) {
-      fullTakeUrl = `https://spectrum.um.edu.my/mod/attendance/${fullTakeUrl}`;
-    }
-    const sessidMatch = fullTakeUrl.match(/sessid=(\d+)/);
-    const sessid = sessidMatch ? sessidMatch[1] : '';
-
-    // Check OCC matching: if user specified an OCC and session/page has OCC labels
-    if (userOcc) {
-      const occMatch = attHtml.match(new RegExp(`\\bocc\\s*0*${userOcc}\\b`, 'i'));
-      const hasOtherOcc = attHtml.match(/\bocc\s*0*([1-9]\d*)\b/i);
-      // If course has other OCCs and doesn't match this user's OCC, skip
-      if (hasOtherOcc && !occMatch) {
-        continue;
-      }
-    }
-
-    // Inspect the take attendance form
-    const formRes = await fetch(fullTakeUrl, { credentials: 'include' });
-    const formHtml = await formRes.text();
-
-    const sesskeyMatch = formHtml.match(/name="sesskey"\s+value="([^"]+)"/) || attHtml.match(/sesskey=([a-zA-Z0-9]+)/);
-    const sesskey = sesskeyMatch ? sesskeyMatch[1] : '';
-
-    // Extract only the attendance form HTML containing status radio options
-    let formSnippet = '';
-    const formMatches = formHtml.match(/<form[\s\S]*?<\/form>/gi) || [];
-    for (const f of formMatches) {
-      if (f.includes('name="status"') || f.includes('attendance.php') || f.includes('take.php')) {
-        formSnippet = f;
-        break;
-      }
-    }
-    if (!formSnippet && formMatches.length > 0) {
-      formSnippet = formMatches[0];
-    }
-
-    // A password/PIN input must exist INSIDE the attendance form itself, not in page navigation or login modals!
-    const hasPasswordInput = formSnippet
-      ? (/<input[^>]+(?:type=["']password["']|name=["'](?:studentpassword|password|qrpass)["'])/i.test(formSnippet))
-      : false;
-
-    // Find radio option for "Present"
-    // Usually <input type="radio" name="status" value="123"> with label "Present" or "Hadir"
-    let presentStatusId = '';
-    const targetHtml = formSnippet || formHtml;
-    const radioRegex = /<input[^>]+type="radio"[^>]+name="status"[^>]+value="(\d+)"[^>]*>([\s\S]*?)<\/label>/gi;
-    let rMatch;
-    while ((rMatch = radioRegex.exec(targetHtml)) !== null) {
-      const val = rMatch[1];
-      const label = rMatch[2];
-      if (/present|hadir/i.test(label) || !presentStatusId) {
-        presentStatusId = val;
-        if (/present|hadir/i.test(label)) break;
-      }
-    }
-    if (!presentStatusId) {
-      const rMatch = targetHtml.match(/<input[^>]+type="radio"[^>]+name="status"[^>]+value="(\d+)"/i);
-      if (rMatch) presentStatusId = rMatch[1];
-    }
-
-    return {
-      activeSession: {
-        takeUrl: fullTakeUrl,
-        sessid,
-        sesskey,
-        requiresPassword: hasPasswordInput,
-        presentStatusId
-      }
-    };
-  }
-
-  return null;
+  return await inspectLinks(attLinks);
 }
 
 // Submit attendance

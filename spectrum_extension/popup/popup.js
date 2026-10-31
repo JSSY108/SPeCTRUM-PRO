@@ -1,6 +1,26 @@
 // SPeCTRUM Pro Popup Controller v2.0
 // Features: Activities Hub (Announcements, Assignments, Auto-Attendance), Timeline Visualizer, Group by Course, Course Materials Downloader (.ZIP)
 
+// Security & CSP Sanitizer: Strips scripts, inline event handlers, and javascript: navigations from fetched HTML
+function cleanHtmlForParser(rawHtml) {
+  if (!rawHtml || typeof rawHtml !== 'string') return '';
+  return rawHtml
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/\s+on[a-z0-9_-]+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, '')
+    .replace(/\bhref\s*=\s*['"]javascript:[^'"]*['"]/gi, 'href="#"')
+    .replace(/\bsrc\s*=\s*['"]javascript:[^'"]*['"]/gi, 'src=""');
+}
+
+if (typeof DOMParser !== 'undefined' && DOMParser.prototype && DOMParser.prototype.parseFromString) {
+  const originalParseFromString = DOMParser.prototype.parseFromString;
+  DOMParser.prototype.parseFromString = function(str, type) {
+    if (type === 'text/html' && typeof str === 'string') {
+      str = cleanHtmlForParser(str);
+    }
+    return originalParseFromString.call(this, str, type);
+  };
+}
+
 const diagLogs = [];
 function logDiag(category, msg, data = null) {
   const d = new Date();
@@ -536,11 +556,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const MINI_ICONS = {
     notice: `<svg class="icon-svg icon-notice" viewBox="0 0 24 24"><path d="M3 11l16-5v12L3 13v-2z"/><path d="M10 15v5"/></svg>`,
     assignment: `<svg class="icon-svg icon-assignment" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>`,
-    attendance: `<svg class="icon-svg icon-attendance" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 5-5"/></svg>`,
+    attendance: `<svg class="icon-svg icon-attendance" viewBox="0 0 24 24" fill="currentColor" stroke="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10.5" cy="6.7" r="4.7"/><path d="M 3.38 14.28 C 3.0 14.8 2.9 15.5 3.0 16.9 C 3.2 18.2 4.0 19.0 5.7 19.9 C 7.3 20.6 9.4 21.0 11.2 21.0 C 10.5 20.1 9.8 18.8 9.6 17.5 C 9.5 15.8 10.1 14.5 10.5 13.5 L 4.8 13.5 C 4.0 13.5 3.6 13.8 3.38 14.28 Z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M 15.8 11.5 A 5.3 5.3 0 0 1 15.8 22.1 A 5.3 5.3 0 0 1 15.8 11.5 Z M 19.19 14.84 L 19.14 15.04 L 18.73 15.50 L 15.04 19.14 L 14.74 19.19 L 14.53 19.08 L 12.43 16.94 L 12.49 16.48 L 12.74 16.27 L 13.10 16.27 L 14.79 17.91 L 14.89 17.91 L 18.27 14.48 L 18.57 14.33 L 18.88 14.38 L 19.08 14.58 Z"/></svg>`,
     lecture: `<svg class="icon-svg icon-attendance" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="13" rx="2"/><path d="M8 21h8"/><path d="M12 16v5"/><path d="m9 8 3-2 3 2"/></svg>`,
     tutorial: `<svg class="icon-svg icon-attendance" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>`,
     lab: `<svg class="icon-svg icon-attendance" viewBox="0 0 24 24"><path d="M10 2v7.5a2 2 0 0 1-.2.9L5 20.5A1 1 0 0 0 6 22h12a1 1 0 0 0 1-1.5l-4.8-10.1a2 2 0 0 1-.2-.9V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>`,
-    class: `<svg class="icon-svg icon-attendance" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 5-5"/></svg>`,
+    class: `<svg class="icon-svg icon-attendance" viewBox="0 0 24 24" fill="currentColor" stroke="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10.5" cy="6.7" r="4.7"/><path d="M 3.38 14.28 C 3.0 14.8 2.9 15.5 3.0 16.9 C 3.2 18.2 4.0 19.0 5.7 19.9 C 7.3 20.6 9.4 21.0 11.2 21.0 C 10.5 20.1 9.8 18.8 9.6 17.5 C 9.5 15.8 10.1 14.5 10.5 13.5 L 4.8 13.5 C 4.0 13.5 3.6 13.8 3.38 14.28 Z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M 15.8 11.5 A 5.3 5.3 0 0 1 15.8 22.1 A 5.3 5.3 0 0 1 15.8 11.5 Z M 19.19 14.84 L 19.14 15.04 L 18.73 15.50 L 15.04 19.14 L 14.74 19.19 L 14.53 19.08 L 12.43 16.94 L 12.49 16.48 L 12.74 16.27 L 13.10 16.27 L 14.79 17.91 L 14.89 17.91 L 18.27 14.48 L 18.57 14.33 L 18.88 14.38 L 19.08 14.58 Z"/></svg>`,
     user: `<svg class="icon-svg" viewBox="0 0 24 24" style="width:12px;height:12px;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
   };
 
@@ -910,54 +930,122 @@ document.addEventListener('DOMContentLoaded', async () => {
   let calCurrentMonth = (new Date()).getMonth();
   let calSelectedDateKey = formatDateKey(new Date());
 
-  // UM Academic Semester & Week Helper
+  // Dynamic UM Academic Semester & Week Engine
+  // Specification:
+  // - Month 9 - 3 (Sep to Mar of next year): SEM I
+  // - Month 4 - 7 (Apr to Jul): SEM II
+  // - Month 8 (Aug): SPECIAL SEM / Inter-Sem Break
+  function getAcademicMonday(year, monthIndex, position) {
+    if (position === 'last') {
+      const lastDay = new Date(year, monthIndex + 1, 0);
+      const dayOfWeek = lastDay.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+      const diffToMonday = (dayOfWeek + 6) % 7;
+      return new Date(year, monthIndex, lastDay.getDate() - diffToMonday);
+    } else {
+      const firstDay = new Date(year, monthIndex, 1);
+      const dayOfWeek = firstDay.getDay();
+      const diffToMonday = (8 - (dayOfWeek || 7)) % 7;
+      return new Date(year, monthIndex, 1 + diffToMonday);
+    }
+  }
+
   function getUmAcademicInfo(date = new Date()) {
-    const d = (date instanceof Date) ? date : new Date(date);
+    const d = (date instanceof Date && !isNaN(date.getTime())) ? date : new Date();
     const year = d.getFullYear();
     const month = d.getMonth() + 1; // 1-12
-    let semName, weekNum;
 
-    // UM Academic Calendar semester start dates (Monday of Week 1)
-    // SEM I typically starts last week of September / first week of October
-    // SEM II typically starts first week of March
-    // Adjust startDate below each year as needed for UM's published calendar.
-    const SEM_STARTS = [
-      // { sem: 'SEM I',    startYear: 2026, startDate: new Date(2026,  8, 28) }, // 28 Sep 2026 (Mon)
-      { sem: 'SEM I',    startYear: 2025, startDate: new Date(2025,  8, 29) }, // 29 Sep 2025 (Mon)
-      { sem: 'SEM II',   startYear: 2025, startDate: new Date(2025,  2,  3) }, // 3 Mar 2025 (Mon)
-      { sem: 'SEM I',    startYear: 2024, startDate: new Date(2024,  9,  7) }, // 7 Oct 2024 (Mon)
-      { sem: 'SEM II',   startYear: 2024, startDate: new Date(2024,  2,  4) }, // 4 Mar 2024 (Mon)
-    ];
+    let semType = 'SEM I';
+    let acYearStart = year;
+    let acYearEnd = year + 1;
+    let startDate = null;
 
-    // Find the most recent semester that started on or before today
-    let matched = null;
-    for (const entry of SEM_STARTS) {
-      if (d >= entry.startDate) {
-        matched = entry;
-        break;
-      }
+    if (month >= 9 && month <= 12) {
+      // Semester 1 (Autumn term of academic year: Sep - Dec)
+      semType = 'SEM I';
+      acYearStart = year;
+      acYearEnd = year + 1;
+      // Start of Sem 1: Last Monday of September
+      startDate = getAcademicMonday(acYearStart, 8, 'last');
+    } else if (month >= 1 && month <= 3) {
+      // Semester 1 (Winter/Spring term continuation into next year: Jan - Mar)
+      semType = 'SEM I';
+      acYearStart = year - 1;
+      acYearEnd = year;
+      // Start of Sem 1 was last Monday of September of the preceding year
+      startDate = getAcademicMonday(acYearStart, 8, 'last');
+    } else if (month >= 4 && month <= 7) {
+      // Semester 2 (Spring/Summer term: Apr - Jul)
+      semType = 'SEM II';
+      acYearStart = year - 1;
+      acYearEnd = year;
+      // Start of Sem 2: First Monday of April
+      startDate = getAcademicMonday(acYearEnd, 3, 'first');
+    } else {
+      // Month 8 (August): Special Term / Inter-Semester Break
+      semType = 'SPECIAL SEM';
+      acYearStart = year - 1;
+      acYearEnd = year;
+      // Start of Special Sem: First Monday of August
+      startDate = getAcademicMonday(acYearEnd, 7, 'first');
     }
 
-    if (matched) {
-      const msPerWeek = 7 * 24 * 3600 * 1000;
-      weekNum = Math.max(1, Math.min(16, Math.ceil((d.getTime() - matched.startDate.getTime()) / msPerWeek)));
-      const acYearEnd = matched.startYear + (matched.sem === 'SEM I' ? 1 : 0);
-      const acYearStart = matched.sem === 'SEM I' ? matched.startYear : matched.startYear - 1;
-      semName = `${matched.sem} · ${acYearStart}-${String(acYearEnd).slice(-2)}`;
+    const msPerWeek = 7 * 24 * 3600 * 1000;
+    let weekNum = 1;
+    if (d >= startDate) {
+      weekNum = Math.floor((d.getTime() - startDate.getTime()) / msPerWeek) + 1;
     } else {
-      // Fallback: special/inter-semester
-      semName = `INTER-SEM · ${year}`;
       weekNum = 1;
     }
 
-    const padWeek = String(weekNum).padStart(2, '0');
+    // Cap to realistic semester lengths (18 weeks for Sem 1/2, 8 weeks for Special Sem)
+    const maxWeeks = (semType === 'SPECIAL SEM') ? 8 : 18;
+    const clampedWeek = Math.max(1, Math.min(maxWeeks, weekNum));
+    const padWeek = String(clampedWeek).padStart(2, '0');
+
+    const acYearStr = `${acYearStart}-${String(acYearEnd).slice(-2)}`;
+    const semName = `${semType} · ${acYearStr}`;
+
     return {
       semName,
+      semType,
+      acYearStr,
       weekNum: padWeek,
-      weekPill: `${semName.split('·')[0].trim()} · WK ${padWeek}`,
+      weekPill: `${semType} · WK ${padWeek}`,
       clockStr: `${d.toISOString().slice(0, 10)} · WK ${padWeek}`,
       monthYearStr: d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase()
     };
+  }
+
+  function updateDateHeroHeader(targetDate) {
+    const d = (targetDate instanceof Date && !isNaN(targetDate.getTime())) ? targetDate : new Date();
+    const numeralEl = document.getElementById('cal-hero-numeral');
+    const dayEl = document.getElementById('cal-hero-day');
+    const subEl = document.getElementById('cal-hero-sub');
+    const todayBadge = document.getElementById('cal-hero-today-badge');
+    const calExpMainDate = document.getElementById('cal-exp-main-date');
+
+    const dayNum = d.getDate();
+    const weekdayName = d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+    const umInfo = getUmAcademicInfo(d);
+    const weekNum = parseInt(umInfo.weekNum, 10) || 1;
+
+    if (numeralEl) numeralEl.textContent = dayNum;
+    if (dayEl) dayEl.textContent = weekdayName;
+    if (subEl) subEl.textContent = `WEEK ${weekNum}`;
+
+    const todayKey = formatDateKey(new Date());
+    const currentKey = formatDateKey(d);
+    const isToday = currentKey === todayKey;
+
+    if (todayBadge) {
+      todayBadge.style.display = isToday ? 'inline-flex' : 'none';
+    }
+
+    if (calExpMainDate) {
+      const monStr = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+      const wdStr = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+      calExpMainDate.textContent = `${String(dayNum).padStart(2, '0')} ${monStr} ${d.getFullYear()} ${wdStr}`;
+    }
   }
 
   function updateFullTabHeader() {
@@ -988,7 +1076,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Surface Detection: Full-Tab Workspace vs Extension Popup
-  const isFullTab = window.location.search.includes('mode=full') || window.innerWidth >= 650;
+  function checkIsFullTab() {
+    // 1. Explicit query param (set whenever opening full tab from extension)
+    if (window.location.search.includes('mode=full')) return true;
+
+    // 2. Standalone desktop tab detection:
+    // Chromium extension popups are hard-capped by the browser to <= 800px width and <= 600px height.
+    // A regular desktop browser tab is significantly larger (e.g. >= 900px wide or > 620px tall).
+    if (window.innerWidth > 800 || window.innerHeight > 620) {
+      return true;
+    }
+
+    return false;
+  }
+
+  const isFullTab = checkIsFullTab();
   document.body.classList.toggle('is-full-tab', isFullTab);
   document.documentElement.classList.toggle('is-full-tab', isFullTab);
   if (isFullTab) window.scrollTo(0, 0);
@@ -1009,15 +1111,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   window.addEventListener('resize', () => {
-    const full = window.location.search.includes('mode=full') || window.innerWidth >= 650;
-    document.body.classList.toggle('is-full-tab', full);
-    document.documentElement.classList.toggle('is-full-tab', full);
-    if (full) window.scrollTo(0, 0);
-    updateFullTabHeader();
-    ensureTabsInCorrectSurface();
+    const full = checkIsFullTab();
+    const currentlyFull = document.body.classList.contains('is-full-tab');
+    if (currentlyFull !== full) {
+      document.body.classList.toggle('is-full-tab', full);
+      document.documentElement.classList.toggle('is-full-tab', full);
+      if (full) window.scrollTo(0, 0);
+      updateFullTabHeader();
+      ensureTabsInCorrectSurface();
+  const btnStatusFullTab = document.getElementById('btn-status-open-fulltab');
+  if (btnStatusFullTab) {
+    btnStatusFullTab.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (chrome && chrome.tabs && chrome.tabs.create) {
+        chrome.tabs.create({ url: chrome.runtime.getURL('popup/popup.html?mode=full') });
+      } else {
+        window.open(location.pathname + '?mode=full', '_blank');
+      }
+    });
+  }
+    }
   });
   updateFullTabHeader();
   ensureTabsInCorrectSurface();
+  const btnStatusFullTab = document.getElementById('btn-status-open-fulltab');
+  if (btnStatusFullTab) {
+    btnStatusFullTab.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (chrome && chrome.tabs && chrome.tabs.create) {
+        chrome.tabs.create({ url: chrome.runtime.getURL('popup/popup.html?mode=full') });
+      } else {
+        window.open(location.pathname + '?mode=full', '_blank');
+      }
+    });
+  }
 
   // 1. Full Tab & Close Button Handling
   if (btnOpenTab) {
@@ -1241,13 +1368,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       lastObservedDateKey = key;
 
-      // Trigger jumping bounce animation when date changes
+      // Date update without reflow thrashing
       const stickyCard = document.querySelector('#popup-sticky-date-box .sticky-date-card') || document.querySelector('.split-date-sticky-box .sticky-date-card');
-      if (stickyCard) {
-        stickyCard.classList.remove('animate-date-jump');
-        void stickyCard.offsetWidth; // force reflow
-        stickyCard.classList.add('animate-date-jump');
-      }
 
       const dayStr = String(d.getDate()).padStart(2, '0');
       const monStr = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
@@ -1259,10 +1381,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (weekdayEl) weekdayEl.textContent = wdStr;
       if (semweekEl) semweekEl.textContent = `SEM WK ${umInfo.weekNum}`;
 
-      // Keep expanded header in sync
-      if (calExpMainDate) {
-        calExpMainDate.textContent = `${dayStr} ${monStr} ${d.getFullYear()} ${wdStr}`;
-      }
+      // Keep expanded hero header in sync
+      updateDateHeroHeader(d);
       if (calExpSemweek) {
         calExpSemweek.textContent = `SEM WK ${String(umInfo.weekNum).padStart(2, '0')}`;
       }
@@ -1279,6 +1399,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateFromCard(card);
             break;
           }
+        }
+        if (typeof updateActiveSpineNode === 'function') {
+          updateActiveSpineNode();
         }
       }, { passive: true });
     }
@@ -1297,7 +1420,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (weekdayEl) weekdayEl.textContent = wdStr;
       const umInfo = getUmAcademicInfo(now);
       if (semweekEl) semweekEl.textContent = `SEM WK ${umInfo.weekNum}`;
-      if (calExpMainDate) calExpMainDate.textContent = `${dayStr} ${monStr} ${now.getFullYear()} ${wdStr}`;
+      updateDateHeroHeader(now);
       if (calExpSemweek) calExpSemweek.textContent = `SEM WK ${String(umInfo.weekNum).padStart(2, '0')}`;
     }
   }
@@ -1312,7 +1435,1608 @@ document.addEventListener('DOMContentLoaded', async () => {
   let isCalendarExpanded = false;        // collapsed vs expanded
   let activeDateFilter = null;           // null = show all, string = YYYY-MM-DD filter
 
+
+  // ── True Zero-Redundancy Course Controller & Monograms ──
+  let popupSidebarMode = 'calendar'; // 'calendar' | 'courses'
+  let selectedCourseFilterId = null;
+  let selectedCourseFilterCode = null;
+
+  function isActivityActive(type) {
+    const map = {
+      notice: 'dock-btn-notice',
+      tutorial: 'dock-btn-tutorial',
+      assignment: 'dock-btn-tutorial',
+      attendance: 'dock-btn-attendance'
+    };
+    const btn = document.getElementById(map[type]);
+    if (!btn) return true;
+    return btn.classList.contains('active');
+  }
+
+  function generateCourseAcronym(name, code) {
+    if (!name && !code) return 'CO';
+    let clean = (name || '').replace(/^[A-Z]{2,4}\d{4}(?:\/[A-Z]{2,4}\d{4})?\s*[-–:]*\s*/i, '').trim();
+    if (!clean) clean = code || '';
+    const cleanLower = clean.toLowerCase();
+    if (cleanLower.includes('database')) return 'DS';
+    if (cleanLower.includes('systems analysis') || cleanLower.includes('sad')) return 'SAD';
+    if (cleanLower.includes('mobile')) return 'MAD';
+    if (cleanLower.includes('machine learning')) return 'ML';
+    if (cleanLower.includes('project management') || cleanLower.includes('project mgmt')) return 'PM';
+    if (cleanLower.includes('thinking skills')) return 'TS';
+    if (cleanLower.includes('software engineering')) return 'SE';
+    if (cleanLower.includes('web application') || cleanLower.includes('web dev')) return 'WAD';
+    if (cleanLower.includes('data structure')) return 'DS';
+    if (cleanLower.includes('artificial intelligence') || cleanLower.includes('ai')) return 'AI';
+    if (cleanLower.includes('operating system')) return 'OS';
+    if (cleanLower.includes('computer network') || cleanLower.includes('networking')) return 'CN';
+    if (cleanLower.includes('computer architecture')) return 'CA';
+    if (cleanLower.includes('information security') || cleanLower.includes('cyber')) return 'IS';
+    if (cleanLower.includes('programming') || cleanLower.includes('problem solving')) return 'PS';
+
+    const stopWords = new Set(['and', 'or', 'the', 'of', 'to', 'in', 'for', 'with', 'dan', 'pada', 'untuk', '&', '-']);
+    const words = clean.split(/[\s\-_/]+/).filter(w => w.length > 0 && !stopWords.has(w.toLowerCase()));
+
+    if (words.length >= 2) {
+      return words.slice(0, 3).map(w => w[0].toUpperCase()).join('');
+    } else if (words.length === 1) {
+      const w = words[0];
+      if (w.length >= 2) return w.slice(0, 2).toUpperCase();
+      return w.toUpperCase();
+    }
+    return (code || 'CO').slice(0, 2).toUpperCase();
+  }
+
+  function formatRelativeCadence(dateInput, type = 'assignment') {
+    if (!dateInput) return '';
+    const d = (dateInput instanceof Date) ? dateInput : new Date(dateInput);
+    if (isNaN(d.getTime())) return String(dateInput);
+
+    const now = new Date();
+    const diffMs = d.getTime() - now.getTime();
+    const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+    const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const isToday = d.toDateString() === now.toDateString();
+
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const isTomorrow = d.toDateString() === tomorrow.toDateString();
+
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isYesterday = d.toDateString() === yesterday.toDateString();
+
+    if (type === 'notice') {
+      if (diffMs > 0 && diffMs < 3600000) return `${timeStr} (Just now)`;
+      if (diffHours >= -24 && diffHours < 0) {
+        const absH = Math.abs(diffHours);
+        return `${timeStr} (${absH}h ago)`;
+      }
+      if (isToday) return `${timeStr} (Today)`;
+      if (isYesterday) return `${timeStr} (Yesterday)`;
+      const day = d.getDate();
+      const mon = d.toLocaleDateString('en-US', { month: 'short' });
+      return `${day} ${mon} · ${Math.abs(diffDays)}d ago`;
+    }
+
+    if (type === 'attendance') {
+      const day = d.getDate();
+      const mon = d.toLocaleDateString('en-US', { month: 'short' });
+      const timeRange = (typeof dateInput === 'object' && dateInput.timeWindow) || timeStr;
+      if (isToday) return `TODAY ${timeRange}`;
+      return `${day} ${mon} ${timeRange}`;
+    }
+
+    // Default: Assignment / Quiz
+    if (diffMs < 0) {
+      const absD = Math.abs(diffDays);
+      if (absD === 0) return `OVERDUE (TODAY ${timeStr})`;
+      return `OVERDUE (${absD}D AGO)`;
+    }
+    if (isToday) {
+      if (diffHours <= 6 && diffHours > 0) return `DUE IN ${diffHours}H · ${timeStr} DEADLINE`;
+      return `DUE TODAY ${timeStr}`;
+    }
+    if (isTomorrow) return `DUE TOMORROW ${timeStr}`;
+    if (diffDays <= 7) return `DUE IN ${diffDays}D · ${timeStr}`;
+    const day = d.getDate();
+    const mon = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+    return `DUE ${day} ${mon} ${timeStr}`;
+  }
+
+  function getPopupCoursesList() {
+    const map = new Map();
+
+    const registerCourse = (cid, code, name, occ) => {
+      if (!cid) return null;
+      const key = String(cid);
+      if (!map.has(key)) {
+        const rawName = (name || '').replace(/[\r\n\t]+/g, ' ').replace(/^Course name\s*/i, '').trim();
+        const codeMatch = rawName.match(/\b([A-Z]{2,4}\d{4}(?:\s*[\/–-]\s*[A-Z]{2,4}\d{4})?)\b/);
+        const cCode = code || (codeMatch ? codeMatch[0] : 'COURSE');
+        const cleanName = (typeof cleanDisplayCourseName === 'function') ? cleanDisplayCourseName(rawName, cCode) : rawName;
+        map.set(key, {
+          courseId: key,
+          courseCode: cCode,
+          courseName: cleanName || rawName,
+          userOcc: occ || courseOccs[key] || defaultOcc || '',
+          lecturer: '',
+          annCount: 0,
+          taskCount: 0,
+          pendingCount: 0,
+          submittedCount: 0,
+          attCount: 0
+        });
+      }
+      return map.get(key);
+    };
+
+    // 1. Enrolled courses from coursesData
+    if (Array.isArray(coursesData)) {
+      coursesData.forEach(c => {
+        if (c && c.id) registerCourse(c.id, c.code, c.name, courseOccs[c.id]);
+      });
+    }
+
+    // 2. Discoveries
+    if (Array.isArray(allCoursesDiscovered)) {
+      allCoursesDiscovered.forEach(c => {
+        if (c && c.id) registerCourse(c.id, c.code, c.name, courseOccs[c.id]);
+      });
+    }
+
+    // 3. Scan announcementsData
+    announcementsData.forEach(ann => {
+      const cid = String(ann.courseId || 'general');
+      if (cid !== 'general') {
+        const item = registerCourse(cid, ann.courseCode, ann.courseName, null);
+        if (item) {
+          item.annCount++;
+          if (!item.lecturer && ann.author) item.lecturer = ann.author;
+        }
+      }
+    });
+
+    // 4. Scan assignmentsData
+    assignmentsData.forEach(assign => {
+      const cid = String(assign.courseId || 'general');
+      if (cid !== 'general') {
+        const item = registerCourse(cid, assign.courseCode, assign.courseName, null);
+        if (item) {
+          const matchesOcc = (typeof isAssignmentMatchingOcc === 'function') ? isAssignmentMatchingOcc(assign, item.userOcc) : true;
+          if (matchesOcc) {
+            item.taskCount++;
+            const isSubmitted = Boolean(assign.hasSubmitted || (assign.statusText && assign.statusText.toLowerCase().includes('submitted')));
+            if (isSubmitted) {
+              item.submittedCount++;
+            } else {
+              item.pendingCount++;
+            }
+          }
+        }
+      }
+    });
+
+    // 5. Scan attendancesData
+    attendancesData.forEach(att => {
+      if (typeof isAttendanceHidden === 'function' && isAttendanceHidden(att)) return;
+      const cid = String(att.courseId || 'general');
+      if (cid !== 'general') {
+        const item = registerCourse(cid, att.courseCode, att.courseName, att.userOcc);
+        if (item) {
+          item.attCount++;
+          if (!item.userOcc && att.userOcc) item.userOcc = att.userOcc;
+        }
+      }
+    });
+
+    return Array.from(map.values());
+  }
+
+  function isActivityForCourse(item, cInfo) {
+    if (!item || !cInfo) return false;
+
+    // 1. Strict numeric courseId match
+    if (cInfo.courseId && item.courseId && String(cInfo.courseId) !== 'general' && String(item.courseId) !== 'general') {
+      if (String(cInfo.courseId) === String(item.courseId)) return true;
+      // If both items have different valid course IDs, they belong to different courses!
+      return false;
+    }
+
+    // 2. Exact course code match (ignoring generic placeholder tokens like 'COURSE', 'ATT', 'GENERAL')
+    const genericCodes = new Set(['COURSE', 'ATT', 'GENERAL', 'ANNOUNCEMENT', 'ASSIGNMENT']);
+    if (cInfo.courseCode && item.courseCode) {
+      const cUpper = cInfo.courseCode.trim().toUpperCase();
+      const iUpper = item.courseCode.trim().toUpperCase();
+      if (!genericCodes.has(cUpper) && !genericCodes.has(iUpper)) {
+        if (cUpper === iUpper) return true;
+        const cParts = cUpper.split(/[\/\s,-]+/).map(s => s.trim()).filter(s => s.length >= 4 && !genericCodes.has(s));
+        const itemParts = iUpper.split(/[\/\s,-]+/).map(s => s.trim()).filter(s => s.length >= 4 && !genericCodes.has(s));
+        if (cParts.length > 0 && itemParts.length > 0 && cParts.some(cp => itemParts.includes(cp))) return true;
+      }
+    }
+
+    // 3. Fallback match by exact normalized course title (must not be empty or generic)
+    if (cInfo.courseName && item.courseName) {
+      const cNorm = cInfo.courseName.trim().toLowerCase();
+      const iNorm = item.courseName.trim().toLowerCase();
+      if (cNorm.length > 3 && cNorm === iNorm) return true;
+    }
+
+    return false;
+  }
+
+  // ── Unified Swiss Academic Editorial Assignment Card View Model (Variant B · Option 1) ──
+  function computeAssignmentCardViewModel(assign) {
+    const isSubmitted = Boolean(
+      assign.isSubmitted || 
+      assign.hasSubmitted || 
+      (assign.statusText && /submitted|dihantar/i.test(assign.statusText))
+    );
+
+    const rawD = assign.dueDate;
+    let d = (rawD instanceof Date) ? rawD : (rawD ? new Date(rawD) : null);
+    if (!d || isNaN(d.getTime())) {
+      if (typeof resolveAssignmentDate === 'function') {
+        d = resolveAssignmentDate(assign);
+      }
+    }
+
+    const now = new Date();
+    const hasValidDate = Boolean(d && !isNaN(d.getTime()));
+    const isOverdue = Boolean(!isSubmitted && (assign.isOverdue || (hasValidDate && d.getTime() < now.getTime())));
+
+    // 1. Unified Top Baseline: Course Code / Title · OCC
+    const code = (assign.courseCode || 'TASK').trim();
+    const rawName = (assign.courseName || '').trim();
+    const cleanName = (typeof cleanDisplayCourseName === 'function') ? cleanDisplayCourseName(rawName, code) : rawName;
+    const headerLeftText = cleanName 
+      ? `${code} / ${cleanName.toUpperCase()}`
+      : code;
+
+    const rawOcc = assign.userOcc || (assign.courseId && courseOccs[assign.courseId]) || defaultOcc || '';
+    let occFormatted = '';
+    if (rawOcc) {
+      const numMatch = String(rawOcc).match(/\d+/);
+      if (numMatch) {
+        occFormatted = `OCC-${String(parseInt(numMatch[0], 10)).padStart(2, '0')}`;
+      } else {
+        occFormatted = String(rawOcc).toUpperCase();
+      }
+    }
+
+    // 2. Assignment Title
+    const title = assign.title || assign.name || 'Assignment';
+
+    // 3. Unified Bottom Baseline (Indicator · Token · Timestamp · Inline 28px CTA)
+    let dotClass = 'dot-upcoming';
+    let tokenClass = 'token-upcoming';
+    let tokenText = 'UPCOMING';
+    let btnClass = 'btn-assign-normal';
+    let btnText = 'Submit →';
+
+    if (isSubmitted) {
+      dotClass = 'dot-submitted';
+      tokenClass = 'token-submitted';
+      tokenText = 'SUBMITTED';
+      btnClass = 'btn-assign-submitted';
+      btnText = 'View →';
+    } else if (isOverdue) {
+      dotClass = 'dot-overdue';
+      tokenClass = 'token-overdue';
+      let daysOverdue = 1;
+      if (hasValidDate) {
+        daysOverdue = Math.max(1, Math.round((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24)));
+      } else if (assign.timeRemaining) {
+        const m = String(assign.timeRemaining).match(/(\d+)\s*d/i);
+        if (m) daysOverdue = parseInt(m[1], 10);
+      }
+      tokenText = `OVERDUE ${daysOverdue}D`;
+      btnClass = 'btn-assign-overdue';
+      btnText = 'Submit Late →';
+    } else if (hasValidDate) {
+      const diffMs = d.getTime() - now.getTime();
+      const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffHours <= 2) {
+        tokenText = `DUE IN ${Math.max(1, diffHours)}H`;
+        dotClass = 'dot-overdue';
+        tokenClass = 'token-overdue';
+      } else if (diffHours <= 24) {
+        tokenText = 'DUE TODAY';
+        dotClass = 'dot-overdue';
+        tokenClass = 'token-overdue';
+      } else if (diffDays === 1) {
+        tokenText = 'DUE TOMORROW';
+      } else {
+        tokenText = `DUE IN ${diffDays}D`;
+      }
+    }
+
+    // Format timestamp (e.g., "Wed 28 Oct, 23:00")
+    let timestampText = '';
+    if (hasValidDate) {
+      const wd = d.toLocaleDateString('en-US', { weekday: 'short' });
+      const day = String(d.getDate()).padStart(2, '0');
+      const mon = d.toLocaleDateString('en-US', { month: 'short' });
+      const hours = String(d.getHours()).padStart(2, '0');
+      const mins = String(d.getMinutes()).padStart(2, '0');
+      timestampText = `${wd} ${day} ${mon}, ${hours}:${mins}`;
+    } else if (assign.dueDateStr) {
+      timestampText = assign.dueDateStr;
+    }
+
+    const submitUrl = assign.viewUrl || assign.url || 'https://spectrum.um.edu.my';
+    const dateKey = hasValidDate ? formatDateKey(d) : formatDateKey(now);
+    const rawId = assign.id || '';
+
+    let stateClass = '';
+    if (isSubmitted) stateClass = 'is-submitted';
+    else if (isOverdue) stateClass = 'is-overdue';
+
+    return {
+      rawId,
+      dateKey,
+      stateClass,
+      headerLeftText,
+      occFormatted,
+      title,
+      dotClass,
+      tokenClass,
+      tokenText,
+      timestampText,
+      btnClass,
+      btnText,
+      submitUrl
+    };
+  }
+
+  function renderUnifiedAssignmentCardHtml(vm) {
+    return `
+      <div class="spectrum-card card-assignment assignment-card scoped-card scoped-card-assignment ${vm.stateClass}" data-assign-id="${escapeHtml(vm.rawId)}" data-id="${escapeHtml(vm.rawId)}" data-date-key="${escapeHtml(vm.dateKey)}">
+        <div class="card-bounded-icon icon-box-assignment ${vm.stateClass}">
+          ${MINI_ICONS.assignment}
+        </div>
+        <div class="card-content-wrap">
+          <div class="assign-row-header">
+            <div class="assign-header-left" title="${escapeHtml(vm.headerLeftText)}">${escapeHtml(vm.headerLeftText)}</div>
+            ${vm.occFormatted ? `
+              <div class="assign-header-right">
+                <span class="assign-occ-pill">${escapeHtml(vm.occFormatted)}</span>
+              </div>
+            ` : ''}
+          </div>
+          <div class="assign-row-title">
+            <span class="assign-title-text" title="${escapeHtml(vm.title)}">${escapeHtml(vm.title)}</span>
+          </div>
+          <div class="assign-row-footer">
+            <div class="assign-footer-left">
+              <span class="assign-dot ${vm.dotClass}">●</span>
+              <span class="assign-token ${vm.tokenClass}">${escapeHtml(vm.tokenText)}</span>
+              ${vm.timestampText ? `
+                <span class="assign-footer-sep">·</span>
+                <span class="assign-timestamp">${escapeHtml(vm.timestampText)}</span>
+              ` : ''}
+            </div>
+            <div class="assign-footer-right">
+              <a href="${escapeHtml(vm.submitUrl)}" target="_blank" class="btn-assign-action ${vm.btnClass}" title="Open assignment submission in SPeCTRUM">
+                ${escapeHtml(vm.btnText)}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderScopedAssignmentCard(assign) {
+    const vm = computeAssignmentCardViewModel(assign);
+    return renderUnifiedAssignmentCardHtml(vm);
+  }
+
+  // ── Unified Swiss Academic Editorial Notice Card View Model ──
+  function computeNoticeCardViewModel(ann) {
+    if (!ann) return null;
+    if (!ann.id) {
+      const discId = ann.discussionId || (ann.discussUrl ? ((ann.discussUrl.match(/[?&]d=(\d+)/) || [])[1]) : '');
+      ann.id = `ann_${ann.courseId || 'c'}_${discId || (ann.timestamp || Math.random().toString(36).slice(2, 7))}`;
+    }
+
+    const d = ann.timestamp ? (ann.timestamp instanceof Date ? ann.timestamp : new Date(ann.timestamp)) : null;
+    const dateKey = (d && !isNaN(d.getTime())) ? formatDateKey(d) : formatDateKey(new Date());
+
+    // 1. Top Baseline: Course Code / Title on Left | Date on Right
+    const code = (ann.courseCode || 'NOTICE').trim();
+    const rawName = (ann.courseName || '').trim();
+    const cleanName = (typeof cleanDisplayCourseName === 'function') ? cleanDisplayCourseName(rawName, code) : rawName;
+    const headerLeftText = cleanName 
+      ? `${code} / ${cleanName.toUpperCase()}`
+      : code;
+
+    // Date: e.g. "17 OCT 2026"
+    let formattedDate = 'ANNOUNCEMENT';
+    if (d && !isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, '0');
+      const mon = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+      const year = d.getFullYear();
+      formattedDate = `${day} ${mon} ${year}`;
+    } else if (ann.dateStr) {
+      formattedDate = ann.dateStr.toUpperCase();
+    }
+
+    // 2. Title
+    const title = ann.title || 'Notice';
+
+    // 3. Bottom Baseline: Author on Left | Action on Right
+    let rawAuthor = ann.author || 'Course Lecturer';
+    if (typeof rawAuthor === 'string') {
+      rawAuthor = rawAuthor.split(/\r?\n/)[0].trim();
+      rawAuthor = rawAuthor.replace(/\s+\d{1,2}\s+[A-Za-z]{3,}\s+\d{4}.*$/, '');
+      rawAuthor = rawAuthor.replace(/[•·.\s]+$/, '').trim();
+    }
+    const author = rawAuthor || 'Course Lecturer';
+    const annId = String(ann.id);
+
+    return {
+      rawId: annId,
+      dateKey,
+      headerLeftText,
+      formattedDate,
+      title,
+      author
+    };
+  }
+
+  function renderUnifiedNoticeCardHtml(vm) {
+    if (!vm) return '';
+    return `
+      <div class="spectrum-card card-notice announcement-card scoped-card scoped-card-notice" data-ann-id="${escapeHtml(vm.rawId)}" data-date-key="${escapeHtml(vm.dateKey)}">
+        <div class="card-bounded-icon icon-box-notice">
+          ${MINI_ICONS.notice}
+        </div>
+        <div class="card-content-wrap">
+          <div class="notice-row-header">
+            <div class="notice-header-left" title="${escapeHtml(vm.headerLeftText)}">${escapeHtml(vm.headerLeftText)}</div>
+            <div class="notice-header-right">
+              <span class="notice-dot">●</span>
+              <span class="notice-date-text">${escapeHtml(vm.formattedDate)}</span>
+            </div>
+          </div>
+          <div class="notice-row-title">
+            <span class="notice-title-text" title="${escapeHtml(vm.title)}">${escapeHtml(vm.title)}</span>
+          </div>
+          <div class="notice-row-footer">
+            <div class="notice-footer-left">
+              <span class="notice-type-tag">NOTICE</span>
+              <span class="notice-sep">·</span>
+              <span class="notice-author" title="${escapeHtml(vm.author)}">${escapeHtml(vm.author)}</span>
+            </div>
+            <div class="notice-footer-right">
+              <button type="button" class="btn-notice-open btn-open-notice" data-ann-id="${escapeHtml(vm.rawId)}" title="Read Announcement in SPeCTRUM Pro">
+                Open Full →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderScopedNoticeCard(ann) {
+    const vm = computeNoticeCardViewModel(ann);
+    return renderUnifiedNoticeCardHtml(vm);
+  }
+
+  // Universal Helper: Robust Time Range and Single Time Parser
+  // Handles all Malaysian and international university time formats:
+  // e.g. "8.00AM - 10.00AM", "8:00 AM - 10:00 AM", "10:00 - 12:00", "2PM - 4PM", "14:00 - 16:00", "9:00 AM"
+  function parseTimeRangeRobust(str) {
+    if (!str) return null;
+    const s = String(str).trim();
+
+    // 1. AM/PM Range: e.g. "8:00AM - 10:00AM", "8.00AM - 10.00AM", "8.00 AM - 10.00 AM", "2PM - 4PM", "2:00 PM - 4:00 PM"
+    const ampmRange = s.match(/(\d{1,2})(?:[:.](\d{2}))?\s*(AM|PM)?\s*(?:[-–—~]|to)\s*(\d{1,2})(?:[:.](\d{2}))?\s*(AM|PM)/i);
+    if (ampmRange) {
+      let sh = parseInt(ampmRange[1], 10);
+      let sm = parseInt(ampmRange[2] || '0', 10);
+      let sAmpm = (ampmRange[3] || '').toUpperCase();
+      let eh = parseInt(ampmRange[4], 10);
+      let em = parseInt(ampmRange[5] || '0', 10);
+      let eAmpm = (ampmRange[6] || '').toUpperCase();
+
+      if (!sAmpm && eAmpm) {
+        sAmpm = (sh <= eh) ? eAmpm : (eAmpm === 'PM' ? 'AM' : 'PM');
+      }
+
+      if (sAmpm === 'PM' && sh < 12) sh += 12;
+      if (sAmpm === 'AM' && sh === 12) sh = 0;
+      if (eAmpm === 'PM' && eh < 12) eh += 12;
+      if (eAmpm === 'AM' && eh === 12) eh = 0;
+
+      const pad = n => String(n).padStart(2, '0');
+      return {
+        formatted: `${pad(sh)}:${pad(sm)} — ${pad(eh)}:${pad(em)}`,
+        startHour: sh,
+        startMin: sm,
+        endHour: eh,
+        endMin: em
+      };
+    }
+
+    // 2. 24-hour range: e.g. "14:00 - 16:00", "14.00 - 16.00", "08:30 - 10:30", "08.30 - 10.30"
+    const range24 = s.match(/(\d{1,2})[:.](\d{2})\s*(?:[-–—~]|to)\s*(\d{1,2})[:.](\d{2})/);
+    if (range24) {
+      let sh = parseInt(range24[1], 10);
+      let sm = parseInt(range24[2], 10);
+      let eh = parseInt(range24[3], 10);
+      let em = parseInt(range24[4], 10);
+
+      const pad = n => String(n).padStart(2, '0');
+      return {
+        formatted: `${pad(sh)}:${pad(sm)} — ${pad(eh)}:${pad(em)}`,
+        startHour: sh,
+        startMin: sm,
+        endHour: eh,
+        endMin: em
+      };
+    }
+
+    // 3. Single time: "8:00 AM", "8.00 AM", "2:00 PM", "2 PM", "14:00", "08:30"
+    const singleMatch = s.match(/(\d{1,2})(?:[:.](\d{2}))?\s*(AM|PM)/i) ||
+                        s.match(/\b(\d{1,2})[:.](\d{2})\b/);
+    if (singleMatch) {
+      let sh = parseInt(singleMatch[1], 10);
+      let sm = parseInt(singleMatch[2] || '0', 10);
+      let ampm = (singleMatch[3] || '').toUpperCase();
+
+      if (ampm === 'PM' && sh < 12) sh += 12;
+      if (ampm === 'AM' && sh === 12) sh = 0;
+
+      let eh = (sh + 2) % 24;
+      let em = sm;
+
+      const pad = n => String(n).padStart(2, '0');
+      return {
+        formatted: `${pad(sh)}:${pad(sm)} — ${pad(eh)}:${pad(em)}`,
+        startHour: sh,
+        startMin: sm,
+        endHour: eh,
+        endMin: em
+      };
+    }
+
+    return null;
+  }
+
+  // ── Unified Horizontal Compact Attendance Card View Model (~4:1 Ratio) ──
+  function computeAttendanceCardViewModel(att, sessionData = {}) {
+    const now = new Date();
+    const todayKey = formatDateKey(now);
+    const targetDateKey = sessionData.dateKey || (typeof activeDateFilter !== 'undefined' && activeDateFilter ? activeDateFilter : todayKey);
+
+    // 1. Resolve matching session for this card
+    const matchedSession = Array.isArray(att.sessions)
+      ? (att.sessions.find(s => s.dateKey === targetDateKey) || 
+         (targetDateKey === todayKey ? att.sessions.find(s => s.isToday) : null))
+      : null;
+
+    const session = sessionData.session || matchedSession || att.activeSession || att.nextSession || null;
+    const isLive = Boolean(sessionData.isLive || (att.activeSession && (targetDateKey === todayKey)));
+    const isVerified = Boolean(
+      sessionData.isVerified || 
+      (session && (session.isPresent || session.statusType === 'present' || session.statusType === 'submitted')) ||
+      att.isAttended || 
+      att.status === 'Present' || 
+      att.lastRecordedStatus === 'Present'
+    );
+
+    const crs = (typeof courses !== 'undefined' && Array.isArray(courses))
+      ? courses.find(c => String(c.courseId) === String(att.courseId) || c.courseCode === att.courseCode)
+      : null;
+
+    // 2. Multi-source Time Parsing (Course info, Moodle session, activity title)
+    const candidateTimeSources = [
+      sessionData.timeStr,
+      session?.time,
+      session?.dateStr,
+      session?.desc,
+      sessionData.desc,
+      crs?.time,
+      crs?.schedule,
+      crs?.timetable,
+      att.activeSession?.time,
+      att.activeSession?.desc,
+      att.nextSession?.time,
+      att.nextSession?.dateStr,
+      att.nextSession?.desc,
+      att.attTitle,
+      att.courseName
+    ];
+
+    let parsedTime = null;
+    for (const src of candidateTimeSources) {
+      if (src && typeof src === 'string') {
+        parsedTime = parseTimeRangeRobust(src);
+        if (parsedTime) break;
+      }
+    }
+
+    // Secondary scan across any session in att.sessions if this course has a consistent class time
+    if (!parsedTime && Array.isArray(att.sessions)) {
+      for (const s of att.sessions) {
+        if (s.time || s.dateStr || s.desc) {
+          parsedTime = parseTimeRangeRobust(s.time || s.dateStr || s.desc);
+          if (parsedTime) break;
+        }
+      }
+    }
+
+    // Default time fallback (only if no times found across all sources)
+    const startHour = parsedTime ? parsedTime.startHour : 14;
+    const startMin = parsedTime ? parsedTime.startMin : 0;
+    const endHour = parsedTime ? parsedTime.endHour : 16;
+    const endMin = parsedTime ? parsedTime.endMin : 0;
+    const timeRangeStr = parsedTime ? parsedTime.formatted : '14:00 — 16:00';
+
+    // 3. Date, Elapsed & Window Status Calculation
+    const targetDate = sessionData.date 
+      ? (sessionData.date instanceof Date ? sessionData.date : new Date(sessionData.date)) 
+      : (session?.date instanceof Date ? session.date : (targetDateKey ? new Date(targetDateKey + 'T00:00:00') : new Date()));
+
+    const targetDayZero = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+    const nowDayZero = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dayDiff = Math.round((nowDayZero.getTime() - targetDayZero.getTime()) / (24 * 3600 * 1000));
+
+    const startMs = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), startHour, startMin).getTime();
+    const endMs = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), endHour, endMin).getTime();
+    const totalDurationMs = Math.max(1, endMs - startMs);
+
+    let progressPct = 0;
+    let minsLeft = 0;
+    let isEnded = false;
+    let isFuture = false;
+    let endedMins = 0;
+
+    if (now.getTime() < startMs) {
+      progressPct = 0;
+      isFuture = true;
+    } else if (now.getTime() >= startMs && now.getTime() <= endMs) {
+      progressPct = Math.min(100, Math.max(8, Math.round(((now.getTime() - startMs) / totalDurationMs) * 100)));
+      minsLeft = Math.max(1, Math.round((endMs - now.getTime()) / 60000));
+    } else {
+      progressPct = 100;
+      isEnded = true;
+      endedMins = Math.round((now.getTime() - endMs) / 60000);
+    }
+
+    if (isLive) {
+      isEnded = false;
+      isFuture = false;
+      if (progressPct === 0) progressPct = 30;
+      if (progressPct >= 100) progressPct = 85;
+      if (minsLeft <= 0) minsLeft = 14;
+    }
+
+    // 4. Course & OCC
+    const code = att.courseCode || sessionData.courseCode || 'COURSE';
+    const rawName = att.courseName || sessionData.courseName || code;
+    const cleanName = (typeof cleanDisplayCourseName === 'function') ? cleanDisplayCourseName(rawName, code) : rawName;
+    const occRaw = att.userOcc || sessionData.userOcc || courseOccs[att.courseId || sessionData.cid] || defaultOcc || '01';
+    const occNum = String(occRaw).replace(/^occ\s*/i, '').trim();
+
+    // 5. Action / Status Routing
+    const rawAttId = att.id || sessionData.cardId || '';
+    const cid = att.courseId || sessionData.cid || '';
+    const takeUrl = sessionData.takeUrl || att.activeSession?.takeUrl || att.attUrl || 'https://spectrum.um.edu.my';
+    const sesskey = sessionData.sesskey || att.activeSession?.sesskey || '';
+    const statusId = sessionData.statusId || att.activeSession?.presentStatusId || '';
+    const subType = sessionData.subType || att.subType || '';
+    const requiresPassword = Boolean(sessionData.requiresPassword || att.activeSession?.requiresPassword || session?.requiresPassword);
+
+    let stateClass = '';
+    let statusPillHtml = '';
+    let stateBadgeHtml = '';
+    let windowSubHtml = '';
+    let actionBtnHtml = '';
+
+    const pad = n => String(n).padStart(2, '0');
+
+    if (isLive) {
+      stateClass = 'state-open';
+      if (minsLeft > 0 && minsLeft <= 30) {
+        statusPillHtml = `<span class="att-urgent-pill">${minsLeft}M LEFT</span>`;
+      } else {
+        statusPillHtml = `<span class="att-status-pill pill-active">WINDOW ACTIVE</span>`;
+      }
+
+      if (requiresPassword) {
+        stateBadgeHtml = `<span class="att-state-badge state-password">🔒 PASSWORD</span>`;
+        actionBtnHtml = `
+          <button type="button" class="btn-att-action btn-att-black att-btn-pin"
+            data-att-id="${escapeHtml(rawAttId)}"
+            data-card-id="${escapeHtml(rawAttId)}"
+            data-course-id="${escapeHtml(cid)}"
+            data-take-url="${escapeHtml(takeUrl)}"
+            data-sesskey="${escapeHtml(sesskey)}"
+            data-status-id="${escapeHtml(statusId)}"
+            data-sub-type="${escapeHtml(subType)}"
+            data-course-code="${escapeHtml(code)}"
+            data-course-name="${escapeHtml(rawName)}"
+            title="Enter Attendance PIN">
+            🔑 Enter PIN
+          </button>
+        `;
+      } else {
+        stateBadgeHtml = `<span class="att-state-badge state-open"><span class="dot-green">●</span> OPEN</span>`;
+        actionBtnHtml = `
+          <button type="button" class="btn-att-action btn-att-black att-btn-direct-take"
+            data-att-id="${escapeHtml(rawAttId)}"
+            data-card-id="${escapeHtml(rawAttId)}"
+            data-course-id="${escapeHtml(cid)}"
+            data-att-url="${escapeHtml(takeUrl)}"
+            data-sesskey="${escapeHtml(sesskey)}"
+            data-status-id="${escapeHtml(statusId)}"
+            data-sub-type="${escapeHtml(subType)}"
+            data-course-code="${escapeHtml(code)}"
+            data-course-name="${escapeHtml(rawName)}"
+            title="Take attendance directly in SPeCTRUM Pro">
+            ⚡ Take Attendance
+          </button>
+        `;
+      }
+    } else if (isVerified) {
+      stateClass = 'state-recorded';
+      statusPillHtml = `<span class="att-status-pill pill-recorded">RECORDED</span>`;
+      stateBadgeHtml = '';
+      windowSubHtml = `<span class="att-window-sub">Attended ✓</span>`;
+      actionBtnHtml = `<span class="btn-att-action btn-att-present">✓ Present</span>`;
+    } else if (isEnded) {
+      stateClass = 'state-ended';
+      statusPillHtml = `<span class="att-status-pill">ENDED</span>`;
+      stateBadgeHtml = `<span class="att-state-badge state-locked">LOCKED</span>`;
+
+      let endedLabel = 'Session ended';
+      if (dayDiff > 0) {
+        // Session was on a past day
+        endedLabel = (dayDiff === 1) ? 'Closed · 1d ago' : `Closed · ${dayDiff}d ago`;
+      } else if (endedMins > 0) {
+        // Session ended earlier today
+        if (endedMins < 60) {
+          endedLabel = `Ended ${endedMins}m ago`;
+        } else {
+          const hrs = Math.round(endedMins / 60);
+          endedLabel = `Ended ${hrs}h ago`;
+        }
+      }
+      windowSubHtml = `<span class="att-window-sub">${endedLabel}</span>`;
+      actionBtnHtml = `<a href="${escapeHtml(takeUrl)}" target="_blank" class="btn-att-action btn-att-faint" title="Open attendance in SPeCTRUM">Check Portal ↗</a>`;
+    } else if (isFuture) {
+      stateClass = '';
+      statusPillHtml = `<span class="att-status-pill">SCHEDULED</span>`;
+      stateBadgeHtml = `<span class="att-state-badge state-locked">SCHEDULED</span>`;
+      let upcomingLabel = `Opens at ${pad(startHour)}:${pad(startMin)}`;
+      if (dayDiff < 0) {
+        const absDays = Math.abs(dayDiff);
+        upcomingLabel = (absDays === 1) 
+          ? `Tomorrow · ${pad(startHour)}:${pad(startMin)}` 
+          : `In ${absDays}d · ${pad(startHour)}:${pad(startMin)}`;
+      }
+      windowSubHtml = `<span class="att-window-sub">${upcomingLabel}</span>`;
+      actionBtnHtml = `<a href="${escapeHtml(takeUrl)}" target="_blank" class="btn-att-action btn-att-wireframe" title="Open attendance in SPeCTRUM">Open SPeCTRUM ↗</a>`;
+    }
+
+    return {
+      stateClass,
+      timeRangeStr,
+      statusPillHtml,
+      stateBadgeHtml,
+      code,
+      cleanName,
+      occNum,
+      windowSubHtml,
+      progressPct,
+      actionBtnHtml,
+      rawAttId,
+      cid,
+      dateKey: targetDateKey
+    };
+  }
+
+  function renderUnifiedAttendanceCardHtml(vm) {
+    return `
+      <div class="spectrum-card card-attendance attendance-card ${vm.stateClass}" id="att-card-${escapeHtml(vm.rawAttId)}" data-att-id="${escapeHtml(vm.rawAttId)}" data-course-id="${escapeHtml(vm.cid)}" data-date-key="${escapeHtml(vm.dateKey)}">
+        <div class="card-bounded-icon icon-box-attendance">
+          ${MINI_ICONS.attendance}
+        </div>
+        <div class="card-content-wrap">
+          <div class="att-row-header">
+            <div class="att-header-left">
+              <span class="att-code-pill">${escapeHtml(vm.code)}</span>
+              <span class="att-header-sep">/</span>
+              <span class="att-course-title" title="${escapeHtml(vm.cleanName)}">${escapeHtml(vm.cleanName)}</span>
+            </div>
+            <div class="att-header-right">
+              ${vm.stateBadgeHtml}
+              <span class="att-occ-tag">OCC ${escapeHtml(vm.occNum)}</span>
+            </div>
+          </div>
+          <div class="att-row-hero">
+            <div class="att-hero-left">
+              <span class="att-time-hero">${escapeHtml(vm.timeRangeStr)}</span>
+              ${vm.statusPillHtml}
+            </div>
+          </div>
+          <div class="att-row-action">
+            <div class="att-progress-section">
+              <div class="att-progress-header">
+                <span class="att-window-label">Check-In Window</span>
+                ${vm.windowSubHtml}
+              </div>
+              <div class="att-progress-track">
+                <div class="att-progress-fill" style="width: ${vm.progressPct}%;"></div>
+              </div>
+            </div>
+            <div class="att-action-wrap">
+              ${vm.actionBtnHtml}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderScopedAttendanceCard(data) {
+    const att = data.att || data;
+    const vm = computeAttendanceCardViewModel(att, data);
+    return renderUnifiedAttendanceCardHtml(vm);
+  }
+
+  function updateActiveSpineNode() {
+    // Collect all visible date groups across feeds
+    const groups = Array.from(document.querySelectorAll('.spine-date-group')).filter(g => g.offsetParent !== null);
+    if (!groups.length) return;
+
+    const stream = document.getElementById('popup-cards-stream') || document.querySelector('.split-cards-stream');
+    const streamRect = stream ? stream.getBoundingClientRect() : { top: 0, height: window.innerHeight };
+    const focalLine = streamRect.top + 70;
+
+    let activeGroup = null;
+    for (const g of groups) {
+      const r = g.getBoundingClientRect();
+      if (r.bottom >= focalLine) {
+        activeGroup = g;
+        break;
+      }
+    }
+
+    if (stream && (stream.scrollTop + stream.clientHeight >= stream.scrollHeight - 15)) {
+      activeGroup = groups[groups.length - 1];
+    }
+
+    if (!activeGroup && groups.length > 0) {
+      activeGroup = groups[0];
+    }
+
+    groups.forEach(g => {
+      const isActive = (g === activeGroup);
+      g.classList.toggle('is-active', isActive);
+      const dot = g.querySelector('.spine-node-dot');
+      if (dot) dot.classList.toggle('is-active', isActive);
+    });
+  }
+
+  function renderByCourseScopedFeed() {
+    const feedEl = document.getElementById('bycourse-activities-feed');
+    if (!feedEl) return;
+
+    const courses = getPopupCoursesList();
+    let cInfo = courses.find(c => 
+      (selectedCourseFilterId && String(c.courseId) === String(selectedCourseFilterId)) ||
+      (selectedCourseFilterCode && c.courseCode === selectedCourseFilterCode)
+    );
+
+    // If no course selected, pick the first course by default
+    if (!cInfo && courses.length > 0) {
+      cInfo = courses[0];
+      selectedCourseFilterId = cInfo.courseId;
+      selectedCourseFilterCode = cInfo.courseCode;
+      renderPopupMonograms();
+    }
+
+    const scopeBar = document.getElementById('popup-focused-scope-bar');
+    const scopeCode = document.getElementById('popup-focused-scope-code');
+    const scopeOcc = document.getElementById('popup-focused-scope-occ');
+    const scopeCount = document.getElementById('popup-focused-scope-count');
+    const scopeName = document.getElementById('popup-focused-scope-name');
+    const scopeInstructor = document.getElementById('popup-focused-scope-instructor');
+
+    if (!cInfo) {
+      if (scopeBar) scopeBar.style.display = 'none';
+      feedEl.innerHTML = `<div style="text-align:center;padding:30px 10px;color:var(--text-muted);font-size:12px;">No courses available</div>`;
+      feedEl.style.display = 'flex';
+      return;
+    }
+
+    if (scopeBar) scopeBar.style.display = 'flex';
+    if (scopeCode) scopeCode.textContent = cInfo.courseCode;
+    let occClean = cInfo.userOcc ? String(cInfo.userOcc).replace(/^occ\s*/i, '').trim() : '';
+    if (scopeOcc) {
+      scopeOcc.textContent = occClean ? `OCC ${occClean}` : '';
+      scopeOcc.style.display = occClean ? 'inline-block' : 'none';
+    }
+    if (scopeName) scopeName.textContent = cInfo.courseName;
+    if (scopeInstructor) {
+      scopeInstructor.textContent = cInfo.lecturer || 'Course Instructor · Faculty of Computer Science & IT';
+    }
+
+    // Gather activities for this course
+    const showNotice = isActivityActive('notice');
+    const showTasks = isActivityActive('tutorial');
+    const showAtt = isActivityActive('attendance');
+
+    const matchedAnns = showNotice ? announcementsData.filter(a => isActivityForCourse(a, cInfo)) : [];
+    const matchedAssigns = showTasks ? assignmentsData.filter(a => {
+      if (!isActivityForCourse(a, cInfo)) return false;
+      return (typeof isAssignmentMatchingOcc === 'function') ? isAssignmentMatchingOcc(a, cInfo.userOcc) : true;
+    }) : [];
+    const matchedAtt = showAtt ? attendancesData.filter(a => {
+      if (typeof isAttendanceHidden === 'function' && isAttendanceHidden(a)) return false;
+      return isActivityForCourse(a, cInfo);
+    }) : [];
+
+    // Build unified chronological timeline events
+    const todayKey = formatDateKey(new Date());
+    const nowZero = new Date();
+    nowZero.setHours(0, 0, 0, 0);
+    const nowTime = nowZero.getTime();
+    const allEvents = [];
+
+    // 1. Assignments
+    matchedAssigns.forEach(assign => {
+      let d = assign.dueDate ? (assign.dueDate instanceof Date ? assign.dueDate : new Date(assign.dueDate)) : null;
+      if (!d || isNaN(d.getTime())) d = new Date();
+      allEvents.push({
+        type: 'assignment',
+        date: d,
+        dateKey: formatDateKey(d),
+        data: assign
+      });
+    });
+
+    // 2. Attendance (Active session + scheduled/past sessions from att.sessions)
+    matchedAtt.forEach(att => {
+      const typeInfo = getAttendanceTypeInfo(att, att.attTitle || '');
+      let sessionsAdded = 0;
+
+      // Active live session right now
+      if (att.activeSession) {
+        allEvents.push({
+          type: 'attendance',
+          date: new Date(),
+          dateKey: todayKey,
+          data: {
+            att,
+            isLive: true,
+            title: cleanSessionDesc(att.activeSession.desc || att.attTitle || 'Active Class Session', typeInfo.label),
+            timeStr: extractOnlyTime(att.activeSession.time || '') || 'Active Now',
+            isVerified: false,
+            statusLabel: att.activeSession.requiresPassword ? '🔑 PIN Required' : '🟢 Active Session',
+            takeUrl: att.activeSession.takeUrl || att.attUrl,
+            requiresPassword: att.activeSession.requiresPassword,
+            sesskey: att.activeSession.sesskey,
+            statusId: att.activeSession.presentStatusId,
+            subType: att.subType || ''
+          }
+        });
+        sessionsAdded++;
+      }
+
+      // Past & upcoming sessions parsed from Moodle
+      if (Array.isArray(att.sessions) && att.sessions.length > 0) {
+        att.sessions.forEach(sess => {
+          if (sess.isToday && att.activeSession) return; // avoid duplicate with activeSession
+
+          const rawD = sess.date;
+          const d = (rawD instanceof Date && !isNaN(rawD.getTime()))
+            ? rawD
+            : (rawD && !isNaN(new Date(rawD).getTime()) ? new Date(rawD) : (sess.dateKey ? new Date(sess.dateKey + 'T12:00:00') : null));
+
+          if (d && !isNaN(d.getTime())) {
+            const sessTypeInfo = getAttendanceTypeInfo(att, sess.desc || '');
+            const sessTitle = cleanSessionDesc(sess.desc || att.attTitle || 'Class Session', sessTypeInfo.label);
+            const onlyTime = extractOnlyTime(sess.dateStr || '') || (sess.time || 'Class Time');
+
+            allEvents.push({
+              type: 'attendance',
+              date: d,
+              dateKey: sess.dateKey || formatDateKey(d),
+              data: {
+                att,
+                isLive: false,
+                session: sess,
+                title: sessTitle,
+                timeStr: onlyTime,
+                isVerified: Boolean(sess.isPresent || sess.statusType === 'present'),
+                statusType: sess.statusType,
+                statusLabel: sess.statusLabel || (sess.isPresent ? 'Verified 100% ✓' : (sess.isFuture ? 'Scheduled' : 'Past Session')),
+                takeUrl: att.attUrl,
+                subType: att.subType || ''
+              }
+            });
+            sessionsAdded++;
+          }
+        });
+      } else if (att.nextSession && sessionsAdded === 0) {
+        const nextSess = att.nextSession;
+        const rawD = nextSess.date;
+        const d = (rawD instanceof Date && !isNaN(rawD.getTime()))
+          ? rawD
+          : (rawD && !isNaN(new Date(rawD).getTime()) ? new Date(rawD) : (nextSess.dateKey ? new Date(nextSess.dateKey + 'T12:00:00') : null));
+
+        if (d && !isNaN(d.getTime())) {
+          const sessTypeInfo = getAttendanceTypeInfo(att, nextSess.desc || '');
+          const sessTitle = cleanSessionDesc(nextSess.desc || att.attTitle || 'Class Session', sessTypeInfo.label);
+          const onlyTime = extractOnlyTime(nextSess.time || nextSess.dateStr || '') || 'Class Time';
+
+          allEvents.push({
+            type: 'attendance',
+            date: d,
+            dateKey: nextSess.dateKey || formatDateKey(d),
+            data: {
+              att,
+              isLive: false,
+              session: nextSess,
+              title: sessTitle,
+              timeStr: onlyTime,
+              isVerified: false,
+              statusType: 'scheduled',
+              statusLabel: 'Scheduled',
+              takeUrl: att.attUrl,
+              subType: att.subType || ''
+            }
+          });
+          sessionsAdded++;
+        }
+      }
+    });
+
+    // 3. Announcements
+    matchedAnns.forEach(ann => {
+      let d = ann.timestamp ? (ann.timestamp instanceof Date ? ann.timestamp : new Date(ann.timestamp)) : null;
+      if (!d || isNaN(d.getTime())) d = new Date();
+      allEvents.push({
+        type: 'notice',
+        date: d,
+        dateKey: formatDateKey(d),
+        data: ann
+      });
+    });
+
+    if (scopeCount) {
+      scopeCount.style.display = 'none';
+    }
+
+    if (allEvents.length === 0) {
+      feedEl.innerHTML = `
+        <div style="text-align:center;padding:36px 12px;color:var(--text-muted);">
+          <p style="font-size:13px;font-weight:600;margin-bottom:4px;">No activities matching this course</p>
+          <p style="font-size:11px;">Check your filter settings or sync SPeCTRUM.</p>
+        </div>
+      `;
+      feedEl.style.display = 'flex';
+      return;
+    }
+
+    // Group events by dateKey
+    const groupsMap = new Map();
+
+    allEvents.forEach(ev => {
+      if (!groupsMap.has(ev.dateKey)) {
+        groupsMap.set(ev.dateKey, {
+          dateKey: ev.dateKey,
+          date: ev.date,
+          events: []
+        });
+      }
+      groupsMap.get(ev.dateKey).events.push(ev);
+    });
+
+    // Chronological spine sort:
+    // 1. TODAY group first (if any)
+    // 2. Upcoming dates: sorted ASCENDING (nearest upcoming deadline/session first, e.g. 03 Nov then 27 Nov)
+    // 3. Past dates: sorted DESCENDING (most recent past first, e.g. 28 Oct then 14 Oct)
+    const groups = Array.from(groupsMap.values()).sort((a, b) => {
+      const aIsToday = (a.dateKey === todayKey);
+      const bIsToday = (b.dateKey === todayKey);
+      if (aIsToday) return -1;
+      if (bIsToday) return 1;
+
+      const aTime = a.date.getTime();
+      const bTime = b.date.getTime();
+      const aIsFuture = (aTime >= nowTime);
+      const bIsFuture = (bTime >= nowTime);
+
+      if (aIsFuture && !bIsFuture) return -1;
+      if (!aIsFuture && bIsFuture) return 1;
+
+      if (aIsFuture && bIsFuture) {
+        return aTime - bTime;
+      }
+      return bTime - aTime;
+    });
+
+    let spineHtml = '<div class="chronological-spine-timeline">';
+
+    groups.forEach(group => {
+      const isToday = (group.dateKey === todayKey);
+      const isFuture = (group.date.getTime() >= nowTime);
+      const d = group.date;
+      const day = String(d.getDate()).padStart(2, '0');
+      const mon = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+      const wd = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+
+      const titleHtml = isToday 
+        ? `TODAY <span class="spine-node-date">${day} ${mon}</span>` 
+        : `${day} ${mon} ${wd}`;
+      const dotClass = isToday ? 'spine-node-dot is-today' : 'spine-node-dot';
+      const badgeText = isToday 
+        ? `${group.events.length} Event${group.events.length !== 1 ? 's' : ''}` 
+        : (isFuture 
+            ? (group.events.some(e => e.type === 'assignment') ? 'Deadline' : 'Upcoming') 
+            : 'Milestone');
+
+      // Sort cards within group: assignments first, then attendance, then notices
+      const sortedEvents = group.events.sort((a, b) => {
+        const order = { assignment: 1, attendance: 2, notice: 3 };
+        return (order[a.type] || 9) - (order[b.type] || 9);
+      });
+
+      const cardsHtml = sortedEvents.map(ev => {
+        if (ev.type === 'assignment') return renderScopedAssignmentCard(ev.data);
+        if (ev.type === 'attendance') return renderScopedAttendanceCard(ev.data);
+        if (ev.type === 'notice') return renderScopedNoticeCard(ev.data);
+        return '';
+      }).join('');
+
+      spineHtml += `
+        <div class="spine-date-group ${isToday ? 'group-today' : ''}">
+          <div class="spine-node-header">
+            <span class="${dotClass}"></span>
+            <div class="spine-node-title">${titleHtml}</div>
+          </div>
+          <div class="spine-date-cards">
+            ${cardsHtml}
+          </div>
+        </div>
+      `;
+    });
+
+    spineHtml += '</div>';
+    feedEl.innerHTML = spineHtml;
+    feedEl.style.display = 'flex';
+    attachAttendanceActions(feedEl);
+
+    // Active node highlight on scroll / in sight animation
+    const stream = document.getElementById('popup-cards-stream');
+    if (stream && !stream._hasByCourseScrollListener) {
+      stream._hasByCourseScrollListener = true;
+      stream.addEventListener('scroll', updateActiveSpineNode, { passive: true });
+      stream.addEventListener('wheel', () => requestAnimationFrame(updateActiveSpineNode), { passive: true });
+      window.addEventListener('scroll', updateActiveSpineNode, { passive: true });
+    }
+
+    // Immediately trigger so the initial in-sight date dot is filled solid black
+    requestAnimationFrame(updateActiveSpineNode);
+    setTimeout(updateActiveSpineNode, 50);
+  }
+
+  function renderPopupMonograms() {
+    const listEl = document.getElementById('rail-monograms-list');
+    if (!listEl) return;
+
+    const courses = getPopupCoursesList();
+    if (courses.length === 0) {
+      listEl.innerHTML = '';
+      return;
+    }
+
+    // If no course is currently selected and we are in dedicated courses mode, select the first course by default
+    if (popupSidebarMode === 'courses' && !selectedCourseFilterId && !selectedCourseFilterCode && courses.length > 0) {
+      selectedCourseFilterId = courses[0].courseId;
+      selectedCourseFilterCode = courses[0].courseCode;
+    }
+
+    const showNotice = isActivityActive('notice');
+    const showTasks = isActivityActive('tutorial');
+    const showAtt = isActivityActive('attendance');
+
+    listEl.innerHTML = courses.map(c => {
+      const isSel = (selectedCourseFilterId && String(selectedCourseFilterId) === String(c.courseId)) ||
+                    (selectedCourseFilterCode && c.courseCode === selectedCourseFilterCode);
+      const acronym = generateCourseAcronym(c.courseName, c.courseCode);
+      const activeTasks = (c.pendingCount !== undefined) ? c.pendingCount : (c.taskCount || 0);
+      const cTotal = (showNotice ? (c.annCount || 0) : 0) + (showTasks ? activeTasks : 0) + (showAtt ? (c.attCount || 0) : 0);
+
+      let occText = '';
+      if (c.userOcc) {
+        const clean = String(c.userOcc).replace(/^occ\s*/i, '').trim();
+        if (clean) occText = ` (OCC ${clean})`;
+      }
+      const titleText = `${c.courseCode}: ${c.courseName}${occText} - ${cTotal} active item${cTotal !== 1 ? 's' : ''}`;
+
+      // In By Course Mode, no dots are displayed on first letter icons per user spec
+      return `
+        <button type="button" class="rail-monogram-btn ${isSel ? 'active' : ''}" 
+          data-course-id="${escapeHtml(c.courseId)}" 
+          data-course-code="${escapeHtml(c.courseCode)}" 
+          data-acronym="${escapeHtml(acronym)}"
+          data-tooltip="${escapeHtml(titleText)}"
+          title="${escapeHtml(titleText)}" 
+          aria-label="${escapeHtml(titleText)}">
+          ${escapeHtml(acronym)}
+        </button>
+      `;
+    }).join('');
+
+    listEl.querySelectorAll('.rail-monogram-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const cid = btn.dataset.courseId;
+        const code = btn.dataset.courseCode;
+        selectedCourseFilterId = cid;
+        selectedCourseFilterCode = code;
+        renderPopupMonograms();
+        syncPopupActivityStreams();
+      });
+
+      // Floating tooltip on hover (using #rail-tooltip-overlay)
+      btn.addEventListener('mouseenter', () => {
+        const overlay = document.getElementById('rail-tooltip-overlay');
+        const tooltipText = btn.dataset.tooltip || btn.title;
+        if (overlay && tooltipText) {
+          overlay.textContent = tooltipText;
+          const rect = btn.getBoundingClientRect();
+          overlay.style.left = `${rect.right + 8}px`;
+          overlay.style.top = `${rect.top + (rect.height / 2) - 12}px`;
+          overlay.classList.add('visible');
+        }
+      });
+
+      btn.addEventListener('mouseleave', () => {
+        const overlay = document.getElementById('rail-tooltip-overlay');
+        if (overlay) overlay.classList.remove('visible');
+      });
+    });
+  }
+
+  function renderCourseFilterMatrix() {
+    const matrixContainer = document.getElementById('course-filter-matrix');
+    const headerTitle = document.getElementById('matrix-header-title');
+    const headerBadge = document.getElementById('matrix-header-badge');
+    if (!matrixContainer) return;
+
+    const courses = getPopupCoursesList();
+    const isAllActive = (!selectedCourseFilterId && !selectedCourseFilterCode);
+
+    let activeAcronym = 'ALL';
+    let totalAll = 0;
+    let activeDeliverablesCount = 0;
+
+    const courseCounts = new Map();
+    const courseUrgent = new Map();
+
+    const showNotice = isActivityActive('notice');
+    const showTasks = isActivityActive('tutorial');
+    const showAtt = isActivityActive('attendance');
+
+    if (popupSidebarMode === 'calendar') {
+      // ── Calendar Mode: scope matrix counts to the SELECTED CALENDAR DATE ──
+      const targetDateKey = activeDateFilter || miniCalSelectedDateKey || formatDateKey(new Date());
+
+      let dAnns = showNotice && (typeof announcementsData !== 'undefined') ? announcementsData.filter(a => {
+        const d = a.timestamp instanceof Date ? a.timestamp : new Date(a.timestamp || 0);
+        return !isNaN(d.getTime()) && formatDateKey(d) === targetDateKey;
+      }) : [];
+
+      let dAssigns = showTasks && (typeof assignmentsData !== 'undefined') ? assignmentsData.filter(a => {
+        const d = a.dueDate instanceof Date ? a.dueDate : new Date(a.dueDate || 0);
+        return !isNaN(d.getTime()) && formatDateKey(d) === targetDateKey;
+      }) : [];
+
+      let dAtt = showAtt && (typeof attendancesData !== 'undefined') ? attendancesData.filter(att => {
+        if (typeof isAttendanceHidden === 'function' && isAttendanceHidden(att)) return false;
+        if (att.activeSession && formatDateKey(new Date()) === targetDateKey) return true;
+        if (Array.isArray(att.sessions)) {
+          return att.sessions.some(s => s.dateKey === targetDateKey);
+        }
+        return false;
+      }) : [];
+
+      totalAll = dAnns.length + dAssigns.length + dAtt.length;
+
+      courses.forEach(c => {
+        const cAnns = dAnns.filter(a => isActivityForCourse(a, c)).length;
+        const cTasks = dAssigns.filter(a => isActivityForCourse(a, c) && ((typeof isAssignmentMatchingOcc === 'function') ? isAssignmentMatchingOcc(a, c.userOcc) : true)).length;
+        const cAttCount = dAtt.filter(a => isActivityForCourse(a, c)).length;
+        const cTotal = cAnns + cTasks + cAttCount;
+        courseCounts.set(String(c.courseId), cTotal);
+        courseUrgent.set(String(c.courseId), cTasks > 0);
+      });
+
+      if (!isAllActive) {
+        const activeCourse = courses.find(c =>
+          (selectedCourseFilterId && String(c.courseId) === String(selectedCourseFilterId)) ||
+          (selectedCourseFilterCode && c.courseCode === selectedCourseFilterCode)
+        );
+        if (activeCourse) {
+          activeAcronym = generateCourseAcronym(activeCourse.courseName, activeCourse.courseCode);
+          activeDeliverablesCount = courseCounts.get(String(activeCourse.courseId)) || 0;
+        }
+      } else {
+        activeDeliverablesCount = totalAll;
+      }
+    } else {
+      // ── Courses Mode: count across the whole semester ──
+      let allAnns = showNotice && (typeof announcementsData !== 'undefined') ? announcementsData : [];
+      let allAssigns = showTasks && (typeof assignmentsData !== 'undefined') ? assignmentsData : [];
+      let allAtt = showAtt && (typeof attendancesData !== 'undefined') ? attendancesData.filter(a => !isAttendanceHidden(a)) : [];
+
+      totalAll = allAnns.length + allAssigns.length + allAtt.length;
+
+      courses.forEach(c => {
+        const cAnns = allAnns.filter(a => isActivityForCourse(a, c)).length;
+        const cTasks = allAssigns.filter(a => isActivityForCourse(a, c) && ((typeof isAssignmentMatchingOcc === 'function') ? isAssignmentMatchingOcc(a, c.userOcc) : true)).length;
+        const cAttCount = allAtt.filter(a => isActivityForCourse(a, c)).length;
+        const cTotal = cAnns + cTasks + cAttCount;
+        courseCounts.set(String(c.courseId), cTotal);
+        courseUrgent.set(String(c.courseId), (c.pendingCount || 0) > 0);
+      });
+
+      if (!isAllActive) {
+        const activeCourse = courses.find(c =>
+          (selectedCourseFilterId && String(c.courseId) === String(selectedCourseFilterId)) ||
+          (selectedCourseFilterCode && c.courseCode === selectedCourseFilterCode)
+        );
+        if (activeCourse) {
+          activeAcronym = generateCourseAcronym(activeCourse.courseName, activeCourse.courseCode);
+          activeDeliverablesCount = courseCounts.get(String(activeCourse.courseId)) || 0;
+        }
+      } else {
+        activeDeliverablesCount = totalAll;
+      }
+    }
+
+    if (headerTitle) {
+      headerTitle.textContent = isAllActive ? 'COURSES (ALL)' : ('COURSES (' + activeAcronym + ')');
+    }
+    if (headerBadge) {
+      headerBadge.textContent = activeDeliverablesCount;
+    }
+
+    // 1. ALL button (Default state)
+    let html = `
+      <button type="button" class="matrix-monogram-btn ${isAllActive ? 'active' : ''}" 
+        data-course-id="all" 
+        data-course-code="ALL" 
+        data-acronym="ALL"
+        title="Show all course feeds"
+        aria-label="Show all course feeds">
+        <span class="matrix-btn-text">ALL</span>
+        <span class="matrix-btn-count">${totalAll}</span>
+      </button>
+    `;
+
+    // 2. Up to 9 enrolled courses
+    courses.slice(0, 9).forEach(c => {
+      const isSel = (selectedCourseFilterId && String(selectedCourseFilterId) === String(c.courseId)) ||
+                    (selectedCourseFilterCode && c.courseCode === selectedCourseFilterCode);
+      const acronym = generateCourseAcronym(c.courseName, c.courseCode);
+      const cTotal = courseCounts.get(String(c.courseId)) || 0;
+      const hasUrgent = courseUrgent.get(String(c.courseId)) || false;
+      const dotClass = hasUrgent ? 'has-urgent' : (cTotal > 0 ? 'has-normal' : '');
+      const dotHtml = dotClass ? `<span class="matrix-btn-dot ${dotClass}"></span>` : '';
+
+      html += `
+        <button type="button" class="matrix-monogram-btn ${isSel ? 'active' : ''}" 
+          data-course-id="${escapeHtml(c.courseId)}" 
+          data-course-code="${escapeHtml(c.courseCode)}" 
+          data-acronym="${escapeHtml(acronym)}"
+          aria-label="${escapeHtml(c.courseName)}">
+          <span class="matrix-btn-text">${escapeHtml(acronym)}</span>
+          ${dotHtml}
+        </button>
+      `;
+    });
+
+    matrixContainer.innerHTML = html;
+
+    // Attach Click Handlers
+    matrixContainer.querySelectorAll('.matrix-monogram-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const cid = btn.dataset.courseId;
+        const code = btn.dataset.courseCode;
+
+        if (cid === 'all') {
+          selectedCourseFilterId = null;
+          selectedCourseFilterCode = null;
+        } else if ((selectedCourseFilterId && String(selectedCourseFilterId) === String(cid)) ||
+                   (selectedCourseFilterCode && code === selectedCourseFilterCode)) {
+          // Toggle off -> reset to ALL
+          selectedCourseFilterId = null;
+          selectedCourseFilterCode = null;
+        } else {
+          selectedCourseFilterId = cid;
+          selectedCourseFilterCode = code;
+        }
+
+        renderPopupMonograms();
+        syncPopupActivityStreams();
+      });
+
+      // Hover Full Name Popover
+      btn.addEventListener('mouseenter', () => {
+        const popover = document.getElementById('matrix-course-popover');
+        if (!popover) return;
+
+        const cid = btn.dataset.courseId;
+        if (cid === 'all') {
+          popover.innerHTML = `
+            <div class="mcp-header">
+              <span class="mcp-code">ALL ENROLLED</span>
+              <span class="mcp-occ">RESET FILTER</span>
+            </div>
+            <div class="mcp-title">All Course Feeds</div>
+            <div class="mcp-instructor">Unified timeline across all subjects</div>
+            <div class="mcp-counter">● ${totalAll} Total Deliverables</div>
+          `;
+        } else {
+          const c = courses.find(item => String(item.courseId) === String(cid) || item.courseCode === btn.dataset.courseCode);
+          if (!c) return;
+
+          const occText = c.userOcc ? ('OCC ' + String(c.userOcc).replace(/^occ\s*/i, '')) : 'All Cohorts';
+          const activeTasks = (c.pendingCount !== undefined) ? c.pendingCount : (c.taskCount || 0);
+          const cTotal = (c.annCount || 0) + activeTasks + (c.attCount || 0);
+          const instructor = c.lecturer || 'Course Instructor · Faculty of CSIT';
+
+          popover.innerHTML = `
+            <div class="mcp-header">
+              <span class="mcp-code">${escapeHtml(c.courseCode)}</span>
+              <span class="mcp-occ">${escapeHtml(occText)}</span>
+            </div>
+            <div class="mcp-title">${escapeHtml(c.courseName)}</div>
+            <div class="mcp-instructor">👤 ${escapeHtml(instructor)}</div>
+            <div class="mcp-counter">● ${cTotal} Active Deliverables (${activeTasks} Tasks)</div>
+          `;
+        }
+
+        const rect = btn.getBoundingClientRect();
+        popover.style.left = (rect.right + 10) + 'px';
+        const popHeight = 110;
+        let topPos = rect.top - 10;
+        if (topPos + popHeight > window.innerHeight) {
+          topPos = window.innerHeight - popHeight - 10;
+        }
+        popover.style.top = Math.max(10, topPos) + 'px';
+        popover.classList.add('visible');
+      });
+
+      btn.addEventListener('mouseleave', () => {
+        const popover = document.getElementById('matrix-course-popover');
+        if (popover) popover.classList.remove('visible');
+      });
+    });
+  }
+
+  function setPopupSidebarMode(mode) {
+    popupSidebarMode = (mode === 'courses') ? 'courses' : 'calendar';
+
+    const btnCal = document.getElementById('btn-sidebar-mode-calendar');
+    const btnCrs = document.getElementById('btn-sidebar-mode-courses');
+    if (btnCal) btnCal.classList.toggle('active', popupSidebarMode === 'calendar');
+    if (btnCrs) btnCrs.classList.toggle('active', popupSidebarMode === 'courses');
+
+    const railEl = document.getElementById('popup-sticky-date-box');
+    const calView = document.getElementById('rail-expanded-view');
+    const crsView = document.getElementById('rail-courses-view');
+    const collapsedView = document.getElementById('rail-collapsed-view');
+    const dockedFilters = document.getElementById('rail-docked-filters');
+
+    if (popupSidebarMode === 'courses') {
+      if (railEl) {
+        railEl.classList.add('rail-mode-courses', 'is-collapsed');
+        railEl.classList.remove('is-calendar-expanded');
+      }
+      const splitCont = document.getElementById('popup-split-container');
+      if (splitCont) splitCont.classList.remove('is-calendar-expanded');
+      if (calView) calView.style.display = 'none';
+      if (crsView) crsView.style.display = 'none';
+      if (dockedFilters) dockedFilters.style.display = 'flex';
+      if (collapsedView) collapsedView.style.display = 'flex';
+      renderPopupMonograms();
+    } else {
+      if (railEl) {
+        railEl.classList.remove('rail-mode-courses', 'is-collapsed');
+      }
+      if (collapsedView) collapsedView.style.display = 'none';
+      if (crsView) crsView.style.display = 'none';
+      if (calView) calView.style.display = 'flex';
+      if (dockedFilters) dockedFilters.style.display = 'flex';
+      selectedCourseFilterId = null;
+      selectedCourseFilterCode = null;
+      renderMiniCalendar();
+    }
+
+    syncPopupActivityStreams();
+    chrome.storage.local.set({ cachedPopupSidebarMode: popupSidebarMode }).catch(() => {});
+  }
+
+  function syncPopupActivityStreams() {
+    const scopeBar = document.getElementById('popup-focused-scope-bar');
+    const byCourseFeed = document.getElementById('bycourse-activities-feed');
+    const dateFilteredList = document.getElementById('date-filtered-activities-list');
+
+    if (popupSidebarMode === 'courses') {
+      // By Course Mode (left rail collapsed into monograms rail)
+      if (dateFilteredList) dateFilteredList.style.display = 'none';
+      if (announcementsListEl) announcementsListEl.style.display = 'none';
+      if (assignmentsListEl) assignmentsListEl.style.display = 'none';
+      if (attendanceListEl) attendanceListEl.style.display = 'none';
+
+      renderByCourseScopedFeed();
+    } else {
+      // Calendar Mode (expanded rail with mini-calendar + course filter matrix)
+      // Never show the bycourse timeline feed in Calendar mode
+      if (scopeBar) scopeBar.style.display = 'none';
+      if (byCourseFeed) byCourseFeed.style.display = 'none';
+
+      // Always filter the calendar day view by the active date and active course!
+      const targetDateKey = activeDateFilter || miniCalSelectedDateKey || formatDateKey(new Date());
+      let targetDateObj = activeDateFilterObj;
+      if (!targetDateObj && targetDateKey) {
+        const parts = targetDateKey.split('-').map(Number);
+        targetDateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+      }
+
+      applyMiniCalDateFilter(targetDateKey, targetDateObj);
+    }
+
+    syncRailCounts();
+    renderCourseFilterMatrix();
+    if (popupSidebarMode === 'calendar') renderMiniCalendar();
+  }
+
   function initSidebarRail() {
+    // ── Mode Switchers: Calendar vs Courses ──
+    const btnSidebarCal = document.getElementById('btn-sidebar-mode-calendar');
+    const btnSidebarCrs = document.getElementById('btn-sidebar-mode-courses');
+    if (btnSidebarCal) {
+      btnSidebarCal.addEventListener('click', (e) => {
+        e.preventDefault();
+        setPopupSidebarMode('calendar');
+      });
+    }
+    if (btnSidebarCrs) {
+      btnSidebarCrs.addEventListener('click', (e) => {
+        e.preventDefault();
+        setPopupSidebarMode('courses');
+      });
+    }
+
+    renderCourseFilterMatrix();
+    // Restore cached sidebar mode preference
+    chrome.storage.local.get(['cachedPopupSidebarMode']).then(res => {
+      if (res && res.cachedPopupSidebarMode) {
+        setPopupSidebarMode(res.cachedPopupSidebarMode);
+      } else {
+        setPopupSidebarMode('calendar');
+      }
+    }).catch(() => {
+      setPopupSidebarMode('calendar');
+    });
     // ── Accordion Toggle: Date Card click → expand calendar ──
     const trigger = document.getElementById('popup-date-card-trigger');
     const btnRailCal = document.getElementById('btn-rail-calendar');
@@ -1371,14 +3095,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const btn = document.getElementById(id);
       if (!btn) return;
       btn.addEventListener('click', () => {
-        const sub = btn.dataset.sub;
-        switchActivitiesSubTab(sub);
-        document.querySelectorAll('.dock-filter-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.rail-activity-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const railId = id.replace('dock-btn-', 'rail-btn-');
-        const railBtn = document.getElementById(railId);
-        if (railBtn) railBtn.classList.add('active');
+        btn.classList.toggle('active');
+        renderPopupMonograms();
+        syncPopupActivityStreams();
       });
     });
 
@@ -1390,16 +3109,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ── Today button ──
     const btnToday = document.getElementById('btn-mini-cal-today');
-    if (btnToday) {
-      btnToday.addEventListener('click', () => {
-        const now = new Date();
-        miniCalYear = now.getFullYear();
-        miniCalMonth = now.getMonth();
-        miniCalSelectedDateKey = `${miniCalYear}-${String(miniCalMonth + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        renderMiniCalendar();
-        applyMiniCalDateFilter(miniCalSelectedDateKey, now);
-      });
-    }
+    const btnHeroToday = document.getElementById('cal-hero-today-badge');
+    const handleJumpToToday = () => {
+      const now = new Date();
+      miniCalYear = now.getFullYear();
+      miniCalMonth = now.getMonth();
+      miniCalSelectedDateKey = `${miniCalYear}-${String(miniCalMonth + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      activeDateFilter = miniCalSelectedDateKey;
+      activeDateFilterObj = now;
+      updateDateHeroHeader(now);
+      syncPopupActivityStreams();
+    };
+    if (btnToday) btnToday.addEventListener('click', handleJumpToToday);
+    if (btnHeroToday) btnHeroToday.addEventListener('click', handleJumpToToday);
 
     // ── Dots / Count Segment Toggle ──
     const btnDots = document.getElementById('btn-seg-dots');
@@ -1429,10 +3151,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnReset = document.getElementById('btn-reset-date-filter');
     if (btnReset) {
       btnReset.addEventListener('click', () => {
-        activeDateFilter = null;
-        miniCalSelectedDateKey = '';
-        renderMiniCalendar();
-        applyMiniCalDateFilter(null, null);
+        const now = new Date();
+        activeDateFilter = formatDateKey(now);
+        activeDateFilterObj = now;
+        miniCalSelectedDateKey = activeDateFilter;
+        syncPopupActivityStreams();
       });
     }
 
@@ -1443,17 +3166,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     miniCalSelectedDateKey = `${miniCalYear}-${String(miniCalMonth + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     renderMiniCalendar();
 
-    // Sync initial active rail button to current sub-tab
-    const subToRail = { 'sub-announcements': 'rail-btn-notice', 'sub-assignments': 'rail-btn-tutorial', 'sub-attendance': 'rail-btn-attendance' };
-    const subToDock = { 'sub-announcements': 'dock-btn-notice', 'sub-assignments': 'dock-btn-tutorial', 'sub-attendance': 'dock-btn-attendance' };
-    const initialRailId = subToRail[currentActivitiesSub] || 'rail-btn-notice';
-    const initialDockId = subToDock[currentActivitiesSub] || 'dock-btn-notice';
-    document.querySelectorAll('.rail-activity-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.dock-filter-btn').forEach(b => b.classList.remove('active'));
-    const initRailBtn = document.getElementById(initialRailId);
-    const initDockBtn = document.getElementById(initialDockId);
-    if (initRailBtn) initRailBtn.classList.add('active');
-    if (initDockBtn) initDockBtn.classList.add('active');
+    // Make all activity buttons active (lit up) by default per user requirement
+    document.querySelectorAll('.dock-filter-btn').forEach(b => b.classList.add('active'));
+    document.querySelectorAll('.rail-activity-btn').forEach(b => b.classList.add('active'));
 
     // ── JS-driven tooltip overlay (position:fixed, bypasses overflow clipping) ──
     const tooltipEl = document.getElementById('rail-tooltip-overlay');
@@ -1491,13 +3206,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sidebarEl = document.getElementById('popup-sticky-date-box');
     const container = document.getElementById('popup-split-container');
 
-    // Expand popup width from 520px → 640px when calendar is open
-    const POPUP_NORMAL_W = 520;
-    const POPUP_EXPANDED_W = 640;
-    if (!document.body.classList.contains('is-full-tab')) {
-      document.body.style.width = expand ? `${POPUP_EXPANDED_W}px` : `${POPUP_NORMAL_W}px`;
-      document.body.style.maxWidth = expand ? `${POPUP_EXPANDED_W}px` : `${POPUP_NORMAL_W}px`;
-    }
+    // Width is permanently locked at 760px to prevent window resizing flash
 
     if (expand) {
       if (collapsed) collapsed.style.display = 'none';
@@ -1522,7 +3231,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       map.get(key)[type]++;
     };
 
+    const courses = getPopupCoursesList();
+    const activeCourse = (selectedCourseFilterId || selectedCourseFilterCode) ? courses.find(c => 
+      (selectedCourseFilterId && String(c.courseId) === String(selectedCourseFilterId)) ||
+      (selectedCourseFilterCode && c.courseCode === selectedCourseFilterCode)
+    ) : null;
+
     announcementsData.forEach(ann => {
+      if (activeCourse && !isActivityForCourse(ann, activeCourse)) return;
       if (ann.timestamp) {
         const d = (ann.timestamp instanceof Date) ? ann.timestamp : new Date(ann.timestamp);
         if (!isNaN(d.getTime())) addEvent(formatDateKey(d), 'ann');
@@ -1530,12 +3246,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     assignmentsData.forEach(assign => {
+      if (activeCourse && !isActivityForCourse(assign, activeCourse)) return;
       const d = assign.dueDate ? (assign.dueDate instanceof Date ? assign.dueDate : new Date(assign.dueDate)) : null;
       if (d && !isNaN(d.getTime())) addEvent(formatDateKey(d), 'tutorial');
     });
 
     attendancesData.forEach(att => {
       if (isAttendanceHidden && isAttendanceHidden(att)) return;
+      if (activeCourse && !isActivityForCourse(att, activeCourse)) return;
       if (att.activeSession) addEvent(formatDateKey(new Date()), 'att');
       if (Array.isArray(att.sessions)) {
         att.sessions.forEach(sess => {
@@ -1553,13 +3271,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     const weekBadge = document.getElementById('mini-cal-week-badge');
     if (!grid) return;
 
-    const MONTH_NAMES = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-    if (monthTitle) monthTitle.textContent = `${MONTH_NAMES[miniCalMonth]} ${miniCalYear}`;
-
-    // Academic week badge for the 1st of month
+    const MONTH_NAMES_FULL = [
+      'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+      'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
+    ];
     const firstOfMonth = new Date(miniCalYear, miniCalMonth, 1);
-    const umInfo = getUmAcademicInfo(firstOfMonth);
-    if (weekBadge) weekBadge.textContent = `W${String(umInfo.weekNum).padStart(2, '0')}`;
+    const lastOfMonth = new Date(miniCalYear, miniCalMonth + 1, 0);
+
+    const startUm = getUmAcademicInfo(firstOfMonth);
+    const endUm = getUmAcademicInfo(lastOfMonth);
+    const startW = parseInt(startUm.weekNum, 10) || 1;
+    const endW = parseInt(endUm.weekNum, 10) || startW;
+    const weekSpan = startW === endW ? `W${String(startW).padStart(2, '0')}` : `W${String(startW).padStart(2, '0')}–W${String(endW).padStart(2, '0')}`;
+
+    if (monthTitle) {
+      monthTitle.textContent = `${MONTH_NAMES_FULL[miniCalMonth]} ${miniCalYear} · ${weekSpan}`;
+    }
+    if (weekBadge) {
+      weekBadge.textContent = '';
+      weekBadge.style.display = 'none';
+    }
+
+    // Keep hero header updated
+    let heroDate = activeDateFilterObj;
+    if (!heroDate && miniCalSelectedDateKey) {
+      const parts = miniCalSelectedDateKey.split('-').map(Number);
+      if (parts.length >= 3 && !isNaN(parts[0])) {
+        heroDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      }
+    }
+    updateDateHeroHeader(heroDate || new Date());
 
     // Gather real event data
     const eventsMap = getMiniCalEvents();
@@ -1606,15 +3347,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const key = cell.dataset.dateKey;
         if (!key) return;
         miniCalSelectedDateKey = key;
-        renderMiniCalendar(); // re-render for selection state
+        activeDateFilter = key;
         const parts = key.split('-').map(Number);
         const d = new Date(parts[0], parts[1] - 1, parts[2]);
-        applyMiniCalDateFilter(key, d);
+        activeDateFilterObj = d;
+        updateDateHeroHeader(d);
+        syncPopupActivityStreams();
       });
     });
 
     // Update summary chip
     updateMiniCalSummaryChip();
+    syncRailCounts();
   }
 
   function renderMiniCalCell(day, dateKey, isAdjacent, eventsMap) {
@@ -1670,111 +3414,285 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  let activeDateFilterObj = null;
+
   function applyMiniCalDateFilter(dateKey, dateObj) {
     activeDateFilter = dateKey || null;
-    const filterBar = document.getElementById('popup-date-filter-bar');
-    const filterLabel = document.getElementById('popup-date-filter-label');
-    const filteredList = document.getElementById('date-filtered-activities-list');
+    activeDateFilterObj = dateObj || null;
 
-    // Update the right-column date filter header
-    if (filterBar) filterBar.style.display = activeDateFilter ? 'flex' : 'none';
+    if (!dateObj && dateKey) {
+      const parts = dateKey.split('-').map(Number);
+      dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+      activeDateFilterObj = dateObj;
+    }
+
+    const filteredList = document.getElementById('date-filtered-activities-list');
+    if (!filteredList) return;
 
     if (activeDateFilter && dateObj) {
-      const wd = dateObj.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-      const mon = dateObj.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-      const day = String(dateObj.getDate()).padStart(2, '0');
-      const yr = dateObj.getFullYear();
+      updateDateHeroHeader(dateObj);
 
-      // Gather all activities for this date
-      const eventsMap = getMiniCalEvents();
-      const evData = eventsMap.get(dateKey) || { ann: 0, tutorial: 0, att: 0 };
-      const total = evData.ann + evData.tutorial + evData.att;
+      // Identify if a specific course filter is active in the matrix
+      const courses = getPopupCoursesList();
+      const activeCourse = (selectedCourseFilterId || selectedCourseFilterCode) ? courses.find(c => 
+        (selectedCourseFilterId && String(c.courseId) === String(selectedCourseFilterId)) ||
+        (selectedCourseFilterCode && c.courseCode === selectedCourseFilterCode)
+      ) : null;
 
-      if (filterLabel) filterLabel.textContent = `${wd}, ${day} ${mon} ${yr} (${total} activit${total !== 1 ? 'ies' : 'y'} scheduled)`;
+      // Activity type toggles (Notices, Tutorials, Attendance)
+      const showNotice = isActivityActive('notice');
+      const showTasks = isActivityActive('tutorial');
+      const showAtt = isActivityActive('attendance');
 
-      // Build filtered feed
-      if (filteredList) {
-        filteredList.style.display = 'flex';
-        filteredList.style.flexDirection = 'column';
-        filteredList.style.gap = '8px';
+      // 1. Notices for this date
+      let allAnns = showNotice ? announcementsData.filter(a => {
+        const d = a.timestamp instanceof Date ? a.timestamp : new Date(a.timestamp || 0);
+        return !isNaN(d.getTime()) && formatDateKey(d) === dateKey;
+      }) : [];
 
-        // Show all three lists but filter by date key
-        const allAnns = announcementsData.filter(a => {
-          const d = a.timestamp instanceof Date ? a.timestamp : new Date(a.timestamp || 0);
-          return !isNaN(d.getTime()) && formatDateKey(d) === dateKey;
-        });
-        const allAssigns = assignmentsData.filter(a => {
-          const d = a.dueDate instanceof Date ? a.dueDate : new Date(a.dueDate || 0);
-          return !isNaN(d.getTime()) && formatDateKey(d) === dateKey;
-        });
-        const allAtt = attendancesData.filter(att => {
-          if (typeof isAttendanceHidden === 'function' && isAttendanceHidden(att)) return false;
-          if (att.activeSession && formatDateKey(new Date()) === dateKey) return true;
-          if (Array.isArray(att.sessions)) {
-            return att.sessions.some(s => s.dateKey === dateKey);
-          }
-          return false;
-        });
+      // 2. Assignments due on this date
+      let allAssigns = showTasks ? assignmentsData.filter(a => {
+        const d = a.dueDate instanceof Date ? a.dueDate : new Date(a.dueDate || 0);
+        return !isNaN(d.getTime()) && formatDateKey(d) === dateKey;
+      }) : [];
 
-        if (total === 0) {
-          filteredList.innerHTML = `<div style="text-align:center;padding:24px 12px;color:var(--text-muted);">
-            <p style="font-size:13px;margin-bottom:4px;">📅 No activities on this date</p>
-            <p style="font-size:11px;">Try another date or <button onclick="document.getElementById('btn-reset-date-filter').click()" style="background:none;border:none;cursor:pointer;color:#2563EB;font-size:11px;text-decoration:underline;">Show All</button></p>
-          </div>`;
-        } else {
-          let html = '';
-          if (allAnns.length) html += allAnns.map(a => typeof renderAnnouncementCardHtml === 'function' ? renderAnnouncementCardHtml(a) : '').join('');
-          if (allAssigns.length) html += allAssigns.map(a => typeof renderAssignmentCardHtml === 'function' ? renderAssignmentCardHtml(a) : '').join('');
-          if (allAtt.length) html += allAtt.map(att => {
-            return typeof renderAttendanceCardHtml === 'function' ? renderAttendanceCardHtml(att) : '';
-          }).join('');
-          filteredList.innerHTML = html;
-          // Re-attach card interaction handlers if available
-          if (typeof attachCardHandlers === 'function') attachCardHandlers(filteredList);
-          // Re-attach open-full button handlers in the filtered list
-          filteredList.querySelectorAll('[data-open-url]').forEach(btn => {
-            btn.addEventListener('click', () => {
-              const url = btn.dataset.openUrl;
-              if (url) chrome.tabs.create({ url });
-            });
-          });
+      // 3. Attendance sessions on this date
+      let allAtt = showAtt ? attendancesData.filter(att => {
+        if (typeof isAttendanceHidden === 'function' && isAttendanceHidden(att)) return false;
+        if (att.activeSession && formatDateKey(new Date()) === dateKey) return true;
+        if (Array.isArray(att.sessions)) {
+          return att.sessions.some(s => s.dateKey === dateKey);
         }
+        return false;
+      }) : [];
+
+      // Scoped subject filtering for this specific day!
+      if (activeCourse) {
+        allAnns = allAnns.filter(a => isActivityForCourse(a, activeCourse));
+        allAssigns = allAssigns.filter(a => {
+          if (!isActivityForCourse(a, activeCourse)) return false;
+          return (typeof isAssignmentMatchingOcc === 'function') ? isAssignmentMatchingOcc(a, activeCourse.userOcc) : true;
+        });
+        allAtt = allAtt.filter(att => isActivityForCourse(att, activeCourse));
       }
 
-      // Hide the standard activity lists
+      const total = allAnns.length + allAssigns.length + allAtt.length;
+
+      filteredList.style.display = 'flex';
+      filteredList.style.flexDirection = 'column';
+      filteredList.style.gap = '8px';
+
+      const scopeBadgeText = activeCourse 
+        ? `${generateCourseAcronym(activeCourse.courseName, activeCourse.courseCode)}`
+        : 'ALL COURSES';
+
+      const scopePillHtml = activeCourse
+        ? `<span class="day-scope-pill is-clickable" id="btn-clear-day-scope" title="Filtering by ${escapeHtml(activeCourse.courseName || activeCourse.courseCode)}. Click to show All Courses.">${escapeHtml(scopeBadgeText)} <span class="scope-clear-x">✕</span></span>`
+        : `<span class="day-scope-pill">${escapeHtml(scopeBadgeText)}</span>`;
+
+      const courseNameHtml = activeCourse
+        ? `<span class="day-scope-course-name" title="${escapeHtml(activeCourse.courseName || '')}">${escapeHtml(activeCourse.courseName || activeCourse.courseCode)}</span>`
+        : '';
+
+      const renderMetaBarHtml = (count) => {
+        // User requirement: Remove the "ALL COURSES 5 ITEMS" header
+        if (!activeCourse) return '';
+        return `
+          <div class="day-agenda-meta-bar">
+            <div class="day-agenda-filters-left">
+              ${scopePillHtml}
+              ${courseNameHtml}
+            </div>
+            <span class="day-agenda-count-badge">${count} ${count === 1 ? 'ITEM' : 'ITEMS'}</span>
+          </div>
+        `;
+      };
+
+      if (total === 0) {
+        const activeCourseName = activeCourse ? (activeCourse.courseName || activeCourse.courseCode) : '';
+        const emptyMsg = activeCourse 
+          ? `📅 No ${escapeHtml(activeCourseName)} activities on this date`
+          : '📅 No activities scheduled on this date';
+        const subMsg = activeCourse
+          ? `<p style="font-size:11.5px;margin-top:6px;">Try another date or <button type="button" id="btn-date-show-all-courses" style="background:none;border:none;cursor:pointer;color:#2563EB;font-size:11.5px;font-weight:600;text-decoration:underline;">Show All Courses on this Date</button></p>`
+          : `<p style="font-size:11.5px;margin-top:6px;">Select another date on the calendar above.</p>`;
+
+        filteredList.innerHTML = `
+          ${renderMetaBarHtml(0)}
+          <div style="text-align:center;padding:36px 16px;color:var(--text-muted);background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:8px;">
+            <p style="font-size:13.5px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">${emptyMsg}</p>
+            ${subMsg}
+          </div>
+        `;
+
+        const btnResetToAll = document.getElementById('btn-date-show-all-courses');
+        if (btnResetToAll) {
+          btnResetToAll.addEventListener('click', (e) => {
+            e.preventDefault();
+            selectedCourseFilterId = null;
+            selectedCourseFilterCode = null;
+            renderCourseFilterMatrix();
+            if (popupSidebarMode === 'calendar') renderMiniCalendar();
+            applyMiniCalDateFilter(dateKey, dateObj);
+          });
+        }
+        const btnClearScope = filteredList.querySelector('#btn-clear-day-scope');
+        if (btnClearScope) {
+          btnClearScope.addEventListener('click', (e) => {
+            e.preventDefault();
+            selectedCourseFilterId = null;
+            selectedCourseFilterCode = null;
+            renderCourseFilterMatrix();
+            if (popupSidebarMode === 'calendar') renderMiniCalendar();
+            applyMiniCalDateFilter(dateKey, dateObj);
+          });
+        }
+      } else {
+        let html = renderMetaBarHtml(total);
+
+        if (allAnns.length) html += allAnns.map(a => typeof renderAnnouncementCardHtml === 'function' ? renderAnnouncementCardHtml(a) : '').join('');
+        if (allAssigns.length) html += allAssigns.map(a => typeof renderAssignmentCardHtml === 'function' ? renderAssignmentCardHtml(a) : '').join('');
+        if (allAtt.length) {
+          allAtt.forEach(att => {
+            const matchingSessions = Array.isArray(att.sessions) 
+              ? att.sessions.filter(s => s.dateKey === dateKey)
+              : [];
+            
+            if (matchingSessions.length > 0) {
+              matchingSessions.forEach(sess => {
+                if (typeof renderAttendanceCardHtml === 'function') {
+                  html += renderAttendanceCardHtml(att, {
+                    session: sess,
+                    dateKey: dateKey,
+                    date: sess.date || dateObj,
+                    timeStr: sess.time || sess.dateStr || '',
+                    isLive: Boolean(att.activeSession && (dateKey === formatDateKey(new Date()))),
+                    isVerified: Boolean(sess.isPresent || sess.statusType === 'present' || sess.statusType === 'submitted'),
+                    cid: att.courseId
+                  });
+                }
+              });
+            } else {
+              if (typeof renderAttendanceCardHtml === 'function') {
+                html += renderAttendanceCardHtml(att, {
+                  session: att.activeSession || att.nextSession,
+                  dateKey: dateKey,
+                  date: dateObj,
+                  timeStr: att.activeSession?.time || att.nextSession?.time || att.nextSession?.dateStr || '',
+                  isLive: Boolean(att.activeSession && (dateKey === formatDateKey(new Date()))),
+                  cid: att.courseId
+                });
+              }
+            }
+          });
+        }
+
+        filteredList.innerHTML = html;
+        if (typeof attachCardHandlers === 'function') attachCardHandlers(filteredList);
+        attachAttendanceActions(filteredList);
+
+        const btnClearScope = filteredList.querySelector('#btn-clear-day-scope');
+        if (btnClearScope) {
+          btnClearScope.addEventListener('click', (e) => {
+            e.preventDefault();
+            selectedCourseFilterId = null;
+            selectedCourseFilterCode = null;
+            renderCourseFilterMatrix();
+            if (popupSidebarMode === 'calendar') renderMiniCalendar();
+            applyMiniCalDateFilter(dateKey, dateObj);
+          });
+        }
+
+        filteredList.querySelectorAll('[data-open-url]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const url = btn.dataset.openUrl;
+            if (url) chrome.tabs.create({ url });
+          });
+        });
+      }
+
+      // Hide standard sub-lists so only the date-filtered view is visible
       if (announcementsListEl) announcementsListEl.style.display = 'none';
       if (assignmentsListEl) assignmentsListEl.style.display = 'none';
       if (attendanceListEl) attendanceListEl.style.display = 'none';
-
     } else {
-      // Restore normal view
-      if (filteredList) { filteredList.style.display = 'none'; filteredList.innerHTML = ''; }
-      switchActivitiesSubTab(currentActivitiesSub || 'sub-announcements');
+      const now = new Date();
+      applyMiniCalDateFilter(formatDateKey(now), now);
     }
 
     updateMiniCalSummaryChip();
   }
 
   function syncRailCounts() {
-    // Sync badge counts on both collapsed & expanded rail buttons
-    const annCount = (typeof announcementsData !== 'undefined') ? announcementsData.length : 0;
-    const assignCount = (typeof assignmentsData !== 'undefined') ? assignmentsData.length : 0;
-    const attCount = (typeof attendancesData !== 'undefined') ? attendancesData.filter(a => a.activeSession).length || attendancesData.length : 0;
+    let annCount = 0;
+    let assignCount = 0;
+    let attCount = 0;
+
+    const courses = getPopupCoursesList();
+    const activeCourse = (selectedCourseFilterId || selectedCourseFilterCode) ? courses.find(c => 
+      (selectedCourseFilterId && String(c.courseId) === String(selectedCourseFilterId)) ||
+      (selectedCourseFilterCode && c.courseCode === selectedCourseFilterCode)
+    ) : null;
+
+    if (popupSidebarMode === 'courses' && activeCourse) {
+      annCount = (typeof announcementsData !== 'undefined') ? announcementsData.filter(a => isActivityForCourse(a, activeCourse)).length : 0;
+      assignCount = (typeof assignmentsData !== 'undefined') ? assignmentsData.filter(a => {
+        if (!isActivityForCourse(a, activeCourse)) return false;
+        return (typeof isAssignmentMatchingOcc === 'function') ? isAssignmentMatchingOcc(a, activeCourse.userOcc) : true;
+      }).length : 0;
+      attCount = (typeof attendancesData !== 'undefined') ? attendancesData.filter(a => {
+        if (typeof isAttendanceHidden === 'function' && isAttendanceHidden(a)) return false;
+        return isActivityForCourse(a, activeCourse);
+      }).length : 0;
+    } else if (popupSidebarMode === 'calendar') {
+      // Calendar mode: count activities on the selected date (filtered by activeCourse if selected)
+      const targetDateKey = activeDateFilter || miniCalSelectedDateKey || formatDateKey(new Date());
+      let dAnns = (typeof announcementsData !== 'undefined') ? announcementsData.filter(a => {
+        const d = a.timestamp instanceof Date ? a.timestamp : new Date(a.timestamp || 0);
+        return !isNaN(d.getTime()) && formatDateKey(d) === targetDateKey;
+      }) : [];
+      let dAssigns = (typeof assignmentsData !== 'undefined') ? assignmentsData.filter(a => {
+        const d = a.dueDate instanceof Date ? a.dueDate : new Date(a.dueDate || 0);
+        return !isNaN(d.getTime()) && formatDateKey(d) === targetDateKey;
+      }) : [];
+      let dAtt = (typeof attendancesData !== 'undefined') ? attendancesData.filter(att => {
+        if (typeof isAttendanceHidden === 'function' && isAttendanceHidden(att)) return false;
+        if (att.activeSession && formatDateKey(new Date()) === targetDateKey) return true;
+        if (Array.isArray(att.sessions)) {
+          return att.sessions.some(s => s.dateKey === targetDateKey);
+        }
+        return false;
+      }) : [];
+
+      if (activeCourse) {
+        dAnns = dAnns.filter(a => isActivityForCourse(a, activeCourse));
+        dAssigns = dAssigns.filter(a => isActivityForCourse(a, activeCourse) && ((typeof isAssignmentMatchingOcc === 'function') ? isAssignmentMatchingOcc(a, activeCourse.userOcc) : true));
+        dAtt = dAtt.filter(a => isActivityForCourse(a, activeCourse));
+      }
+
+      annCount = dAnns.length;
+      assignCount = dAssigns.length;
+      attCount = dAtt.length;
+    } else {
+      annCount = (typeof announcementsData !== 'undefined') ? announcementsData.length : 0;
+      assignCount = (typeof assignmentsData !== 'undefined') ? assignmentsData.length : 0;
+      attCount = (typeof attendancesData !== 'undefined') ? attendancesData.filter(a => a.activeSession).length || attendancesData.length : 0;
+    }
 
     ['rail-count-ann', 'dock-count-ann'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = annCount; });
     ['rail-count-assign', 'dock-count-assign'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = assignCount; });
     ['rail-count-att', 'dock-count-att'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = attCount; });
 
     // Update tooltips
-    const rnBtn = document.getElementById('rail-btn-notice');
-    const rtBtn = document.getElementById('rail-btn-tutorial');
-    const raBtn = document.getElementById('rail-btn-attendance');
-    if (rnBtn) rnBtn.dataset.tooltip = `[ Notices (${annCount}) ]`;
-    if (rtBtn) rtBtn.dataset.tooltip = `[ Tutorials (${assignCount}) ]`;
-    if (raBtn) raBtn.dataset.tooltip = `[ Attendance (${attCount}) ]`;
+    const dnBtn = document.getElementById('dock-btn-notice');
+    const dtBtn = document.getElementById('dock-btn-tutorial');
+    const daBtn = document.getElementById('dock-btn-attendance');
+    if (dnBtn) dnBtn.dataset.tooltip = '[ Notices (' + annCount + ') ]';
+    if (dtBtn) dtBtn.dataset.tooltip = '[ Tutorials (' + assignCount + ') ]';
+    if (daBtn) daBtn.dataset.tooltip = '[ Attendance (' + attCount + ') ]';
 
     // Re-render mini-calendar if expanded to pick up new events
-    if (isCalendarExpanded) renderMiniCalendar();
+    if (isCalendarExpanded && popupSidebarMode === 'calendar') renderMiniCalendar();
   }
 
   // Popup Radio Pills (Notice | Tutorial | Attendance)
@@ -2811,15 +4729,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   const activeSpectrumTab = await findSpectrumTab();
   activeTabSession = activeSpectrumTab;
 
-  if (activeSpectrumTab) {
-    statusIndicator.className = 'status-indicator ready';
-    statusIndicator.innerHTML = '<span class="dot"></span> <span id="status-text">Connected</span>';
-  } else if (cached.cachedCoursesData && cached.cachedCoursesData.length > 0) {
-    statusIndicator.className = 'status-indicator';
-    statusIndicator.innerHTML = '<span class="dot" style="background:#10b981;box-shadow:none;"></span> Cached';
-  } else {
-    statusIndicator.className = 'status-indicator';
-    statusIndicator.innerHTML = '<span class="dot" style="background:#f59e0b;box-shadow:none;"></span> Offline';
+  if (statusIndicator) {
+    const textEl = document.getElementById('status-indicator-text');
+    if (textEl) {
+      if (activeSpectrumTab) {
+        textEl.textContent = 'Connected to UM SPeCTRUM';
+      } else if (cached.cachedCoursesData && cached.cachedCoursesData.length > 0) {
+        textEl.textContent = 'Connected to UM SPeCTRUM (Cached)';
+      } else {
+        textEl.textContent = 'SPeCTRUM Offline';
+      }
+    } else {
+      if (activeSpectrumTab) {
+        statusIndicator.className = 'status-indicator ready';
+        statusIndicator.innerHTML = '<span class="dot"></span> <span id="status-text">Connected</span>';
+      } else if (cached.cachedCoursesData && cached.cachedCoursesData.length > 0) {
+        statusIndicator.className = 'status-indicator';
+        statusIndicator.innerHTML = '<span class="dot" style="background:#10b981;box-shadow:none;"></span> Cached';
+      } else {
+        statusIndicator.className = 'status-indicator';
+        statusIndicator.innerHTML = '<span class="dot" style="background:#f59e0b;box-shadow:none;"></span> Offline';
+      }
+    }
   }
 
   // Load everything immediately from cache
@@ -3980,39 +5911,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderAnnouncementCardHtml(ann) {
-    if (!ann) return '';
-    if (!ann.id) {
-      const discId = ann.discussionId || (ann.discussUrl ? ((ann.discussUrl.match(/[?&]d=(\d+)/) || [])[1]) : '');
-      ann.id = `ann_${ann.courseId || 'c'}_${discId || (ann.timestamp || Math.random().toString(36).slice(2, 7))}`;
-    }
-    const d = ann.timestamp ? (ann.timestamp instanceof Date ? ann.timestamp : new Date(ann.timestamp)) : new Date();
-    const dateKey = !isNaN(d.getTime()) ? formatDateKey(d) : formatDateKey(new Date());
-    const dateStr = escapeHtml(ann.dateStr || dateKey);
-    const annId = escapeHtml(String(ann.id));
-    const cleanCourse = cleanDisplayCourseName(ann.courseName, ann.courseCode);
-    return `
-      <div class="spectrum-card card-notice announcement-card" data-ann-id="${annId}" data-date-key="${dateKey}">
-        <div class="card-header-row">
-          <div class="card-title-group">
-            <div class="card-activity-icon icon-notice" title="Notice">${MINI_ICONS.notice}</div>
-            <span class="card-course-code">${escapeHtml(ann.courseCode || 'NOTICE')}</span>
-            ${cleanCourse ? `
-              <span class="card-course-sep">·</span>
-              <span class="card-course-name" title="${escapeHtml(cleanCourse)}">${escapeHtml(cleanCourse)}</span>
-            ` : ''}
-          </div>
-          <span class="wireframe-pill">${dateStr}</span>
-        </div>
-        <div class="card-subject-row">
-          <div class="card-bold-title">${escapeHtml(ann.title || 'Announcement')}</div>
-          ${ann.preview ? `<div class="card-text-preview">${escapeHtml(ann.preview)}</div>` : ''}
-        </div>
-        <div class="card-meta-row">
-          <span class="card-meta-author">${MINI_ICONS.user} ${escapeHtml(ann.author || 'Lecturer')}</span>
-          <button type="button" class="btn-wireframe btn-open-notice" data-ann-id="${annId}">Open Full ➔</button>
-        </div>
-      </div>
-    `;
+    const vm = computeNoticeCardViewModel(ann);
+    return renderUnifiedNoticeCardHtml(vm);
   }
 
   // ========================================================
@@ -4123,58 +6023,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderAssignmentCardHtml(assign) {
-    const rawD = assign.dueDate;
-    const d = (rawD instanceof Date) ? rawD : (rawD ? new Date(rawD) : null);
-    const dateKey = (d && !isNaN(d.getTime())) ? formatDateKey(d) : formatDateKey(new Date());
-    const isOverdue = !!assign.isOverdue;
-    const isSubmitted = !!assign.isSubmitted;
-    const timeInfo = escapeHtml(assign.dueDateStr || 'No deadline');
-    const timeRem = assign.timeRemaining ? escapeHtml(assign.timeRemaining) : '';
-    const occNum = assign.userOcc || courseOccs[assign.courseId] || defaultOcc || '';
-
-    let statusTagClass = 'upcoming';
-    let statusText = 'Upcoming';
-    let ctaText = 'Link to Submit ➔';
-
-    if (isSubmitted) {
-      statusTagClass = 'live';
-      statusText = '● Submitted';
-      ctaText = 'View Submission ➔';
-    } else if (isOverdue) {
-      statusTagClass = 'overdue';
-      statusText = '● Overdue' + (timeRem ? ` (${timeRem})` : '');
-      ctaText = 'Submit Late ➔';
-    } else if (assign.isDueSoon) {
-      statusTagClass = 'due-soon';
-      statusText = '● Due Soon' + (timeRem ? ` (${timeRem})` : '');
-      ctaText = 'Submit ➔';
-    }
-
-    const cleanCourse = cleanDisplayCourseName(assign.courseName, assign.courseCode);
-
-    return `
-      <div class="spectrum-card card-assignment ${isOverdue ? 'is-overdue' : ''} assignment-card" data-assign-id="${escapeHtml(assign.id)}" data-date-key="${dateKey}">
-        <div class="card-header-row">
-          <div class="card-title-group">
-            <div class="card-activity-icon icon-assignment" title="Assignment">${MINI_ICONS.assignment}</div>
-            <span class="card-course-code">${escapeHtml(assign.courseCode || 'TASK')}</span>
-            ${cleanCourse ? `
-              <span class="card-course-sep">·</span>
-              <span class="card-course-name" title="${escapeHtml(cleanCourse)}">${escapeHtml(cleanCourse)}</span>
-            ` : ''}
-          </div>
-          ${occNum ? `<span class="wireframe-pill">Occ: ${escapeHtml(occNum)}</span>` : ''}
-        </div>
-        <div class="card-subject-row">
-          <div class="card-bold-title">${escapeHtml(assign.title)}</div>
-          <div class="card-due-info">DUE: ${timeInfo} ${timeRem && !isOverdue ? `(${timeRem})` : ''}</div>
-        </div>
-        <div class="card-meta-row">
-          <span class="badge-tag-status ${statusTagClass}">${statusText}</span>
-          <a href="${escapeHtml(assign.url || '#')}" target="_blank" class="btn-cta-solid">${ctaText}</a>
-        </div>
-      </div>
-    `;
+    const vm = computeAssignmentCardViewModel(assign);
+    return renderUnifiedAssignmentCardHtml(vm);
   }
 
   // ========================================================
@@ -4415,217 +6265,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Dedicated Timeline & Day Agenda Attendance Card Renderer
   function renderTimelineAttendanceCardHtml(ev) {
     const att = ev.obj || {};
-    const sess = ev.sessObj || {};
-    const courseCode = escapeHtml(ev.courseCode || att.courseCode || 'ATT');
-    const cleanCourse = cleanDisplayCourseName(ev.courseName || att.courseName || '', ev.courseCode || att.courseCode || '');
-    const courseName = escapeHtml(cleanCourse);
-    const title = escapeHtml(ev.title || sess.desc || 'Class Session');
-    const typeInfo = ev.attTypeInfo || getAttendanceTypeInfo(att, title);
-    const userOcc = att.userOcc || courseOccs[att.courseId] || defaultOcc || '';
-    const dateKey = ev.dateKey || formatDateKey(ev.date || new Date());
-    const cardId = att.id ? `${att.id}_${dateKey}` : `att_${att.courseId || 'c'}_${dateKey}`;
-    const isOpen = ev.status === 'active' || (att.activeSession != null && ev.dateKey === formatDateKey(new Date()));
-    const activeSess = att.activeSession;
-
-    // Status mapping
-    let statusTagClass = 'upcoming';
-    let statusText = '⏳ Scheduled';
-
-    if (isOpen) {
-      statusTagClass = 'live';
-      statusText = activeSess?.requiresPassword ? '🔑 PIN REQUIRED' : '🟢 OPEN NOW';
-    } else if (ev.status === 'submitted' || ev.status === 'present' || sess.isPresent) {
-      statusTagClass = 'live';
-      statusText = '✔ Present';
-    } else if (ev.status === 'late' || sess.statusType === 'late') {
-      statusTagClass = 'due-soon';
-      statusText = '⚠️ Late';
-    } else if (ev.status === 'overdue' || ev.status === 'absent' || sess.statusType === 'absent') {
-      statusTagClass = 'overdue';
-      statusText = '❌ Absent';
-    } else if (ev.status === 'excused' || sess.statusType === 'excused') {
-      statusTagClass = 'upcoming';
-      statusText = 'ℹ️ Excused';
-    } else {
-      statusTagClass = 'upcoming';
-      statusText = sess.statusLabel || '⏳ Scheduled';
-    }
-
-    // Time / Schedule info - Keep ONLY the time and strip redundant date, month, year
-    const rawTime = sess.dateStr || (isOpen ? (activeSess?.time || 'Active Now') : (att.nextSession?.time || 'Class Time'));
-    const onlyTime = extractOnlyTime(rawTime);
-    const timeStr = escapeHtml(onlyTime || rawTime);
-
-    // Action CTA button
-    const takeUrl = activeSess?.takeUrl || att.attUrl || '';
-    const sesskey = activeSess?.sesskey || '';
-    const statusId = activeSess?.presentStatusId || '';
-    const subType = att.subType || '';
-    const rawAttId = att.id || '';
-    const cid = att.courseId || ev.courseId || '';
-
-    let ctaHtml = '';
-    if (isOpen) {
-      if (activeSess?.requiresPassword) {
-        ctaHtml = `<button type="button" class="btn-cta-solid att-btn-pin" data-att-id="${escapeHtml(rawAttId)}" data-card-id="${escapeHtml(cardId)}" data-course-id="${escapeHtml(cid)}" data-take-url="${escapeHtml(takeUrl)}" data-sesskey="${escapeHtml(sesskey)}" data-status-id="${escapeHtml(statusId)}" data-sub-type="${escapeHtml(subType)}" data-course-code="${escapeHtml(ev.courseCode || att.courseCode || '')}" data-course-name="${escapeHtml(ev.courseName || att.courseName || '')}">🔑 Enter PIN ➔</button>`;
-      } else {
-        ctaHtml = `<button type="button" class="btn-cta-solid att-btn-submit" data-att-id="${escapeHtml(rawAttId)}" data-card-id="${escapeHtml(cardId)}" data-course-id="${escapeHtml(cid)}" data-take-url="${escapeHtml(takeUrl)}" data-sesskey="${escapeHtml(sesskey)}" data-status-id="${escapeHtml(statusId)}" data-sub-type="${escapeHtml(subType)}" data-course-code="${escapeHtml(ev.courseCode || att.courseCode || '')}" data-course-name="${escapeHtml(ev.courseName || att.courseName || '')}">⚡ Attend ➔</button>`;
-      }
-    } else {
-      ctaHtml = `
-        <div style="display:flex;align-items:center;gap:4px;">
-          <button type="button" class="btn-cta-solid att-btn-direct-take" data-att-id="${escapeHtml(rawAttId)}" data-card-id="${escapeHtml(cardId)}" data-course-id="${escapeHtml(cid)}" data-att-url="${escapeHtml(att.attUrl || '')}" data-sub-type="${escapeHtml(subType)}" data-course-code="${escapeHtml(ev.courseCode || att.courseCode || '')}" data-course-name="${escapeHtml(ev.courseName || att.courseName || '')}" title="Check & take attendance directly in SPeCTRUM Pro">⚡ Take Attendance</button>
-          <a href="${escapeHtml(att.attUrl || '#')}" target="_blank" class="btn-wireframe" style="padding:4px 7px;font-size:10.5px;" title="Open official SPeCTRUM page">SPeCTRUM ↗</a>
-        </div>
-      `;
-    }
-
-    return `
-      <div class="spectrum-card card-attendance attendance-card ${isOpen ? 'session-open' : ''}" id="att-card-${escapeHtml(cardId)}" data-att-id="${escapeHtml(att.id || cardId)}" data-date-key="${escapeHtml(dateKey)}">
-        <div class="card-header-row">
-          <div class="card-title-group">
-            <div class="card-activity-icon icon-attendance" title="${escapeHtml(typeInfo.label)}">${typeInfo.svgIcon || MINI_ICONS.attendance}</div>
-            <span class="card-course-code">${courseCode}</span>
-            ${courseName ? `
-              <span class="card-course-sep">·</span>
-              <span class="card-course-name" title="${courseName}">${courseName}</span>
-            ` : ''}
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <span class="badge-session-type session-${escapeHtml(typeInfo.type || 'general')} att-type-${escapeHtml(typeInfo.type || 'general')}">[${escapeHtml(typeInfo.label.toUpperCase())}]</span>
-            ${userOcc ? `<span class="wireframe-pill">Occ: ${escapeHtml(userOcc)}</span>` : ''}
-          </div>
-        </div>
-
-        <div class="card-subject-row" style="margin-top:4px;">
-          <span class="card-subject-title" title="${title}">${title}</span>
-          <span class="badge-tag-status ${statusTagClass}">${statusText}</span>
-        </div>
-
-        <div class="card-meta-row" style="margin-top:6px;align-items:center;">
-          <div class="card-meta-left" style="display:flex;align-items:center;">
-            ${isOpen ? `
-              <div class="card-time-wrap">
-                <span class="card-time-live-dot"></span>
-                <span class="card-time-text" style="color:var(--signal-attendance);">${timeStr}</span>
-              </div>
-            ` : `
-              <div class="card-time-wrap">
-                <svg class="icon-svg card-time-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
-                <span class="card-time-text">${timeStr}</span>
-              </div>
-            `}
-          </div>
-          ${ctaHtml}
-        </div>
-      </div>
-    `;
+    const vm = computeAttendanceCardViewModel(att, {
+      session: ev.sessObj,
+      timeStr: ev.timeStr,
+      isLive: ev.status === 'active',
+      isVerified: ev.status === 'present' || ev.status === 'submitted',
+      dateKey: ev.dateKey,
+      cid: ev.courseId || att.courseId
+    });
+    return renderUnifiedAttendanceCardHtml(vm);
   }
 
-  function renderAttendanceCardHtml(att, canHideDuplicate = false) {
-    const userOcc = att.userOcc || courseOccs[att.courseId] || defaultOcc || '';
-    const isOpen = att.activeSession != null;
-    const session = att.activeSession;
-    if (!att.id) {
-      const urlIdMatch = ((att.attUrl || '').match(/id=(\d+)/) || [])[1];
-      att.id = `att_${att.courseId || 'c'}_${att.cmid || urlIdMatch || 'item'}${att.subType ? `_${att.subType}` : ''}`;
+  function renderAttendanceCardHtml(att, sessionOrData = {}) {
+    let sessionData = {};
+    if (typeof sessionOrData === 'object' && sessionOrData !== null) {
+      if (sessionOrData.dateKey || sessionOrData.session || sessionOrData.timeStr || sessionOrData.isLive !== undefined) {
+        sessionData = sessionOrData;
+      }
     }
-    const cardId = att.id;
-    const sessions = att.sessions || [];
-    const pastSessions = sessions.filter(s => !s.isFuture);
-    const lastPast = pastSessions.length > 0 ? pastSessions[pastSessions.length - 1] : null;
-
-    const typeInfo = getAttendanceTypeInfo(att, (session && session.desc) || (att.nextSession && att.nextSession.desc) || '');
-    const cleanDesc = cleanSessionDesc(
-      (session && session.desc) || (att.nextSession && att.nextSession.desc) || att.attTitle || '',
-      typeInfo.label
-    );
-
-    const nextDateKey = (att.nextSession && (att.nextSession.dateStr || att.nextSession.dateKey)) || formatDateKey(new Date());
-    const cleanCourse = cleanDisplayCourseName(att.courseName, att.courseCode);
-
-    return `
-      <div class="spectrum-card card-attendance attendance-card ${isOpen ? 'session-open' : ''}" id="att-card-${escapeHtml(cardId)}" data-att-id="${escapeHtml(cardId)}" data-date-key="${escapeHtml(nextDateKey)}">
-        <div class="card-header-row">
-          <div class="card-title-group">
-            <div class="card-activity-icon icon-attendance" title="${escapeHtml(typeInfo.label)}">${typeInfo.svgIcon || MINI_ICONS.attendance}</div>
-            <span class="card-course-code">${escapeHtml(att.courseCode || 'ATT')}</span>
-            ${cleanCourse ? `
-              <span class="card-course-sep">·</span>
-              <span class="card-course-name" title="${escapeHtml(cleanCourse)}">${escapeHtml(cleanCourse)}</span>
-            ` : ''}
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            ${canHideDuplicate ? `
-              <button type="button" class="btn-card-delete btn-remove-att-duplicate" data-att-id="${escapeHtml(cardId)}" title="Hide Duplicate Attendance">✕</button>
-            ` : ''}
-          </div>
-        </div>
-
-        <!-- Occ pill + Lecture/Tutorial Badge -->
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-          <span class="badge-session-type session-${escapeHtml(typeInfo.type || 'general')} att-type-${escapeHtml(typeInfo.type || 'general')}">[${escapeHtml(typeInfo.label.toUpperCase())}]</span>
-          <span class="wireframe-pill clickable btn-edit-occ" data-card-id="${escapeHtml(cardId)}" data-course-id="${escapeHtml(att.courseId)}" title="Click to edit OCC">
-            Occ: ${escapeHtml(userOcc || 'All')} | Edit
-          </span>
-          ${isOpen ? `<span class="badge-tag-status live">LIVE NOW</span>` : (att.nextSession ? `<span class="badge-tag-status upcoming">SCHEDULED</span>` : '')}
-        </div>
-
-        <!-- Inline OCC Form (hidden by default) -->
-        <div class="occ-inline-form" id="occ-form-${escapeHtml(cardId)}" style="display:none;align-items:center;gap:4px;background:var(--bg-subtle);padding:4px 6px;border-radius:4px;">
-          <span style="font-size:10.5px;color:var(--text-muted);">Set OCC:</span>
-          <input type="text" class="occ-input-inline" id="occ-input-${escapeHtml(cardId)}" value="${escapeHtml(userOcc)}" placeholder="e.g. 2" maxlength="4" style="width:50px;padding:2px 4px;font-size:11px;">
-          <button class="btn-wireframe btn-save-inline-occ" data-card-id="${escapeHtml(cardId)}" data-course-id="${escapeHtml(att.courseId)}" style="padding:2px 6px;font-size:10.5px;">Save</button>
-          <button class="btn-wireframe btn-clear-inline-occ" data-card-id="${escapeHtml(cardId)}" data-course-id="${escapeHtml(att.courseId)}" style="padding:2px 6px;font-size:10.5px;color:var(--signal-urgent);">Clear</button>
-        </div>
-
-        <!-- Previous & Next Session Row -->
-        <div class="card-meta-row" style="align-items:flex-end;">
-          <div class="card-meta-left">
-            <div class="prev-session" style="font-size:10.5px;color:var(--text-secondary);">
-              <span>Previous:</span>
-              <span>${lastPast ? `✔ ${escapeHtml(lastPast.dateStr || lastPast.dateKey)}` : (att.lastRecordedStatus ? `✔ ${escapeHtml(att.lastRecordedStatus)}` : 'None recorded')}</span>
-              ${att.pastStats ? `<span style="color:var(--signal-verified);font-weight:600;">(${att.pastStats.percentage}%)</span>` : ''}
-            </div>
-            <div class="next-session" style="color:var(--text-primary);margin-top:2px;">
-              ${isOpen ? `
-                <div class="card-time-wrap">
-                  <span class="card-time-live-dot"></span>
-                  <span class="card-time-text" style="color:var(--signal-attendance);">Open: ${escapeHtml(extractOnlyTime(session.time) || session.time || 'Available now')}</span>
-                </div>
-              ` : att.nextSession ? `
-                <div class="card-time-wrap">
-                  <svg class="icon-svg card-time-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                  </svg>
-                  <span class="card-time-text">${escapeHtml(extractOnlyTime(att.nextSession.time || att.nextSession.dateStr) || att.nextSession.time || 'Class Time')}</span>
-                </div>
-              ` : `
-                <span style="font-size:11px;color:var(--text-muted);">No upcoming session scheduled</span>
-              `}
-            </div>
-          </div>
-
-          <!-- Action Button -->
-          <div style="display:flex;align-items:center;gap:6px;">
-            ${isOpen ? (
-              session.requiresPassword ? `
-                <button type="button" class="btn-cta-solid att-btn-pin" data-att-id="${escapeHtml(att.id || cardId)}" data-card-id="${escapeHtml(cardId)}" data-course-id="${escapeHtml(att.courseId || '')}" data-take-url="${escapeHtml(session.takeUrl || att.attUrl || '')}" data-sesskey="${escapeHtml(session.sesskey || '')}" data-status-id="${escapeHtml(session.presentStatusId || '')}" data-sub-type="${escapeHtml(att.subType || '')}" data-course-code="${escapeHtml(att.courseCode || '')}" data-course-name="${escapeHtml(att.courseName || '')}">🔑 Enter PIN ➔</button>
-              ` : `
-                <button type="button" class="btn-cta-solid att-btn-submit" data-att-id="${escapeHtml(att.id || cardId)}" data-card-id="${escapeHtml(cardId)}" data-course-id="${escapeHtml(att.courseId || '')}" data-take-url="${escapeHtml(session.takeUrl || att.attUrl || '')}" data-sesskey="${escapeHtml(session.sesskey || '')}" data-status-id="${escapeHtml(session.presentStatusId || '')}" data-sub-type="${escapeHtml(att.subType || '')}" data-course-code="${escapeHtml(att.courseCode || '')}" data-course-name="${escapeHtml(att.courseName || '')}">⚡ Attend ➔</button>
-              `
-            ) : `
-              <button type="button" class="btn-cta-solid att-btn-direct-take" data-att-id="${escapeHtml(att.id || cardId)}" data-card-id="${escapeHtml(cardId)}" data-course-id="${escapeHtml(att.courseId || '')}" data-att-url="${escapeHtml(att.attUrl || '')}" data-sub-type="${escapeHtml(att.subType || '')}" data-course-code="${escapeHtml(att.courseCode || '')}" data-course-name="${escapeHtml(att.courseName || '')}" title="Check & take attendance directly in SPeCTRUM Pro">⚡ Take Attendance</button>
-              <a href="${escapeHtml(att.attUrl || '#')}" target="_blank" class="btn-wireframe" style="padding:4px 8px;font-size:10.5px;" title="Open official SPeCTRUM page in new tab">SPeCTRUM ↗</a>
-            `}
-          </div>
-        </div>
-      </div>
-    `;
+    const vm = computeAttendanceCardViewModel(att, sessionData);
+    return renderUnifiedAttendanceCardHtml(vm);
   }
 
   // Robust Attendance Item Lookup helper for buttons
@@ -4869,6 +6528,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (fulltabHeading && currentFullTabMode !== 'materials' && currentFullTabMode !== 'preferences') {
       fulltabHeading.textContent = `${monthNames[calCurrentMonth].toUpperCase()} ${calCurrentYear}`;
     }
+    const calTargetDate = new Date(calCurrentYear, calCurrentMonth, 1);
+    const calUmInfo = getUmAcademicInfo(calTargetDate);
+    const fulltabSemBadge = document.getElementById('fulltab-sem-badge');
+    const fulltabWeekPill = document.getElementById('fulltab-week-pill');
+    if (fulltabSemBadge) fulltabSemBadge.textContent = calUmInfo.semName;
+    if (fulltabWeekPill) fulltabWeekPill.textContent = calUmInfo.weekPill;
 
     // Collect all events for this month
     const eventsByDate = new Map();
@@ -5139,6 +6804,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const formattedDate = !isNaN(parsedDate.getTime())
       ? parsedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
       : dateKey;
+    if (!isNaN(parsedDate.getTime())) {
+      const dayUmInfo = getUmAcademicInfo(parsedDate);
+      const semBadgeEl = document.getElementById('fulltab-sem-badge');
+      const weekPillEl = document.getElementById('fulltab-week-pill');
+      if (semBadgeEl) semBadgeEl.textContent = dayUmInfo.semName;
+      if (weekPillEl) weekPillEl.textContent = dayUmInfo.weekPill;
+    }
 
     if (sidebar && sidebarTitle && sidebarList) {
       if (calSection) calSection.classList.add('has-sidebar');
@@ -5710,11 +7382,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (weekdayEl) weekdayEl.textContent = fullListCurrentDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
       if (semweekEl) semweekEl.textContent = `SEM WK ${umInfo.weekNum}`;
 
-      if (stickyCard) {
-        stickyCard.classList.remove('animate-date-jump');
-        void stickyCard.offsetWidth;
-        stickyCard.classList.add('animate-date-jump');
-      }
+      // Sticky card updated without reflow thrashing
 
       // Update Header month display
       const monthHeading = document.getElementById('fulltab-month-heading');
@@ -9073,6 +10741,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     hidePageNavControls();
     activeDocPreview = null;
+    currentPreviewZoom = 1.0;
+    const zoomValEl = document.getElementById('insp-zoom-val');
+    if (zoomValEl) zoomValEl.textContent = '100%';
     const contentArea = document.getElementById('insp-preview-content-area') || frame;
     contentArea.innerHTML = `
       <div class="insp-preview-loading">
@@ -9446,18 +11117,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       const scaleX = (frameWidth - padX) / unscaledViewport.width;
       const scaleY = (frameHeight - padY) / unscaledViewport.height;
       const fitScale = Math.min(scaleX, scaleY);
-      const displayScale = Math.max(fitScale, 0.35);
+      const zoomFactor = (typeof currentPreviewZoom === 'number' && currentPreviewZoom > 0) ? currentPreviewZoom : 1.0;
+      const displayScale = Math.max(fitScale, 0.35) * zoomFactor;
 
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const renderViewport = page.getViewport({ scale: displayScale * dpr });
 
       const canvas = document.createElement('canvas');
       canvas.className = 'insp-preview-canvas';
+      if (zoomFactor > 1.0) {
+        canvas.classList.add('is-zoomed');
+      }
       const context = canvas.getContext('2d');
       canvas.width = renderViewport.width;
       canvas.height = renderViewport.height;
-      canvas.style.width = `${Math.floor(renderViewport.width / dpr)}px`;
-      canvas.style.height = `${Math.floor(renderViewport.height / dpr)}px`;
+      const cssW = Math.floor(renderViewport.width / dpr);
+      const cssH = Math.floor(renderViewport.height / dpr);
+      canvas.style.width = `${cssW}px`;
+      canvas.style.height = `${cssH}px`;
 
       await page.render({
         canvasContext: context,
@@ -9637,6 +11314,167 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else if (e.key === 'ArrowRight' || e.key === 'PageDown') {
         e.preventDefault();
         goToDocPage(activeDocPreview.currentPage + 1);
+      }
+    });
+  }
+
+  // --- Preview Zoom & Frame Expand Controls ---
+  let currentPreviewZoom = 1.0;
+  const ZOOM_LEVELS = [0.5, 0.7, 0.85, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5];
+
+  function applyPreviewZoom(newZoom) {
+    newZoom = Math.max(0.5, Math.min(2.5, Math.round(newZoom * 100) / 100));
+    currentPreviewZoom = newZoom;
+
+    // Update UI badge
+    const zoomValEl = document.getElementById('insp-zoom-val');
+    if (zoomValEl) {
+      zoomValEl.textContent = `${Math.round(currentPreviewZoom * 100)}%`;
+    }
+
+    const zoomOutBtn = document.getElementById('insp-zoom-out-btn');
+    const zoomInBtn = document.getElementById('insp-zoom-in-btn');
+    if (zoomOutBtn) zoomOutBtn.disabled = currentPreviewZoom <= 0.5;
+    if (zoomInBtn) zoomInBtn.disabled = currentPreviewZoom >= 2.5;
+
+    // Apply to active preview
+    if (activeDocPreview && activeDocPreview.type === 'pdf') {
+      renderPdfDocPage(activeDocPreview.currentPage || 1);
+    } else {
+      const canvas = document.querySelector('.insp-preview-canvas');
+      if (canvas) {
+        canvas.style.transform = `scale(${currentPreviewZoom})`;
+        canvas.style.transformOrigin = 'center center';
+        if (currentPreviewZoom > 1.0) canvas.classList.add('is-zoomed');
+        else canvas.classList.remove('is-zoomed');
+      }
+      const img = document.getElementById('insp-preview-img');
+      if (img && img.style.display !== 'none') {
+        img.style.transform = `scale(${currentPreviewZoom})`;
+        img.style.transformOrigin = 'center center';
+      }
+      const box = document.querySelector('.insp-slide-preview-box') || document.getElementById('insp-preview-text');
+      if (box) {
+        box.style.transform = `scale(${currentPreviewZoom})`;
+        box.style.transformOrigin = 'top center';
+      }
+    }
+  }
+
+  function zoomInPreview() {
+    const next = ZOOM_LEVELS.find(z => z > currentPreviewZoom + 0.02);
+    applyPreviewZoom(next || Math.min(2.5, currentPreviewZoom + 0.25));
+  }
+
+  function zoomOutPreview() {
+    const prev = [...ZOOM_LEVELS].reverse().find(z => z < currentPreviewZoom - 0.02);
+    applyPreviewZoom(prev || Math.max(0.5, currentPreviewZoom - 0.25));
+  }
+
+  function resetPreviewZoom() {
+    applyPreviewZoom(1.0);
+  }
+
+  let isPreviewFrameMaximized = false;
+  function togglePreviewFrameExpand() {
+    const pane = document.getElementById('file-inspector-pane');
+    const expandBtn = document.getElementById('insp-frame-expand-btn');
+    const maxIcon = document.getElementById('insp-expand-icon-max');
+    const restoreIcon = document.getElementById('insp-expand-icon-restore');
+    if (!pane) return;
+
+    isPreviewFrameMaximized = !isPreviewFrameMaximized;
+    pane.classList.toggle('is-preview-maximized', isPreviewFrameMaximized);
+
+    if (expandBtn) {
+      expandBtn.classList.toggle('is-expanded', isPreviewFrameMaximized);
+      expandBtn.title = isPreviewFrameMaximized ? 'Restore Preview Layout' : 'Maximize Preview Area';
+    }
+    if (maxIcon) maxIcon.style.display = isPreviewFrameMaximized ? 'none' : 'block';
+    if (restoreIcon) restoreIcon.style.display = isPreviewFrameMaximized ? 'block' : 'none';
+
+    // If inspector pane is narrow, also expand the layout width for maximum comfort
+    const layout = document.querySelector('.materials-workspace-layout');
+    if (isPreviewFrameMaximized && layout) {
+      const currentW = pane.offsetWidth;
+      const targetW = Math.round(layout.clientWidth * 0.60);
+      if (currentW < targetW) {
+        layout.style.setProperty('--inspector-width', `${targetW}px`);
+      }
+    }
+
+    // Re-render PDF to fit sharp dimensions
+    if (activeDocPreview && activeDocPreview.type === 'pdf') {
+      setTimeout(() => {
+        renderPdfDocPage(activeDocPreview.currentPage || 1);
+      }, 50);
+    }
+  }
+
+  let previewZoomInitialized = false;
+  function initPreviewZoomControls() {
+    if (previewZoomInitialized) return;
+    previewZoomInitialized = true;
+
+    const btnZoomOut = document.getElementById('insp-zoom-out-btn');
+    const btnZoomIn = document.getElementById('insp-zoom-in-btn');
+    const btnZoomReset = document.getElementById('insp-zoom-reset-btn');
+    const btnFrameExpand = document.getElementById('insp-frame-expand-btn');
+
+    if (btnZoomOut) {
+      btnZoomOut.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        zoomOutPreview();
+      });
+    }
+
+    if (btnZoomIn) {
+      btnZoomIn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        zoomInPreview();
+      });
+    }
+
+    if (btnZoomReset) {
+      btnZoomReset.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        resetPreviewZoom();
+      });
+    }
+
+    if (btnFrameExpand) {
+      btnFrameExpand.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        togglePreviewFrameExpand();
+      });
+    }
+
+    // Keyboard shortcuts when inspector is open:
+    // + / =: zoom in
+    // - / _: zoom out
+    // 0: reset zoom
+    window.addEventListener('keydown', (e) => {
+      const pane = document.getElementById('file-inspector-pane');
+      if (!pane || pane.style.display === 'none') return;
+
+      const activeTag = (document.activeElement && document.activeElement.tagName) || '';
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || (document.activeElement && document.activeElement.isContentEditable)) {
+        return;
+      }
+
+      if (e.key === '+' || e.key === '=' || (e.ctrlKey && (e.key === '+' || e.key === '='))) {
+        e.preventDefault();
+        zoomInPreview();
+      } else if (e.key === '-' || e.key === '_' || (e.ctrlKey && (e.key === '-' || e.key === '_'))) {
+        e.preventDefault();
+        zoomOutPreview();
+      } else if (e.key === '0' || (e.ctrlKey && e.key === '0')) {
+        e.preventDefault();
+        resetPreviewZoom();
       }
     });
   }
@@ -10012,6 +11850,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initialize inspector resizer & page navigation controls
   initInspectorResizer();
   initPageNavControls();
+  initPreviewZoomControls();
 
   // 4. Single File & Course Pack Downloader
   async function downloadSingleFile(file, course) {
@@ -11561,7 +13400,8 @@ async function fetchCourseAssignments(courseId, courseCode, courseName, minTimes
     const res = await fetchWithTimeout(courseUrl, { credentials: 'include' }, 12000);
     if (res.ok && !res.url.includes('/login/')) {
       const html = await res.text();
-      const doc = parser.parseFromString(`<base href="${origin}/">${html}`, 'text/html');
+      const cleanHtml = cleanHtmlForParser(html);
+      const doc = parser.parseFromString(`<base href="${origin}/">${cleanHtml}`, 'text/html');
       const directLinks = doc.querySelectorAll('a[href*="/mod/assign/view.php?id="], a[href*="mod/assign/view.php?id="], a[href*="/mod/quiz/view.php?id="], a[href*="mod/quiz/view.php?id="]');
 
       const itemsToInspect = [];
@@ -11637,7 +13477,7 @@ async function fetchCourseAssignments(courseId, courseCode, courseName, minTimes
             const itemRes = await fetchWithTimeout(item.href, { credentials: 'include' }, 10000);
             if (itemRes.ok) {
               const itemHtml = await itemRes.text();
-              const itemDoc = parser.parseFromString(itemHtml, 'text/html');
+              const itemDoc = parser.parseFromString(cleanHtmlForParser(itemHtml), 'text/html');
 
               let dStr = '';
               let sStr = item.statusText;
@@ -12131,6 +13971,8 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
         let descColText = '';
         let statusColText = '';
 
+        let timeColText = '';
+
         for (let c = 0; c < cols.length; c++) {
           const col = cols[c];
           const txt = (col?.textContent || col?.innerText || '').trim();
@@ -12138,11 +13980,22 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
 
           if (/^\s*#?\d+\s*$/.test(txt)) continue;
 
+          // Check if column contains a time or time range
+          const extractedTime = extractOnlyTime(txt);
+          if (extractedTime && !timeColText && (/\b(am|pm)\b/i.test(extractedTime) || /\d{1,2}[:.]\d{2}\s*(?:[-–—~]|to)\s*\d{1,2}[:.]\d{2}/.test(extractedTime))) {
+            timeColText = extractedTime;
+            continue;
+          }
+
           if (!sessDate) {
             const parsed = parseMoodleDate(txt, courseName, now);
             if (parsed) {
               sessDate = parsed;
               dateColText = txt;
+              const embeddedTime = extractOnlyTime(txt);
+              if (embeddedTime && embeddedTime !== txt && !timeColText) {
+                timeColText = embeddedTime;
+              }
               continue;
             }
           }
@@ -12151,6 +14004,14 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
             if (!statusColText) statusColText = txt;
           } else if (!descColText) {
             descColText = txt;
+          }
+        }
+
+        // Secondary fallback: check entire row text for time range
+        if (!timeColText) {
+          const rowExtracted = extractOnlyTime(rowText);
+          if (rowExtracted && rowExtracted !== rowText) {
+            timeColText = rowExtracted;
           }
         }
 
@@ -12198,10 +14059,13 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
           }
 
           if (occMatches) {
+            const finalTime = timeColText || (sessDate && (sessDate.getHours() !== 0 || sessDate.getMinutes() !== 0) ? `${String(sessDate.getHours()).padStart(2, '0')}:${String(sessDate.getMinutes()).padStart(2, '0')}` : '');
+            const finalDateStr = (finalTime && !dateColText.includes(finalTime)) ? `${dateColText} ${finalTime}` : dateColText;
             list.push({
               date: sessDate,
               dateKey: formatDateKey(sessDate),
-              dateStr: dateColText,
+              dateStr: finalDateStr,
+              time: finalTime,
               desc: descColText || 'Class Session',
               status: statusColText || statusLabel,
               statusType,

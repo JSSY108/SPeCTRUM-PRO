@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,400..800;1,400..800&family=JetBrains+Mono:ital,wght@0,400..800;1,400..800&family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&display=swap');
+
 /* ==========================================================================
    SPeCTRUM PRO v3.0 — Master Editorial Minimalist Design System
    Swiss Grids, 90% Monochrome / 10% Semantic Signal Architecture
@@ -40,8 +42,38 @@
 
   --signal-verified: #059669;
 
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  /* SPeCTRUM PRO Production Typography Configuration */
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Scaled Typographic Tokens */
+  --fs-card-title: 16.5px;
+  --ls-card-title: 0em;
+  --fs-header-code: 12.7px;
+  --fs-occ-badge: 15.4px;
+  --fs-timestamp: 13.8px;
+  --fs-author: 13.8px;
+  --h-action-btn: 32px;
+  --fs-action-btn: 14.3px;
+  --fs-cal-legend: 10.8px;
+
+  /* ==========================================================================
+     CALENDAR TUNING CONFIGURATION (TUNE CALENDAR SIZES HERE)
+     Change these values to scale the calendar up or down!
+     ========================================================================== */
+  --cal-rail-width: 280px;            /* Rail width: 1.25x scale (default was 230px) */
+  --cal-cell-height: 25px;            /* Day cell height: 1.25x scale (default was 20px) */
+  --cal-cell-font-size: 12px;         /* Date number text: 1.25x scale (default was 9.5px) */
+  --cal-header-date-size: 15px;       /* Header main date text: 1.25x scale (default was 12px) */
+  --cal-month-title-size: 13px;       /* Month title text: 1.25x scale (default was 10.5px) */
+  --cal-day-header-size: 11px;        /* Weekday M T W T F S S: 1.25x scale (default was 8.5px) */
+  --cal-dot-size: 4px;                /* Event dot size: 1.25x scale (default was 3px) */
+  --cal-arrow-btn-size: 22px;         /* Month prev/next arrow button size */
+
+  /* Timeline Mode Day Column Tuning Tokens */
+  --kanban-col-width: 560px;          /* Day column width in Full Tab Timeline mode (expanded so due timestamps are never cut) */
+  --kanban-col-min-width: 520px;      /* Minimum day column width to prevent text truncating */
+  --kanban-col-max-width: 680px;      /* Maximum day column width */         /* Month prev/next arrow button size */
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
@@ -97,17 +129,330 @@ html, body {
   color: var(--signal-attendance) !important;
 }
 
+.icon-svg.icon-attendance,
+.dock-filter-btn .icon-svg.icon-attendance,
+.dock-filter-btn:hover .icon-svg.icon-attendance,
+.rail-toggle-pill .icon-svg.icon-attendance,
+.rail-toggle-pill:hover .icon-svg.icon-attendance,
+.card-bounded-icon .icon-svg.icon-attendance,
+.icon-box-attendance .icon-svg {
+  fill: currentColor !important;
+  stroke: none !important;
+}
+
 /* ==========================================================================
    SURFACE B: EXTENSION POPUP (Default: 520px × 600px)
    Strictly a fast list-feed. No left rail, no calendar grid, no kanban.
    ========================================================================== */
 body:not(.is-full-tab) {
-  width: 520px;
+  width: 780px;
   height: 600px;
-  max-width: 520px;
+  max-width: 800px;
   max-height: 600px;
   overflow: hidden;
   user-select: none;
+
+  /* Scaled Typographic Tokens for Extension Popup (Expanded 760px Natural Ratio) */
+  --fs-card-title: 14.5px;
+  --ls-card-title: 0em;
+  --fs-header-code: 11px;
+  --fs-occ-badge: 11px;
+  --fs-timestamp: 11.5px;
+  --fs-author: 11.5px;
+  --h-action-btn: 27px;
+  --fs-action-btn: 11.5px;
+}
+
+/* Extension Popup Proportional Card & Rail Scaling */
+body:not(.is-full-tab) .spectrum-card,
+body:not(.is-full-tab) .scoped-card {
+  padding: 9px 12px !important;
+  min-height: unset !important;
+  gap: 6px !important;
+  border-radius: 6px !important;
+}
+
+body:not(.is-full-tab) .card-bounded-icon {
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  height: 34px !important;
+  border-radius: 6px !important;
+}
+
+body:not(.is-full-tab) .card-bounded-icon .icon-svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+body:not(.is-full-tab) .card-content-wrap {
+  gap: 4px !important;
+  overflow: visible !important;
+}
+
+body:not(.is-full-tab) .spectrum-card,
+body:not(.is-full-tab) .scoped-card {
+  overflow: visible !important;
+}
+
+body:not(.is-full-tab) .assign-row-title,
+body:not(.is-full-tab) .notice-row-title,
+body:not(.is-full-tab) .att-row-hero {
+  margin: 0 !important;
+}
+
+/* Swapped Attendance Card Typography in Extension: Time is the Hero headline */
+body:not(.is-full-tab) .att-time-hero {
+  font-size: 14px !important;
+  font-weight: 800 !important;
+}
+
+body:not(.is-full-tab) .att-course-title,
+body:not(.is-full-tab) .att-course-name,
+body:not(.is-full-tab) .att-header-left {
+  font-size: 11px !important;
+}
+
+body:not(.is-full-tab) .att-code-pill,
+body:not(.is-full-tab) .assign-code-pill,
+body:not(.is-full-tab) .notice-code-pill {
+  font-size: 11px !important;
+  padding: 1px 4px !important;
+}
+
+body:not(.is-full-tab) .assign-occ-pill,
+body:not(.is-full-tab) .att-occ-tag {
+  font-size: 10.5px !important;
+  padding: 1px 5px !important;
+}
+
+body:not(.is-full-tab) .btn-assign-action,
+body:not(.is-full-tab) .btn-att-action,
+body:not(.is-full-tab) .btn-notice-open {
+  height: 25px !important;
+  font-size: 11px !important;
+  padding: 0 8px !important;
+  border-radius: 4px !important;
+  margin-left: auto !important;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+
+body:not(.is-full-tab) .assign-row-footer {
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+  margin-top: 4px !important;
+}
+
+body:not(.is-full-tab) .assign-footer-left {
+  font-size: 11.2px !important;
+  gap: 4px !important;
+  letter-spacing: 0.1px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  white-space: nowrap !important;
+}
+
+body:not(.is-full-tab) .assign-token {
+  font-size: 10.5px !important;
+  letter-spacing: 0.2px !important;
+}
+
+body:not(.is-full-tab) .assign-timestamp {
+  font-size: 11px !important;
+  letter-spacing: 0.1px !important;
+  white-space: nowrap !important;
+}
+
+body:not(.is-full-tab) .att-row-action {
+  gap: 8px !important;
+  margin-top: 1px !important;
+}
+
+body:not(.is-full-tab) .att-progress-track {
+  height: 3px !important;
+}
+
+body:not(.is-full-tab) .att-window-label,
+body:not(.is-full-tab) .att-window-sub {
+  font-size: 10.5px !important;
+}
+
+/* Left Sidebar Rail Scaled Geometry (1.25x Calendar Scale) */
+body:not(.is-full-tab) .split-date-sticky-box.popup-sidebar-rail,
+body:not(.is-full-tab) .split-date-container.is-calendar-expanded .popup-sidebar-rail,
+body:not(.is-full-tab) .split-date-sticky-box.popup-sidebar-rail.is-calendar-expanded {
+  width: var(--cal-rail-width, 280px) !important;
+  padding: 7px 10px !important;
+}
+
+/* Collapsed Rail in Courses Mode (Slim 58px Icon Strip) */
+body:not(.is-full-tab) .split-date-sticky-box.popup-sidebar-rail.is-collapsed,
+body:not(.is-full-tab) .split-date-sticky-box.popup-sidebar-rail.rail-mode-courses,
+body:not(.is-full-tab) .split-date-container .split-date-sticky-box.is-collapsed,
+body:not(.is-full-tab) .split-date-container .split-date-sticky-box.rail-mode-courses,
+.split-date-sticky-box.is-collapsed,
+.split-date-sticky-box.rail-mode-courses {
+  width: 58px !important;
+  min-width: 58px !important;
+  max-width: 58px !important;
+  padding: 10px 6px !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+}
+
+body:not(.is-full-tab) .cal-exp-header-box {
+  padding: 4px 2px 10px 2px !important;
+  margin-bottom: 2px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+body:not(.is-full-tab) .cal-hero-numeral {
+  font-size: 32px !important;
+  line-height: 1 !important;
+}
+
+body:not(.is-full-tab) .cal-exp-main-date {
+  font-size: var(--cal-header-date-size, 15px) !important;
+  margin: 2px 0 1px 0 !important;
+}
+
+body:not(.is-full-tab) .mini-cal-card {
+  padding: 7px 7px !important;
+}
+
+body:not(.is-full-tab) .mini-cal-nav-row,
+body:not(.is-full-tab) .mini-cal-toggle-row {
+  margin-bottom: 4px !important;
+}
+
+body:not(.is-full-tab) .mini-cal-month-title {
+  font-size: var(--cal-month-title-size, 13px) !important;
+  font-weight: 800 !important;
+}
+
+body:not(.is-full-tab) .mini-cal-arrow-btn {
+  width: var(--cal-arrow-btn-size, 22px) !important;
+  height: var(--cal-arrow-btn-size, 22px) !important;
+  font-size: 11px !important;
+}
+
+body:not(.is-full-tab) .seg-btn {
+  font-size: 9.5px !important;
+  padding: 2px 6px !important;
+}
+
+body:not(.is-full-tab) .mini-cal-day-headers {
+  margin-bottom: 3px !important;
+  font-size: var(--cal-day-header-size, 11px) !important;
+}
+
+body:not(.is-full-tab) .mini-cal-day-cell {
+  height: var(--cal-cell-height, 25px) !important;
+  font-size: var(--cal-cell-font-size, 12px) !important;
+  font-weight: 700 !important;
+}
+
+body:not(.is-full-tab) .cell-dots-wrap {
+  height: 4px !important;
+  margin-top: 1px !important;
+  gap: 2px !important;
+}
+
+body:not(.is-full-tab) .cell-dot {
+  width: var(--cal-dot-size, 4px) !important;
+  height: var(--cal-dot-size, 4px) !important;
+}
+
+body:not(.is-full-tab) .cell-count-badge {
+  font-size: 8.5px !important;
+  padding: 1px 4px !important;
+}
+
+body:not(.is-full-tab) .mini-cal-legend {
+  margin-top: 6px !important;
+  font-size: var(--fs-cal-legend, 10.8px) !important;
+  gap: 5px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 4px 8px 2px 6px !important;
+  box-sizing: border-box !important;
+}
+
+body:not(.is-full-tab) .legend-item {
+  font-size: var(--fs-cal-legend, 10.8px) !important;
+  gap: 3.5px !important;
+}
+
+body:not(.is-full-tab) .legend-dot {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+}
+
+body:not(.is-full-tab) .legend-rect.rect-today {
+  width: 7.5px !important;
+  height: 7.5px !important;
+  border-radius: 2px !important;
+}
+
+body:not(.is-full-tab) .legend-today-btn {
+  font-size: var(--fs-cal-legend, 10.8px) !important;
+  padding: 1px 4px !important;
+  gap: 3.5px !important;
+}
+
+body:not(.is-full-tab) .rail-course-matrix-card {
+  padding: 5px 6px !important;
+  margin-top: 4px !important;
+}
+
+body:not(.is-full-tab) .matrix-header-row {
+  margin-bottom: 3px !important;
+}
+
+body:not(.is-full-tab) .matrix-header-title {
+  font-size: 9px !important;
+}
+
+body:not(.is-full-tab) .course-filter-matrix {
+  gap: 3px !important;
+}
+
+body:not(.is-full-tab) .matrix-monogram-btn {
+  height: 24px !important;
+  font-size: 9.5px !important;
+  padding: 0 2px !important;
+}
+
+body:not(.is-full-tab) .matrix-btn-text {
+  font-size: 9.5px !important;
+}
+
+body:not(.is-full-tab) .matrix-btn-count {
+  font-size: 7.5px !important;
+  padding: 1px 3px !important;
+}
+
+body:not(.is-full-tab) .rail-docked-filters {
+  margin-top: 4px !important;
+}
+
+body:not(.is-full-tab) .dock-filter-btn {
+  height: 26px !important;
+}
+
+body:not(.is-full-tab) .dock-filter-btn .icon-svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+body:not(.is-full-tab) .dock-badge {
+  font-size: 8px !important;
+  padding: 0 4px !important;
 }
 
 body:not(.is-full-tab) .fulltab-only {
@@ -118,9 +463,11 @@ body:not(.is-full-tab) .fulltab-only {
   display: flex;
   flex-direction: column;
   width: 100%;
+  max-width: 100%;
   height: 100%;
   background: var(--bg-canvas);
   position: relative;
+  overflow-x: hidden !important;
 }
 
 /* Popup Header (Image 4) */
@@ -303,6 +650,61 @@ body:not(.is-full-tab) .fulltab-only {
 
 .radio-pill-btn.active .color-dot {
   box-shadow: 0 0 0 1px #fff;
+}
+
+/* Sidebar Mode Switcher (Calendar vs Courses) in Primary Navigation */
+.sidebar-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-subtle, #F4F4F5);
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid var(--border-hairline, #E4E4E7);
+  gap: 2px;
+}
+
+.sidebar-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary, #71717A);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.sidebar-mode-btn .icon-svg {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+}
+
+.sidebar-mode-btn:hover {
+  color: var(--text-primary, #18181B);
+}
+
+.sidebar-mode-btn.active {
+  background: #FFFFFF !important;
+  color: #111111 !important;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .sidebar-mode-toggle {
+  background: #27272A;
+  border-color: #3F3F46;
+}
+
+[data-theme="dark"] .sidebar-mode-btn.active {
+  background: #18181B !important;
+  color: #FAFAFA !important;
 }
 
 .grouping-toggle {
@@ -587,7 +989,8 @@ body:not(.is-full-tab) .fulltab-only {
   display: flex;
   width: 100%;
   height: 100%;
-  overflow-x: visible;
+  max-width: 100%;
+  overflow-x: hidden !important;
   overflow-y: hidden;
   position: relative;
 }
@@ -625,13 +1028,163 @@ body:not(.is-full-tab) .fulltab-only {
   padding: 10px 10px;
 }
 
-/* Collapsed Rail View */
-.rail-collapsed-view {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
+/* Collapsed Rail View & First-Letter Course Monograms - ONLY displayed in Courses mode */
+.rail-collapsed-view,
+body:not(.is-full-tab) .rail-collapsed-view {
+  display: none !important;
+}
+
+body:not(.is-full-tab) .rail-mode-courses .rail-collapsed-view,
+body:not(.is-full-tab) .is-collapsed .rail-collapsed-view,
+.rail-mode-courses .rail-collapsed-view,
+.is-collapsed .rail-collapsed-view {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  width: 100% !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.rail-monograms-list,
+body:not(.is-full-tab) .rail-monograms-list {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  padding: 4px 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: none !important;
+}
+
+.rail-monograms-list::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* Tactical First-Letter Course Monogram Icon Button */
+.rail-monogram-btn,
+body:not(.is-full-tab) .rail-monogram-btn {
+  width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  border-radius: 8px !important;
+  background: var(--bg-surface, #FFFFFF) !important;
+  border: 1.5px solid var(--border-hairline, #E4E4E7) !important;
+  color: #18181B !important;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+  font-size: 11.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  position: relative !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  padding: 0 !important;
+}
+
+.rail-monogram-btn:hover,
+body:not(.is-full-tab) .rail-monogram-btn:hover {
+  background: #F4F4F5 !important;
+  border-color: #A1A1AA !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Active Selected Course State */
+.rail-monogram-btn.active,
+body:not(.is-full-tab) .rail-monogram-btn.active {
+  background: #111111 !important;
+  color: #FFFFFF !important;
+  border-color: #111111 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+  transform: none !important;
+}
+
+/* Dark Theme Monograms */
+[data-theme="dark"] .rail-monogram-btn,
+body[data-theme="dark"]:not(.is-full-tab) .rail-monogram-btn {
+  background: #27272A !important;
+  border-color: #3F3F46 !important;
+  color: #FAFAFA !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .rail-monogram-btn:hover,
+body[data-theme="dark"]:not(.is-full-tab) .rail-monogram-btn:hover {
+  background: #3F3F46 !important;
+  border-color: #71717A !important;
+}
+
+[data-theme="dark"] .rail-monogram-btn.active,
+body[data-theme="dark"]:not(.is-full-tab) .rail-monogram-btn.active {
+  background: #FAFAFA !important;
+  color: #111111 !important;
+  border-color: #FAFAFA !important;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Status Indicator Dot on Monogram Icon in By Course Mode (Hidden per user spec) */
+.rail-monogram-dot {
+  display: none !important;
+}
+
+/* Docked Activity Filters in Courses / Collapsed Rail Mode */
+body:not(.is-full-tab) .rail-mode-courses .rail-docked-filters,
+body:not(.is-full-tab) .is-collapsed .rail-docked-filters,
+.rail-mode-courses .rail-docked-filters,
+.is-collapsed .rail-docked-filters {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+  margin-top: auto !important;
+  padding-top: 8px !important;
+  border-top: 1px solid var(--border-hairline, #E4E4E7) !important;
+}
+
+body:not(.is-full-tab) .rail-mode-courses .dock-filter-btn,
+body:not(.is-full-tab) .is-collapsed .dock-filter-btn,
+.rail-mode-courses .dock-filter-btn,
+.is-collapsed .dock-filter-btn {
+  width: 38px !important;
+  height: 32px !important;
+  flex: none !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+}
+
+body:not(.is-full-tab) .rail-mode-courses .dock-filter-btn .icon-svg,
+body:not(.is-full-tab) .is-collapsed .dock-filter-btn .icon-svg,
+.rail-mode-courses .dock-filter-btn .icon-svg,
+.is-collapsed .dock-filter-btn .icon-svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+body:not(.is-full-tab) .rail-mode-courses .dock-badge,
+body:not(.is-full-tab) .is-collapsed .dock-badge,
+.rail-mode-courses .dock-badge,
+.is-collapsed .dock-badge {
+  position: absolute !important;
+  top: -3px !important;
+  right: -3px !important;
+  font-size: 7.5px !important;
+  padding: 1px 3px !important;
+  border-radius: 4px !important;
+  line-height: 1 !important;
+  border: 1px solid var(--bg-surface, #FFFFFF) !important;
 }
 
 /* Date Card Accordion Trigger */
@@ -871,70 +1424,115 @@ body:not(.is-full-tab) .fulltab-only {
   width: 100%;
 }
 
+/* Date Hero Header (Option A - Swiss Typography & High Glanceability) */
 .cal-exp-header-box {
-  background: #111111;
-  color: #FFFFFF;
-  border-radius: 8px;
-  padding: 8px 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.cal-exp-top-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.cal-exp-title {
-  font-size: 8.5px;
-  font-weight: 800;
-  letter-spacing: 0.8px;
-  color: rgba(255, 255, 255, 0.7);
-  text-transform: uppercase;
-}
-
-.cal-exp-collapse-btn {
   background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 13px;
-  cursor: pointer;
-  padding: 0 2px;
-  line-height: 1;
-  transition: color 0.15s ease;
+  color: var(--text-primary);
+  border-radius: 0;
+  padding: 4px 2px 10px 2px;
+  box-shadow: none;
+  margin-bottom: 2px;
 }
 
-.cal-exp-collapse-btn:hover {
-  color: #FFFFFF;
-}
-
-.cal-exp-main-date {
-  font-size: 13.5px;
-  font-weight: 800;
-  margin: 4px 0 3px 0;
-  letter-spacing: -0.2px;
-  white-space: nowrap;
-}
-
-.cal-exp-sub-row {
+.cal-hero-date-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 9px;
-  font-weight: 700;
+  justify-content: space-between;
+  width: 100%;
 }
 
-.cal-exp-semweek {
-  color: rgba(255, 255, 255, 0.6);
+.cal-date-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cal-hero-numeral {
+  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text-primary, #18181B);
+  letter-spacing: -0.8px;
+}
+
+.cal-hero-meta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.cal-hero-day {
+  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: 0.3px;
   text-transform: uppercase;
+  color: var(--text-primary, #18181B);
 }
 
-.cal-exp-selected-tag {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+.cal-hero-sub {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--text-secondary, #71717A);
+}
+
+.cal-date-hero-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.cal-hero-today-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 3px 7px;
   border-radius: 4px;
-  padding: 1px 5px;
-  font-size: 8.5px;
+  background: var(--bg-tertiary, #F4F4F5);
+  color: var(--text-secondary, #52525B);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  line-height: 1.2;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cal-hero-today-badge:hover {
+  background: var(--bg-hover, #E4E4E7);
+  color: var(--text-primary, #18181B);
+}
+
+[data-theme="dark"] .cal-hero-numeral {
+  color: #FAFAFA;
+}
+
+[data-theme="dark"] .cal-hero-day {
+  color: #FAFAFA;
+}
+
+[data-theme="dark"] .cal-hero-sub {
+  color: #A1A1AA;
+}
+
+[data-theme="dark"] .cal-hero-today-badge {
+  background: rgba(255, 255, 255, 0.08);
+  color: #D4D4D8;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .cal-hero-today-badge:hover {
+  background: rgba(255, 255, 255, 0.16);
   color: #FFFFFF;
 }
 
@@ -952,7 +1550,7 @@ body:not(.is-full-tab) .fulltab-only {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .mini-cal-nav-left {
@@ -962,47 +1560,59 @@ body:not(.is-full-tab) .fulltab-only {
 }
 
 .mini-cal-month-title {
+  font-family: var(--font-mono, monospace);
   font-size: 11.5px;
   font-weight: 800;
   color: var(--text-primary);
-  letter-spacing: -0.2px;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
 }
 
 .mini-cal-week-badge {
-  font-size: 9px;
-  font-weight: 700;
-  background: var(--bg-subtle);
-  color: var(--text-muted);
-  border-radius: 4px;
-  padding: 1px 4px;
-  line-height: 1.2;
+  display: none;
 }
 
 .mini-cal-nav-arrows {
   display: flex;
-  gap: 3px;
+  gap: 4px;
 }
 
 .mini-cal-arrow-btn {
-  width: 18px;
-  height: 18px;
-  border: 1px solid var(--border-hairline);
-  border-radius: 3px;
-  background: transparent;
+  width: var(--cal-arrow-btn-size, 22px);
+  height: var(--cal-arrow-btn-size, 22px);
+  border: 1px solid var(--border-hairline, #E4E4E7);
+  border-radius: 4px;
+  background: var(--bg-surface, #FFFFFF);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: bold;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #71717A);
   transition: all 0.15s ease;
 }
 
 .mini-cal-arrow-btn:hover {
-  background: var(--bg-subtle);
-  color: var(--text-primary);
-  border-color: var(--border-strong);
+  background: var(--bg-hover, #F4F4F5);
+  color: var(--text-primary, #18181B);
+  border-color: var(--border-strong, #D4D4D8);
+}
+
+[data-theme="dark"] .mini-cal-month-title {
+  color: #FAFAFA;
+}
+
+[data-theme="dark"] .mini-cal-arrow-btn {
+  background: var(--bg-surface, #18181B);
+  border-color: var(--border-hairline, #27272A);
+  color: #A1A1AA;
+}
+
+[data-theme="dark"] .mini-cal-arrow-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+  border-color: #3F3F46;
 }
 
 .mini-cal-toggle-row {
@@ -1135,24 +1745,80 @@ body:not(.is-full-tab) .fulltab-only {
 
 .mini-cal-legend {
   display: flex;
-  justify-content: center;
-  gap: 6px;
-  font-size: 8px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  font-size: var(--fs-cal-legend, 10.8px);
   font-weight: 600;
   color: var(--text-secondary);
   margin-top: 6px;
+  padding: 4px 8px 2px 6px;
+  box-sizing: border-box;
 }
 
 .legend-item {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 3.5px;
+  white-space: nowrap;
+  font-size: var(--fs-cal-legend, 10.8px);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.legend-today-btn {
+  background: transparent;
+  border: none;
+  padding: 1px 4px;
+  margin: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--fs-cal-legend, 10.8px);
+  font-weight: 700;
+  color: var(--text-primary);
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3.5px;
+  transition: all 0.15s ease;
+}
+
+.legend-today-btn:hover {
+  background: var(--bg-subtle, #F4F4F5);
+  color: var(--text-primary, #000000);
+}
+
+.legend-today-btn:active {
+  transform: scale(0.96);
+}
+
+.legend-rect.rect-today {
+  width: 7.5px;
+  height: 7.5px;
+  border-radius: 2px;
+  background: #111111;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .legend-rect.rect-today {
+  background: #FAFAFA;
+}
+
+[data-theme="dark"] .legend-today-btn {
+  color: var(--text-primary, #F4F4F5);
+}
+
+[data-theme="dark"] .legend-today-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .legend-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50% !important;
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 .mini-cal-summary-chip {
@@ -1200,44 +1866,298 @@ body:not(.is-full-tab) .fulltab-only {
   color: var(--text-primary);
 }
 
-/* Docked Activity Filters Below Calendar */
+/* High-Density Course Filter Matrix Card (Beneath Calendar) */
+.rail-course-matrix-card {
+  width: 100%;
+  background: var(--bg-surface, #FFFFFF);
+  border: 1px solid var(--border-hairline, #E4E4E7);
+  border-radius: 6px;
+  padding: 8px 8px;
+  margin-top: 6px;
+  box-sizing: border-box;
+}
+
+.matrix-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  padding: 0 2px;
+}
+
+.matrix-header-title {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  color: #71717A;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.matrix-header-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #71717A;
+  background: #F4F4F5;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.course-filter-matrix {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  width: 100%;
+}
+
+.matrix-monogram-btn {
+  height: 28px;
+  border-radius: 6px;
+  background: #F4F4F5;
+  border: 1px solid #E4E4E7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  color: #18181B;
+  cursor: pointer;
+  padding: 0 4px;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.matrix-monogram-btn:hover {
+  background: #E4E4E7;
+  border-color: #D4D4D8;
+  transform: translateY(-1px);
+}
+
+.matrix-monogram-btn.active {
+  background: #111111 !important;
+  color: #FFFFFF !important;
+  border-color: #111111 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.matrix-monogram-btn.active .matrix-btn-text {
+  color: #FFFFFF !important;
+}
+
+.matrix-btn-text {
+  font-family: var(--font-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.matrix-btn-count {
+  font-size: 8.5px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: #E4E4E7;
+  color: #52525B;
+  margin-left: 3px;
+  line-height: 1;
+}
+
+.matrix-monogram-btn.active .matrix-btn-count {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #FFFFFF !important;
+}
+
+.matrix-btn-dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: #111111 !important;
+  transition: background 0.15s ease;
+}
+
+.matrix-btn-dot.has-urgent,
+.matrix-btn-dot.has-normal {
+  background: #111111 !important;
+}
+
+/* When selected and turns black, dot turns white */
+.matrix-monogram-btn.active .matrix-btn-dot,
+.matrix-monogram-btn.active .matrix-btn-dot.has-urgent,
+.matrix-monogram-btn.active .matrix-btn-dot.has-normal {
+  background: #FFFFFF !important;
+}
+
+[data-theme="dark"] .matrix-btn-dot,
+[data-theme="dark"] .matrix-btn-dot.has-urgent,
+[data-theme="dark"] .matrix-btn-dot.has-normal {
+  background: #FFFFFF !important;
+}
+
+[data-theme="dark"] .matrix-monogram-btn.active .matrix-btn-dot,
+[data-theme="dark"] .matrix-monogram-btn.active .matrix-btn-dot.has-urgent,
+[data-theme="dark"] .matrix-monogram-btn.active .matrix-btn-dot.has-normal {
+  background: #111111 !important;
+}
+
+/* Floating Course Monogram Popover Overlay */
+.matrix-course-popover {
+  position: fixed !important;
+  z-index: 99999 !important;
+  display: none !important;
+  background: #18181B;
+  color: #FFFFFF;
+  padding: 10px 14px;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+  width: 220px;
+  box-sizing: border-box;
+}
+
+.matrix-course-popover.visible {
+  display: block !important;
+}
+
+.mcp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.mcp-code {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  color: #A1A1AA;
+}
+
+.mcp-occ {
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: #FAFAFA;
+}
+
+.mcp-title {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #FFFFFF;
+  margin-bottom: 5px;
+}
+
+.mcp-instructor {
+  font-size: 10.5px;
+  color: #A1A1AA;
+  margin-bottom: 5px;
+  line-height: 1.25;
+}
+
+.mcp-counter {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  color: #34D399;
+}
+
+/* Docked Activity Filters Below Calendar (Dedicated Semantic Tinting) */
 .rail-docked-filters {
   display: flex;
   justify-content: space-between;
   gap: 4px;
-  margin-top: 4px;
+  margin-top: 6px;
+  width: 100%;
 }
 
 .dock-filter-btn {
   flex: 1;
-  height: 28px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border-hairline);
-  border-radius: 5px;
-  background: var(--bg-surface);
-  color: var(--text-secondary);
+  border-radius: 6px;
   position: relative;
   cursor: pointer;
   transition: all 0.15s ease;
+  box-sizing: border-box;
+  opacity: 0.4;
+  background: var(--bg-surface, #FFFFFF);
+  border: 1px solid var(--border-hairline, #E4E4E7);
+  color: var(--text-muted, #71717A);
+}
+
+.dock-filter-btn .icon-svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
 }
 
 .dock-filter-btn:hover {
-  background: var(--bg-subtle);
-  color: var(--text-primary);
-  border-color: var(--border-strong);
+  opacity: 0.85;
+  transform: translateY(-1px);
 }
 
 .dock-filter-btn.active {
-  background: #111111 !important;
-  color: #FFFFFF !important;
-  border-color: #111111 !important;
+  opacity: 1 !important;
 }
 
-.dock-filter-btn.active .icon-svg {
+/* 1. Notice Button */
+.dock-filter-btn#dock-btn-notice.active {
+  background: #EFF6FF !important;
+  border: 1.5px solid #3B82F6 !important;
+}
+.dock-filter-btn#dock-btn-notice.active .icon-svg {
+  color: #2563EB !important;
+  stroke: #2563EB !important;
+}
+.dock-filter-btn#dock-btn-notice .dock-badge,
+.dock-badge.badge-ann {
+  background: #2563EB !important;
   color: #FFFFFF !important;
-  stroke: #FFFFFF !important;
+}
+
+/* 2. Tutorial / Assignment Button */
+.dock-filter-btn#dock-btn-tutorial.active {
+  background: #FFF7ED !important;
+  border: 1.5px solid #F97316 !important;
+}
+.dock-filter-btn#dock-btn-tutorial.active .icon-svg {
+  color: #F97316 !important;
+  stroke: #F97316 !important;
+}
+.dock-filter-btn#dock-btn-tutorial .dock-badge,
+.dock-badge.badge-assign {
+  background: #F97316 !important;
+  color: #FFFFFF !important;
+}
+
+/* 3. Attendance Button */
+.dock-filter-btn#dock-btn-attendance.active {
+  background: #ECFDF5 !important;
+  border: 1.5px solid #10B981 !important;
+}
+.dock-filter-btn#dock-btn-attendance.active .icon-svg {
+  color: #10B981 !important;
+  fill: #10B981 !important;
+  stroke: none !important;
+}
+.dock-filter-btn#dock-btn-attendance .dock-badge,
+.dock-badge.badge-att {
+  background: #10B981 !important;
+  color: #FFFFFF !important;
 }
 
 .dock-badge {
@@ -1246,12 +2166,132 @@ body:not(.is-full-tab) .fulltab-only {
   right: -4px;
   font-size: 8px;
   font-weight: 800;
-  padding: 0 3px;
+  padding: 0 4px;
   border-radius: 999px;
   line-height: 12px;
   height: 12px;
   min-width: 12px;
   text-align: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Focused Course Scope Header Bar inside Stream */
+.popup-focused-scope-bar {
+  background: var(--bg-surface, #FFFFFF);
+  border: 1px solid var(--border-hairline, #E4E4E7);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.scope-bar-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scope-bar-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  color: #71717A;
+  letter-spacing: 0.3px;
+}
+
+.scope-crumb-code {
+  color: #111111;
+  font-weight: 800;
+}
+
+.scope-crumb-occ {
+  background: #F4F4F5;
+  color: #3F3F46;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+.scope-updates-badge {
+  display: none !important;
+}
+
+.scope-bar-title-row {
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.popup-focused-scope-name {
+  font-family: 'Hanken Grotesk', var(--font-sans), sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: #000000;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scope-bar-sub-row {
+  display: none !important;
+}
+
+[data-theme="dark"] .rail-course-matrix-card,
+[data-theme="dark"] .popup-focused-scope-bar {
+  background: var(--bg-surface, #18181B);
+  border-color: var(--border-hairline, #27272A);
+}
+
+[data-theme="dark"] .scope-crumb-code {
+  color: #FAFAFA;
+}
+
+[data-theme="dark"] .scope-crumb-occ {
+  background: #27272A;
+  color: #D4D4D8;
+}
+
+[data-theme="dark"] .popup-focused-scope-name {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .matrix-monogram-btn {
+  background: #27272A;
+  border-color: #3F3F46;
+  color: #FAFAFA;
+}
+
+[data-theme="dark"] .matrix-monogram-btn.active {
+  background: #FAFAFA !important;
+  color: #111111 !important;
+  border-color: #FAFAFA !important;
+}
+
+[data-theme="dark"] .matrix-monogram-btn.active .matrix-btn-text {
+  color: #111111 !important;
+}
+
+[data-theme="dark"] .dock-filter-btn#dock-btn-notice.active {
+  background: rgba(37, 99, 235, 0.18) !important;
+  border-color: #60A5FA !important;
+}
+[data-theme="dark"] .dock-filter-btn#dock-btn-tutorial.active {
+  background: rgba(249, 115, 22, 0.18) !important;
+  border-color: #FB923C !important;
+}
+[data-theme="dark"] .dock-filter-btn#dock-btn-attendance.active {
+  background: rgba(16, 185, 129, 0.18) !important;
+  border-color: #34D399 !important;
 }
 
 /* Right Stream Active Date Filter Bar */
@@ -1299,14 +2339,139 @@ body:not(.is-full-tab) .fulltab-only {
   color: #1D4ED8;
 }
 
+.activities-list {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+
 .split-cards-stream {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px 12px;
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  max-width: 100%;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  padding: 10px 12px 36px 12px !important;
   background: var(--bg-canvas);
   display: flex;
   flex-direction: column;
   gap: 8px;
+  box-sizing: border-box !important;
+  scrollbar-width: thin;
+}
+
+.split-cards-stream::-webkit-scrollbar {
+  width: 6px;
+}
+
+.split-cards-stream::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.split-cards-stream::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+}
+
+.split-cards-stream::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .split-cards-stream::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .split-cards-stream::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+#date-filtered-activities-list {
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 28px !important;
+  box-sizing: border-box !important;
+}
+
+/* Day Agenda Filter Pill for Active Course Filter */
+.day-agenda-meta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 10px;
+  background: var(--bg-surface, #FFFFFF);
+  border: 1px solid var(--border-hairline, #E4E4E7);
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+
+.day-agenda-filters-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.day-scope-pill {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  background: #111111;
+  color: #FFFFFF;
+  padding: 2.5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.15s ease;
+}
+
+.day-scope-pill:hover {
+  background: #27272A;
+}
+
+.scope-clear-x {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.day-scope-course-name {
+  font-family: var(--font-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #71717A;
+  text-transform: uppercase;
+}
+
+.day-agenda-count-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #71717A;
+}
+
+[data-theme="dark"] .day-agenda-meta-bar {
+  background: #18181B;
+  border-color: #27272A;
+}
+
+[data-theme="dark"] .day-scope-pill {
+  background: #FAFAFA;
+  color: #111111;
+}
+
+[data-theme="dark"] .day-scope-pill:hover {
+  background: #E4E4E7;
+}
+
+[data-theme="dark"] .scope-clear-x {
+  color: rgba(0, 0, 0, 0.6);
 }
 
 /* Bottom Status Bar (Image 4) */
@@ -2479,6 +3644,37 @@ body.mode-preferences #fulltab-week-pill {
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
+  background: var(--bg-surface);
+}
+
+.cal-sidebar-header-top,
+.cal-sidebar-eyebrow,
+#btn-close-cal-sidebar,
+.cal-sidebar-close-btn {
+  display: none !important;
+}
+
+.cal-sidebar-date-title {
+  margin: 0;
+  font-family: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+
+.cal-sidebar-count-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+  padding: 3px 9px;
+  border-radius: 9999px;
+  border: 1px solid var(--border-hairline);
+  letter-spacing: 0.2px;
+  white-space: nowrap;
 }
 
 .cal-sidebar-title {
@@ -2542,13 +3738,14 @@ body.mode-preferences #fulltab-week-pill {
   user-select: none;
 }
 
-/* Exactly 3 day columns at a time (calc(33.333% - 1rem)) */
+/* Full-Tab Timeline Mode Day Column (Expanded Width to Prevent Text Truncation) */
 .kanban-day-column {
-  flex: 0 0 calc(33.333% - 11px);
-  min-width: 290px;
-  max-width: 440px;
-  flex-shrink: 0;
-  height: 100%;
+  flex: 0 0 var(--kanban-col-width, 560px) !important;
+  width: var(--kanban-col-width, 560px) !important;
+  min-width: var(--kanban-col-min-width, 520px) !important;
+  max-width: var(--kanban-col-max-width, 680px) !important;
+  flex-shrink: 0 !important;
+  height: 100% !important;
   background: var(--bg-surface);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-sm);
@@ -2556,6 +3753,67 @@ body.mode-preferences #fulltab-week-pill {
   flex-direction: column;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
+  box-sizing: border-box;
+}
+
+/* Timeline Cards Layout & Ergonomics */
+.kanban-day-column .spectrum-card,
+.kanban-day-column .scoped-card {
+  width: 100% !important;
+  padding: 10px 14px !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
+
+.kanban-day-column .card-content-wrap {
+  overflow: visible !important;
+}
+
+/* Title: allow 2-line wrap instead of cutting off mid-word */
+.kanban-day-column .assign-title-text,
+.kanban-day-column .notice-title-text {
+  white-space: normal !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  line-height: 1.35 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  word-break: break-word !important;
+}
+
+/* Bottom baseline: ensure timestamp and action button never collide or cut */
+.kanban-day-column .assign-row-footer,
+.kanban-day-column .notice-row-footer {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  overflow: visible !important;
+}
+
+.kanban-day-column .assign-footer-left,
+.kanban-day-column .notice-footer-left {
+  flex: 1 1 auto !important;
+  min-width: fit-content !important;
+  overflow: visible !important;
+  white-space: nowrap !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.kanban-day-column .assign-timestamp {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  overflow: visible !important;
+}
+
+.kanban-day-column .btn-assign-action,
+.kanban-day-column .btn-att-action,
+.kanban-day-column .btn-notice-open {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  margin-left: auto !important;
 }
 
 .kanban-day-column.is-today {
@@ -4389,6 +5647,148 @@ body.is-inspector-dragging * {
   letter-spacing: 0.3px;
 }
 
+/* ========================================================
+   FILE INSPECTOR: ZOOM & PREVIEW FRAME TOOLBAR
+   ======================================================== */
+.insp-zoom-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg-subtle, #F4F4F5);
+  border: 1px solid var(--border-hairline, #E4E4E7);
+  border-radius: 6px;
+  padding: 2px 3px;
+  height: 26px;
+  box-sizing: border-box;
+}
+
+.insp-zoom-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 20px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary, #71717A);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.insp-zoom-btn:hover {
+  background: var(--bg-surface, #FFFFFF);
+  color: var(--text-primary, #18181B);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.insp-zoom-btn:active {
+  transform: scale(0.92);
+}
+
+.insp-zoom-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.insp-zoom-btn svg {
+  display: block;
+}
+
+.insp-zoom-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  height: 20px;
+  padding: 0 4px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary, #18181B);
+  letter-spacing: -0.2px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.insp-zoom-reset-btn:hover {
+  background: var(--bg-surface, #FFFFFF);
+  color: #2563EB;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.insp-zoom-reset-btn:active {
+  transform: scale(0.94);
+}
+
+.insp-zoom-sep {
+  display: inline-block;
+  width: 1px;
+  height: 12px;
+  background: var(--border-hairline, #E4E4E7);
+  margin: 0 2px;
+}
+
+.insp-frame-expand-btn {
+  color: var(--text-secondary, #71717A);
+}
+
+.insp-frame-expand-btn.is-expanded {
+  color: #2563EB;
+  background: rgba(37, 99, 235, 0.1);
+}
+
+/* Dark mode for Zoom & Frame Toolbar */
+[data-theme="dark"] .insp-zoom-toolbar {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .insp-zoom-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .insp-zoom-reset-btn {
+  color: #FAFAFA;
+}
+
+[data-theme="dark"] .insp-zoom-reset-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #60A5FA;
+}
+
+[data-theme="dark"] .insp-zoom-sep {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .insp-frame-expand-btn.is-expanded {
+  color: #60A5FA;
+  background: rgba(96, 165, 250, 0.15);
+}
+
+/* Maximized Preview Mode */
+.file-inspector-pane.is-preview-maximized .insp-preview-card,
+.file-inspector-pane.is-preview-maximized .insp-actions-group {
+  display: none !important;
+}
+
+.file-inspector-pane.is-preview-maximized .insp-preview-tab-card {
+  flex: 1 1 100% !important;
+  height: 100% !important;
+}
+
+.file-inspector-pane.is-preview-maximized .insp-mini-preview-frame {
+  height: 100% !important;
+}
+
 .insp-reader-cta-btn {
   display: inline-flex;
   align-items: center;
@@ -4562,6 +5962,7 @@ body.is-inspector-dragging * {
   padding: 8px;
   background: rgba(0, 0, 0, 0.04);
   box-sizing: border-box;
+  overflow: auto;
 }
 
 [data-theme="dark"] .insp-canvas-wrap {
@@ -4578,6 +5979,12 @@ body.is-inspector-dragging * {
   object-fit: contain;
   transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
   background: #FFFFFF;
+}
+
+.insp-preview-canvas.is-zoomed {
+  max-width: none !important;
+  max-height: none !important;
+  flex-shrink: 0 !important;
 }
 
 .insp-canvas-wrap:hover .insp-preview-canvas {
@@ -6127,4 +7534,1081 @@ body:not(.is-full-tab) .sync-cinematic-current {
   letter-spacing: 0.4px;
 }
 
+
+
+/* ==========================================================================
+   Horizontal Compact Attendance Cards (~4:1 Aspect Ratio) with Inline Actions
+   Green Color Theme Restored & OCC Alignment in Row 1 Right
+   ========================================================================== */
+.spectrum-card.card-attendance,
+.scoped-card.scoped-card-attendance {
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-hairline, #e4e4e7);
+  border-left: 3.5px solid var(--signal-attendance, #10B981) !important;
+  border-radius: 6px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  box-shadow: none !important;
+  box-sizing: border-box;
+  width: 100%;
+  transition: all 0.15s ease;
+}
+
+.spectrum-card.card-attendance.state-open,
+.scoped-card.scoped-card-attendance.state-open {
+  border-left-color: var(--signal-attendance, #10B981) !important;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2), 0 2px 8px rgba(16, 185, 129, 0.08) !important;
+}
+
+.spectrum-card.card-attendance.state-recorded,
+.scoped-card.scoped-card-attendance.state-recorded {
+  border-left-color: var(--signal-attendance, #10B981) !important;
+}
+
+.spectrum-card.card-attendance.state-ended,
+.scoped-card.scoped-card-attendance.state-ended {
+  border-left-color: #A7F3D0 !important;
+  opacity: 0.88;
+}
+
+/* Row 1: Unified Course Identification Header (Code / Course Name · OCC) */
+.att-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  line-height: 1.2;
+}
+
+.att-header-left {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--fs-header-code, 12.7px);
+  font-weight: 700;
+  color: #71717A;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.att-header-sep {
+  color: #A1A1AA;
+  font-size: var(--fs-header-code, 12.7px);
+  font-weight: 400;
+  margin: 0 2px;
+}
+
+.att-course-title,
+.att-course-name {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--fs-header-code, 12.7px);
+  font-weight: 700;
+  color: #71717A;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.att-code-pill {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--fs-header-code, 12.7px);
+  font-weight: 700;
+  background: #F4F4F5;
+  color: #27272A;
+  padding: 1.5px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.att-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.att-occ-tag {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--fs-occ-badge, 15.4px);
+  font-weight: 700;
+  color: #71717A;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+  background: #F4F4F5;
+  padding: 1.5px 6px;
+  border-radius: 3px;
+}
+
+.att-state-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.att-state-badge.state-open {
+  background: var(--signal-attendance-bg, #ECFDF5);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.att-state-badge.state-open .dot-green {
+  color: var(--signal-attendance, #10B981);
+  font-size: 11px;
+}
+
+.att-state-badge.state-password {
+  background: #F4F4F5;
+  color: #52525B;
+  border: 1px solid #E4E4E7;
+}
+
+.att-state-badge.state-locked {
+  color: #A1A1AA;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Row 2: Hero Timehead (Swapped with course name per user request: time is the key point) */
+.att-row-hero {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  margin: 1px 0 2px 0;
+  line-height: 1.2;
+}
+
+.att-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.att-time-hero {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--fs-card-title, 16.5px);
+  letter-spacing: var(--ls-card-title, 0em);
+  font-weight: 800;
+  color: #18181B;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.att-urgent-pill {
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px;
+  font-weight: 800;
+  background: #000000;
+  color: #FFFFFF;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.4px;
+  line-height: 1;
+}
+
+.att-status-pill {
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px;
+  font-weight: 700;
+  background: #E4E4E7;
+  color: #52525B;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.att-status-pill.pill-recorded {
+  background: var(--signal-attendance-bg, #ECFDF5) !important;
+  color: #047857 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+.att-status-pill.pill-active {
+  background: var(--signal-attendance-bg, #ECFDF5) !important;
+  color: #047857 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Row 3: Progress Bar & Inline Action Button */
+.att-row-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 2px;
+}
+
+.att-progress-section {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.att-progress-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.att-window-label {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--fs-header-code, 12.7px) !important;
+  font-weight: 600;
+  color: #71717A;
+  letter-spacing: 0.2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.att-window-sub {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--fs-header-code, 12.7px) !important;
+  font-weight: 600;
+  color: #A1A1AA;
+  font-variant-numeric: tabular-nums;
+}
+
+.att-progress-track {
+  width: 100%;
+  height: 3.5px;
+  background: #E4E4E7;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.att-progress-fill {
+  height: 100%;
+  background: var(--signal-attendance, #10B981);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.state-recorded .att-progress-fill {
+  background: var(--signal-attendance, #10B981) !important;
+}
+
+.state-ended .att-progress-fill {
+  background: #A1A1AA !important;
+}
+
+.att-action-wrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Action Buttons & Badges */
+.btn-att-action {
+  font-family: var(--font-sans, inherit);
+  height: var(--h-action-btn, 32px);
+  font-size: var(--fs-action-btn, 14.3px);
+  font-weight: 700;
+  padding: 0 14px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.btn-att-black {
+  background: #000000 !important;
+  color: #FFFFFF !important;
+  border: 1px solid #000000 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.btn-att-black:hover {
+  background: #047857 !important;
+  border-color: #047857 !important;
+  transform: translateY(-1px);
+}
+
+.btn-att-wireframe {
+  background: #E4E4E7 !important;
+  color: #18181B !important;
+  border: 1px solid #D4D4D8 !important;
+}
+
+.btn-att-wireframe:hover {
+  background: #D4D4D8 !important;
+}
+
+.btn-att-present {
+  background: var(--signal-attendance-bg, #ECFDF5) !important;
+  color: #047857 !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  cursor: default;
+}
+
+.btn-att-faint {
+  background: #F4F4F5 !important;
+  color: #71717A !important;
+  border: 1px solid #E4E4E7 !important;
+}
+
+.btn-att-faint:hover {
+  color: #18181B !important;
+  border-color: #D4D4D8 !important;
+}
+
+[data-theme="dark"] .spectrum-card.card-attendance,
+[data-theme="dark"] .scoped-card.scoped-card-attendance {
+  border-left-color: #10B981 !important;
+}
+
+[data-theme="dark"] .att-status-pill.pill-recorded,
+[data-theme="dark"] .att-status-pill.pill-active,
+[data-theme="dark"] .att-state-badge.state-open,
+[data-theme="dark"] .btn-att-present {
+  background: rgba(16, 185, 129, 0.16) !important;
+  color: #34D399 !important;
+  border-color: rgba(52, 211, 153, 0.35) !important;
+}
+
+[data-theme="dark"] .att-header-left,
+[data-theme="dark"] .att-course-title,
+[data-theme="dark"] .att-course-name {
+  color: #A1A1AA !important;
+}
+
+[data-theme="dark"] .att-time-hero {
+  color: #FAFAFA !important;
+}
+
+[data-theme="dark"] .att-code-pill,
+[data-theme="dark"] .att-occ-tag {
+  background: #27272A !important;
+  color: #A1A1AA !important;
+}
+
+
+/* ==========================================================================
+   Variant B · Option 1: Swiss Academic Editorial Assignment Cards (~92px Height)
+   Single 3px Urgency Hairline, Unified Reading Baseline, Zero Nested Boxes
+   ========================================================================== */
+.spectrum-card.card-assignment,
+.scoped-card.scoped-card-assignment {
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-hairline, #e4e4e7);
+  border-left: 3.5px solid var(--signal-assignment, #F97316) !important;
+  border-radius: 6px;
+  padding: 10px 14px;
+  min-height: 84px;
+  box-sizing: border-box;
+  width: 100%;
+  box-shadow: none !important;
+  transition: all 0.15s ease;
+}
+
+.spectrum-card.card-assignment.is-overdue,
+.scoped-card.scoped-card-assignment.is-overdue {
+  border-left-color: #E11D48 !important; /* Crimson Urgency Hairline */
+}
+
+.spectrum-card.card-assignment.is-submitted,
+.scoped-card.scoped-card-assignment.is-submitted {
+  border-left-color: #10B981 !important; /* Emerald Hairline */
+}
+
+/* Row 1: Unified Top Baseline (Course Code / Course Name · OCC) */
+.assign-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  line-height: 1.2;
+}
+
+.assign-header-left {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--fs-header-code, 12.7px);
+  font-weight: 700;
+  color: #71717A;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.assign-header-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.assign-occ-pill {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--fs-occ-badge, 15.4px);
+  font-weight: 700;
+  background: #F4F4F5;
+  color: #52525B;
+  padding: 2px 7px;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+/* Row 2: Assignment Title */
+.assign-row-title {
+  margin: 1px 0 3px 0;
+}
+
+.assign-title-text {
+  font-family: var(--font-sans);
+  font-size: var(--fs-card-title, 16.5px);
+  letter-spacing: var(--ls-card-title, 0em);
+  font-weight: 700;
+  color: #18181B;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+/* Row 3: Unified Bottom Baseline (Indicator dot · Token · Timestamp · Inline 28px CTA) */
+.assign-row-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.assign-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono, monospace);
+  font-size: var(--fs-timestamp, 13.8px);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: fit-content;
+  font-variant-numeric: tabular-nums;
+}
+
+.assign-dot {
+  font-size: 10px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.assign-dot.dot-overdue {
+  color: #E11D48;
+}
+
+.assign-dot.dot-upcoming {
+  color: #F97316;
+}
+
+.assign-dot.dot-submitted {
+  color: #10B981;
+}
+
+.assign-token {
+  font-weight: 800;
+  letter-spacing: 0.4px;
+}
+
+.assign-token.token-overdue {
+  color: #E11D48;
+}
+
+.assign-token.token-upcoming {
+  color: #F97316;
+}
+
+.assign-token.token-submitted {
+  color: #10B981;
+}
+
+.assign-footer-sep {
+  color: #A1A1AA;
+  font-weight: 400;
+}
+
+.assign-timestamp {
+  color: #71717A;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.assign-footer-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+/* Inline 28px CTA Buttons */
+.btn-assign-action {
+  height: var(--h-action-btn, 32px);
+  padding: 0 14px;
+  border-radius: 4px;
+  font-family: var(--font-sans, inherit);
+  font-size: var(--fs-action-btn, 14.3px);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+/* Overdue State: High-contrast Dark CTA */
+.btn-assign-action.btn-assign-overdue {
+  background: #0F172A !important;
+  color: #FFFFFF !important;
+  border: 1px solid #0F172A !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.btn-assign-action.btn-assign-overdue:hover {
+  background: #1E293B !important;
+  border-color: #1E293B !important;
+  transform: translateY(-1px);
+}
+
+/* Normal / Upcoming State: Clean Wireframe Slate CTA */
+.btn-assign-action.btn-assign-normal {
+  background: #E2E8F0 !important;
+  color: #1E293B !important;
+  border: 1px solid #CBD5E1 !important;
+}
+
+.btn-assign-action.btn-assign-normal:hover {
+  background: #CBD5E1 !important;
+  color: #0F172A !important;
+  border-color: #94A3B8 !important;
+  transform: translateY(-1px);
+}
+
+/* Submitted State: Subtle Emerald Tint CTA */
+.btn-assign-action.btn-assign-submitted {
+  background: #ECFDF5 !important;
+  color: #047857 !important;
+  border: 1px solid #A7F3D0 !important;
+}
+
+.btn-assign-action.btn-assign-submitted:hover {
+  background: #D1FAE5 !important;
+  transform: translateY(-1px);
+}
+
+/* Dark Theme Adaptations */
+[data-theme="dark"] .spectrum-card.card-assignment,
+[data-theme="dark"] .scoped-card.scoped-card-assignment {
+  background: var(--bg-surface, #18181B);
+  border-color: var(--border-hairline, #27272A);
+}
+
+[data-theme="dark"] .assign-header-left {
+  color: #A1A1AA;
+}
+
+[data-theme="dark"] .assign-occ-pill {
+  background: #27272A;
+  color: #D4D4D8;
+}
+
+[data-theme="dark"] .assign-title-text {
+  color: #FAFAFA;
+}
+
+[data-theme="dark"] .assign-timestamp {
+  color: #A1A1AA;
+}
+
+[data-theme="dark"] .btn-assign-action.btn-assign-normal {
+  background: #27272A !important;
+  color: #F4F4F5 !important;
+  border-color: #3F3F46 !important;
+}
+
+[data-theme="dark"] .btn-assign-action.btn-assign-submitted {
+  background: rgba(16, 185, 129, 0.16) !important;
+  color: #34D399 !important;
+  border-color: rgba(52, 211, 153, 0.35) !important;
+}
+
+
+/* ==========================================================================
+   Bounded Semantic Icons Architecture (Notice, Assignment, Attendance)
+   Preserves Peripheral Type Recognition Across All Activity Taxonomies
+   ========================================================================== */
+.spectrum-card,
+.scoped-card {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+.card-bounded-icon {
+  width: 38px;
+  min-width: 38px;
+  max-width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 1px;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.card-bounded-icon .icon-svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2px;
+}
+
+/* 1. Notice: Cobalt Blue Megaphone */
+.icon-box-notice {
+  background: var(--signal-notice-bg, #EFF6FF);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  color: var(--signal-notice, #2563EB);
+}
+
+.icon-box-notice .icon-svg {
+  stroke: var(--signal-notice, #2563EB) !important;
+  color: var(--signal-notice, #2563EB) !important;
+}
+
+/* 2. Assignment: Amber Task Sheet (or Crimson if Overdue, Emerald if Submitted) */
+.icon-box-assignment {
+  background: var(--signal-assignment-bg, #FFF7ED);
+  border: 1px solid rgba(249, 115, 22, 0.2);
+  color: var(--signal-assignment, #F97316);
+}
+
+.icon-box-assignment .icon-svg {
+  stroke: var(--signal-assignment, #F97316) !important;
+  color: var(--signal-assignment, #F97316) !important;
+}
+
+.icon-box-assignment.is-overdue {
+  background: var(--signal-urgent-bg, #FFF1F2) !important;
+  border-color: rgba(225, 29, 72, 0.25) !important;
+  color: #E11D48 !important;
+}
+
+.icon-box-assignment.is-overdue .icon-svg {
+  stroke: #E11D48 !important;
+  color: #E11D48 !important;
+}
+
+.icon-box-assignment.is-submitted {
+  background: var(--signal-attendance-bg, #ECFDF5) !important;
+  border-color: rgba(16, 185, 129, 0.25) !important;
+  color: #10B981 !important;
+}
+
+.icon-box-assignment.is-submitted .icon-svg {
+  stroke: #10B981 !important;
+  color: #10B981 !important;
+}
+
+/* 3. Attendance: Emerald Check-In */
+.icon-box-attendance {
+  background: var(--signal-attendance-bg, #ECFDF5);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: var(--signal-attendance, #10B981);
+}
+
+.icon-box-attendance .icon-svg {
+  fill: var(--signal-attendance, #10B981) !important;
+  stroke: none !important;
+  color: var(--signal-attendance, #10B981) !important;
+}
+
+.card-content-wrap {
+  flex: 1 !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  gap: 5px !important;
+  overflow: hidden !important;
+}
+
+/* ==========================================================================
+   Redesigned Notice Card: Swiss Academic Editorial
+   Zero Date Duplication, Removed Nested Container Clutter, Harmonized Baseline
+   ========================================================================== */
+.spectrum-card.card-notice,
+.scoped-card.scoped-card-notice {
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-hairline, #e4e4e7);
+  border-left: 3.5px solid var(--signal-notice, #2563EB) !important;
+  border-radius: 6px;
+  padding: 10px 14px;
+  min-height: 84px;
+  box-sizing: border-box;
+  width: 100%;
+  box-shadow: none !important;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.spectrum-card.card-notice:hover,
+.scoped-card.scoped-card-notice:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06) !important;
+}
+
+/* Notice Row 1: Header (Course Code/Name · Top Right Date) */
+.notice-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  line-height: 1.2;
+}
+
+.notice-header-left {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--fs-header-code, 12.7px);
+  font-weight: 700;
+  color: #71717A;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.notice-header-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.notice-dot {
+  color: var(--signal-notice, #2563EB);
+  font-size: 9px;
+  line-height: 1;
+}
+
+.notice-date-text {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--fs-timestamp, 13.8px);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: #18181B;
+}
+
+/* Notice Row 2: Title */
+.notice-row-title {
+  margin: 1px 0 3px 0;
+}
+
+.notice-title-text {
+  font-family: var(--font-sans);
+  font-size: var(--fs-card-title, 16.5px);
+  letter-spacing: var(--ls-card-title, 0em);
+  font-weight: 700;
+  color: #18181B;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+/* Notice Row 3: Footer (NOTICE · Author | Open Full →) */
+.notice-row-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.notice-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono, monospace);
+  font-size: var(--fs-timestamp, 13.8px);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.notice-type-tag {
+  color: #71717A;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.notice-sep {
+  color: #A1A1AA;
+}
+
+.notice-author {
+  font-family: var(--font-sans);
+  font-size: var(--fs-author, 13.8px);
+  font-weight: 600;
+  color: #52525B;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  display: inline-block !important;
+  max-width: 100% !important;
+}
+
+.notice-footer-right {
+  flex-shrink: 0;
+}
+
+.btn-notice-open {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans, inherit);
+  height: var(--h-action-btn, 32px);
+  font-size: var(--fs-action-btn, 14.3px);
+  font-weight: 700;
+  color: var(--signal-notice, #2563EB);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-notice-open:hover {
+  opacity: 0.85;
+  transform: translateX(2px);
+}
+
+/* Dark Theme Adaptations for Notice & Bounded Icons */
+[data-theme="dark"] .spectrum-card.card-notice,
+[data-theme="dark"] .scoped-card.scoped-card-notice {
+  background: var(--bg-surface, #18181B);
+  border-color: var(--border-hairline, #27272A);
+}
+
+[data-theme="dark"] .notice-header-left {
+  color: #A1A1AA;
+}
+
+[data-theme="dark"] .notice-date-text {
+  color: #FAFAFA;
+}
+
+[data-theme="dark"] .notice-title-text {
+  color: #FAFAFA;
+}
+
+[data-theme="dark"] .notice-author {
+  color: #A1A1AA;
+}
+
+[data-theme="dark"] .icon-box-notice {
+  background: rgba(37, 99, 235, 0.16);
+  border-color: rgba(96, 165, 250, 0.35);
+  color: #60A5FA;
+}
+
+[data-theme="dark"] .icon-box-assignment {
+  background: rgba(249, 115, 22, 0.16);
+  border-color: rgba(251, 146, 60, 0.35);
+  color: #FB923C;
+}
+
+[data-theme="dark"] .icon-box-attendance {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(52, 211, 153, 0.35);
+  color: #34D399;
+}
+
+/* ==========================================================================
+   BY-COURSE TIMELINE SPINDLE (Chronological Spine Timeline - Matching Image 2)
+   ========================================================================== */
+.chronological-spine-timeline {
+  position: relative;
+  padding-left: 20px;
+  margin-left: 8px;
+  margin-top: 6px;
+  margin-right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 24px;
+}
+
+.chronological-spine-timeline::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 12px;
+  left: 4px;
+  width: 2px;
+  background: var(--border-hairline, #E4E4E7);
+  z-index: 1;
+}
+
+[data-theme="dark"] .chronological-spine-timeline::before {
+  background: var(--border-hairline, #27272A);
+}
+
+.spine-date-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.spine-node-header {
+  display: flex;
+  align-items: center;
+  position: relative;
+  min-height: 18px;
+}
+
+.spine-node-dot {
+  position: absolute;
+  left: -15px;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #FFFFFF !important;
+  border: 2px solid #000000 !important;
+  box-sizing: border-box;
+  z-index: 2;
+  transition: background-color 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.22s ease;
+}
+
+.spine-node-dot.is-today {
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 0 2px var(--bg-body, #F8F9FA);
+}
+
+/* Active node / date in sight: smoothly animates from hollow (white in middle) to solid filled */
+.spine-date-group.is-active .spine-node-dot,
+.spine-node-dot.is-active {
+  background: #000000 !important;
+  border-color: #000000 !important;
+  transform: translate(-50%, -50%) scale(1.25);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="dark"] .spine-node-dot {
+  background: #121214 !important;
+  border-color: #FAFAFA !important;
+}
+
+[data-theme="dark"] .spine-node-dot.is-today {
+  box-shadow: 0 0 0 2px #121214;
+}
+
+[data-theme="dark"] .spine-date-group.is-active .spine-node-dot,
+[data-theme="dark"] .spine-node-dot.is-active {
+  background: #FFFFFF !important;
+  border-color: #FFFFFF !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+}
+
+.spine-node-title {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-primary, #18181B);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
+}
+
+.spine-node-date {
+  font-weight: 500;
+  color: var(--text-secondary, #71717A);
+}
+
+[data-theme="dark"] .spine-node-title {
+  color: #FAFAFA;
+}
+
+[data-theme="dark"] .spine-node-date {
+  color: #A1A1AA;
+}
+
+.spine-node-badge {
+  display: none !important;
+}
+
+.spine-date-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
 

@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SPeCTRUM PRO — Course, Activities & Attendance Hub</title>
+    <!-- SPeCTRUM PRO Swiss Editorial & Technical Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,400..800;1,400..800&family=JetBrains+Mono:ital,wght@0,400..800;1,400..800&family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -55,11 +59,15 @@
         <button class="primary-tab-btn tab-btn" data-tab="tab-support">Tip Jar ☕</button>
       </div>
       <div class="primary-tabs-right">
-        <div class="grouping-toggle" id="popup-grouping-toggle">
-          <span class="label">By:</span>
-          <button type="button" class="group-toggle-link active" id="btn-group-date" title="Group by Date">Date</button>
-          <span>|</span>
-          <button type="button" class="group-toggle-link" id="btn-group-course" title="Group by Course">Course</button>
+        <div class="sidebar-mode-toggle" id="popup-sidebar-mode-toggle">
+          <button type="button" class="sidebar-mode-btn active" id="btn-sidebar-mode-calendar" title="Calendar View">
+            <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span id="label-sidebar-mode-calendar">Calendar</span>
+          </button>
+          <button type="button" class="sidebar-mode-btn" id="btn-sidebar-mode-courses" title="Courses View">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+            <span id="label-sidebar-mode-courses">Courses</span>
+          </button>
         </div>
       </div>
     </nav>
@@ -118,77 +126,40 @@
     <main class="popup-body">
       <!-- JS-driven Rail Tooltip Overlay (position:fixed, escapes overflow clipping) -->
       <div id="rail-tooltip-overlay"></div>
+      <!-- Rich Floating Popover for Course Monograms -->
+      <div id="matrix-course-popover" class="matrix-course-popover"></div>
       <!-- TAB 1: Activities (Split Sticky-Date Scroll or Course-Grouped) -->
       <section id="tab-activities" class="tab-content active" style="width:100%;height:100%;display:flex;">
         <!-- Split Sticky Scroll View (Active when By: Date) -->
         <div class="split-date-container" id="popup-split-container">
-          <!-- Left Sidebar Rail (86px Collapsed -> 192px Expanded Mini-Calendar) -->
+          <!-- Left Sidebar Rail: Directly provides the Monthly Mini-Calendar & Filters (No Mode Switch) -->
           <aside class="split-date-sticky-box popup-sidebar-rail" id="popup-sticky-date-box">
-            <!-- 1. COLLAPSED STREAMLINED RAIL -->
-            <div class="rail-collapsed-view" id="rail-collapsed-view">
-              <!-- Anchored Date Card (Accordion Trigger) -->
-              <div class="sticky-date-card accordion-trigger" id="popup-date-card-trigger" title="Click to expand Monthly Mini-Calendar">
-                <span class="sticky-date-day" id="sticky-box-day">21</span>
-                <span class="sticky-date-month" id="sticky-box-month">OCT</span>
-                <div class="sticky-date-bottom-row">
-                  <span class="sticky-date-weekday" id="sticky-box-weekday">WED</span>
-                  <span class="sticky-date-semweek" id="sticky-box-semweek">WK 03</span>
-                </div>
-                <div class="date-card-accordion-arrow" title="Expand Calendar">▾</div>
-              </div>
-
-              <!-- View Mode Toggles (Timeline, Grid, List) with high-contrast tooltips -->
-              <div class="rail-view-modes" id="rail-view-modes">
-                <button type="button" class="rail-mode-btn active has-rail-tooltip" id="btn-rail-timeline" data-tooltip="[ Timeline ]" title="Timeline Stream">
-                  <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M7 12h10"/><path d="M12 7v10"/></svg>
-                </button>
-                <button type="button" class="rail-mode-btn has-rail-tooltip" id="btn-rail-calendar" data-tooltip="[ Calendar ]" title="Expand Calendar">
-                  <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                </button>
-                <button type="button" class="rail-mode-btn has-rail-tooltip" id="btn-rail-list" data-tooltip="[ List ]" title="Group by Course">
-                  <svg class="icon-svg" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                </button>
-              </div>
-
-              <!-- Activity Filter Buttons (Notice, Tutorial, Attendance) with badges & tooltips -->
-              <div class="rail-activity-filters" id="rail-activity-filters">
-                <button type="button" class="rail-activity-btn active has-rail-tooltip" id="rail-btn-notice" data-sub="sub-announcements" data-tooltip="[ Notices (20) ]">
-                  <svg class="icon-svg icon-notice" viewBox="0 0 24 24"><path d="M3 11l16-5v12L3 13v-2z"/><path d="M10 15v5"/></svg>
-                  <span class="rail-badge-counter badge-ann" id="rail-count-ann">20</span>
-                </button>
-                <button type="button" class="rail-activity-btn has-rail-tooltip" id="rail-btn-tutorial" data-sub="sub-assignments" data-tooltip="[ Tutorials (25) ]">
-                  <svg class="icon-svg icon-assignment" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
-                  <span class="rail-badge-counter badge-assign" id="rail-count-assign">25</span>
-                </button>
-                <button type="button" class="rail-activity-btn has-rail-tooltip" id="rail-btn-attendance" data-sub="sub-attendance" data-tooltip="[ Attendance (4) ]">
-                  <svg class="icon-svg icon-attendance" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 5-5"/></svg>
-                  <span class="rail-badge-counter badge-att" id="rail-count-att">4</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- 2. EXPANDED MONTHLY MINI-CALENDAR VIEW -->
-            <div class="rail-expanded-view" id="rail-expanded-view" style="display:none;">
-              <!-- Black Header Box -->
-              <div class="cal-exp-header-box" id="cal-exp-header-box">
-                <div class="cal-exp-top-row">
-                  <span class="cal-exp-title">CALENDAR EXPANDED</span>
-                  <button type="button" class="cal-exp-collapse-btn" id="btn-header-collapse-cal" title="Collapse calendar">▴</button>
-                </div>
-                <div class="cal-exp-main-date" id="cal-exp-main-date">21 OCT 2026 WED</div>
-                <div class="cal-exp-sub-row">
-                  <span class="cal-exp-semweek" id="cal-exp-semweek">SEM WK 03</span>
-                  <span class="cal-exp-selected-tag">Selected</span>
-                </div>
-              </div>
-
-              <!-- Monthly Mini-Calendar Content -->
+            <div class="rail-expanded-view" id="rail-expanded-view">
+              <!-- Monthly Mini-Calendar Content Card -->
               <div class="mini-cal-card" id="mini-cal-card">
-                <!-- Month & Academic Week Nav -->
+                <!-- Date Hero Header Box (Option A: High Glanceability) -->
+                <div class="cal-exp-header-box" id="cal-exp-header-box">
+                  <div class="cal-hero-date-row">
+                    <div class="cal-date-hero-left">
+                      <span class="cal-hero-numeral" id="cal-hero-numeral">31</span>
+                      <div class="cal-hero-meta">
+                        <div class="cal-hero-day" id="cal-hero-day">SATURDAY</div>
+                        <div class="cal-hero-sub" id="cal-hero-sub">WEEK 16</div>
+                      </div>
+                    </div>
+                    <div class="cal-date-hero-right">
+                      <button type="button" class="cal-hero-today-badge" id="cal-hero-today-badge" title="Jump to Today">TODAY</button>
+                    </div>
+                  </div>
+                  <!-- Hidden legacy container for backward compatibility -->
+                  <div class="cal-exp-main-date" id="cal-exp-main-date" style="display:none;"></div>
+                </div>
+
+                <!-- Month & Academic Week Nav (Macro Switcher) -->
                 <div class="mini-cal-nav-row">
                   <div class="mini-cal-nav-left">
-                    <span class="mini-cal-month-title" id="mini-cal-month-title">OCT 2026</span>
-                    <span class="mini-cal-week-badge" id="mini-cal-week-badge">W03</span>
+                    <span class="mini-cal-month-title" id="mini-cal-month-title">OCTOBER 2026 · W14–W18</span>
+                    <span class="mini-cal-week-badge" id="mini-cal-week-badge" style="display:none;"></span>
                   </div>
                   <div class="mini-cal-nav-arrows">
                     <button type="button" class="mini-cal-arrow-btn" id="btn-mini-cal-prev" title="Previous Month">&lt;</button>
@@ -198,7 +169,6 @@
 
                 <!-- Segmented Indicator Toggle (Dots vs Count) -->
                 <div class="mini-cal-toggle-row">
-                  <span class="mini-cal-mode-label" id="mini-cal-mode-label">Option 1: Dot indicators</span>
                   <div class="mini-cal-segmented-control">
                     <button type="button" class="seg-btn active" id="btn-seg-dots">Dots</button>
                     <button type="button" class="seg-btn" id="btn-seg-count">Count</button>
@@ -213,54 +183,73 @@
                 <!-- Calendar Days Grid (Rendered Dynamically) -->
                 <div class="mini-cal-days-grid" id="mini-cal-days-grid"></div>
 
-                <!-- Semantic Color Legend -->
-                <div class="mini-cal-legend">
+                <!-- Semantic Color Legend & Today Action -->
+                <div class="mini-cal-legend" id="mini-cal-legend">
+                  <button type="button" class="legend-item legend-today-btn mini-cal-action-btn" id="btn-mini-cal-today" title="Jump to Today">
+                    <span class="legend-rect rect-today"></span>Today
+                  </button>
                   <span class="legend-item"><span class="legend-dot dot-notice"></span>Notice</span>
                   <span class="legend-item"><span class="legend-dot dot-tutorial"></span>Tutorial</span>
                   <span class="legend-item"><span class="legend-dot dot-attendance"></span>Attendance</span>
                 </div>
+              </div>
 
-                <!-- Contextual Summary Chip -->
-                <div class="mini-cal-summary-chip" id="mini-cal-summary-chip">
-                  <span class="chip-text" id="mini-cal-chip-text">21 OCT: 4 items active</span>
-                  <span class="chip-status" id="mini-cal-chip-status">Filtered</span>
+              <!-- Repurposed Space Beneath Calendar: High-Density Course Filter Matrix -->
+              <div class="rail-course-matrix-card" id="rail-course-matrix-card">
+                <div class="matrix-header-row">
+                  <span class="matrix-header-title" id="matrix-header-title">COURSES (ALL)</span>
+                  <span class="matrix-header-badge" id="matrix-header-badge">0</span>
                 </div>
+                <div class="course-filter-matrix" id="course-filter-matrix">
+                  <!-- Rendered dynamically by popup.js: ALL + Course Monograms -->
+                </div>
+              </div>
+            </div>
 
-                <!-- Calendar Foot Actions -->
-                <div class="mini-cal-foot-actions">
-                  <button type="button" class="mini-cal-action-btn" id="btn-mini-cal-today">● Today</button>
-                  <button type="button" class="mini-cal-action-btn" id="btn-mini-cal-collapse-bottom">^ Collapse</button>
+              <!-- 2. COLLAPSED MONOGRAMS RAIL VIEW (Acronym Initials - Default for Courses) -->
+              <div class="rail-collapsed-view" id="rail-collapsed-view" style="display:none;">
+                <div class="rail-monograms-list" id="rail-monograms-list">
+                  <!-- Dynamically rendered acronym buttons: DS, ML, MAD, SAD, PS -->
                 </div>
               </div>
 
-              <!-- Docked Activity Filter Buttons Below Calendar -->
-              <div class="rail-docked-filters" id="rail-docked-filters">
+<div class="rail-docked-filters" id="rail-docked-filters">
                 <button type="button" class="dock-filter-btn active has-rail-tooltip" id="dock-btn-notice" data-sub="sub-announcements" data-tooltip="[ Notices ]">
                   <svg class="icon-svg icon-notice" viewBox="0 0 24 24"><path d="M3 11l16-5v12L3 13v-2z"/><path d="M10 15v5"/></svg>
                   <span class="dock-badge badge-ann" id="dock-count-ann">20</span>
                 </button>
-                <button type="button" class="dock-filter-btn has-rail-tooltip" id="dock-btn-tutorial" data-sub="sub-assignments" data-tooltip="[ Tutorials ]">
+                <button type="button" class="dock-filter-btn active has-rail-tooltip" id="dock-btn-tutorial" data-sub="sub-assignments" data-tooltip="[ Tutorials ]">
                   <svg class="icon-svg icon-assignment" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
                   <span class="dock-badge badge-assign" id="dock-count-assign">25</span>
                 </button>
-                <button type="button" class="dock-filter-btn has-rail-tooltip" id="dock-btn-attendance" data-sub="sub-attendance" data-tooltip="[ Attendance ]">
-                  <svg class="icon-svg icon-attendance" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 5-5"/></svg>
+                <button type="button" class="dock-filter-btn active has-rail-tooltip" id="dock-btn-attendance" data-sub="sub-attendance" data-tooltip="[ Attendance ]">
+                  <svg class="icon-svg icon-attendance" viewBox="0 0 24 24" fill="currentColor" stroke="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10.5" cy="6.7" r="4.7"/><path d="M 3.38 14.28 C 3.0 14.8 2.9 15.5 3.0 16.9 C 3.2 18.2 4.0 19.0 5.7 19.9 C 7.3 20.6 9.4 21.0 11.2 21.0 C 10.5 20.1 9.8 18.8 9.6 17.5 C 9.5 15.8 10.1 14.5 10.5 13.5 L 4.8 13.5 C 4.0 13.5 3.6 13.8 3.38 14.28 Z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M 15.8 11.5 A 5.3 5.3 0 0 1 15.8 22.1 A 5.3 5.3 0 0 1 15.8 11.5 Z M 19.19 14.84 L 19.14 15.04 L 18.73 15.50 L 15.04 19.14 L 14.74 19.19 L 14.53 19.08 L 12.43 16.94 L 12.49 16.48 L 12.74 16.27 L 13.10 16.27 L 14.79 17.91 L 14.89 17.91 L 18.27 14.48 L 18.57 14.33 L 18.88 14.38 L 19.08 14.58 Z"/></svg>
                   <span class="dock-badge badge-att" id="dock-count-att">4</span>
                 </button>
               </div>
-            </div>
           </aside>
 
           <!-- Right Scrollable Stream of Cards -->
           <div class="split-cards-stream" id="popup-cards-stream">
-            <!-- Active Date Filter Bar Header (Visible when a calendar date is filtered) -->
-            <div class="popup-date-filter-bar" id="popup-date-filter-bar" style="display:none;">
-              <div class="date-filter-info">
-                <span class="date-filter-bullet">●</span>
-                <span class="date-filter-label" id="popup-date-filter-label">WED, 21 OCT 2026 (4 activities scheduled)</span>
+            <!-- True Zero-Redundancy Sticky Scope Bar (Spec 2.0 / By Course Model) -->
+            <div class="popup-focused-scope-bar" id="popup-focused-scope-bar" style="display:none;">
+              <div class="scope-bar-top-row">
+                <div class="scope-bar-breadcrumb">
+                  <span class="scope-crumb-label">COURSES /</span>
+                  <span class="scope-crumb-code" id="popup-focused-scope-code">WIA2001</span>
+                  <span class="scope-crumb-sep">·</span>
+                  <span class="scope-crumb-occ" id="popup-focused-scope-occ">OCC 01</span>
+                </div>
               </div>
-              <button type="button" class="date-filter-reset-link" id="btn-reset-date-filter">Show All</button>
+              <div class="scope-bar-title-row">
+                <div class="popup-focused-scope-name" id="popup-focused-scope-name">Database Systems</div>
+              </div>
             </div>
+
+            <button type="button" id="btn-reset-date-filter" style="display:none;"></button>
+
+            <!-- Deduplicated Course Feed for By Course mode -->
+            <div id="bycourse-activities-feed" class="activities-list bycourse-feed" style="display:none;flex-direction:column;gap:10px;"></div>
 
             <!-- Container for filtered date activities -->
             <div id="date-filtered-activities-list" class="activities-list" style="display:none;flex-direction:column;gap:8px;"></div>
@@ -477,6 +466,25 @@
                     <svg class="icon-svg" viewBox="0 0 24 24" style="width:12px;height:12px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                     <span>Preview</span>
                   </div>
+
+                  <!-- Zoom & View Expand/Shrink Controls -->
+                  <div class="insp-zoom-toolbar" id="insp-zoom-toolbar" role="toolbar" aria-label="Preview zoom and expand controls">
+                    <button type="button" class="insp-zoom-btn" id="insp-zoom-out-btn" title="Zoom Out (− or Ctrl −)" aria-label="Zoom out">
+                      <svg viewBox="0 0 24 24" class="icon-svg" style="width:12px;height:12px;" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </button>
+                    <button type="button" class="insp-zoom-reset-btn" id="insp-zoom-reset-btn" title="Reset Zoom to 100% (Press 0)" aria-label="Reset zoom">
+                      <span id="insp-zoom-val">100%</span>
+                    </button>
+                    <button type="button" class="insp-zoom-btn" id="insp-zoom-in-btn" title="Zoom In (+ or Ctrl +)" aria-label="Zoom in">
+                      <svg viewBox="0 0 24 24" class="icon-svg" style="width:12px;height:12px;" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </button>
+                    <span class="insp-zoom-sep" aria-hidden="true"></span>
+                    <button type="button" class="insp-zoom-btn insp-frame-expand-btn" id="insp-frame-expand-btn" title="Maximize / Restore Preview Frame" aria-label="Toggle preview frame height">
+                      <svg viewBox="0 0 24 24" class="icon-svg icon-frame-expand" id="insp-expand-icon-max" style="width:12px;height:12px;" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                      <svg viewBox="0 0 24 24" class="icon-svg icon-frame-expand" id="insp-expand-icon-restore" style="width:12px;height:12px;display:none;" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                    </button>
+                  </div>
+
                   <a href="#" target="_blank" id="insp-open-reader-btn" class="insp-reader-cta-btn" title="Open full reader in new tab">
                     <span>Full Reader</span>
                     <svg class="icon-svg" viewBox="0 0 24 24" style="width:11px;height:11px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
@@ -692,14 +700,13 @@
 
     <!-- Bottom Status Bar (Image 4) -->
     <footer class="popup-status-bar">
-      <div class="status-left">
-        <svg class="icon-svg" viewBox="0 0 24 24" style="width:12px;height:12px;color:var(--text-muted);"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <span>SYNCED <span id="status-sync-time">--:--:--</span></span>
+      <div class="status-left" id="connection-status" title="Connected to UM SPeCTRUM">
+        <svg class="icon-svg" viewBox="0 0 24 24" style="width:13px;height:13px;color:var(--text-muted);fill:none;stroke:currentColor;"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+        <span id="status-indicator-text">Connected to UM SPeCTRUM</span>
       </div>
-      <div class="status-right" id="connection-status">
-        <span class="pulse-dot"></span>
-        <span id="status-indicator-text">ONLINE SYNC</span>
-      </div>
+      <button type="button" id="btn-status-open-fulltab" class="status-workstation-btn" title="Open Full Workstation in new tab">
+        Open Full Workstation ↗
+      </button>
     </footer>
   </div>
 
@@ -727,7 +734,7 @@
           </svg>
         </div>
         <span class="header-app-title">SPeCTRUM PRO</span>
-        <span class="header-sem-badge" id="fulltab-sem-badge">SEM II · 2024-25</span>
+        <span class="header-sem-badge" id="fulltab-sem-badge">SEM I · 2026-27</span>
       </div>
 
       <div class="header-center-title">
@@ -741,7 +748,7 @@
           </button>
           <button id="btn-cal-today" class="btn-wireframe" style="padding:2px 8px;font-size:11px;border-radius:6px;">Today</button>
         </div>
-        <span class="header-week-pill" id="fulltab-week-pill">SEM II · WK 07-09</span>
+        <span class="header-week-pill" id="fulltab-week-pill">SEM I · WK 05</span>
       </div>
 
       <div class="header-right-actions">
@@ -786,12 +793,12 @@
 
         <!-- Middle Stadium Pill (Multi-Select Checklist - User Spec Image) -->
         <div class="rail-checklist-stadium">
-          <button id="rail-toggle-assign" class="rail-toggle-pill active" data-filter="assignment" aria-label="Toggle Assignments / Tasks">
+          <button id="rail-toggle-assign" class="rail-toggle-pill active" data-filter="assignment" aria-label="Toggle Tutorials">
             <svg class="icon-svg icon-assignment" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
-            <span class="rail-expand-label">Tasks</span>
+            <span class="rail-expand-label">Tutorial</span>
           </button>
           <button id="rail-toggle-att" class="rail-toggle-pill active" data-filter="attendance" aria-label="Toggle Attendance Sessions">
-            <svg class="icon-svg icon-attendance" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 5-5"/></svg>
+            <svg class="icon-svg icon-attendance" viewBox="0 0 24 24" fill="currentColor" stroke="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10.5" cy="6.7" r="4.7"/><path d="M 3.38 14.28 C 3.0 14.8 2.9 15.5 3.0 16.9 C 3.2 18.2 4.0 19.0 5.7 19.9 C 7.3 20.6 9.4 21.0 11.2 21.0 C 10.5 20.1 9.8 18.8 9.6 17.5 C 9.5 15.8 10.1 14.5 10.5 13.5 L 4.8 13.5 C 4.0 13.5 3.6 13.8 3.38 14.28 Z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M 15.8 11.5 A 5.3 5.3 0 0 1 15.8 22.1 A 5.3 5.3 0 0 1 15.8 11.5 Z M 19.19 14.84 L 19.14 15.04 L 18.73 15.50 L 15.04 19.14 L 14.74 19.19 L 14.53 19.08 L 12.43 16.94 L 12.49 16.48 L 12.74 16.27 L 13.10 16.27 L 14.79 17.91 L 14.89 17.91 L 18.27 14.48 L 18.57 14.33 L 18.88 14.38 L 19.08 14.58 Z"/></svg>
             <span class="rail-expand-label">Attendance</span>
           </button>
           <button id="rail-toggle-notice" class="rail-toggle-pill active" data-filter="notice" aria-label="Toggle Notices / Announcements">
@@ -857,14 +864,11 @@
             <div id="cal-grid" class="cal-cells-grid"></div>
           </div>
 
-          <!-- Master-Detail 35% Right Details Sidebar -->
+          <!-- Master-Detail Right Details Sidebar (Spec 4.1 Redesign) -->
           <aside class="cal-detail-sidebar" id="cal-detail-sidebar" style="display:none;">
             <div class="cal-sidebar-header">
-              <div>
-                <div class="cal-sidebar-title" id="cal-sidebar-date-title">Date</div>
-                <div id="cal-sidebar-item-count" style="font-size:10.5px;color:var(--text-muted);">0 items</div>
-              </div>
-              <button id="btn-close-cal-sidebar" class="modal-close-btn" title="Close Sidebar">✕</button>
+              <h3 class="cal-sidebar-date-title" id="cal-sidebar-date-title">Date</h3>
+              <span class="cal-sidebar-count-pill" id="cal-sidebar-item-count">0 Activities</span>
             </div>
             <div class="cal-sidebar-content" id="cal-sidebar-cards-list"></div>
           </aside>
@@ -914,14 +918,14 @@
               </div>
 
               <!-- Sticky Course Navigator Pane (Active in By Course Mode) -->
-              <div id="fulllist-side-course-pane" style="display:none;flex-direction:column;gap:10px;width:100%;">
-                <div class="sticky-date-card fulllist-main-date-card" style="padding:16px;">
+              <div id="fulllist-side-course-pane" style="display:none;flex-direction:column;gap:10px;width:100%;height:100%;min-height:0;">
+                <div class="sticky-date-card fulllist-main-date-card" style="padding:16px;flex-shrink:0;">
                   <span class="sticky-date-day" id="fulllist-course-count">0</span>
                   <span class="sticky-date-month">COURSES</span>
                   <span class="sticky-date-weekday" id="fulllist-course-items-count">0 Activities</span>
                   <span class="sticky-date-semweek">COURSE GROUPING</span>
                 </div>
-                <div id="fulllist-course-jump-list" style="display:flex;flex-direction:column;gap:5px;width:100%;max-height:380px;overflow-y:auto;padding-right:2px;"></div>
+                <div id="fulllist-course-jump-list" style="display:flex;flex-direction:column;gap:5px;width:100%;flex:1;min-height:0;overflow-y:auto;padding-right:2px;"></div>
               </div>
             </aside>
 
