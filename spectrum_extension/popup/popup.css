@@ -8612,3 +8612,413 @@ body:not(.is-full-tab) .sync-cinematic-current {
   width: 100%;
 }
 
+/* ==========================================================================
+   ACADEMIC WEEKLY TIMETABLE MODE & EXPORT SYSTEM (Spec 5.0)
+   - Visual parity with Editorial Master Timetable
+   - Pure day-of-week slots, no specific calendar dates
+   - Zero-dependency PDF, PNG, and CSV exporters
+   ========================================================================== */
+.timetable-pane,
+.timetable-workspace-layout {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-canvas);
+  box-sizing: border-box;
+}
+
+.timetable-export-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-hairline);
+  flex-shrink: 0;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.timetable-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.timetable-academic-kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.timetable-main-title {
+  margin: 0;
+  font-family: 'Hanken Grotesk', -apple-system, sans-serif;
+  font-size: 17.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+  line-height: 1.15;
+}
+
+.timetable-badge-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-hairline);
+  border-radius: 999px;
+  color: var(--text-secondary);
+}
+
+.timetable-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-timetable-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.btn-timetable-export svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+
+.btn-timetable-export:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.btn-timetable-export:active {
+  transform: translateY(0);
+}
+
+.btn-timetable-export.btn-export-primary {
+  background: #18181B;
+  color: #FFFFFF;
+  border-color: #18181B;
+}
+
+.btn-timetable-export.btn-export-primary:hover {
+  background: #27272A;
+  border-color: #27272A;
+}
+
+.timetable-scroll-frame {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px 24px 40px 24px;
+  background: var(--bg-canvas);
+  box-sizing: border-box;
+}
+
+.timetable-grid {
+  display: grid;
+  width: 100%;
+  min-width: 1120px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* Grid Header Cells */
+.tt-header-cell {
+  padding: 10px 8px;
+  border-bottom: 2px solid var(--border-hairline);
+  border-right: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.tt-corner-cell {
+  text-align: left;
+  padding: 12px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+}
+
+.tt-time-col-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.tt-time-top {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.tt-time-bot {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* Day Row Label Cell */
+.tt-day-label-cell {
+  padding: 16px 14px;
+  border-bottom: 1px solid var(--border-hairline);
+  border-right: 2px solid var(--border-hairline);
+  background: var(--bg-surface);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.tt-day-name {
+  font-family: 'Hanken Grotesk', -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
+  text-transform: uppercase;
+}
+
+/* Class Contact Session Card */
+.tt-session-card {
+  margin: 5px 4px;
+  padding: 8px 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-left: 3.5px solid #18181B !important;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  z-index: 2;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.tt-session-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
+}
+
+.tt-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.tt-card-code-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.tt-code {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 0.2px;
+}
+
+.tt-type-tag {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-hairline);
+}
+
+.tt-time-range {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.tt-card-occ {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.tt-card-title {
+  font-family: 'Hanken Grotesk', -apple-system, sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tt-card-footer {
+  margin-top: auto;
+  padding-top: 3px;
+}
+
+.tt-venue {
+  font-size: 10px;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Empty day & Gap Placeholders */
+.tt-empty-day-banner {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 16px 22px;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-hairline);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  background: rgba(0, 0, 0, 0.015);
+  box-sizing: border-box;
+}
+
+.tt-gap-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-bottom: 1px solid var(--border-hairline);
+  border-right: 1px solid var(--border-hairline);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #A1A1AA;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.01);
+  box-sizing: border-box;
+  user-select: none;
+  text-align: center;
+}
+
+/* Dark Mode Support for Timetable */
+[data-theme="dark"] .timetable-grid {
+  background: var(--bg-surface);
+  border-color: var(--border-hairline);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .tt-session-card {
+  background: #18181B;
+  border-color: #27272A;
+  border-left-color: #FAFAFA !important;
+}
+
+[data-theme="dark"] .btn-timetable-export.btn-export-primary {
+  background: #FAFAFA;
+  color: #18181B;
+  border-color: #FAFAFA;
+}
+
+[data-theme="dark"] .tt-empty-day-banner {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="dark"] .tt-gap-cell {
+  background: rgba(255, 255, 255, 0.015);
+  color: #52525B;
+}
+
+/* Timetable Print to PDF Stylesheet */
+@media print {
+  @page {
+    size: landscape;
+    margin: 8mm;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  #tab-timetable,
+  #tab-timetable * {
+    visibility: visible !important;
+  }
+
+  #tab-timetable {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    background: #FFFFFF !important;
+  }
+
+  .timetable-export-toolbar {
+    display: none !important;
+  }
+
+  .timetable-scroll-frame {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .timetable-grid {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-shadow: none !important;
+    border: 1px solid #000000 !important;
+  }
+
+  .tt-session-card {
+    border: 1px solid #000000 !important;
+    border-left: 3.5px solid #000000 !important;
+    box-shadow: none !important;
+  }
+}
+

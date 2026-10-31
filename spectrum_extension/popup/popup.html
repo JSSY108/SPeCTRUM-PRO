@@ -54,6 +54,7 @@
     <nav class="primary-tabs-nav" id="popup-primary-tabs">
       <div class="primary-tabs-left">
         <button class="primary-tab-btn active tab-btn" data-tab="tab-activities">Activities</button>
+        <button class="primary-tab-btn tab-btn" data-tab="tab-timetable">Timetable</button>
         <button class="primary-tab-btn tab-btn" data-tab="tab-materials">Materials</button>
         <button class="primary-tab-btn tab-btn" data-tab="tab-filters">Preferences</button>
         <button class="primary-tab-btn tab-btn" data-tab="tab-support">Tip Jar ☕</button>
@@ -335,6 +336,43 @@
             </div>
 
             <div id="attendance-list" class="activities-list" style="display:none;flex-direction:column;gap:8px;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: Academic Weekly Timetable (Constructed from Attendance Sessions) -->
+      <section id="tab-timetable" class="tab-content timetable-pane" style="display:none;width:100%;height:100%;flex-direction:column;overflow:hidden;">
+        <div class="timetable-workspace-layout">
+          <!-- Timetable Top Action Bar (Header with Export Buttons) -->
+          <div class="timetable-export-toolbar">
+            <div class="timetable-toolbar-left">
+              <div class="timetable-title-group">
+                <span class="timetable-academic-kicker">ACADEMIC SCHEDULE</span>
+                <h2 class="timetable-main-title">WEEKLY TIMETABLE</h2>
+              </div>
+              <span class="timetable-badge-pill" id="timetable-session-count">0 Contact Sessions</span>
+            </div>
+            <div class="timetable-toolbar-right">
+              <button type="button" id="btn-export-timetable-csv" class="btn-timetable-export" title="Export as CSV spreadsheet (Excel, Notion, Google Calendar)">
+                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                <span>Export CSV</span>
+              </button>
+              <button type="button" id="btn-export-timetable-png" class="btn-timetable-export" title="Export as High-Resolution PNG Graphic">
+                <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <span>Export PNG</span>
+              </button>
+              <button type="button" id="btn-export-timetable-pdf" class="btn-timetable-export btn-export-primary" title="Export or Print as PDF Document">
+                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                <span>Export PDF</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Timetable Scroll Track & Grid Container -->
+          <div class="timetable-scroll-frame" id="timetable-scroll-frame">
+            <div class="timetable-grid" id="timetable-grid">
+              <!-- Dynamically populated by renderTimetableMode() -->
+            </div>
           </div>
         </div>
       </section>
@@ -821,6 +859,10 @@
             <button id="rail-mode-list" class="rail-mode-item" data-mode="list" aria-label="List View Mode">
               <svg class="icon-svg" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1.5" fill="currentColor"/><circle cx="3.5" cy="12" r="1.5" fill="currentColor"/><circle cx="3.5" cy="18" r="1.5" fill="currentColor"/></svg>
               <span class="rail-expand-label">List View</span>
+            </button>
+            <button id="rail-mode-timetable" class="rail-mode-item" data-mode="timetable" aria-label="Timetable Mode">
+              <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="4" x2="8" y2="20"/><line x1="14" y1="4" x2="14" y2="20"/></svg>
+              <span class="rail-expand-label">Timetable</span>
             </button>
           </div>
         </div>
