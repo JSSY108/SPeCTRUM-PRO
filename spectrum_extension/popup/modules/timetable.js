@@ -339,21 +339,39 @@
     const totalCols = maxHour - minHour;
     const pad = n => String(n).padStart(2, '0');
 
+    // Dynamically read horizontal column width & row height from CSS tuning dashboard
+    let horizColWidth = 215;
+    let horizRowHeight = 115;
+    try {
+      if (typeof document !== 'undefined') {
+        const rootStyle = getComputedStyle(document.documentElement);
+        const gridStyle = getComputedStyle(gridEl);
+        const colVal = parseInt(rootStyle.getPropertyValue('--tt-horiz-col-width') || gridStyle.getPropertyValue('--tt-horiz-col-width'), 10);
+        if (!isNaN(colVal) && colVal >= 120 && colVal <= 400) {
+          horizColWidth = colVal;
+        }
+        const rowVal = parseInt(rootStyle.getPropertyValue('--tt-horiz-row-height') || gridStyle.getPropertyValue('--tt-horiz-row-height'), 10);
+        if (!isNaN(rowVal) && rowVal >= 60 && rowVal <= 300) {
+          horizRowHeight = rowVal;
+        }
+      }
+    } catch (e) {}
+
     // Saturday takes half a row height if empty
     const hasSatSession = sessions.some(s => s.dayIndex === 6);
-    const rowTracks = ['50px'];
+    const rowTracks = ['52px'];
     activeDayIndices.forEach(dIdx => {
       if (dIdx === 6 && !hasSatSession) {
-        rowTracks.push('minmax(44px, 0.5fr)');
+        rowTracks.push(`minmax(${Math.round(horizRowHeight * 0.45)}px, 0.5fr)`);
       } else {
-        rowTracks.push('minmax(88px, 1fr)');
+        rowTracks.push(`minmax(${horizRowHeight}px, 1fr)`);
       }
     });
 
     gridEl.className = 'timetable-grid timetable-horizontal-grid';
-    gridEl.style.gridTemplateColumns = `140px repeat(${totalCols}, minmax(115px, 1fr))`;
+    gridEl.style.gridTemplateColumns = `140px repeat(${totalCols}, minmax(${horizColWidth}px, 1fr))`;
     gridEl.style.gridTemplateRows = rowTracks.join(' ');
-    gridEl.style.minWidth = `${140 + totalCols * 115}px`;
+    gridEl.style.minWidth = `${140 + totalCols * horizColWidth}px`;
 
     let html = '';
 
@@ -450,6 +468,7 @@
               <div class="tt-card-title" title="${esc(s.courseName)}">${esc(s.courseName)}</div>
               <div class="tt-card-footer">
                 ${venueHtml}
+                <span class="tt-card-dur">${esc(s.durText)}</span>
               </div>
             </div>
           `;

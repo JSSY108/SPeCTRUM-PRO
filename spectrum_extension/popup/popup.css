@@ -9120,6 +9120,23 @@ body:not(.is-full-tab) .sync-cinematic-current {
      Recommended: 100px - 135px (Default: 115px, previous: 80px)
      ======================================================================== */
   --tt-hour-row-height: 115px;
+
+  /* ========================================================================
+     2. HORIZONTAL MODE: HOUR CELL WIDTH (HORIZONTAL SPACING):
+     Adjust this value to increase or decrease the width of 1-hour columns.
+     215px ensures 1-hour cards fit course code, type tag, full time range (e.g. 10:00 - 11:00),
+     and full 2-line course title without truncation.
+     Recommended: 180px - 260px (Default: 215px, previous: 115px)
+     ======================================================================== */
+  --tt-horiz-col-width: 215px;
+
+  /* ========================================================================
+     3. HORIZONTAL MODE: DAY ROW HEIGHT (VERTICAL SPACING):
+     Adjust this value to increase or decrease the height of each day row.
+     115px ensures cards with 2-line title, OCC, and venue fit with comfortable breathing room.
+     Recommended: 100px - 140px (Default: 115px, previous: 88px)
+     ======================================================================== */
+  --tt-horiz-row-height: 115px;
 }
 
 .tt-session-card {
@@ -9546,6 +9563,61 @@ body:not(.is-full-tab) .sync-cinematic-current {
   width: auto !important;
   height: auto !important;
   margin: 5px 4px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+}
+
+.timetable-horizontal-grid .tt-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  min-height: 20px;
+}
+
+.timetable-horizontal-grid .tt-card-code-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.timetable-horizontal-grid .tt-time-range {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--tt-font-time, 10.5px);
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.timetable-horizontal-grid .tt-card-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.tt-card-dur {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg-hover);
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid var(--border-hairline);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+[data-theme="dark"] .tt-card-dur {
+  background: #27272A;
+  color: #A1A1AA;
+  border-color: #3F3F46;
 }
 
 /* Dark Mode Additions */
