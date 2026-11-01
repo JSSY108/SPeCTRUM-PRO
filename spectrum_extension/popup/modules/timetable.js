@@ -45,7 +45,7 @@
   function getTimetableDayNames() {
     const lang = getTimetableLang();
     if (lang === 'zh') {
-      return ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+      return ['日', '一', '二', '三', '四', '五', '六'];
     }
     if (lang === 'bm') {
       return ['AHAD', 'ISNIN', 'SELASA', 'RABU', 'KHAMIS', 'JUMAAT', 'SABTU'];
@@ -698,9 +698,8 @@
       const isHalf = isDayHalf(dIdx);
       const todayClass = isToday ? ' is-today' : '';
       const halfClass = isHalf ? ' is-half-cell' : '';
-      const todayTagText = getTimetableText('timetable', 'today', 'TODAY');
       const headerContent = isToday
-        ? `<span class="tt-today-indicator">●</span> ${dayName} ${isHalf ? '' : `<span class="tt-today-tag">(${todayTagText})</span>`}`
+        ? `<span class="tt-today-indicator">●</span> ${dayName}`
         : dayName;
 
       html += `
@@ -1026,8 +1025,10 @@
       const cleanVenue = s.venue.replace(/"/g, '""');
       const cleanName = s.courseName.replace(/"/g, '""');
 
+      const localizedDayNames = getTimetableDayNames();
+      const dayLabel = (typeof s.dayIndex === 'number' && localizedDayNames[s.dayIndex]) ? localizedDayNames[s.dayIndex] : s.dayName;
       rows.push([
-        `"${s.dayName}"`,
+        `"${dayLabel}"`,
         `"${s.courseCode}"`,
         `"${cleanName}"`,
         `"${s.typeLabel}"`,
@@ -1326,21 +1327,11 @@
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Day Label Cell (Col 1)
-      if (isToday) {
-        ctx.fillStyle = '#E4E4E7';
-        ctx.fillRect(gridX + 1, y + 1, cornerW - 1, rowH - 1);
-        ctx.fillStyle = '#18181B';
-        const dFontSz = isHalf ? 15 : 20;
-        ctx.font = `800 ${dFontSz}px "Hanken Grotesk", sans-serif`;
-        const label = isHalf ? `● ${dayName}` : `● ${dayName} (TODAY)`;
-        ctx.fillText(label, gridX + 16, y + rowH / 2 + 7);
-      } else {
-        ctx.fillStyle = '#18181B';
-        const dFontSz = isHalf ? 15 : 20;
-        ctx.font = `800 ${dFontSz}px "Hanken Grotesk", sans-serif`;
-        ctx.fillText(dayName, gridX + 20, y + rowH / 2 + 7);
-      }
+      // Day Label Cell (Col 1) - Export renders clean timeless day names without today indicator
+      ctx.fillStyle = '#18181B';
+      const dFontSz = isHalf ? 15 : 20;
+      ctx.font = `800 ${dFontSz}px "Hanken Grotesk", sans-serif`;
+      ctx.fillText(dayName, gridX + 20, y + rowH / 2 + 7);
 
       if (daySess.length === 0) {
         // Empty Day Banner
@@ -1679,16 +1670,9 @@
       ctx.font = `800 ${fontSz}px "Hanken Grotesk", sans-serif`;
       ctx.textAlign = 'center';
 
-      if (isToday) {
-        ctx.fillStyle = '#E4E4E7';
-        ctx.fillRect(colX, gridY + 1, dayColW, headerH - 1);
-        ctx.fillStyle = '#18181B';
-        const label = isHalf ? `● ${dayName}` : `● ${dayName} (TODAY)`;
-        ctx.fillText(label, colX + dayColW / 2, gridY + 41);
-      } else {
-        ctx.fillStyle = '#18181B';
-        ctx.fillText(dayName, colX + dayColW / 2, gridY + 41);
-      }
+      // Clean timeless day column headers without today indicator in export
+      ctx.fillStyle = '#18181B';
+      ctx.fillText(dayName, colX + dayColW / 2, gridY + 41);
     });
 
     // Time Column Labels & Horizontal Grid Lines
