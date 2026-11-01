@@ -2080,6 +2080,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       targetDate = new Date(activeDateFilter + 'T12:00:00');
     }
     if (!targetDate || isNaN(targetDate.getTime())) {
+      const candidateStr = session?.dateStr || session?.time || sessionData?.timeStr || session?.desc || '';
+      if (candidateStr) {
+        const p = (typeof parseMoodleDate === 'function') ? parseMoodleDate(candidateStr) : new Date(candidateStr);
+        if (p && !isNaN(p.getTime())) targetDate = p;
+      }
+    }
+    if (!targetDate || isNaN(targetDate.getTime())) {
       targetDate = new Date();
     }
 
@@ -2262,21 +2269,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       stateClass = 'state-ended';
       statusPillHtml = `<span class="att-status-pill">ENDED</span>`;
       stateBadgeHtml = `<span class="att-state-badge state-locked">LOCKED</span>`;
-
-      let endedLabel = 'Session ended';
-      if (dayDiff > 0) {
-        // Session was on a past day
-        endedLabel = (dayDiff === 1) ? 'Closed · 1d ago' : `Closed · ${dayDiff}d ago`;
-      } else if (endedMins > 0) {
-        // Session ended earlier today
-        if (endedMins < 60) {
-          endedLabel = `Ended ${endedMins}m ago`;
-        } else {
-          const hrs = Math.round(endedMins / 60);
-          endedLabel = `Ended ${hrs}h ago`;
-        }
-      }
-      windowSubHtml = `<span class="att-window-sub">${endedLabel}</span>`;
+      windowSubHtml = `<span class="att-window-sub">Session ended</span>`;
       actionBtnHtml = `<a href="${escapeHtml(takeUrl)}" target="_blank" class="btn-att-action btn-att-faint" title="Open attendance in SPeCTRUM">Check Portal ↗</a>`;
     } else if (isFuture) {
       stateClass = '';
@@ -2357,9 +2350,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
   }
 
-  function renderScopedAttendanceCard(data) {
+  function renderScopedAttendanceCard(data, fallbackDate, fallbackDateKey) {
     const att = data.att || data;
-    const vm = computeAttendanceCardViewModel(att, data);
+    const sessionData = {
+      ...data,
+      date: data.date || fallbackDate || data.session?.date,
+      dateKey: data.dateKey || fallbackDateKey || data.session?.dateKey
+    };
+    const vm = computeAttendanceCardViewModel(att, sessionData);
     return renderUnifiedAttendanceCardHtml(vm);
   }
 
@@ -2728,6 +2726,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           dateKey: todayKey,
           data: {
             att,
+            date: new Date(),
+            dateKey: todayKey,
             isLive: true,
             title: cleanSessionDesc(att.activeSession.desc || att.attTitle || 'Active Class Session', typeInfo.label),
             timeStr: extractOnlyTime(att.activeSession.time || '') || 'Active Now',
@@ -2757,13 +2757,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             const sessTypeInfo = getAttendanceTypeInfo(att, sess.desc || '');
             const sessTitle = cleanSessionDesc(sess.desc || att.attTitle || 'Class Session', sessTypeInfo.label);
             const onlyTime = extractOnlyTime(sess.dateStr || '') || (sess.time || 'Class Time');
+            const dKey = sess.dateKey || formatDateKey(d);
 
             allEvents.push({
               type: 'attendance',
               date: d,
-              dateKey: sess.dateKey || formatDateKey(d),
+              dateKey: dKey,
               data: {
                 att,
+                date: d,
+                dateKey: dKey,
                 isLive: false,
                 session: sess,
                 title: sessTitle,
@@ -2789,13 +2792,16 @@ document.addEventListener('DOMContentLoaded', async () => {
           const sessTypeInfo = getAttendanceTypeInfo(att, nextSess.desc || '');
           const sessTitle = cleanSessionDesc(nextSess.desc || att.attTitle || 'Class Session', sessTypeInfo.label);
           const onlyTime = extractOnlyTime(nextSess.time || nextSess.dateStr || '') || 'Class Time';
+          const dKey = nextSess.dateKey || formatDateKey(d);
 
           allEvents.push({
             type: 'attendance',
             date: d,
-            dateKey: nextSess.dateKey || formatDateKey(d),
+            dateKey: dKey,
             data: {
               att,
+              date: d,
+              dateKey: dKey,
               isLive: false,
               session: nextSess,
               title: sessTitle,
@@ -2913,7 +2919,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const cardsHtml = sortedEvents.map(ev => {
         if (ev.type === 'assignment') return renderScopedAssignmentCard(ev.data);
-        if (ev.type === 'attendance') return renderScopedAttendanceCard(ev.data);
+        if (ev.type === 'attendance') {
+          return renderScopedAttendanceCard(ev.data, ev.date || group.date, ev.dateKey || group.dateKey);
+        }
         if (ev.type === 'notice') return renderScopedNoticeCard(ev.data);
         return '';
       }).join('');
@@ -7679,6 +7687,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             dateKey: todayKey,
             data: {
               att,
+              date: new Date(),
+              dateKey: todayKey,
               isLive: true,
               title: cleanSessionDesc(att.activeSession.desc || att.attTitle || 'Active Class Session', typeInfo.label),
               timeStr: extractOnlyTime(att.activeSession.time || '') || 'Active Now',
@@ -7706,13 +7716,16 @@ document.addEventListener('DOMContentLoaded', async () => {
               const sessTypeInfo = getAttendanceTypeInfo(att, sess.desc || '');
               const sessTitle = cleanSessionDesc(sess.desc || att.attTitle || 'Class Session', sessTypeInfo.label);
               const onlyTime = extractOnlyTime(sess.dateStr || '') || (sess.time || 'Class Time');
+              const dKey = sess.dateKey || formatDateKey(d);
 
               allEvents.push({
                 type: 'attendance',
                 date: d,
-                dateKey: sess.dateKey || formatDateKey(d),
+                dateKey: dKey,
                 data: {
                   att,
+                  date: d,
+                  dateKey: dKey,
                   isLive: false,
                   session: sess,
                   title: sessTitle,
@@ -7738,13 +7751,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             const sessTypeInfo = getAttendanceTypeInfo(att, nextSess.desc || '');
             const sessTitle = cleanSessionDesc(nextSess.desc || att.attTitle || 'Class Session', sessTypeInfo.label);
             const onlyTime = extractOnlyTime(nextSess.time || nextSess.dateStr || '') || 'Class Time';
+            const dKey = nextSess.dateKey || formatDateKey(d);
 
             allEvents.push({
               type: 'attendance',
               date: d,
-              dateKey: nextSess.dateKey || formatDateKey(d),
+              dateKey: dKey,
               data: {
                 att,
+                date: d,
+                dateKey: dKey,
                 isLive: false,
                 session: nextSess,
                 title: sessTitle,
@@ -7870,7 +7886,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const cardsHtml = sortedEvents.map(ev => {
           if (ev.type === 'assignment') return renderScopedAssignmentCard(ev.data);
-          if (ev.type === 'attendance') return renderScopedAttendanceCard(ev.data);
+          if (ev.type === 'attendance') {
+            return renderScopedAttendanceCard(ev.data, ev.date || group.date, ev.dateKey || group.dateKey);
+          }
           if (ev.type === 'notice') return renderScopedNoticeCard(ev.data);
           return '';
         }).join('');
