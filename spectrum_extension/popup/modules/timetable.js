@@ -28,6 +28,41 @@
     return (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  let customLocations = {};
+  let customLocationsLoaded = false;
+
+  async function loadCustomLocations() {
+    try {
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        const res = await chrome.storage.local.get(['timetableLocations']);
+        if (res && res.timetableLocations && typeof res.timetableLocations === 'object') {
+          customLocations = res.timetableLocations;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load custom locations:', e);
+    }
+    customLocationsLoaded = true;
+    return customLocations;
+  }
+
+  async function saveCustomLocation(key, location) {
+    if (!key) return;
+    const cleanLoc = (location || '').trim();
+    if (cleanLoc) {
+      customLocations[key] = cleanLoc;
+    } else {
+      delete customLocations[key];
+    }
+    try {
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        await chrome.storage.local.set({ timetableLocations: customLocations });
+      }
+    } catch (e) {
+      console.warn('Failed to save custom location:', e);
+    }
+  }
+
   function cleanTimetableCourseName(name, code) {
     if (!name) return '';
     let str = String(name).trim();
@@ -99,21 +134,33 @@
           occStr = occM ? `OCC ${parseInt(occM[1], 10)}` : 'OCC 1';
         }
 
-        let venue = (sess.desc || '').replace(/^(?:lecture|tutorial|lab|workshop)\s*[-–—:]?\s*/i, '').trim();
-        if (!venue || venue.length < 2) {
-          venue = /tut/i.test(typeLabel) ? 'Discussion Room / Lab' : (/lab/i.test(typeLabel) ? 'Computer Lab' : 'Main Lecture Hall');
-        }
-        const isOnline = /online|zoom|teams|google meet|meet|webex/i.test(venue);
-        const venueIcon = isOnline ? '🌐' : '📍';
-        const durHours = Math.max(0.5, (timeInfo.endHour + timeInfo.endMin / 60) - (timeInfo.startHour + timeInfo.startMin / 60));
-        const durText = `${durHours.toFixed(durHours % 1 === 0 ? 0 : 1)}h`;
-        const venueDisplay = `${venueIcon} ${venue} · ${durText}`;
-
         const pad = n => String(n).padStart(2, '0');
         const timeStr = `${pad(timeInfo.startHour)}:${pad(timeInfo.startMin)} - ${pad(timeInfo.endHour)}:${pad(timeInfo.endMin)}`;
 
         const cleanCode = (courseCode || '').split('/')[0].trim();
         const key = `${dayIndex}_${timeInfo.startHour}_${timeInfo.startMin}_${timeInfo.endHour}_${timeInfo.endMin}_${cleanCode}_${typeLabel}`;
+
+        // Check custom user-defined location first
+        const customLoc = (customLocations && (customLocations[key] || customLocations[`${cleanCode}_${dayIndex}_${timeInfo.startHour}`] || customLocations[`${cleanCode}_${typeLabel}`])) || '';
+
+        let venue = customLoc || '';
+        if (!venue) {
+          const rawDesc = (sess.desc || '').replace(/^(?:lecture|tutorial|lab|workshop)\s*[-–—:]?\s*/i, '').trim();
+          // Filter out dummy/placeholder session descriptions from Spectrum Moodle
+          const isDummyDesc = !rawDesc ||
+            /^(?:regular\s+class(?:\s+session)?|sesi\s+kelas\s+biasa|class\s+session|sesi\s+kelas|none|null|tba|tbd)$/i.test(rawDesc) ||
+            /^occ[- ]*\d+$/i.test(rawDesc) ||
+            /^(?:all\s+groups?|kumpulan\s+semua)$/i.test(rawDesc);
+          if (!isDummyDesc && rawDesc.length >= 2) {
+            venue = rawDesc;
+          }
+        }
+
+        const isOnline = /online|zoom|teams|google meet|meet|webex/i.test(venue);
+        const venueIcon = isOnline ? '🌐' : '📍';
+        const durHours = Math.max(0.5, (timeInfo.endHour + timeInfo.endMin / 60) - (timeInfo.startHour + timeInfo.startMin / 60));
+        const durText = `${durHours.toFixed(durHours % 1 === 0 ? 0 : 1)}h`;
+        const venueDisplay = venue ? `${venueIcon} ${venue} · ${durText}` : durText;
 
         rawSlots.push({
           key,
@@ -328,19 +375,29 @@
             posStyle = 'left: 6px; width: calc(100% - 12px);';
           }
 
+          const hasVenue = Boolean(s.venue && s.venue.trim().length > 0);
+          const subtitleText = hasVenue ? `${esc(s.occ)} · ${esc(s.venue)}` : esc(s.occ);
+          const venueHtml = hasVenue
+            ? `<span class="tt-venue" title="${esc(s.venue)}">${s.venueIcon || '📍'} ${esc(s.venue)}</span>`
+            : `<span class="tt-venue tt-venue-empty" title="Click to add location"><span class="tt-venue-add-icon">📍</span> <span class="tt-venue-placeholder">+ Add Location</span></span>`;
+
           html += `
-            <div class="tt-session-card${compactClass}" style="top: ${topPx}px; height: ${heightPx}px; ${posStyle}">
+            <div class="tt-session-card${compactClass}"
+                 data-session-key="${esc(s.key)}"
+                 data-course-code="${esc(s.courseCode)}"
+                 data-course-name="${esc(s.courseName)}"
+                 data-time-str="${esc(s.dayName)} ${esc(s.timeStr)} · ${esc(s.occ)}"
+                 data-venue="${esc(s.venue || '')}"
+                 title="Click to set or edit location"
+                 style="top: ${topPx}px; height: ${heightPx}px; ${posStyle}">
               <div class="tt-card-header">
-                <div class="tt-card-code-badge">
-                  <span class="tt-code">${esc(s.courseCode)}</span>
-                  <span class="tt-type-tag">${esc(s.typeLabel)}</span>
-                </div>
-                <span class="tt-card-occ-pill">${esc(s.occ)}</span>
+                <span class="tt-code">${esc(s.courseCode)}</span>
+                <span class="tt-type-tag">${esc(s.typeLabel)}</span>
               </div>
               <div class="tt-card-title" title="${esc(s.courseName)}">${esc(s.courseName)}</div>
-              ${!isCompact ? `<div class="tt-card-subtitle">${esc(s.occ)} · ${esc(s.venue)}</div>` : ''}
+              ${!isCompact ? `<div class="tt-card-subtitle">${subtitleText}</div>` : ''}
               <div class="tt-card-footer">
-                <span class="tt-venue" title="${esc(s.venue)}">${s.venueIcon || '📍'} ${esc(s.venue)}</span>
+                ${venueHtml}
                 <span class="tt-time-range">${esc(s.timeStr)}</span>
               </div>
             </div>
@@ -352,6 +409,58 @@
     });
 
     gridEl.innerHTML = html;
+
+    if (!gridEl._hasLocationClickListener) {
+      gridEl._hasLocationClickListener = true;
+      gridEl.addEventListener('click', (e) => {
+        const card = e.target.closest('.tt-session-card');
+        if (!card) return;
+        const key = card.dataset.sessionKey;
+        const courseCode = card.dataset.courseCode;
+        const courseName = card.dataset.courseName;
+        const timeStr = card.dataset.timeStr;
+        const currentVenue = card.dataset.venue || '';
+        openLocationModal({ key, courseCode, courseName, timeStr, currentVenue });
+      });
+    }
+  }
+
+  let activeSessionForLocation = null;
+
+  function openLocationModal(sessInfo) {
+    activeSessionForLocation = sessInfo;
+    const modal = document.getElementById('tt-location-modal');
+    if (!modal) return;
+
+    const codeEl = document.getElementById('tt-location-course-code');
+    const nameEl = document.getElementById('tt-location-course-name');
+    const timeEl = document.getElementById('tt-location-session-time');
+    const inp = document.getElementById('tt-location-input');
+    const btnDel = document.getElementById('btn-delete-tt-location');
+
+    if (codeEl) codeEl.textContent = sessInfo.courseCode || 'Course';
+    if (nameEl) nameEl.textContent = sessInfo.courseName ? ` · ${sessInfo.courseName}` : '';
+    if (timeEl) timeEl.textContent = sessInfo.timeStr || '';
+    if (inp) {
+      inp.value = sessInfo.currentVenue || '';
+    }
+    if (btnDel) {
+      btnDel.style.display = sessInfo.currentVenue ? 'inline-block' : 'none';
+    }
+
+    modal.style.display = 'flex';
+    setTimeout(() => {
+      if (inp) {
+        inp.focus();
+        inp.select();
+      }
+    }, 50);
+  }
+
+  function closeLocationModal() {
+    const modal = document.getElementById('tt-location-modal');
+    if (modal) modal.style.display = 'none';
+    activeSessionForLocation = null;
   }
 
   function downloadBlobFile(blob, filename) {
@@ -616,23 +725,14 @@
           const codeW = ctx.measureText(s.courseCode).width;
           const tagW = Math.max(46, ctx.measureText(s.typeLabel).width + 16);
           ctx.fillStyle = '#F4F4F5';
-          ctx.fillRect(cardX + 22 + codeW, cardY + 11, tagW, 20);
+          ctx.fillRect(cardX + cardW - tagW - 14, cardY + 11, tagW, 20);
           ctx.strokeStyle = '#E4E4E7';
-          ctx.strokeRect(cardX + 22 + codeW, cardY + 11, tagW, 20);
+          ctx.strokeRect(cardX + cardW - tagW - 14, cardY + 11, tagW, 20);
           ctx.fillStyle = '#71717A';
           ctx.font = '700 13px "JetBrains Mono", monospace';
           ctx.textAlign = 'center';
-          ctx.fillText(s.typeLabel, cardX + 22 + codeW + tagW / 2, cardY + 25);
+          ctx.fillText(s.typeLabel, cardX + cardW - 14 - tagW / 2, cardY + 25);
           ctx.textAlign = 'left';
-
-          // OCC Tag on right header if room
-          if (cardW > codeW + tagW + 110) {
-            ctx.fillStyle = '#71717A';
-            ctx.font = '700 14px "JetBrains Mono", monospace';
-            ctx.textAlign = 'right';
-            ctx.fillText(s.occ, cardX + cardW - 14, cardY + 26);
-            ctx.textAlign = 'left';
-          }
 
           // Course Title
           ctx.fillStyle = '#18181B';
@@ -650,7 +750,7 @@
           if (cardH >= 95) {
             ctx.fillStyle = '#71717A';
             ctx.font = '600 15px "JetBrains Mono", monospace';
-            let sub = `${s.occ} · ${s.venue}`;
+            let sub = s.venue ? `${s.occ} · ${s.venue}` : s.occ;
             if (ctx.measureText(sub).width > cardW - 28) {
               while (sub.length > 4 && ctx.measureText(sub + '…').width > cardW - 28) {
                 sub = sub.slice(0, -1);
@@ -662,11 +762,15 @@
 
           // Footer (Venue left, Time right)
           if (cardH >= 70) {
+            if (s.venue) {
+              ctx.fillStyle = '#71717A';
+              ctx.font = '600 14px "JetBrains Mono", monospace';
+              let vText = `${s.venue}`;
+              ctx.fillText(vText, cardX + 16, cardY + cardH - 12);
+            }
+
             ctx.fillStyle = '#71717A';
             ctx.font = '600 14px "JetBrains Mono", monospace';
-            let vText = `${s.venue}`;
-            ctx.fillText(vText, cardX + 16, cardY + cardH - 12);
-
             ctx.textAlign = 'right';
             ctx.fillText(s.timeStr, cardX + cardW - 14, cardY + cardH - 12);
             ctx.textAlign = 'left';
@@ -776,6 +880,74 @@
   }
 
   function initTimetableControls() {
+    loadCustomLocations();
+    if (typeof document === 'undefined') return;
+
+    const modal = document.getElementById('tt-location-modal');
+    const btnClose = document.getElementById('btn-close-tt-location-modal');
+    const btnCancel = document.getElementById('btn-cancel-tt-location');
+    const btnSave = document.getElementById('btn-save-tt-location');
+    const btnDelete = document.getElementById('btn-delete-tt-location');
+    const inp = document.getElementById('tt-location-input');
+    const chipsWrap = document.getElementById('tt-quick-location-chips');
+
+    if (modal && !modal._hasLocationListeners) {
+      modal._hasLocationListeners = true;
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeLocationModal();
+      });
+
+      if (btnClose) btnClose.addEventListener('click', closeLocationModal);
+      if (btnCancel) btnCancel.addEventListener('click', closeLocationModal);
+
+      if (btnSave) {
+        btnSave.addEventListener('click', async () => {
+          if (!activeSessionForLocation) return;
+          const locVal = inp ? inp.value.trim() : '';
+          await saveCustomLocation(activeSessionForLocation.key, locVal);
+          closeLocationModal();
+          renderTimetableMode();
+        });
+      }
+
+      if (btnDelete) {
+        btnDelete.addEventListener('click', async () => {
+          if (!activeSessionForLocation) return;
+          await saveCustomLocation(activeSessionForLocation.key, '');
+          closeLocationModal();
+          renderTimetableMode();
+        });
+      }
+
+      if (inp) {
+        inp.addEventListener('keydown', async (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (!activeSessionForLocation) return;
+            await saveCustomLocation(activeSessionForLocation.key, inp.value.trim());
+            closeLocationModal();
+            renderTimetableMode();
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            closeLocationModal();
+          }
+        });
+      }
+
+      if (chipsWrap) {
+        chipsWrap.addEventListener('click', (e) => {
+          const chip = e.target.closest('.btn-loc-quick');
+          if (!chip) return;
+          const loc = chip.dataset.loc || chip.textContent.trim();
+          if (inp) {
+            inp.value = loc;
+            inp.focus();
+          }
+        });
+      }
+    }
+
     const btnCsv = document.getElementById('btn-export-timetable-csv');
     const btnPng = document.getElementById('btn-export-timetable-png');
     const btnPdf = document.getElementById('btn-export-timetable-pdf');

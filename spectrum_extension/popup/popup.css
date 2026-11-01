@@ -8997,6 +8997,8 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 /* Session Card */
 .tt-session-card {
+  cursor: pointer;
+  user-select: none;
   position: absolute;
   background: var(--bg-surface);
   border: 1px solid var(--border-hairline);
@@ -9097,6 +9099,38 @@ body:not(.is-full-tab) .sync-cinematic-current {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.tt-venue-empty {
+  color: var(--text-muted);
+  opacity: 0.65;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.tt-session-card:hover .tt-venue-empty {
+  opacity: 1;
+  color: var(--text-primary);
+  text-decoration: underline;
+}
+
+.btn-loc-quick {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-hairline);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn-loc-quick:hover {
+  background: var(--border-hairline);
+  color: var(--text-primary);
 }
 
 .tt-time-range {
