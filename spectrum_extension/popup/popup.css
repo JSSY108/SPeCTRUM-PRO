@@ -9357,6 +9357,223 @@ body:not(.is-full-tab) .sync-cinematic-current {
   border-color: #FAFAFA;
 }
 
+/* ==========================================================================
+   TIMETABLE ORIENTATION SWITCH (VERTICAL VS HORIZONTAL)
+   ========================================================================== */
+.timetable-view-switch {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-hairline);
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.btn-tt-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.btn-tt-switch .icon-svg {
+  width: 13px;
+  height: 13px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+
+.btn-tt-switch:hover {
+  color: var(--text-primary);
+}
+
+.btn-tt-switch.active {
+  background: #FFFFFF;
+  color: var(--text-primary);
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.timetable-toolbar-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--border-hairline);
+  margin: 0 4px;
+}
+
+/* ==========================================================================
+   HORIZONTAL TIMETABLE GRID STYLES (DAYS AS ROWS, TIME AS COLUMNS)
+   ========================================================================== */
+.timetable-horizontal-grid {
+  display: grid;
+  width: 100%;
+  min-width: 1120px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.timetable-horizontal-grid .tt-header-cell {
+  padding: 10px 8px;
+  border-bottom: 2px solid var(--border-hairline);
+  border-right: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.timetable-horizontal-grid .tt-corner-cell {
+  text-align: left;
+  padding: 12px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.timetable-horizontal-grid .tt-time-col-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.timetable-horizontal-grid .tt-time-top {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.timetable-horizontal-grid .tt-time-bot {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.timetable-horizontal-grid .tt-day-label-cell {
+  padding: 16px 14px;
+  border-bottom: 1px solid var(--border-hairline);
+  border-right: 2px solid var(--border-hairline);
+  background: var(--bg-surface);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.timetable-horizontal-grid .tt-day-label-cell.is-today {
+  background: #E4E4E7 !important;
+  color: #18181B !important;
+}
+
+.timetable-horizontal-grid .tt-day-label-cell.is-half-row {
+  padding: 8px 14px;
+}
+
+.timetable-horizontal-grid .tt-day-name {
+  font-family: 'Hanken Grotesk', -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
+  text-transform: uppercase;
+}
+
+.timetable-horizontal-grid .tt-empty-day-banner {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 16px 22px;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-hairline);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  background: rgba(0, 0, 0, 0.015);
+  box-sizing: border-box;
+}
+
+.timetable-horizontal-grid .tt-empty-day-banner.is-half-row {
+  padding: 8px 22px;
+  font-size: 10px;
+}
+
+.timetable-horizontal-grid .tt-gap-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-bottom: 1px solid var(--border-hairline);
+  border-right: 1px solid var(--border-hairline);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #A1A1AA;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.01);
+  box-sizing: border-box;
+  user-select: none;
+  text-align: center;
+}
+
+.timetable-horizontal-grid .tt-session-card {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 5px 4px;
+}
+
+/* Dark Mode Additions */
+[data-theme="dark"] .timetable-view-switch {
+  background: #27272A;
+  border-color: #3F3F46;
+}
+
+[data-theme="dark"] .btn-tt-switch.active {
+  background: #18181B;
+  color: #FAFAFA;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .timetable-horizontal-grid .tt-day-label-cell.is-today {
+  background: #27272A !important;
+  color: #FAFAFA !important;
+}
+
+[data-theme="dark"] .timetable-horizontal-grid .tt-empty-day-banner {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="dark"] .timetable-horizontal-grid .tt-gap-cell {
+  background: rgba(255, 255, 255, 0.015);
+  color: #52525B;
+}
+
 /* Timetable Print to PDF Stylesheet */
 @media print {
   @page {

@@ -289,32 +289,202 @@
     return sorted;
   }
 
-  function renderTimetableMode() {
-    const gridEl = document.getElementById('timetable-grid');
-    const countEl = document.getElementById('timetable-session-count');
-    if (!gridEl) return;
-
-    const esc = getSafeEscapeHtml();
-    const sessions = extractWeeklyTimetableSessions();
-    if (countEl) {
-      countEl.textContent = `${sessions.length} Contact Session${sessions.length === 1 ? '' : 's'}`;
+  let currentTimetableLayout = 'vertical';
+  try {
+    const saved = localStorage.getItem('spectrum_pro_timetable_layout');
+    if (saved === 'horizontal' || saved === 'vertical') {
+      currentTimetableLayout = saved;
     }
+  } catch (e) {}
 
-    if (sessions.length === 0) {
-      gridEl.className = 'timetable-grid';
-      gridEl.style.gridTemplateColumns = '1fr';
-      gridEl.innerHTML = `
-        <div class="tt-empty-state" style="padding: 56px 24px; text-align: center; font-family: var(--font-sans); color: var(--text-muted);">
-          <div style="font-size: 32px; margin-bottom: 12px;">🗓</div>
-          <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">No Timetable Sessions Found</div>
-          <div style="font-size: 13px; max-width: 440px; margin: 0 auto; line-height: 1.5;">
-            Synchronize your course attendance to automatically populate your weekly academic timetable.
-          </div>
+  function updateLayoutSwitchUI() {
+    const btnVert = document.getElementById('btn-tt-vertical');
+    const btnHoriz = document.getElementById('btn-tt-horizontal');
+    if (btnVert) btnVert.classList.toggle('active', currentTimetableLayout === 'vertical');
+    if (btnHoriz) btnHoriz.classList.toggle('active', currentTimetableLayout === 'horizontal');
+  }
+
+  function setTimetableLayout(layout) {
+    currentTimetableLayout = (layout === 'horizontal') ? 'horizontal' : 'vertical';
+    try {
+      localStorage.setItem('spectrum_pro_timetable_layout', currentTimetableLayout);
+    } catch (e) {}
+    updateLayoutSwitchUI();
+    renderTimetableMode();
+  }
+
+  function getEditorialGapLabel(startH, endH) {
+    if (startH < 11) return (endH - startH >= 4) ? 'RESEARCH & MORNING WORKSTATION PREP' : 'STUDY CYCLE';
+    if (startH >= 12 && endH <= 16) return 'RECESSED';
+    if (startH >= 14) return (endH - startH >= 3) ? 'AFTERNOON STUDY CYCLE' : 'OPEN';
+    return 'ACADEMIC STUDY PERIOD';
+  }
+
+  function renderHorizontalGrid(gridEl, sessions) {
+    const esc = getSafeEscapeHtml();
+    const DAY_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+    // Always include Monday to Saturday (days 1..6)
+    const activeDayIndices = [1, 2, 3, 4, 5, 6];
+    if (sessions.some(s => s.dayIndex === 0)) activeDayIndices.push(0);
+
+    const todayDayIndex = new Date().getDay();
+
+    let minHour = 8;
+    let maxHour = 18;
+    sessions.forEach(s => {
+      if (s.startHour < minHour) minHour = s.startHour;
+      if (s.endHour > maxHour) maxHour = s.endHour;
+      if (s.endMin > 0 && s.endHour >= maxHour) maxHour = s.endHour + 1;
+    });
+    const totalCols = maxHour - minHour;
+    const pad = n => String(n).padStart(2, '0');
+
+    // Saturday takes half a row height if empty
+    const hasSatSession = sessions.some(s => s.dayIndex === 6);
+    const rowTracks = ['50px'];
+    activeDayIndices.forEach(dIdx => {
+      if (dIdx === 6 && !hasSatSession) {
+        rowTracks.push('minmax(44px, 0.5fr)');
+      } else {
+        rowTracks.push('minmax(88px, 1fr)');
+      }
+    });
+
+    gridEl.className = 'timetable-grid timetable-horizontal-grid';
+    gridEl.style.gridTemplateColumns = `140px repeat(${totalCols}, minmax(115px, 1fr))`;
+    gridEl.style.gridTemplateRows = rowTracks.join(' ');
+    gridEl.style.minWidth = `${140 + totalCols * 115}px`;
+
+    let html = '';
+
+    // Corner Header Cell (Row 1, Col 1)
+    html += `
+      <div class="tt-header-cell tt-corner-cell" style="grid-column: 1; grid-row: 1;">
+        <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.8px; color: var(--text-primary);">ACADEMIC WK</div>
+        <div style="font-size: 9.5px; font-weight: 600; color: var(--text-muted); margin-top: 2px;">TIME (MYT)</div>
+      </div>
+    `;
+
+    // Time Columns Header (Row 1, Col 2..N)
+    for (let h = minHour; h < maxHour; h++) {
+      const colIdx = (h - minHour) + 2;
+      html += `
+        <div class="tt-header-cell tt-time-col-header" style="grid-column: ${colIdx}; grid-row: 1;">
+          <span class="tt-time-top">${pad(h)}:00</span>
+          <span class="tt-time-bot">${pad(h + 1)}:00</span>
         </div>
       `;
-      return;
     }
 
+    // Day Rows (Row 2..N)
+    activeDayIndices.forEach((dIdx, dayRowOffset) => {
+      const rowNum = dayRowOffset + 2;
+      const dayName = DAY_NAMES[dIdx];
+      const isToday = (dIdx === todayDayIndex);
+      const isHalf = (dIdx === 6 && !hasSatSession);
+      const todayClass = isToday ? ' is-today' : '';
+      const halfClass = isHalf ? ' is-half-row' : '';
+      const daySess = sessions.filter(s => s.dayIndex === dIdx);
+
+      // Day Label Cell (Col 1)
+      html += `
+        <div class="tt-day-label-cell${todayClass}${halfClass}" style="grid-column: 1; grid-row: ${rowNum};">
+          <div class="tt-day-name">${isToday ? `<span class="tt-today-indicator">●</span> ${dayName}` : dayName}</div>
+        </div>
+      `;
+
+      if (daySess.length === 0) {
+        html += `
+          <div class="tt-empty-day-banner${halfClass}" style="grid-column: 2 / ${totalCols + 2}; grid-row: ${rowNum};">
+            <span>🗓 NO SCHEDULED CONTACT SESSIONS · INDEPENDENT ACADEMIC STUDY</span>
+          </div>
+        `;
+      } else {
+        const occupied = new Array(totalCols).fill(false);
+
+        daySess.forEach(s => {
+          const startCol = Math.max(2, (s.startHour - minHour) + 2);
+          const endCol = Math.min(totalCols + 2, Math.max(startCol + 1, (s.endHour - minHour) + (s.endMin > 0 ? 1 : 0) + 2));
+
+          const startIdx = Math.max(0, s.startHour - minHour);
+          const endIdx = Math.min(totalCols, (s.endHour - minHour) + (s.endMin > 0 ? 1 : 0));
+          for (let i = startIdx; i < endIdx; i++) occupied[i] = true;
+
+          const hasVenue = Boolean(s.venue && s.venue.trim().length > 0);
+          const venueHtml = hasVenue
+            ? `<span class="tt-venue" title="${esc(s.venue)}">${s.venueIcon || '📍'} ${esc(s.venue)}</span>`
+            : `<span class="tt-venue tt-venue-empty" title="Click to add location"><span class="tt-venue-add-icon">📍</span> <span class="tt-venue-placeholder">+ Add Location</span></span>`;
+
+          const startTimeVal = `${pad(s.startHour)}:${pad(s.startMin)}`;
+          const endTimeVal = `${pad(s.endHour)}:${pad(s.endMin)}`;
+          const rawStartTimeVal = `${pad(s.rawStartHour)}:${pad(s.rawStartMin)}`;
+          const rawEndTimeVal = `${pad(s.rawEndHour)}:${pad(s.rawEndMin)}`;
+
+          html += `
+            <div class="tt-session-card"
+                 data-session-key="${esc(s.key)}"
+                 data-fallback-key="${esc(s.fallbackKey)}"
+                 data-course-code="${esc(s.courseCode)}"
+                 data-course-name="${esc(s.courseName)}"
+                 data-type-label="${esc(s.typeLabel)}"
+                 data-occ="${esc(s.occ)}"
+                 data-day-name="${esc(s.dayName)}"
+                 data-time-str="${esc(s.timeStr)}"
+                 data-raw-time-str="${esc(s.rawTimeStr)}"
+                 data-start-time="${startTimeVal}"
+                 data-end-time="${endTimeVal}"
+                 data-raw-start-time="${rawStartTimeVal}"
+                 data-raw-end-time="${rawEndTimeVal}"
+                 data-is-custom-time="${s.isCustomTime ? '1' : '0'}"
+                 data-venue="${esc(s.venue || '')}"
+                 title="Click to edit session time or location"
+                 style="grid-column: ${startCol} / ${endCol}; grid-row: ${rowNum};">
+              <div class="tt-card-header">
+                <div class="tt-card-code-badge">
+                  <span class="tt-code">${esc(s.courseCode)}</span>
+                  <span class="tt-type-tag">${esc(s.typeLabel)}</span>
+                </div>
+                <span class="tt-time-range">${esc(s.timeStr)}</span>
+              </div>
+              <div class="tt-card-subtitle">${esc(s.occ)}</div>
+              <div class="tt-card-title" title="${esc(s.courseName)}">${esc(s.courseName)}</div>
+              <div class="tt-card-footer">
+                ${venueHtml}
+              </div>
+            </div>
+          `;
+        });
+
+        // Fill remaining empty gaps
+        let gapStart = null;
+        for (let i = 0; i <= totalCols; i++) {
+          if (i < totalCols && !occupied[i]) {
+            if (gapStart === null) gapStart = i;
+          } else {
+            if (gapStart !== null) {
+              const gStartCol = gapStart + 2;
+              const gEndCol = i + 2;
+              const gStartH = gapStart + minHour;
+              const gEndH = i + minHour;
+              const label = getEditorialGapLabel(gStartH, gEndH);
+
+              html += `
+                <div class="tt-gap-cell" style="grid-column: ${gStartCol} / ${gEndCol}; grid-row: ${rowNum};">
+                  ${label}
+                </div>
+              `;
+              gapStart = null;
+            }
+          }
+        }
+      }
+    });
+
+    gridEl.innerHTML = html;
+  }
+
+  function renderVerticalGrid(gridEl, sessions) {
+    const esc = getSafeEscapeHtml();
     const DAY_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
     // Always include Monday to Saturday (days 1..6)
     const activeDayIndices = [1, 2, 3, 4, 5, 6];
@@ -330,11 +500,6 @@
       if (s.endMin > 0 && s.endHour >= maxHour) maxHour = s.endHour + 1;
     });
 
-    // ========================================================================
-    // TIMETABLE GRID ROW HEIGHT (HOUR CELL SPACING):
-    // Default: 115px (increased from 80px so 1-hour cards fit comfortably with larger fonts).
-    // Dynamically reads --tt-hour-row-height from popup.css (:root or .timetable-grid).
-    // ========================================================================
     let hourHeight = 115;
     try {
       if (typeof document !== 'undefined') {
@@ -364,6 +529,7 @@
 
     gridEl.className = 'timetable-grid timetable-vertical-grid';
     gridEl.style.gridTemplateColumns = `75px ${colTracks.join(' ')}`;
+    gridEl.style.gridTemplateRows = 'none';
     gridEl.style.minWidth = `${totalMinWidth}px`;
 
     let html = '';
@@ -495,6 +661,41 @@
     });
 
     gridEl.innerHTML = html;
+  }
+
+  function renderTimetableMode() {
+    updateLayoutSwitchUI();
+    const gridEl = document.getElementById('timetable-grid');
+    const countEl = document.getElementById('timetable-session-count');
+    if (!gridEl) return;
+
+    const sessions = extractWeeklyTimetableSessions();
+    if (countEl) {
+      countEl.textContent = `${sessions.length} Contact Session${sessions.length === 1 ? '' : 's'}`;
+    }
+
+    if (sessions.length === 0) {
+      gridEl.className = 'timetable-grid';
+      gridEl.style.gridTemplateColumns = '1fr';
+      gridEl.style.gridTemplateRows = 'none';
+      gridEl.style.minWidth = '0px';
+      gridEl.innerHTML = `
+        <div class="tt-empty-state" style="padding: 56px 24px; text-align: center; font-family: var(--font-sans); color: var(--text-muted);">
+          <div style="font-size: 32px; margin-bottom: 12px;">🗓</div>
+          <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">No Timetable Sessions Found</div>
+          <div style="font-size: 13px; max-width: 440px; margin: 0 auto; line-height: 1.5;">
+            Synchronize your course attendance to automatically populate your weekly academic timetable.
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    if (currentTimetableLayout === 'horizontal') {
+      renderHorizontalGrid(gridEl, sessions);
+    } else {
+      renderVerticalGrid(gridEl, sessions);
+    }
 
     if (!gridEl._hasLocationClickListener) {
       gridEl._hasLocationClickListener = true;
@@ -774,7 +975,318 @@
     ctx.restore();
   }
 
+  function renderHorizontalTimetableToCanvas() {
+    const sessions = extractWeeklyTimetableSessions();
+    const DAY_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+    // Always include Monday to Saturday (days 1..6)
+    const activeDayIndices = [1, 2, 3, 4, 5, 6];
+    if (sessions.some(s => s.dayIndex === 0)) activeDayIndices.push(0);
+
+    const todayDayIndex = new Date().getDay();
+
+    let minHour = 8;
+    let maxHour = 18;
+    sessions.forEach(s => {
+      if (s.startHour < minHour) minHour = s.startHour;
+      if (s.endHour > maxHour) maxHour = s.endHour;
+      if (s.endMin > 0 && s.endHour >= maxHour) maxHour = s.endHour + 1;
+    });
+    const totalCols = maxHour - minHour;
+    const totalDays = activeDayIndices.length;
+
+    const width = 2400;
+    const height = 1400;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Fill Canvas White Background
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, width, height);
+
+    // Verified Brand Mark (Prism Icon)
+    drawSpectrumPrismIcon(ctx, 60, 42, 88);
+
+    // Bold, Authoritative Brand Typography
+    ctx.fillStyle = '#18181B';
+    ctx.font = '800 24px "JetBrains Mono", monospace';
+    ctx.fillText('SPECTRUM PRO', 165, 74);
+
+    ctx.fillStyle = '#18181B';
+    ctx.font = '800 42px "Hanken Grotesk", -apple-system, sans-serif';
+    ctx.fillText('WEEKLY ACADEMIC TIMETABLE', 165, 118);
+
+    // Right-aligned Tabular Academic Metadata Badge
+    const termBadgeW = 280;
+    const termBadgeH = 72;
+    const termBadgeX = width - 60 - termBadgeW;
+    const termBadgeY = 48;
+
+    ctx.fillStyle = '#F4F4F5';
+    ctx.beginPath();
+    if (typeof ctx.roundRect === 'function') {
+      ctx.roundRect(termBadgeX, termBadgeY, termBadgeW, termBadgeH, 8);
+    } else {
+      ctx.rect(termBadgeX, termBadgeY, termBadgeW, termBadgeH);
+    }
+    ctx.fill();
+
+    ctx.fillStyle = '#71717A';
+    ctx.font = '700 18px "JetBrains Mono", monospace';
+    ctx.fillText('TERM:', termBadgeX + 20, termBadgeY + 44);
+
+    ctx.fillStyle = '#18181B';
+    ctx.font = '800 20px "JetBrains Mono", monospace';
+    ctx.fillText('2024/2025', termBadgeX + 90, termBadgeY + 34);
+    ctx.fillText('SEM I', termBadgeX + 90, termBadgeY + 58);
+
+    // Grid Dimensions
+    const gridX = 60;
+    const gridY = 160;
+    const gridW = width - 120; // 2280px
+    const gridH = height - 215; // 1185px
+    const headerH = 70;
+    const cornerW = 210;
+    const colW = (gridW - cornerW) / totalCols;
+
+    // Saturday half-row height if no sessions
+    const hasSatSession = sessions.some(s => s.dayIndex === 6);
+    const dayRowWeights = activeDayIndices.map(dIdx => (dIdx === 6 && !hasSatSession) ? 0.5 : 1.0);
+    const totalRowWeight = dayRowWeights.reduce((a, b) => a + b, 0);
+    const availableGridH = gridH - headerH;
+    const unitRowH = availableGridH / totalRowWeight;
+
+    const dayRows = [];
+    let curRowY = gridY + headerH;
+    activeDayIndices.forEach((dIdx, i) => {
+      const rH = dayRowWeights[i] * unitRowH;
+      dayRows.push({ dIdx, y: curRowY, h: rH, isHalf: dayRowWeights[i] === 0.5 });
+      curRowY += rH;
+    });
+
+    // Outer Grid Border & Background
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(gridX, gridY, gridW, gridH);
+    ctx.strokeStyle = '#E4E4E7';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(gridX, gridY, gridW, gridH);
+
+    // Header Row Background
+    ctx.fillStyle = '#FBFBFC';
+    ctx.fillRect(gridX, gridY, gridW, headerH);
+    ctx.beginPath();
+    ctx.moveTo(gridX, gridY + headerH);
+    ctx.lineTo(gridX + gridW, gridY + headerH);
+    ctx.strokeStyle = '#D4D4D8';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Corner Header Cell
+    ctx.fillStyle = '#18181B';
+    ctx.font = '800 16px "JetBrains Mono", monospace';
+    ctx.fillText('ACADEMIC WK', gridX + 22, gridY + 32);
+    ctx.fillStyle = '#71717A';
+    ctx.font = '600 15px "JetBrains Mono", monospace';
+    ctx.fillText('TIME (MYT)', gridX + 22, gridY + 54);
+
+    ctx.beginPath();
+    ctx.moveTo(gridX + cornerW, gridY);
+    ctx.lineTo(gridX + cornerW, gridY + gridH);
+    ctx.strokeStyle = '#D4D4D8';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    const pad = n => String(n).padStart(2, '0');
+
+    // Time Slot Columns
+    for (let c = 0; c < totalCols; c++) {
+      const h = minHour + c;
+      const colX = gridX + cornerW + c * colW;
+
+      ctx.beginPath();
+      ctx.moveTo(colX, gridY);
+      ctx.lineTo(colX, gridY + gridH);
+      ctx.strokeStyle = '#E4E4E7';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = '#18181B';
+      ctx.font = '800 20px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${pad(h)}:00`, colX + colW / 2, gridY + 32);
+
+      ctx.fillStyle = '#71717A';
+      ctx.font = '600 16px "JetBrains Mono", monospace';
+      ctx.fillText(`${pad(h + 1)}:00`, colX + colW / 2, gridY + 54);
+    }
+    ctx.textAlign = 'left';
+
+    // Day Rows
+    dayRows.forEach(rowInfo => {
+      const { dIdx, y, h: rowH, isHalf } = rowInfo;
+      const dayName = DAY_NAMES[dIdx];
+      const isToday = (dIdx === todayDayIndex);
+      const daySess = sessions.filter(s => s.dayIndex === dIdx);
+
+      // Horizontal Row Divider
+      ctx.beginPath();
+      ctx.moveTo(gridX, y);
+      ctx.lineTo(gridX + gridW, y);
+      ctx.strokeStyle = '#E4E4E7';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Day Label Cell
+      if (isToday) {
+        ctx.fillStyle = '#E4E4E7';
+        ctx.fillRect(gridX + 1, y + 1, cornerW - 1, rowH - 1);
+        ctx.fillStyle = '#18181B';
+        const dFontSz = isHalf ? 16 : 22;
+        ctx.font = `800 ${dFontSz}px "Hanken Grotesk", sans-serif`;
+        ctx.fillText(`● ${dayName} (TODAY)`, gridX + 16, y + rowH / 2 + 7);
+      } else {
+        ctx.fillStyle = '#18181B';
+        const dFontSz = isHalf ? 16 : 22;
+        ctx.font = `800 ${dFontSz}px "Hanken Grotesk", sans-serif`;
+        ctx.fillText(dayName, gridX + 22, y + rowH / 2 + 7);
+      }
+
+      if (daySess.length === 0) {
+        // Empty Day Banner
+        ctx.fillStyle = '#FAFAFB';
+        ctx.fillRect(gridX + cornerW + 2, y + 2, gridW - cornerW - 4, rowH - 4);
+        ctx.fillStyle = '#A1A1AA';
+        const wmFontSz = isHalf ? 14 : 17;
+        ctx.font = `700 ${wmFontSz}px "JetBrains Mono", monospace`;
+        ctx.fillText('🗓 NO SCHEDULED CONTACT SESSIONS · INDEPENDENT ACADEMIC STUDY', gridX + cornerW + 36, y + rowH / 2 + 6);
+      } else {
+        const occupied = new Array(totalCols).fill(false);
+
+        daySess.forEach(s => {
+          const startIdx = Math.max(0, s.startHour - minHour);
+          const endIdx = Math.min(totalCols, (s.endHour - minHour) + (s.endMin > 0 ? 1 : 0));
+          for (let i = startIdx; i < endIdx; i++) occupied[i] = true;
+
+          const cardX = gridX + cornerW + startIdx * colW + 8;
+          const cardY = y + 8;
+          const cardW = Math.max(80, (endIdx - startIdx) * colW - 16);
+          const cardH = rowH - 16;
+
+          // Card Background & Border
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(cardX, cardY, cardW, cardH);
+          ctx.strokeStyle = '#E4E4E7';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(cardX, cardY, cardW, cardH);
+
+          // Left Black Accent Stripe
+          ctx.fillStyle = '#18181B';
+          ctx.fillRect(cardX, cardY, 6.5, cardH);
+
+          // Card Header: Code + Type + Time
+          ctx.fillStyle = '#18181B';
+          ctx.font = '800 18px "JetBrains Mono", monospace';
+          ctx.fillText(s.courseCode, cardX + 18, cardY + 26);
+
+          ctx.fillStyle = '#71717A';
+          ctx.font = '700 15px "JetBrains Mono", monospace';
+          ctx.fillText(s.typeLabel, cardX + 18 + ctx.measureText(s.courseCode).width + 8, cardY + 26);
+
+          ctx.fillStyle = '#71717A';
+          ctx.font = '600 15px "JetBrains Mono", monospace';
+          const timeText = s.timeStr;
+          const timeWidth = ctx.measureText(timeText).width;
+          if (cardW > timeWidth + 140) {
+            ctx.fillText(timeText, cardX + cardW - timeWidth - 12, cardY + 26);
+          }
+
+          // OCC Badge (Subtitle - OCC only, NO redundant venue!)
+          ctx.fillStyle = '#71717A';
+          ctx.font = '700 15px "JetBrains Mono", monospace';
+          ctx.fillText(s.occ, cardX + 18, cardY + 52);
+
+          // Course Title
+          ctx.fillStyle = '#18181B';
+          ctx.font = '800 20px "Hanken Grotesk", sans-serif';
+          let title = s.courseName;
+          if (ctx.measureText(title).width > cardW - 32) {
+            while (title.length > 4 && ctx.measureText(title + '…').width > cardW - 32) {
+              title = title.slice(0, -1);
+            }
+            title += '…';
+          }
+          ctx.fillText(title, cardX + 18, cardY + 80);
+
+          // Venue Footer
+          if (cardH >= 65 && s.venue) {
+            ctx.fillStyle = '#71717A';
+            ctx.font = '600 15px "JetBrains Mono", monospace';
+            let venueText = `${s.venueIcon || '📍'} ${s.venue}`;
+            if (ctx.measureText(venueText).width > cardW - 32) {
+              while (venueText.length > 4 && ctx.measureText(venueText + '…').width > cardW - 32) {
+                venueText = venueText.slice(0, -1);
+              }
+              venueText += '…';
+            }
+            ctx.fillText(venueText, cardX + 18, cardY + cardH - 14);
+          }
+        });
+
+        // Fill Gaps
+        let gapStart = null;
+        for (let i = 0; i <= totalCols; i++) {
+          if (i < totalCols && !occupied[i]) {
+            if (gapStart === null) gapStart = i;
+          } else {
+            if (gapStart !== null) {
+              const gapX = gridX + cornerW + gapStart * colW + 4;
+              const gapY = y + 4;
+              const gapW = (i - gapStart) * colW - 8;
+              const gapH = rowH - 8;
+
+              ctx.fillStyle = 'rgba(0, 0, 0, 0.012)';
+              ctx.fillRect(gapX, gapY, gapW, gapH);
+              ctx.strokeStyle = '#F0F0F2';
+              ctx.lineWidth = 1;
+              ctx.strokeRect(gapX, gapY, gapW, gapH);
+
+              const gStartH = gapStart + minHour;
+              const gEndH = i + minHour;
+              const label = getEditorialGapLabel(gStartH, gEndH);
+
+              ctx.fillStyle = '#A1A1AA';
+              ctx.font = '600 13px "JetBrains Mono", monospace';
+              ctx.textAlign = 'center';
+              if (gapW > 120) {
+                ctx.fillText(label, gapX + gapW / 2, gapY + gapH / 2 + 5);
+              }
+              ctx.textAlign = 'left';
+
+              gapStart = null;
+            }
+          }
+        }
+      }
+    });
+
+    // Bottom Watermark
+    ctx.fillStyle = '#A1A1AA';
+    ctx.font = '600 14px "JetBrains Mono", monospace';
+    ctx.fillText('SPeCTRUM PRO · ACADEMIC SUITE · UNIVERSITI MALAYA', 60, height - 22);
+
+    return canvas;
+  }
+
   function renderTimetableToCanvas() {
+    if (currentTimetableLayout === 'horizontal') {
+      return renderHorizontalTimetableToCanvas();
+    }
+    return renderVerticalTimetableToCanvas();
+  }
+
+  function renderVerticalTimetableToCanvas() {
     const sessions = extractWeeklyTimetableSessions();
     const DAY_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
     // Always include Monday to Saturday (days 1..6)
@@ -1328,6 +1840,18 @@
       }
     }
 
+    const btnVert = document.getElementById('btn-tt-vertical');
+    const btnHoriz = document.getElementById('btn-tt-horizontal');
+    if (btnVert && !btnVert._hasSwitchListener) {
+      btnVert._hasSwitchListener = true;
+      btnVert.addEventListener('click', () => setTimetableLayout('vertical'));
+    }
+    if (btnHoriz && !btnHoriz._hasSwitchListener) {
+      btnHoriz._hasSwitchListener = true;
+      btnHoriz.addEventListener('click', () => setTimetableLayout('horizontal'));
+    }
+    updateLayoutSwitchUI();
+
     const btnCsv = document.getElementById('btn-export-timetable-csv');
     const btnPng = document.getElementById('btn-export-timetable-png');
     const btnPdf = document.getElementById('btn-export-timetable-pdf');
@@ -1352,6 +1876,8 @@
   window.computeSessionColumns = computeSessionColumns;
   window.renderTimetableMode = renderTimetableMode;
   window.renderTimetableToCanvas = renderTimetableToCanvas;
+  window.setTimetableLayout = setTimetableLayout;
+  window.currentTimetableLayout = () => currentTimetableLayout;
   window.exportTimetableCSV = exportTimetableCSV;
   window.exportTimetablePNG = exportTimetablePNG;
   window.exportTimetablePDF = exportTimetablePDF;
