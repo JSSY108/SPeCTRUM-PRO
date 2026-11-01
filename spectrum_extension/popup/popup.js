@@ -3415,7 +3415,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let cellClass = 'mini-cal-day-cell';
     if (isAdjacent) cellClass += ' adjacent-month';
-    if (isToday && !isSelected) cellClass += ' is-today';
+    if (isToday) cellClass += ' is-today';
     if (isSelected) cellClass += ' selected-day';
 
     let indicatorHtml = '';

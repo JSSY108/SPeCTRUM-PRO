@@ -1694,10 +1694,34 @@ body:not(.is-full-tab) .is-collapsed .dock-badge,
   color: var(--text-muted);
 }
 
+.mini-cal-day-cell.is-today {
+  background: var(--bg-hover, #E4E4E7) !important;
+  color: var(--text-primary, #18181B) !important;
+  font-weight: 700;
+}
+
+.mini-cal-day-cell.is-today:hover:not(.selected-day) {
+  background: #D4D4D8 !important;
+}
+
 .mini-cal-day-cell.selected-day {
   background: #111111 !important;
   color: #FFFFFF !important;
   font-weight: 800;
+}
+
+[data-theme="dark"] .mini-cal-day-cell.is-today {
+  background: #3F3F46 !important;
+  color: #F4F4F5 !important;
+}
+
+[data-theme="dark"] .mini-cal-day-cell.is-today:hover:not(.selected-day) {
+  background: #52525B !important;
+}
+
+[data-theme="dark"] .mini-cal-day-cell.selected-day {
+  background: #FAFAFA !important;
+  color: #111111 !important;
 }
 
 .cell-dots-wrap {
@@ -1796,13 +1820,16 @@ body:not(.is-full-tab) .is-collapsed .dock-badge,
   width: 7.5px;
   height: 7.5px;
   border-radius: 2px;
-  background: #111111;
+  background: var(--bg-hover, #E4E4E7);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
   display: inline-block;
   flex-shrink: 0;
 }
 
 [data-theme="dark"] .legend-rect.rect-today {
-  background: #FAFAFA;
+  background: #3F3F46;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 [data-theme="dark"] .legend-today-btn {
