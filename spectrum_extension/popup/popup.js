@@ -543,6 +543,8 @@ function updateSidebarLabels() {
       const label = el.querySelector('.rail-expand-label');
       if (label) label.textContent = text;
       el.setAttribute('aria-label', text);
+      el.setAttribute('title', text);
+      el.dataset.tooltip = text;
     }
   }
 
@@ -749,6 +751,20 @@ function updateHeaderTranslations() {
   if (btnPrevAct) btnPrevAct.textContent = t('headers', 'prevEvent');
   const btnNextAct = document.getElementById('fulllist-side-next-act');
   if (btnNextAct) btnNextAct.textContent = t('headers', 'nextEvent');
+
+  const calTodayBtn = document.getElementById('btn-cal-today');
+  if (calTodayBtn) calTodayBtn.textContent = t('headers', 'today');
+
+  const calWeekdays = document.querySelectorAll('#cal-weekdays-header .cal-weekday-cell');
+  if (calWeekdays && calWeekdays.length === 7) {
+    const daysEn = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const daysBm = ['Isn', 'Sel', 'Rab', 'Kha', 'Jum', 'Sab', 'Ahd'];
+    const daysZh = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+    const days = (currentLang === 'zh') ? daysZh : ((currentLang === 'bm') ? daysBm : daysEn);
+    calWeekdays.forEach((cell, idx) => {
+      if (days[idx]) cell.textContent = days[idx];
+    });
+  }
 }
 
 window.t = t;
@@ -785,18 +801,13 @@ function setAppLanguage(lang, broadcast = true) {
   updateHeaderTranslations();
   updatePreferencesTranslations();
   updateMaterialsTranslations();
-  if (typeof updateFullTabHeader === 'function') updateFullTabHeader();
 
-  if (typeof renderAllActivities === 'function') renderAllActivities();
-  if (typeof renderByCourseScopedFeed === 'function') renderByCourseScopedFeed();
-  if (typeof renderMiniCalendar === 'function') renderMiniCalendar();
-  if (typeof renderTimelineVisualizer === 'function') renderTimelineVisualizer();
-  if (typeof renderCalendarView === 'function') renderCalendarView(calCurrentYear, calCurrentMonth);
-  if (document.getElementById('fulllist-wrapper')?.style.display !== 'none' && typeof renderFullListMode === 'function') {
-    renderFullListMode();
-  }
-  if (typeof renderCourseTreeShells === 'function') {
-    renderCourseTreeShells();
+  if (typeof window.onLanguageChange === 'function') {
+    try {
+      window.onLanguageChange();
+    } catch (e) {
+      console.error('[i18n] UI refresh error:', e);
+    }
   }
 }
 
@@ -1865,6 +1876,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         monthHeading.textContent = t('headers', 'materialsTitle');
       } else if (currentFullTabMode === 'preferences') {
         monthHeading.textContent = t('headers', 'preferencesTitle');
+      } else if (currentFullTabMode === 'timetable') {
+        monthHeading.textContent = t('headers', 'timetableTitle');
+      } else if (currentFullTabMode === 'timeline') {
+        monthHeading.textContent = t('headers', 'timelineFeed');
+      } else if (currentFullTabMode === 'list') {
+        monthHeading.textContent = t('headers', 'byCourseFeed');
       } else {
         monthHeading.textContent = info.monthYearStr;
       }
@@ -1940,6 +1957,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
   bindLanguageSwitchers();
+
+  // Document-level delegation for responsive language switching across all surfaces
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.rail-lang-btn, .popup-lang-btn, .lang-btn');
+    if (btn && btn.dataset && btn.dataset.lang) {
+      e.preventDefault();
+      const lang = btn.dataset.lang;
+      if (lang && lang !== currentLang) {
+        setAppLanguage(lang, true);
+      }
+    }
+  });
 
   // Load Saved Language Preference
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
@@ -2085,7 +2114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (mode === 'timeline') {
       if (tlSec) tlSec.style.display = 'flex';
       if (monthHeading) {
-        monthHeading.textContent = (new Date()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+        monthHeading.textContent = t('headers', 'timelineFeed');
       }
       renderTimelineVisualizer();
     } else if (mode === 'calendar') {
@@ -2112,7 +2141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         matSec.style.display = 'flex';
         matSec.classList.add('active');
       }
-      if (monthHeading) monthHeading.textContent = 'COURSE MATERIALS & DOWNLOADS';
+      if (monthHeading) monthHeading.textContent = t('headers', 'materialsTitle');
       renderCourseTreeShells();
       const needsMaterialScan = coursesData.length === 0 || coursesData.some(c => !c.loaded && (!c.sections || c.sections.length === 0));
       if (needsMaterialScan) {
@@ -2125,7 +2154,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         prefSec.style.display = 'flex';
         prefSec.classList.add('active');
       }
-      if (monthHeading) monthHeading.textContent = 'PREFERENCES & AUTOMATION';
+      if (monthHeading) monthHeading.textContent = t('headers', 'preferencesTitle');
       renderOccPreferencesTable();
       renderHiddenAttendanceSettings();
       if (typeof updatePreferencesStorageStats === 'function') updatePreferencesStorageStats();
@@ -4442,10 +4471,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const weekBadge = document.getElementById('mini-cal-week-badge');
     if (!grid) return;
 
-    const MONTH_NAMES_FULL = [
+    const MONTH_NAMES_FULL_EN = [
       'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
       'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
     ];
+    const MONTH_NAMES_FULL_BM = [
+      'JANUARI', 'FEBRUARI', 'MAC', 'APRIL', 'MEI', 'JUN',
+      'JULAI', 'OGOS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DISEMBER'
+    ];
+    const MONTH_NAMES_FULL_ZH = [
+      '一月', '二月', '三月', '四月', '五月', '六月',
+      '七月', '八月', '九月', '十月', '十一月', '十二月'
+    ];
+    const MONTH_NAMES_FULL = (currentLang === 'zh') ? MONTH_NAMES_FULL_ZH : ((currentLang === 'bm') ? MONTH_NAMES_FULL_BM : MONTH_NAMES_FULL_EN);
     const firstOfMonth = new Date(miniCalYear, miniCalMonth, 1);
     const lastOfMonth = new Date(miniCalYear, miniCalMonth + 1, 0);
 
@@ -4456,7 +4494,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const weekSpan = startW === endW ? `W${String(startW).padStart(2, '0')}` : `W${String(startW).padStart(2, '0')}–W${String(endW).padStart(2, '0')}`;
 
     if (monthTitle) {
-      monthTitle.textContent = `${MONTH_NAMES_FULL[miniCalMonth]} ${miniCalYear} · ${weekSpan}`;
+      monthTitle.textContent = (currentLang === 'zh')
+        ? `${miniCalYear}年 ${MONTH_NAMES_FULL[miniCalMonth]} · ${weekSpan}`
+        : `${MONTH_NAMES_FULL[miniCalMonth]} ${miniCalYear} · ${weekSpan}`;
     }
     if (weekBadge) {
       weekBadge.textContent = '';
@@ -7750,16 +7790,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     calCurrentYear = targetYear;
     calCurrentMonth = targetMonth;
 
-    const monthNames = [
+    const monthNamesEn = [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'
     ];
+    const monthNamesBm = [
+      'Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun',
+      'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'
+    ];
+    const monthNamesZh = [
+      '一月', '二月', '三月', '四月', '五月', '六月',
+      '七月', '八月', '九月', '十月', '十一月', '十二月'
+    ];
+    const monthNames = (currentLang === 'zh') ? monthNamesZh : ((currentLang === 'bm') ? monthNamesBm : monthNamesEn);
+
     if (calMonthTitle) {
-      calMonthTitle.textContent = `${monthNames[calCurrentMonth]} ${calCurrentYear}`;
+      calMonthTitle.textContent = (currentLang === 'zh')
+        ? `${calCurrentYear}年 ${monthNames[calCurrentMonth]}`
+        : `${monthNames[calCurrentMonth]} ${calCurrentYear}`;
     }
     const fulltabHeading = document.getElementById('fulltab-month-heading');
     if (fulltabHeading && currentFullTabMode !== 'materials' && currentFullTabMode !== 'preferences') {
-      fulltabHeading.textContent = `${monthNames[calCurrentMonth].toUpperCase()} ${calCurrentYear}`;
+      fulltabHeading.textContent = (currentLang === 'zh')
+        ? `${calCurrentYear}年 ${monthNames[calCurrentMonth]}`
+        : `${monthNames[calCurrentMonth].toUpperCase()} ${calCurrentYear}`;
     }
     const calTargetDate = new Date(calCurrentYear, calCurrentMonth, 1);
     const calUmInfo = getUmAcademicInfo(calTargetDate);
@@ -11263,6 +11317,45 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     } catch(e) {}
   }
+
+  // Reactive Language UI Refresh Bridge (triggers live re-render without requiring browser refresh)
+  function applyLanguageUiRefresh() {
+    updateSidebarLabels();
+    updateHeaderTranslations();
+    updatePreferencesTranslations();
+    updateMaterialsTranslations();
+    updateFullTabHeader();
+
+    const isFull = document.body.classList.contains('is-full-tab');
+    if (isFull) {
+      if (typeof setFullTabMode === 'function') {
+        setFullTabMode(currentFullTabMode);
+      }
+    } else {
+      const activeBtn = document.querySelector('.primary-tab-btn.active');
+      const tabId = activeBtn ? activeBtn.dataset.tab : (typeof currentTab !== 'undefined' ? currentTab : 'tab-activities');
+      if (typeof switchTab === 'function') {
+        switchTab(tabId);
+      }
+      if (tabId === 'tab-activities') {
+        if (typeof currentActivitiesGrouping !== 'undefined' && currentActivitiesGrouping === 'course') {
+          if (typeof renderByCourseScopedFeed === 'function') renderByCourseScopedFeed();
+        } else {
+          if (typeof renderAllActivities === 'function') renderAllActivities();
+        }
+        if (typeof renderMiniCalendar === 'function') renderMiniCalendar();
+      } else if (tabId === 'tab-timetable') {
+        if (typeof renderTimetableMode === 'function') renderTimetableMode();
+      } else if (tabId === 'tab-materials') {
+        if (typeof renderCourseTreeShells === 'function') renderCourseTreeShells();
+      } else if (tabId === 'tab-filters') {
+        if (typeof renderOccPreferencesTable === 'function') renderOccPreferencesTable();
+        if (typeof renderHiddenAttendanceSettings === 'function') renderHiddenAttendanceSettings();
+      }
+    }
+    if (typeof syncRailCounts === 'function') syncRailCounts();
+  }
+  window.onLanguageChange = applyLanguageUiRefresh;
 
   initHeaderBrandLogo();
 });
