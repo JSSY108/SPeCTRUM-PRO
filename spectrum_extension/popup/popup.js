@@ -58,6 +58,535 @@ let currentSyncAbortController = null;
 let syncStartTime = 0;
 let saveCacheTimeout = null;
 
+// ── Internationalization (i18n) Engine ──
+// Supports: English (en), Bahasa Melayu (bm), Chinese (zh)
+// User rule: Course code, name, announcement and tutorial titles fetched from SPeCTRUM remain in original language.
+const I18N = {
+  en: {
+    langLabel: 'English',
+    tooltips: {
+      pref: 'Preferences',
+      mat: 'Materials',
+      assign: 'Tutorials',
+      att: 'Attendance',
+      notice: 'Notices',
+      timeline: 'Timeline',
+      cal: 'Calendar',
+      list: 'List View',
+      timetable: 'Timetable',
+      tipjar: 'Tip Jar'
+    },
+    cards: {
+      today: 'TODAY',
+      upcoming: 'UPCOMING',
+      ended: 'ENDED',
+      live: 'LIVE',
+      recorded: 'RECORDED',
+      locked: 'LOCKED',
+      active: 'WINDOW ACTIVE',
+      password: 'PASSWORD',
+      checkInWindow: 'Check-In Window',
+      sessionEnded: 'Session ended',
+      openSpectrum: 'Open SPeCTRUM ↗',
+      checkPortal: 'Check Portal ↗',
+      takeAttendance: 'Take Attendance',
+      pinRequired: '🔑 Enter PIN',
+      attended: 'Attended ✓',
+      present: '✓ Present',
+      opensAt: 'Opens at',
+      tomorrow: 'Tomorrow',
+      inDays: 'In {d}d',
+      endedHoursAgo: 'Ended {h}h ago',
+      endedDaysAgo: 'Ended {d}d ago',
+      leftMin: '{m}M LEFT',
+      notice: 'NOTICE',
+      openFull: 'Open Full →',
+      dueInDays: 'DUE IN {d}D',
+      dueInHours: 'DUE IN {h}H',
+      dueToday: 'DUE TODAY',
+      dueTomorrow: 'DUE TOMORROW',
+      overdueDays: 'OVERDUE {d}D',
+      overdueToday: 'OVERDUE (TODAY)',
+      submit: 'Submit →',
+      submitLate: 'Submit Late →',
+      submitted: 'Submitted ✓',
+      noActToday: 'No scheduled activities today',
+      syncingTitle: 'SYNCING ACTIVITIES & ATTENDANCE'
+    },
+    settings: {
+      occSettingsTitle: 'OCCURRENCE (OCC) SETTINGS',
+      occSettingsDesc: 'Specify cohort occurrence filters for selective biometric check-ins.',
+      defaultOccTitle: 'Default Academic OCC Cohort',
+      defaultOccSub: 'Fallback for unmapped modules',
+      perCourseOverrides: 'PER-COURSE ENROLLED OVERRIDES',
+      resetAll: 'Reset All',
+      resetOccCleared: '✔ All OCC preferences cleared!',
+      attAutoTitle: 'ATTENDANCE AUTOMATION',
+      attAutoBadgeActive: 'DAEMON ACTIVE',
+      attAutoBadgeOff: 'STANDBY',
+      attAutoCheckTitle: 'Enable auto-attendance check',
+      attAutoCheckSub: 'Runs periodically in background and marks attendance',
+      cadenceLabel: 'Validation Cadence:',
+      every10m: 'Every 10 minutes',
+      every15m: 'Every 15 minutes (Standard)',
+      every30m: 'Every 30 minutes',
+      every1h: 'Every 1 hour',
+      hiddenAttTitle: 'HIDDEN DUPLICATE ATTENDANCES',
+      hiddenAttDesc: 'Redundant slots filtered from daily timeline view.',
+      restoreAll: 'Restore All',
+      hiddenCount: '{n} Hidden Activities',
+      noHidden: '✔ No duplicate attendances currently hidden.',
+      timelineFocalTitle: 'TIMELINE DOT TRIGGER POSITION',
+      timelineFocalDesc: 'Adjust the vertical screen position where timeline date dots animate and light up solid black as activities scroll past.',
+      focalHeight: 'Focal Trigger Height',
+      focalMid: 'Middle of Screen',
+      presetUpper: 'Upper (30%)',
+      presetMiddle: 'Middle (50% Default)',
+      presetLower: 'Lower (70%)',
+      clearCache: 'Clear Cache',
+      savePreferences: 'Save Preferences',
+      savedToast: 'Preferences Saved'
+    },
+    materials: {
+      searchPlaceholder: 'Filter files by key',
+      all: 'ALL',
+      sortName: 'ORDER: File Name (A-Z)',
+      sortMoodle: 'ORDER: Moodle Order',
+      expandAll: 'Expand All',
+      collapseAll: 'Collapse All',
+      rescan: 'Rescan',
+      selectedFiles: 'Selected: {n} files',
+      clearSelection: 'Clear Selection',
+      markSynced: 'Mark All as Synced',
+      downloadZip: 'Download Selected (.zip)',
+      docDetails: 'DOCUMENT DETAILS',
+      preview: 'Preview',
+      fullReader: 'Full Reader',
+      downloadFile: 'Download Local Copy (.pdf)',
+      loadingPreview: 'Loading preview...'
+    }
+  },
+  bm: {
+    langLabel: 'Bahasa Melayu',
+    tooltips: {
+      pref: 'Tetapan',
+      mat: 'Bahan Kursus',
+      assign: 'Tutorial',
+      att: 'Kehadiran',
+      notice: 'Notis',
+      timeline: 'Garis Masa',
+      cal: 'Kalendar',
+      list: 'Paparan Senarai',
+      timetable: 'Jadual Waktu',
+      tipjar: 'Tip Jar'
+    },
+    cards: {
+      today: 'HARI INI',
+      upcoming: 'AKAN DATANG',
+      ended: 'TAMAT',
+      live: 'SEDANG BERLALU',
+      recorded: 'DIREKOD',
+      locked: 'DIKUNCI',
+      active: 'TETINGKAP AKTIF',
+      password: 'KATA LALUAN',
+      checkInWindow: 'Tetingkap Daftar Masuk',
+      sessionEnded: 'Sesi tamat',
+      openSpectrum: 'Buka SPeCTRUM ↗',
+      checkPortal: 'Semak Portal ↗',
+      takeAttendance: 'Daftar Kehadiran',
+      pinRequired: '🔑 Masukkan PIN',
+      attended: 'Telah Hadir ✓',
+      present: '✓ Hadir',
+      opensAt: 'Dibuka pada',
+      tomorrow: 'Esok',
+      inDays: 'Dalam {d}h',
+      endedHoursAgo: 'Tamat {h}j lalu',
+      endedDaysAgo: 'Tamat {d}h lalu',
+      leftMin: 'BAKI {m}M',
+      notice: 'NOTIS',
+      openFull: 'Buka Penuh →',
+      dueInDays: 'TEMPOH {d}H',
+      dueInHours: 'TEMPOH {h}J',
+      dueToday: 'HARI INI',
+      dueTomorrow: 'ESOK',
+      overdueDays: 'TERLEWAT {d}H',
+      overdueToday: 'TERLEWAT (HARI INI)',
+      submit: 'Hantar →',
+      submitLate: 'Hantar Lewat →',
+      submitted: 'Telah Dihantar ✓',
+      noActToday: 'Tiada aktiviti dijadualkan hari ini',
+      syncingTitle: 'MENYEGERAKKAN AKTIVITI & KEHADIRAN'
+    },
+    settings: {
+      occSettingsTitle: 'TETAPAN KUMPULAN (OCC)',
+      occSettingsDesc: 'Tentukan penapis kohort OCC untuk semakan kehadiran terpilih.',
+      defaultOccTitle: 'Kohort OCC Akademik Lalai',
+      defaultOccSub: 'Sandaran untuk modul tanpa penetapan khusus',
+      perCourseOverrides: 'PENGECUALIAN MENGIKUT KURSUS',
+      resetAll: 'Set Semula Semua',
+      resetOccCleared: '✔ Semua tetapan OCC telah dikosongkan!',
+      attAutoTitle: 'AUTOMASI KEHADIRAN',
+      attAutoBadgeActive: 'DAEMON AKTIF',
+      attAutoBadgeOff: 'BERSEDIA',
+      attAutoCheckTitle: 'Dayakan semakan kehadiran automatik',
+      attAutoCheckSub: 'Berjalan secara berkala di latar belakang dan menandakan kehadiran',
+      cadenceLabel: 'Kekerapan Pengesahan:',
+      every10m: 'Setiap 10 minit',
+      every15m: 'Setiap 15 minit (Standard)',
+      every30m: 'Setiap 30 minit',
+      every1h: 'Setiap 1 jam',
+      hiddenAttTitle: 'KEHADIRAN PENDUA TERSEMBUNYI',
+      hiddenAttDesc: 'Slot lewah ditapis daripada paparan garis masa harian.',
+      restoreAll: 'Pulihkan Semua',
+      hiddenCount: '{n} Aktiviti Tersembunyi',
+      noHidden: '✔ Tiada kehadiran pendua yang tersembunyi pada masa ini.',
+      timelineFocalTitle: 'KEDUDUKAN PEMICU TITIK GARIS MASA',
+      timelineFocalDesc: 'Laraskan kedudukan menegak skrin di mana titik tarikh garis masa menyala hitam pekat semasa aktiviti diskrol.',
+      focalHeight: 'Ketinggian Pemicu Fokus',
+      focalMid: 'Tengah Skrin',
+      presetUpper: 'Atas (30%)',
+      presetMiddle: 'Tengah (50% Lalai)',
+      presetLower: 'Bawah (70%)',
+      clearCache: 'Kosongkan Cache',
+      savePreferences: 'Simpan Tetapan',
+      savedToast: 'Tetapan Telah Disimpan'
+    },
+    materials: {
+      searchPlaceholder: 'Tapis fail mengikut kata kunci',
+      all: 'SEMUA',
+      sortName: 'SUSUNAN: Nama Fail (A-Z)',
+      sortMoodle: 'SUSUNAN: Urutan Moodle',
+      expandAll: 'Kembangkan Semua',
+      collapseAll: 'Runtuhkan Semua',
+      rescan: 'Imbas Semula',
+      selectedFiles: 'Dipilih: {n} fail',
+      clearSelection: 'Kosongkan Pilihan',
+      markSynced: 'Tandakan Semua Disegerakkan',
+      downloadZip: 'Muat Turun Pilihan (.zip)',
+      docDetails: 'BUTIRAN DOKUMEN',
+      preview: 'Pratonton',
+      fullReader: 'Pembaca Penuh',
+      downloadFile: 'Muat Turun Salinan Tempatan (.pdf)',
+      loadingPreview: 'Memuatkan pratonton...'
+    }
+  },
+  zh: {
+    langLabel: '中文',
+    tooltips: {
+      pref: '系统设置',
+      mat: '课件资料',
+      assign: '作业教程',
+      att: '考勤签到',
+      notice: '课程通知',
+      timeline: '时间轴',
+      cal: '日历视图',
+      list: '列表视图',
+      timetable: '每周课表',
+      tipjar: '支持作者'
+    },
+    cards: {
+      today: '今天',
+      upcoming: '即将进行',
+      ended: '已结束',
+      live: '进行中',
+      recorded: '已记录',
+      locked: '已锁定',
+      active: '签到窗口开放中',
+      password: '需要密码',
+      checkInWindow: '签到窗口',
+      sessionEnded: '签到已结束',
+      openSpectrum: '打开 SPeCTRUM ↗',
+      checkPortal: '检查门户 ↗',
+      takeAttendance: '前往签到',
+      pinRequired: '🔑 输入密码',
+      attended: '已签到 ✓',
+      present: '✓ 出勤',
+      opensAt: '开放时间：',
+      tomorrow: '明天',
+      inDays: '还有 {d} 天',
+      endedHoursAgo: '已结束 {h} 小时',
+      endedDaysAgo: '已结束 {d} 天',
+      leftMin: '还剩 {m} 分钟',
+      notice: '通知',
+      openFull: '查看全文 →',
+      dueInDays: '截止还剩 {d} 天',
+      dueInHours: '截止还剩 {h} 小时',
+      dueToday: '今天截止',
+      dueTomorrow: '明天截止',
+      overdueDays: '已逾期 {d} 天',
+      overdueToday: '已逾期 (今天)',
+      submit: '前往提交 →',
+      submitLate: '逾期提交 →',
+      submitted: '已提交 ✓',
+      noActToday: '今天没有安排任何活动',
+      syncingTitle: '正在同步课程动态与考勤'
+    },
+    settings: {
+      occSettingsTitle: '班级分组 (OCC) 设置',
+      occSettingsDesc: '指定 OCC 班级组别，用于精准过滤签到与课程项目。',
+      defaultOccTitle: '全局默认 OCC 组别',
+      defaultOccSub: '未单独指定课程时的默认组别',
+      perCourseOverrides: '按课程独立设置 OCC',
+      resetAll: '全部重置',
+      resetOccCleared: '✔ 所有课程 OCC 设置已清除！',
+      attAutoTitle: '考勤自动签到',
+      attAutoBadgeActive: '后台守护运行中',
+      attAutoBadgeOff: '待命',
+      attAutoCheckTitle: '启用考勤自动签到',
+      attAutoCheckSub: '在后台定期检测并在签到开放时自动签到',
+      cadenceLabel: '检测频率：',
+      every10m: '每 10 分钟',
+      every15m: '每 15 分钟 (标准推荐)',
+      every30m: '每 30 分钟',
+      every1h: '每 1 小时',
+      hiddenAttTitle: '已隐藏的重复签到',
+      hiddenAttDesc: '已从日常时间轴中过滤的冗余考勤项目。',
+      restoreAll: '全部恢复',
+      hiddenCount: '{n} 项已隐藏活动',
+      noHidden: '✔ 当前没有已隐藏的重复考勤。',
+      timelineFocalTitle: '时间轴圆点激活位置',
+      timelineFocalDesc: '调整滚动时时间轴日期圆点变黑激活的屏幕垂直位置。',
+      focalHeight: '焦点触发高度',
+      focalMid: '屏幕中心',
+      presetUpper: '偏上 (30%)',
+      presetMiddle: '居中 (50% 默认)',
+      presetLower: '偏下 (70%)',
+      clearCache: '清除缓存',
+      savePreferences: '保存设置',
+      savedToast: '设置已成功保存'
+    },
+    materials: {
+      searchPlaceholder: '按关键词筛选文件',
+      all: '全部',
+      sortName: '排序：文件名 (A-Z)',
+      sortMoodle: '排序：SPeCTRUM 默认顺序',
+      expandAll: '展开全部',
+      collapseAll: '折叠全部',
+      rescan: '重新扫描',
+      selectedFiles: '已选：{n} 个文件',
+      clearSelection: '清除选择',
+      markSynced: '全部标记为已同步',
+      downloadZip: '下载所选文件 (.zip)',
+      docDetails: '文档详情',
+      preview: '预览',
+      fullReader: '全屏阅读器',
+      downloadFile: '下载本地副本 (.pdf)',
+      loadingPreview: '正在加载预览...'
+    }
+  }
+};
+
+let currentLang = 'en';
+
+function t(section, key, params = {}) {
+  const dict = I18N[currentLang] || I18N.en;
+  let text = (dict[section] && dict[section][key]) || (I18N.en[section] && I18N.en[section][key]) || key;
+  for (const [k, v] of Object.entries(params)) {
+    text = text.replace(new RegExp('\\{' + k + '\\}', 'g'), v);
+  }
+  return text;
+}
+
+function updateSidebarLabels() {
+  const map = {
+    'rail-btn-pref': t('tooltips', 'pref'),
+    'rail-btn-mat': t('tooltips', 'mat'),
+    'rail-toggle-assign': t('tooltips', 'assign'),
+    'rail-toggle-att': t('tooltips', 'att'),
+    'rail-toggle-notice': t('tooltips', 'notice'),
+    'rail-mode-timeline': t('tooltips', 'timeline'),
+    'rail-mode-calendar': t('tooltips', 'cal'),
+    'rail-mode-list': t('tooltips', 'list'),
+    'rail-mode-timetable': t('tooltips', 'timetable')
+  };
+  for (const [id, text] of Object.entries(map)) {
+    const el = document.getElementById(id);
+    if (el) {
+      const label = el.querySelector('.rail-expand-label');
+      if (label) label.textContent = text;
+      el.setAttribute('aria-label', text);
+    }
+  }
+
+  const dockNotice = document.getElementById('dock-btn-notice');
+  if (dockNotice) dockNotice.dataset.tooltip = `[ ${t('tooltips', 'notice')} ]`;
+  const dockTutorial = document.getElementById('dock-btn-tutorial');
+  if (dockTutorial) dockTutorial.dataset.tooltip = `[ ${t('tooltips', 'assign')} ]`;
+  const dockAtt = document.getElementById('dock-btn-attendance');
+  if (dockAtt) dockAtt.dataset.tooltip = `[ ${t('tooltips', 'att')} ]`;
+}
+
+function updatePreferencesTranslations() {
+  const prefTab = document.getElementById('tab-filters');
+  if (!prefTab) return;
+
+  const occCard = prefTab.querySelector('.pref-card:nth-of-type(1)');
+  if (occCard) {
+    const title = occCard.querySelector('.pref-card-title');
+    if (title) title.textContent = t('settings', 'occSettingsTitle');
+    const desc = occCard.querySelector('.pref-card-desc');
+    if (desc) desc.textContent = t('settings', 'occSettingsDesc');
+    const rowTitle = occCard.querySelector('.pref-default-occ-box .pref-row-title');
+    if (rowTitle) rowTitle.textContent = t('settings', 'defaultOccTitle');
+    const rowSub = occCard.querySelector('.pref-default-occ-box .pref-row-subtitle');
+    if (rowSub) rowSub.textContent = t('settings', 'defaultOccSub');
+    const subhead = occCard.querySelector('.pref-subhead-title');
+    if (subhead) subhead.textContent = t('settings', 'perCourseOverrides');
+    const btnResetAll = document.getElementById('btn-reset-all-occ');
+    if (btnResetAll) btnResetAll.textContent = t('settings', 'resetAll');
+  }
+
+  const autoCard = prefTab.querySelector('.pref-card:nth-of-type(2)');
+  if (autoCard) {
+    const title = autoCard.querySelector('.pref-card-title');
+    if (title) title.textContent = t('settings', 'attAutoTitle');
+    const badge = document.getElementById('pref-auto-att-badge');
+    const chk = document.getElementById('chk-auto-attendance');
+    if (badge) badge.textContent = (chk && chk.checked) ? t('settings', 'attAutoBadgeActive') : t('settings', 'attAutoBadgeOff');
+    const rowTitle = autoCard.querySelector('.pref-automation-box .pref-row-title');
+    if (rowTitle) rowTitle.textContent = t('settings', 'attAutoCheckTitle');
+    const rowSub = document.getElementById('pref-auto-att-sub');
+    if (rowSub) rowSub.textContent = t('settings', 'attAutoCheckSub');
+    const cadence = autoCard.querySelector('.pref-interval-label');
+    if (cadence) cadence.textContent = t('settings', 'cadenceLabel');
+    const selInterval = document.getElementById('sel-attendance-interval');
+    if (selInterval && selInterval.options) {
+      if (selInterval.options[0]) selInterval.options[0].textContent = t('settings', 'every10m');
+      if (selInterval.options[1]) selInterval.options[1].textContent = t('settings', 'every15m');
+      if (selInterval.options[2]) selInterval.options[2].textContent = t('settings', 'every30m');
+      if (selInterval.options[3]) selInterval.options[3].textContent = t('settings', 'every1h');
+    }
+  }
+
+  const hiddenCard = document.getElementById('group-hidden-attendance');
+  if (hiddenCard) {
+    const title = hiddenCard.querySelector('.pref-card-title');
+    if (title) title.textContent = t('settings', 'hiddenAttTitle');
+    const desc = hiddenCard.querySelector('.pref-card-desc');
+    if (desc) desc.textContent = t('settings', 'hiddenAttDesc');
+    const btnRestore = document.getElementById('btn-restore-all-att');
+    if (btnRestore) btnRestore.textContent = t('settings', 'restoreAll');
+  }
+
+  const focalCard = document.getElementById('group-timeline-focal');
+  if (focalCard) {
+    const title = focalCard.querySelector('.pref-card-title');
+    if (title) title.textContent = t('settings', 'timelineFocalTitle');
+    const desc = focalCard.querySelector('.pref-card-desc');
+    if (desc) desc.textContent = t('settings', 'timelineFocalDesc');
+    const heightLabel = focalCard.querySelector('.pref-row-box div:first-child span:first-child');
+    if (heightLabel) heightLabel.textContent = t('settings', 'focalHeight');
+    const p30 = focalCard.querySelector('.btn-focal-preset[data-val="30"]');
+    if (p30) p30.textContent = t('settings', 'presetUpper');
+    const p50 = focalCard.querySelector('.btn-focal-preset[data-val="50"]');
+    if (p50) p50.textContent = t('settings', 'presetMiddle');
+    const p70 = focalCard.querySelector('.btn-focal-preset[data-val="70"]');
+    if (p70) p70.textContent = t('settings', 'presetLower');
+  }
+
+  const btnClearCache = document.getElementById('btn-clear-cache');
+  if (btnClearCache) {
+    const span = btnClearCache.querySelector('span');
+    if (span) span.textContent = t('settings', 'clearCache');
+  }
+  const btnSaveSettings = document.getElementById('btn-save-settings');
+  if (btnSaveSettings) {
+    const span = btnSaveSettings.querySelector('span');
+    if (span) span.textContent = t('settings', 'savePreferences');
+  }
+
+  if (typeof renderHiddenAttendanceSettings === 'function') {
+    renderHiddenAttendanceSettings();
+  }
+}
+
+function updateMaterialsTranslations() {
+  const searchInput = document.getElementById('filter-search-input');
+  if (searchInput) searchInput.placeholder = t('materials', 'searchPlaceholder');
+
+  const allPill = document.querySelector('.mat-ext-pill[data-ext="ALL"]');
+  if (allPill) allPill.textContent = t('materials', 'all');
+
+  const sortSelect = document.getElementById('mat-sort-select');
+  if (sortSelect && sortSelect.options) {
+    if (sortSelect.options[0]) sortSelect.options[0].textContent = t('materials', 'sortName');
+    if (sortSelect.options[1]) sortSelect.options[1].textContent = t('materials', 'sortMoodle');
+  }
+
+  const expandLabel = document.getElementById('btn-toggle-expand-label');
+  if (expandLabel) {
+    const isExpanded = document.getElementById('btn-toggle-expand-all')?.classList.contains('all-expanded');
+    expandLabel.textContent = isExpanded ? t('materials', 'collapseAll') : t('materials', 'expandAll');
+  }
+
+  const rescanLabel = document.getElementById('btn-rescan-label');
+  if (rescanLabel) rescanLabel.textContent = t('materials', 'rescan');
+
+  const btnClearSelection = document.getElementById('btn-clear-selection');
+  if (btnClearSelection) btnClearSelection.textContent = t('materials', 'clearSelection');
+
+  const btnMarkSynced = document.getElementById('btn-mark-all-synced');
+  if (btnMarkSynced) btnMarkSynced.textContent = t('materials', 'markSynced');
+
+  const downloadText = document.getElementById('btn-download-text');
+  if (downloadText) downloadText.textContent = t('materials', 'downloadZip');
+
+  const inspTitle = document.querySelector('.inspector-title');
+  if (inspTitle) inspTitle.textContent = t('materials', 'docDetails');
+
+  const previewLabel = document.querySelector('.insp-preview-tab-label span');
+  if (previewLabel) previewLabel.textContent = t('materials', 'preview');
+
+  const fullReaderBtn = document.getElementById('insp-open-reader-btn');
+  if (fullReaderBtn) {
+    const span = fullReaderBtn.querySelector('span');
+    if (span) span.textContent = t('materials', 'fullReader');
+  }
+
+  const inspDownloadText = document.getElementById('insp-download-text');
+  if (inspDownloadText) inspDownloadText.textContent = t('materials', 'downloadFile');
+}
+
+function setAppLanguage(lang, broadcast = true) {
+  if (!['en', 'bm', 'zh'].includes(lang)) lang = 'en';
+  currentLang = lang;
+
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    chrome.storage.local.set({ appLanguage: lang });
+    if (broadcast && chrome.runtime && chrome.runtime.sendMessage) {
+      try {
+        chrome.runtime.sendMessage({ type: 'LANGUAGE_CHANGED', lang });
+      } catch (e) {}
+    }
+  }
+
+  document.querySelectorAll('.rail-lang-btn, .popup-lang-btn, .lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+
+  updateSidebarLabels();
+  updatePreferencesTranslations();
+  updateMaterialsTranslations();
+
+  if (typeof renderAllActivities === 'function') renderAllActivities();
+  if (typeof renderByCourseScopedFeed === 'function') renderByCourseScopedFeed();
+  if (typeof renderMiniCalendar === 'function') renderMiniCalendar();
+  if (typeof renderTimelineVisualizer === 'function') renderTimelineVisualizer();
+  if (typeof renderCalendarView === 'function') renderCalendarView(calCurrentYear, calCurrentMonth);
+  if (document.getElementById('fulllist-wrapper')?.style.display !== 'none' && typeof renderFullListMode === 'function') {
+    renderFullListMode();
+  }
+}
+
+if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg && msg.type === 'LANGUAGE_CHANGED' && msg.lang && msg.lang !== currentLang) {
+      setAppLanguage(msg.lang, false);
+    }
+  });
+}
+
+
 // Expose state references on window for cross-module access
 window.coursesData = coursesData;
 window.allCoursesDiscovered = allCoursesDiscovered;
@@ -1163,6 +1692,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   ensureTabsInCorrectSurface();
 
 
+  // Language Switcher Bindings (.rail-lang-btn & .popup-lang-btn)
+  function bindLanguageSwitchers() {
+    document.querySelectorAll('.rail-lang-btn, .popup-lang-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const lang = btn.dataset.lang;
+        if (lang && lang !== currentLang) {
+          setAppLanguage(lang, true);
+        }
+      });
+    });
+  }
+  bindLanguageSwitchers();
+
+  // Load Saved Language Preference
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    chrome.storage.local.get(['appLanguage'], (res) => {
+      const savedLang = res && res.appLanguage;
+      if (savedLang && ['en', 'bm', 'zh'].includes(savedLang)) {
+        setAppLanguage(savedLang, false);
+      } else {
+        setAppLanguage('en', false);
+      }
+    });
+  } else {
+    setAppLanguage('en', false);
+  }
+
   // 1. Full Tab & Close Button Handling
   if (btnOpenTab) {
     btnOpenTab.addEventListener('click', (e) => {
@@ -1747,16 +2304,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 3. Unified Bottom Baseline (Indicator · Token · Timestamp · Inline 28px CTA)
     let dotClass = 'dot-upcoming';
     let tokenClass = 'token-upcoming';
-    let tokenText = 'UPCOMING';
+    let tokenText = t('cards', 'upcoming');
     let btnClass = 'btn-assign-normal';
-    let btnText = 'Submit →';
+    let btnText = t('cards', 'submit');
 
     if (isSubmitted) {
       dotClass = 'dot-submitted';
       tokenClass = 'token-submitted';
-      tokenText = 'SUBMITTED';
+      tokenText = t('cards', 'submitted');
       btnClass = 'btn-assign-submitted';
-      btnText = 'View →';
+      btnText = t('cards', 'submitted');
     } else if (isOverdue) {
       dotClass = 'dot-overdue';
       tokenClass = 'token-overdue';
@@ -1767,27 +2324,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         const m = String(assign.timeRemaining).match(/(\d+)\s*d/i);
         if (m) daysOverdue = parseInt(m[1], 10);
       }
-      tokenText = `OVERDUE ${daysOverdue}D`;
+      tokenText = t('cards', 'overdueDays', { d: daysOverdue });
       btnClass = 'btn-assign-overdue';
-      btnText = 'Submit Late →';
+      btnText = t('cards', 'submitLate');
     } else if (hasValidDate) {
       const diffMs = d.getTime() - now.getTime();
       const diffHours = Math.round(diffMs / (1000 * 60 * 60));
       const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
       if (diffHours <= 2) {
-        tokenText = `DUE IN ${Math.max(1, diffHours)}H`;
+        tokenText = t('cards', 'dueInHours', { h: Math.max(1, diffHours) });
         dotClass = 'dot-overdue';
         tokenClass = 'token-overdue';
       } else if (diffHours <= 24) {
-        tokenText = 'DUE TODAY';
+        tokenText = t('cards', 'dueToday');
         dotClass = 'dot-overdue';
         tokenClass = 'token-overdue';
       } else if (diffDays === 1) {
-        tokenText = 'DUE TOMORROW';
+        tokenText = t('cards', 'dueTomorrow');
       } else {
-        tokenText = `DUE IN ${diffDays}D`;
+        tokenText = t('cards', 'dueInDays', { d: diffDays });
       }
+      btnText = t('cards', 'submit');
     }
 
     // Format timestamp (e.g., "Wed 28 Oct, 23:00")
@@ -1944,13 +2502,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
           <div class="notice-row-footer">
             <div class="notice-footer-left">
-              <span class="notice-type-tag">NOTICE</span>
+              <span class="notice-type-tag">${t('cards', 'notice')}</span>
               <span class="notice-sep">·</span>
               <span class="notice-author" title="${escapeHtml(vm.author)}">${escapeHtml(vm.author)}</span>
             </div>
             <div class="notice-footer-right">
               <button type="button" class="btn-notice-open btn-open-notice" data-ann-id="${escapeHtml(vm.rawId)}" title="Read Announcement in SPeCTRUM Pro">
-                Open Full →
+                ${t('cards', 'openFull')}
               </button>
             </div>
           </div>
@@ -2219,13 +2777,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isLive) {
       stateClass = 'state-open';
       if (minsLeft > 0 && minsLeft <= 30) {
-        statusPillHtml = `<span class="att-urgent-pill">${minsLeft}M LEFT</span>`;
+        statusPillHtml = `<span class="att-urgent-pill">${t('cards', 'leftMin', { m: minsLeft })}</span>`;
       } else {
-        statusPillHtml = `<span class="att-status-pill pill-active">WINDOW ACTIVE</span>`;
+        statusPillHtml = `<span class="att-status-pill pill-active">${t('cards', 'active')}</span>`;
       }
 
       if (requiresPassword) {
-        stateBadgeHtml = `<span class="att-state-badge state-password">🔒 PASSWORD</span>`;
+        stateBadgeHtml = `<span class="att-state-badge state-password">🔒 ${t('cards', 'password')}</span>`;
         actionBtnHtml = `
           <button type="button" class="btn-att-action btn-att-black att-btn-pin"
             data-att-id="${escapeHtml(rawAttId)}"
@@ -2238,7 +2796,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             data-course-code="${escapeHtml(code)}"
             data-course-name="${escapeHtml(rawName)}"
             title="Enter Attendance PIN">
-            🔑 Enter PIN
+            ${t('cards', 'pinRequired')}
           </button>
         `;
       } else {
@@ -2255,35 +2813,35 @@ document.addEventListener('DOMContentLoaded', async () => {
             data-course-code="${escapeHtml(code)}"
             data-course-name="${escapeHtml(rawName)}"
             title="Take attendance directly in SPeCTRUM Pro">
-            ⚡ Take Attendance
+            ⚡ ${t('cards', 'takeAttendance')}
           </button>
         `;
       }
     } else if (isVerified) {
       stateClass = 'state-recorded';
-      statusPillHtml = `<span class="att-status-pill pill-recorded">RECORDED</span>`;
+      statusPillHtml = `<span class="att-status-pill pill-recorded">${t('cards', 'recorded')}</span>`;
       stateBadgeHtml = '';
-      windowSubHtml = `<span class="att-window-sub">Attended ✓</span>`;
-      actionBtnHtml = `<span class="btn-att-action btn-att-present">✓ Present</span>`;
+      windowSubHtml = `<span class="att-window-sub">${t('cards', 'attended')}</span>`;
+      actionBtnHtml = `<span class="btn-att-action btn-att-present">${t('cards', 'present')}</span>`;
     } else if (isEnded) {
       stateClass = 'state-ended';
-      statusPillHtml = `<span class="att-status-pill">ENDED</span>`;
-      stateBadgeHtml = `<span class="att-state-badge state-locked">LOCKED</span>`;
-      windowSubHtml = `<span class="att-window-sub">Session ended</span>`;
-      actionBtnHtml = `<a href="${escapeHtml(takeUrl)}" target="_blank" class="btn-att-action btn-att-faint" title="Open attendance in SPeCTRUM">Check Portal ↗</a>`;
+      statusPillHtml = `<span class="att-status-pill">${t('cards', 'ended')}</span>`;
+      stateBadgeHtml = `<span class="att-state-badge state-locked">${t('cards', 'locked')}</span>`;
+      windowSubHtml = `<span class="att-window-sub">${t('cards', 'sessionEnded')}</span>`;
+      actionBtnHtml = `<a href="${escapeHtml(takeUrl)}" target="_blank" class="btn-att-action btn-att-faint" title="Open attendance in SPeCTRUM">${t('cards', 'checkPortal')}</a>`;
     } else if (isFuture) {
       stateClass = '';
-      statusPillHtml = `<span class="att-status-pill pill-upcoming">UPCOMING</span>`;
-      stateBadgeHtml = `<span class="att-state-badge state-locked">UPCOMING</span>`;
-      let upcomingLabel = `Opens at ${pad(startHour)}:${pad(startMin)}`;
+      statusPillHtml = `<span class="att-status-pill pill-upcoming">${t('cards', 'upcoming')}</span>`;
+      stateBadgeHtml = `<span class="att-state-badge state-locked">${t('cards', 'upcoming')}</span>`;
+      let upcomingLabel = `${t('cards', 'opensAt')} ${pad(startHour)}:${pad(startMin)}`;
       if (dayDiff < 0) {
         const absDays = Math.abs(dayDiff);
         upcomingLabel = (absDays === 1) 
-          ? `Tomorrow · ${pad(startHour)}:${pad(startMin)}` 
-          : `In ${absDays}d · ${pad(startHour)}:${pad(startMin)}`;
+          ? `${t('cards', 'tomorrow')} · ${pad(startHour)}:${pad(startMin)}` 
+          : `${t('cards', 'inDays', { d: absDays })} · ${pad(startHour)}:${pad(startMin)}`;
       }
       windowSubHtml = `<span class="att-window-sub">${upcomingLabel}</span>`;
-      actionBtnHtml = `<a href="${escapeHtml(takeUrl)}" target="_blank" class="btn-att-action btn-att-wireframe" title="Open attendance in SPeCTRUM">Open SPeCTRUM ↗</a>`;
+      actionBtnHtml = `<a href="${escapeHtml(takeUrl)}" target="_blank" class="btn-att-action btn-att-wireframe" title="Open attendance in SPeCTRUM">${t('cards', 'openSpectrum')}</a>`;
     }
 
     return {
@@ -2334,7 +2892,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="att-row-action">
             <div class="att-progress-section">
               <div class="att-progress-header">
-                <span class="att-window-label">Check-In Window</span>
+                <span class="att-window-label">${t('cards', 'checkInWindow')}</span>
                 ${vm.windowSubHtml}
               </div>
               <div class="att-progress-track">
@@ -2931,8 +3489,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const mon = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
       const wd = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
 
+      const todayWord = t('cards', 'today');
       const titleHtml = isToday 
-        ? `TODAY <span class="spine-node-date">${day} ${mon}</span>` 
+        ? `${todayWord} <span class="spine-node-date">${day} ${mon}</span>` 
         : `${day} ${mon} ${wd}`;
       const dotClass = isToday ? 'spine-node-dot is-today is-active' : 'spine-node-dot';
       const badgeText = isToday 
@@ -7924,8 +8483,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const mon = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
         const wd = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
 
+        const todayWord = t('cards', 'today');
         const titleHtml = isToday 
-          ? `TODAY <span class="spine-node-date">${day} ${mon}</span>` 
+          ? `${todayWord} <span class="spine-node-date">${day} ${mon}</span>` 
           : `${day} ${mon} ${wd}`;
         const dotClass = isToday ? 'spine-node-dot is-today is-active' : 'spine-node-dot';
 
