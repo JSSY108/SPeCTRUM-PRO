@@ -94,6 +94,14 @@
     }
   }
 
+  function cleanSingleCourseCode(code) {
+    if (!code || typeof code !== 'string') return '';
+    const trimmed = code.trim();
+    const match = trimmed.match(/\b[A-Z]{2,4}\d{4}\b/i);
+    if (match) return match[0].toUpperCase();
+    const firstPart = trimmed.split(/[\/\\\u2013\u2014\-]/)[0].trim();
+    return firstPart || trimmed;
+  }
   function cleanTimetableCourseName(name, code) {
     if (!name) return '';
     let str = String(name).trim();
@@ -116,7 +124,8 @@
     const parseTime = getSafeTimeParser();
 
     records.forEach(att => {
-      const courseCode = att.courseCode || '';
+      const rawCourseCode = att.courseCode || '';
+      const courseCode = cleanSingleCourseCode(rawCourseCode);
       const courseName = cleanTimetableCourseName(att.courseName || '', courseCode);
       const userOcc = att.userOcc || '';
 
@@ -150,7 +159,7 @@
           return;
         }
 
-        const cleanCode = (courseCode || '').split('/')[0].trim();
+        const cleanCode = cleanSingleCourseCode(courseCode);
         // Specifically filter out fabricated Friday session for Probability and Statistics (WIA2003 / WIB2003)
         if (dayIndex === 5 && (/WIA2003|WIB2003/i.test(cleanCode) || /probability/i.test(courseName))) {
           return;
@@ -583,7 +592,7 @@
                  style="grid-column: ${startCol} / ${endCol}; grid-row: ${rowNum};">
               <div class="tt-card-header">
                 <div class="tt-card-code-badge">
-                  <span class="tt-code">${esc(s.courseCode)}</span>
+                  <span class="tt-code">${esc(cleanSingleCourseCode(s.courseCode))}</span>
                   <span class="tt-type-tag">${esc(s.typeLabel)}</span>
                 </div>
                 <span class="tt-time-range">${esc(s.timeStr)}</span>
@@ -791,7 +800,7 @@
                  title="Click to edit session time or location"
                  style="top: ${topPx}px; height: ${heightPx}px; ${posStyle}">
               <div class="tt-card-header">
-                <span class="tt-code">${esc(s.courseCode)}</span>
+                <span class="tt-code">${esc(cleanSingleCourseCode(s.courseCode))}</span>
                 <span class="tt-type-tag">${esc(s.typeLabel)}</span>
               </div>
               <div class="tt-card-title" title="${esc(s.courseName)}">${esc(s.courseName)}</div>

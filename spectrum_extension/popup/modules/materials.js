@@ -476,7 +476,7 @@
     return [
       {
         id: 'c_wia2001',
-        code: 'WIA2001 / WIB2001',
+        code: 'WIA2001',
         title: 'DATABASE SYSTEMS & MODELING',
         dept: 'COMP',
         checked: true,
@@ -513,7 +513,7 @@
       },
       {
         id: 'c_wia2003',
-        code: 'WIA2003 / WIB2003',
+        code: 'WIA2003',
         title: 'PROBABILITY AND STATISTICS',
         dept: 'MATH',
         checked: true,

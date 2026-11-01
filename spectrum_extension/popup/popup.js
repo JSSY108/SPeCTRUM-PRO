@@ -1661,6 +1661,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Remove unbold course code that is redundant to the bolded course code
+  function cleanSingleCourseCode(code) {
+    if (!code || typeof code !== 'string') return '';
+    const trimmed = code.trim();
+    const match = trimmed.match(/\b[A-Z]{2,4}\d{4}\b/i);
+    if (match) return match[0].toUpperCase();
+    const firstPart = trimmed.split(/[\/\\\u2013\u2014\-]/)[0].trim();
+    return firstPart || trimmed;
+  }
   function cleanDisplayCourseName(courseName, courseCode) {
     if (!courseName) return '';
     let name = String(courseName).replace(/[\r\n\t]+/g, ' ').trim();
@@ -2615,8 +2623,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const key = String(cid);
       if (!map.has(key)) {
         const rawName = (name || '').replace(/[\r\n\t]+/g, ' ').replace(/^Course name\s*/i, '').trim();
-        const codeMatch = rawName.match(/\b([A-Z]{2,4}\d{4}(?:\s*[\/–-]\s*[A-Z]{2,4}\d{4})?)\b/);
-        const cCode = code || (codeMatch ? codeMatch[0] : 'COURSE');
+        const codeMatch = rawName.match(/\b([A-Z]{2,4}\d{4})\b/);
+        const cCode = cleanSingleCourseCode(code || (codeMatch ? codeMatch[0] : 'COURSE'));
         const cleanName = (typeof cleanDisplayCourseName === 'function') ? cleanDisplayCourseName(rawName, cCode) : rawName;
         map.set(key, {
           courseId: key,
@@ -2750,7 +2758,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isOverdue = Boolean(!isSubmitted && (assign.isOverdue || (hasValidDate && d.getTime() < now.getTime())));
 
     // 1. Unified Top Baseline: Course Code / Title · OCC
-    const code = (assign.courseCode || 'TASK').trim();
+    const code = cleanSingleCourseCode((assign.courseCode || 'TASK').trim());
     const rawName = (assign.courseName || '').trim();
     const cleanName = (typeof cleanDisplayCourseName === 'function') ? cleanDisplayCourseName(rawName, code) : rawName;
     const headerLeftText = cleanName 
@@ -2917,7 +2925,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dateKey = (d && !isNaN(d.getTime())) ? formatDateKey(d) : formatDateKey(new Date());
 
     // 1. Top Baseline: Course Code / Title on Left | Date on Right
-    const code = (ann.courseCode || 'NOTICE').trim();
+    const code = cleanSingleCourseCode((ann.courseCode || 'NOTICE').trim());
     const rawName = (ann.courseName || '').trim();
     const cleanName = (typeof cleanDisplayCourseName === 'function') ? cleanDisplayCourseName(rawName, code) : rawName;
     const headerLeftText = cleanName 
@@ -3235,7 +3243,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 4. Course & OCC
-    const code = att.courseCode || sessionData.courseCode || 'COURSE';
+    const code = cleanSingleCourseCode(att.courseCode || sessionData.courseCode || 'COURSE');
     const rawName = att.courseName || sessionData.courseName || code;
     const cleanName = (typeof cleanDisplayCourseName === 'function') ? cleanDisplayCourseName(rawName, code) : rawName;
     const occRaw = att.userOcc || sessionData.userOcc || courseOccs[att.courseId || sessionData.cid] || defaultOcc || '1';
@@ -9386,8 +9394,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function createCourseTreeShell(c) {
     const rawName = (c.name || '').replace(/[\r\n\t]+/g, ' ').replace(/^Course name\s*/i, '').trim();
-    const codeMatch = rawName.match(/^[A-Z]{2,4}\d{4}(?:\/[A-Z]{2,4}\d{4})?/);
-    const code = codeMatch ? codeMatch[0] : (c.code || `Course ${c.id}`);
+    const codeMatch = rawName.match(/^[A-Z]{2,4}\d{4}/);
+    const code = cleanSingleCourseCode(codeMatch ? codeMatch[0] : (c.code || `Course ${c.id}`));
     const cleanTitle = cleanDisplayCourseName(rawName, code);
     return {
       id: String(c.id),

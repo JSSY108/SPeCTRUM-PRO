@@ -168,6 +168,14 @@
     return result || 'General';
   }
 
+  function cleanSingleCourseCode(code) {
+    if (!code || typeof code !== 'string') return '';
+    const trimmed = code.trim();
+    const match = trimmed.match(/\b[A-Z]{2,4}\d{4}\b/i);
+    if (match) return match[0].toUpperCase();
+    const firstPart = trimmed.split(/[\/\\\u2013\u2014\-]/)[0].trim();
+    return firstPart || trimmed;
+  }
   function cleanDisplayCourseName(courseName, courseCode) {
     if (!courseName) return '';
     let name = String(courseName).replace(/[\r\n\t]+/g, ' ').trim();
@@ -546,6 +554,7 @@
   window.extractOnlyTime = extractOnlyTime;
   window.cleanSectionTitle = cleanSectionTitle;
   window.cleanDisplayCourseName = cleanDisplayCourseName;
+  window.cleanSingleCourseCode = cleanSingleCourseCode;
   window.generateCourseAcronym = generateCourseAcronym;
   window.getCourseCategoryTag = getCourseCategoryTag;
   window.parseTimeRangeRobust = parseTimeRangeRobust;
