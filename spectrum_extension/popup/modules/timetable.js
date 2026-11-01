@@ -416,7 +416,7 @@
           }
 
           const hasVenue = Boolean(s.venue && s.venue.trim().length > 0);
-          const subtitleText = hasVenue ? `${esc(s.occ)} · ${esc(s.venue)}` : esc(s.occ);
+          const subtitleText = esc(s.occ);
           const venueHtml = hasVenue
             ? `<span class="tt-venue" title="${esc(s.venue)}">${s.venueIcon || '📍'} ${esc(s.venue)}</span>`
             : `<span class="tt-venue tt-venue-empty" title="Click to add location"><span class="tt-venue-add-icon">📍</span> <span class="tt-venue-placeholder">+ Add Location</span></span>`;

@@ -9193,15 +9193,19 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 .tt-venue {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9.5px;
-  font-weight: 500;
+  /* ========================================================================
+     VENUE FONT SIZE SETTING:
+     Adjust this value (default: 12px = 1.25x of original 9.5px) to scale venue text
+     ======================================================================== */
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
 }
 
 .tt-venue-empty {
