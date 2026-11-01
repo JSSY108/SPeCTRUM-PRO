@@ -694,9 +694,16 @@ function parseMoodleDate(str, courseName = '', now = new Date()) {
   }
 
   // If string contains a date range e.g. "12 October - 18 October" or "12 - 18 October", extract the ending deadline
-  const rangeMatch = clean.match(/\s+[-–]\s+([0-9]{1,2}(?:\s+[A-Za-z]+|\s*[\/\-\.][0-9]{1,2})[^\n\r]*)$/);
+  // Guard against time ranges like "8.00 AM - 10.00 AM", "8.00 pagi - 10.00 pagi", or "08:00 - 10:00"
+  const rangeMatch = clean.match(/\s+[-–]\s+([0-9]{1,2}[^\n\r]*)$/);
   if (rangeMatch) {
-    clean = rangeMatch[1].trim();
+    const candidate = rangeMatch[1].trim();
+    const isTime = /\b(?:am|pm|pagi|petang|malam)\b/i.test(candidate) || /^\d{1,2}[:.]\d{2}/.test(candidate);
+    const hasMonth = /\b(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|Januari|Februari|Mac|Mei|Jun|Julai|Ogos|Oktober|Disember)\b/i.test(candidate);
+    const hasFullDate = /\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b/.test(candidate);
+    if (!isTime && (hasMonth || hasFullDate)) {
+      clean = candidate;
+    }
   }
 
   // Handle relative days (Today / Tomorrow / Yesterday / Hari ini / Esok / Semalam)
@@ -789,7 +796,7 @@ function parseMoodleDate(str, courseName = '', now = new Date()) {
   // 5. Normalize dot-time or colon-time before AM/PM
   clean = clean.replace(/(\d{1,2})\.(\d{2})\s*(AM|PM)/gi, '$1:$2 $3');
   clean = clean.replace(/(\d{1,2}:\d{2})\s*(AM|PM)/i, '$1 $2');
-  clean = clean.replace(/\b(\d{1,2})\s*(AM|PM)/i, '$1:00 $2');
+  clean = clean.replace(/(^|[^\d:])(\d{1,2})\s*(AM|PM)/gi, '$1$2:00 $3');
 
   clean = clean.replace(/[\(\)]/g, ' ');
   clean = clean.trim().replace(/^,\s*/, '').replace(/\s+,/g, ',').replace(/\s+/g, ' ');
@@ -1230,15 +1237,31 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
       const { url: fullAttUrl, label: initialLabel } = candidateLinks[i];
       let attHtml = '';
 
-      // 1. Fetch default view (ONLY 1 HTTP request per instance!)
+      // 1. Fetch complete semester view (mode=1&view=5 for Moodle Attendance)
+      // This ensures all sessions across November, December, January are returned rather than only past/current month!
+      let targetAttUrl = fullAttUrl;
+      if (!/[?&]view=/i.test(targetAttUrl)) {
+        targetAttUrl += (targetAttUrl.includes('?') ? '&' : '?') + 'mode=1&view=5';
+      }
+
       try {
-        const res = await fetchWithTimeout(fullAttUrl, { credentials: 'include' }, 12000);
+        const res = await fetchWithTimeout(targetAttUrl, { credentials: 'include' }, 12000);
         logDiag('Attendance:Inst', `[${courseId}] [${i + 1}/${candidateLinks.length}] HTTP ${res.status} ("${initialLabel}")`);
         if (res.ok && !res.url.includes('/login/')) {
           attHtml = await res.text();
         }
       } catch (err) {
-        logDiag('Attendance:Inst', `[${courseId}] Fetch error on ${fullAttUrl}: ${err?.message || err}`);
+        logDiag('Attendance:Inst', `[${courseId}] Fetch error on ${targetAttUrl}: ${err?.message || err}`);
+      }
+
+      // Fallback: if targetAttUrl failed or returned login/error, try bare URL
+      if (!attHtml && targetAttUrl !== fullAttUrl) {
+        try {
+          const resFallback = await fetchWithTimeout(fullAttUrl, { credentials: 'include' }, 12000);
+          if (resFallback.ok && !resFallback.url.includes('/login/')) {
+            attHtml = await resFallback.text();
+          }
+        } catch (fErr) {}
       }
 
       if (!attHtml) continue;
@@ -1249,7 +1272,39 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
         continue;
       }
 
-      const attDoc = parser.parseFromString(attHtml, 'text/html');
+      let attDoc = parser.parseFromString(attHtml, 'text/html');
+
+      // Check if page has an explicit "All Sessions" tab link provided by Moodle (e.g. view=5 or view=all)
+      const allTabLink = Array.from(attDoc.querySelectorAll('a')).find(a => {
+        const txt = (a.textContent || '').trim().toLowerCase();
+        const href = a.getAttribute('href') || a.href || '';
+        return (/^(?:all|all\s+sessions?|semua|semua\s+sesi)$/i.test(txt) || /[?&]view=(?:5|all)\b/i.test(href)) && href.includes('view.php');
+      });
+
+      if (allTabLink) {
+        let allUrl = allTabLink.getAttribute('href') || allTabLink.href || '';
+        if (allUrl.startsWith('/')) allUrl = `${origin}${allUrl}`;
+        else if (!allUrl.startsWith('http')) allUrl = `${origin}/mod/attendance/${allUrl}`;
+
+        // If the All tab URL differs from what we fetched, fetch it to guarantee full semester coverage!
+        if (allUrl && allUrl !== targetAttUrl && allUrl !== fullAttUrl) {
+          try {
+            const allRes = await fetchWithTimeout(allUrl, { credentials: 'include' }, 12000);
+            if (allRes.ok && !allRes.url.includes('/login/')) {
+              const fullHtml = await allRes.text();
+              const fullDoc = parser.parseFromString(fullHtml, 'text/html');
+              const fullSessions = parseSessionsFromDoc(fullDoc);
+              if (fullSessions.length > parseSessionsFromDoc(attDoc).length) {
+                logDiag('Attendance:AllView', `[${courseId}] Upgraded to Moodle All Sessions tab (${fullSessions.length} total sessions).`);
+                attHtml = fullHtml;
+                attDoc = fullDoc;
+              }
+            }
+          } catch (tErr) {
+            logDiag('Attendance:AllView', `[${courseId}] All tab fetch note: ${tErr?.message || tErr}`);
+          }
+        }
+      }
 
       // Extract title
       let attTitle = initialLabel || '';
