@@ -9077,6 +9077,18 @@ body:not(.is-full-tab) .sync-cinematic-current {
   width: 100%;
 }
 
+/* Half-width day column (e.g. empty Saturday taking half a cell) */
+.tt-day-header-cell.is-half-cell {
+  padding: 12px 4px;
+  font-size: 11.5px;
+  letter-spacing: 0.2px;
+}
+
+.tt-day-column.is-half-cell .tt-vertical-watermark {
+  font-size: 9.5px;
+  letter-spacing: 2px;
+}
+
 /* Vertical Watermark for empty day */
 .tt-vertical-watermark {
   position: absolute;

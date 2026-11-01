@@ -316,8 +316,8 @@
     }
 
     const DAY_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
-    const activeDayIndices = [1, 2, 3, 4, 5];
-    if (sessions.some(s => s.dayIndex === 6)) activeDayIndices.push(6);
+    // Always include Monday to Saturday (days 1..6)
+    const activeDayIndices = [1, 2, 3, 4, 5, 6];
     if (sessions.some(s => s.dayIndex === 0)) activeDayIndices.push(0);
 
     const todayDayIndex = new Date().getDay();
@@ -352,9 +352,19 @@
     const totalHeight = totalHours * HOUR_HEIGHT;
     const pad = n => String(n).padStart(2, '0');
 
+    // Saturday takes only half a cell (0.5fr) if it has no courses scheduled!
+    const hasSatSession = sessions.some(s => s.dayIndex === 6);
+    const colTracks = activeDayIndices.map(dIdx => {
+      const isHalf = (dIdx === 6 && !hasSatSession);
+      return isHalf ? 'minmax(95px, 0.5fr)' : 'minmax(185px, 1fr)';
+    });
+    const totalMinWidth = 75 + activeDayIndices.reduce((sum, dIdx) => {
+      return sum + ((dIdx === 6 && !hasSatSession) ? 95 : 185);
+    }, 0);
+
     gridEl.className = 'timetable-grid timetable-vertical-grid';
-    gridEl.style.gridTemplateColumns = `75px repeat(${activeDayIndices.length}, minmax(185px, 1fr))`;
-    gridEl.style.minWidth = `${75 + activeDayIndices.length * 185}px`;
+    gridEl.style.gridTemplateColumns = `75px ${colTracks.join(' ')}`;
+    gridEl.style.minWidth = `${totalMinWidth}px`;
 
     let html = '';
 
@@ -371,13 +381,15 @@
       const col = colOffset + 2;
       const dayName = DAY_NAMES[dIdx];
       const isToday = (dIdx === todayDayIndex);
+      const isHalf = (dIdx === 6 && !hasSatSession);
       const todayClass = isToday ? ' is-today' : '';
+      const halfClass = isHalf ? ' is-half-cell' : '';
       const headerContent = isToday
-        ? `<span class="tt-today-indicator">●</span> ${dayName} <span class="tt-today-tag">(TODAY)</span>`
+        ? `<span class="tt-today-indicator">●</span> ${dayName} ${isHalf ? '' : '<span class="tt-today-tag">(TODAY)</span>'}`
         : dayName;
 
       html += `
-        <div class="tt-header-cell tt-day-header-cell${todayClass}" style="grid-column: ${col}; grid-row: 1;">
+        <div class="tt-header-cell tt-day-header-cell${todayClass}${halfClass}" style="grid-column: ${col}; grid-row: 1;">
           ${headerContent}
         </div>
       `;
@@ -399,10 +411,12 @@
     // Row 2, Col 2..N: Day Columns
     activeDayIndices.forEach((dIdx, colOffset) => {
       const col = colOffset + 2;
+      const isHalf = (dIdx === 6 && !hasSatSession);
+      const halfClass = isHalf ? ' is-half-cell' : '';
       const daySess = sessions.filter(s => s.dayIndex === dIdx);
 
       html += `
-        <div class="tt-day-column" style="grid-column: ${col}; grid-row: 2; height: ${totalHeight}px;">
+        <div class="tt-day-column${halfClass}" style="grid-column: ${col}; grid-row: 2; height: ${totalHeight}px;">
       `;
 
       // Background hourly grid lines
@@ -763,8 +777,8 @@
   function renderTimetableToCanvas() {
     const sessions = extractWeeklyTimetableSessions();
     const DAY_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
-    const activeDayIndices = [1, 2, 3, 4, 5];
-    if (sessions.some(s => s.dayIndex === 6)) activeDayIndices.push(6);
+    // Always include Monday to Saturday (days 1..6)
+    const activeDayIndices = [1, 2, 3, 4, 5, 6];
     if (sessions.some(s => s.dayIndex === 0)) activeDayIndices.push(0);
 
     const todayDayIndex = new Date().getDay();
@@ -861,8 +875,23 @@
     const gridH = height - gridY - 55; // 1250px (was 1215px, +35px extra space)
     const headerH = 65;
     const timeColW = 115;
-    const dayColW = (gridW - timeColW) / totalDays;
+    const availableW = gridW - timeColW;
     const hourH = (gridH - headerH) / totalHours;
+
+    // Saturday takes half a cell (weight 0.5) if it has no courses scheduled!
+    const hasSatSession = sessions.some(s => s.dayIndex === 6);
+    const dayWeights = activeDayIndices.map(dIdx => (dIdx === 6 && !hasSatSession) ? 0.5 : 1.0);
+    const totalWeight = dayWeights.reduce((a, b) => a + b, 0);
+    const unitW = availableW / totalWeight;
+
+    // Precalculate positions & widths for all day columns
+    const dayCols = [];
+    let curColX = gridX + timeColW;
+    activeDayIndices.forEach((dIdx, i) => {
+      const colW = dayWeights[i] * unitW;
+      dayCols.push({ dIdx, x: curColX, w: colW, isHalf: dayWeights[i] === 0.5 });
+      curColX += colW;
+    });
 
     // Grid outer border & fill
     ctx.fillStyle = '#FFFFFF';
@@ -900,8 +929,8 @@
     const pad = n => String(n).padStart(2, '0');
 
     // Day Column Headers (Col 2..N)
-    activeDayIndices.forEach((dIdx, colOffset) => {
-      const colX = gridX + timeColW + colOffset * dayColW;
+    dayCols.forEach((colInfo, colOffset) => {
+      const { dIdx, x: colX, w: dayColW, isHalf } = colInfo;
       const dayName = DAY_NAMES[dIdx];
       const isToday = (dIdx === todayDayIndex);
 
@@ -914,17 +943,18 @@
         ctx.stroke();
       }
 
+      const fontSz = isHalf ? 16 : 20;
+      ctx.font = `800 ${fontSz}px "Hanken Grotesk", sans-serif`;
+      ctx.textAlign = 'center';
+
       if (isToday) {
         ctx.fillStyle = '#E4E4E7';
         ctx.fillRect(colX, gridY + 1, dayColW, headerH - 1);
         ctx.fillStyle = '#18181B';
-        ctx.font = '800 20px "Hanken Grotesk", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(`● ${dayName} (TODAY)`, colX + dayColW / 2, gridY + 41);
+        const label = isHalf ? `● ${dayName}` : `● ${dayName} (TODAY)`;
+        ctx.fillText(label, colX + dayColW / 2, gridY + 41);
       } else {
         ctx.fillStyle = '#18181B';
-        ctx.font = '800 20px "Hanken Grotesk", sans-serif';
-        ctx.textAlign = 'center';
         ctx.fillText(dayName, colX + dayColW / 2, gridY + 41);
       }
     });
@@ -948,8 +978,8 @@
     ctx.textAlign = 'left';
 
     // Day Columns Content
-    activeDayIndices.forEach((dIdx, colOffset) => {
-      const colX = gridX + timeColW + colOffset * dayColW;
+    dayCols.forEach(colInfo => {
+      const { dIdx, x: colX, w: dayColW, isHalf } = colInfo;
       const daySess = sessions.filter(s => s.dayIndex === dIdx);
 
       if (daySess.length === 0) {
@@ -958,7 +988,8 @@
         ctx.translate(colX + dayColW / 2, gridY + headerH + (gridH - headerH) / 2);
         ctx.rotate(-Math.PI / 2);
         ctx.fillStyle = '#A1A1AA';
-        ctx.font = '700 18px "JetBrains Mono", monospace';
+        const wmFontSz = isHalf ? 14 : 18;
+        ctx.font = `700 ${wmFontSz}px "JetBrains Mono", monospace`;
         ctx.textAlign = 'center';
         ctx.fillText('NO TEACHING SCHEDULED', 0, 6);
         ctx.restore();
