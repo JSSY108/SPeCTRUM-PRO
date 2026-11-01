@@ -134,6 +134,9 @@ const I18N = {
       submit: 'Submit →',
       submitLate: 'Submit Late →',
       submitted: 'Submitted ✓',
+      noDeadline: 'No deadline',
+      items: '{n} item{s}',
+      assignment: 'Assignment',
       noActToday: 'No scheduled activities today',
       syncingTitle: 'SYNCING ACTIVITIES & ATTENDANCE'
     },
@@ -284,6 +287,9 @@ const I18N = {
       submit: 'Hantar →',
       submitLate: 'Hantar Lewat →',
       submitted: 'Dihantar ✓',
+      noDeadline: 'Tiada had masa',
+      items: '{n} item',
+      assignment: 'Tugasan',
       noActToday: 'Tiada aktiviti hari ini',
       syncingTitle: 'MENYEGERAKKAN DATA'
     },
@@ -434,6 +440,9 @@ const I18N = {
       submit: '提交 →',
       submitLate: '补交 →',
       submitted: '已提交 ✓',
+      noDeadline: '无截止',
+      items: '{n} 项',
+      assignment: '作业',
       noActToday: '今日暂无安排',
       syncingTitle: '正在同步数据'
     },
@@ -759,10 +768,21 @@ function updateHeaderTranslations() {
   if (calWeekdays && calWeekdays.length === 7) {
     const daysEn = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const daysBm = ['Isn', 'Sel', 'Rab', 'Kha', 'Jum', 'Sab', 'Ahd'];
-    const daysZh = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+    const daysZh = ['一', '二', '三', '四', '五', '六', '日'];
     const days = (currentLang === 'zh') ? daysZh : ((currentLang === 'bm') ? daysBm : daysEn);
     calWeekdays.forEach((cell, idx) => {
       if (days[idx]) cell.textContent = days[idx];
+    });
+  }
+
+  const miniWeekdays = document.querySelectorAll('.mini-cal-day-headers span');
+  if (miniWeekdays && miniWeekdays.length === 7) {
+    const mDaysEn = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    const mDaysBm = ['I', 'S', 'R', 'K', 'J', 'S', 'A'];
+    const mDaysZh = ['一', '二', '三', '四', '五', '六', '日'];
+    const mDays = (currentLang === 'zh') ? mDaysZh : ((currentLang === 'bm') ? mDaysBm : mDaysEn);
+    miniWeekdays.forEach((cell, idx) => {
+      if (mDays[idx]) cell.textContent = mDays[idx];
     });
   }
 }
@@ -2613,17 +2633,31 @@ document.addEventListener('DOMContentLoaded', async () => {
       btnText = t('cards', 'submit');
     }
 
-    // Format timestamp (e.g., "Wed 28 Oct, 23:00")
+    // Format timestamp (e.g., "Wed 28 Oct, 23:00" or Chinese "10月28日 23:00")
     let timestampText = '';
     if (hasValidDate) {
-      const wd = d.toLocaleDateString('en-US', { weekday: 'short' });
       const day = String(d.getDate()).padStart(2, '0');
-      const mon = d.toLocaleDateString('en-US', { month: 'short' });
       const hours = String(d.getHours()).padStart(2, '0');
       const mins = String(d.getMinutes()).padStart(2, '0');
-      timestampText = `${wd} ${day} ${mon}, ${hours}:${mins}`;
-    } else if (assign.dueDateStr) {
-      timestampText = assign.dueDateStr;
+      if (currentLang === 'zh') {
+        const mon = String(d.getMonth() + 1);
+        timestampText = `${mon}月${day}日 ${hours}:${mins}`;
+      } else if (currentLang === 'bm') {
+        const mon = d.toLocaleDateString('ms-MY', { month: 'short' });
+        const wd = d.toLocaleDateString('ms-MY', { weekday: 'short' });
+        timestampText = `${wd} ${day} ${mon}, ${hours}:${mins}`;
+      } else {
+        const wd = d.toLocaleDateString('en-US', { weekday: 'short' });
+        const mon = d.toLocaleDateString('en-US', { month: 'short' });
+        timestampText = `${wd} ${day} ${mon}, ${hours}:${mins}`;
+      }
+    } else {
+      const rawDue = assign.dueDateStr || assign.timeStr || assign.dateStr || '';
+      if (!rawDue || /no\s*deadline|no\s*due\s*date|tiada/i.test(rawDue)) {
+        timestampText = t('cards', 'noDeadline');
+      } else {
+        timestampText = rawDue;
+      }
     }
 
     const submitUrl = assign.viewUrl || assign.url || 'https://spectrum.um.edu.my';
@@ -2717,9 +2751,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     let formattedDate = 'ANNOUNCEMENT';
     if (d && !isNaN(d.getTime())) {
       const day = String(d.getDate()).padStart(2, '0');
-      const mon = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
       const year = d.getFullYear();
-      formattedDate = `${day} ${mon} ${year}`;
+      if (currentLang === 'zh') {
+        const mon = d.getMonth() + 1;
+        formattedDate = `${year}年${mon}月${day}日`;
+      } else if (currentLang === 'bm') {
+        const mon = d.toLocaleDateString('ms-MY', { month: 'short' }).toUpperCase();
+        formattedDate = `${day} ${mon} ${year}`;
+      } else {
+        const mon = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+        formattedDate = `${day} ${mon} ${year}`;
+      }
     } else if (ann.dateStr) {
       formattedDate = ann.dateStr.toUpperCase();
     }
@@ -3751,13 +3793,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       const isFuture = (group.date.getTime() >= nowTime);
       const d = group.date;
       const day = String(d.getDate()).padStart(2, '0');
-      const mon = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-      const wd = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-
+      let titleHtml = '';
       const todayWord = t('cards', 'today');
-      const titleHtml = isToday 
-        ? `${todayWord} <span class="spine-node-date">${day} ${mon}</span>` 
-        : `${day} ${mon} ${wd}`;
+      if (currentLang === 'zh') {
+        const mon = String(d.getMonth() + 1);
+        titleHtml = isToday 
+          ? `${todayWord} <span class="spine-node-date">${mon}月${day}日</span>` 
+          : `${mon}月${day}日`;
+      } else if (currentLang === 'bm') {
+        const mon = d.toLocaleDateString('ms-MY', { month: 'short' }).toUpperCase();
+        const wd = d.toLocaleDateString('ms-MY', { weekday: 'short' }).toUpperCase();
+        titleHtml = isToday 
+          ? `${todayWord} <span class="spine-node-date">${day} ${mon}</span>` 
+          : `${day} ${mon} ${wd}`;
+      } else {
+        const mon = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+        const wd = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+        titleHtml = isToday 
+          ? `${todayWord} <span class="spine-node-date">${day} ${mon}</span>` 
+          : `${day} ${mon} ${wd}`;
+      }
       const dotClass = isToday ? 'spine-node-dot is-today is-active' : 'spine-node-dot';
       const badgeText = isToday 
         ? `${group.events.length} Event${group.events.length !== 1 ? 's' : ''}` 
@@ -8042,11 +8097,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const attCount = events.filter(e => e.type === 'att').length;
     const annCount = events.filter(e => e.type === 'ann').length;
 
+    const labelNotice = currentLang === 'zh' ? '通知' : (currentLang === 'bm' ? 'Notis' : 'Notice');
+    const labelAssign = currentLang === 'zh' ? '作业' : (currentLang === 'bm' ? 'Tugasan' : 'Assignment');
+    const labelAtt = currentLang === 'zh' ? '签到' : (currentLang === 'bm' ? 'Kehadiran' : 'Attendance');
+
     let pillsHtml = '';
     if (annCount > 0) {
       pillsHtml += `
         <div class="cal-count-pill pill-notice">
-          <span class="pill-left">${MINI_ICONS.notice} Notice</span>
+          <span class="pill-left">${MINI_ICONS.notice} ${labelNotice}</span>
           <span class="pill-count">${annCount}</span>
         </div>
       `;
@@ -8054,7 +8113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (taskCount > 0) {
       pillsHtml += `
         <div class="cal-count-pill pill-assignment">
-          <span class="pill-left">${MINI_ICONS.assignment} Assignment</span>
+          <span class="pill-left">${MINI_ICONS.assignment} ${labelAssign}</span>
           <span class="pill-count">${taskCount}</span>
         </div>
       `;
@@ -8062,7 +8121,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (attCount > 0) {
       pillsHtml += `
         <div class="cal-count-pill pill-attendance">
-          <span class="pill-left">${MINI_ICONS.attendance} Attendance</span>
+          <span class="pill-left">${MINI_ICONS.attendance} ${labelAtt}</span>
           <span class="pill-count">${attCount}</span>
         </div>
       `;
@@ -8090,9 +8149,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sidebarList = document.getElementById('cal-sidebar-cards-list');
 
     const parsedDate = new Date(dateKey + 'T00:00:00');
-    const formattedDate = !isNaN(parsedDate.getTime())
-      ? parsedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
-      : dateKey;
+    let formattedDate = dateKey;
+    if (!isNaN(parsedDate.getTime())) {
+      if (currentLang === 'zh') {
+        formattedDate = `${parsedDate.getFullYear()}年${parsedDate.getMonth() + 1}月${parsedDate.getDate()}日`;
+      } else if (currentLang === 'bm') {
+        formattedDate = parsedDate.toLocaleDateString('ms-MY', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+      } else {
+        formattedDate = parsedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+      }
+    }
     if (!isNaN(parsedDate.getTime())) {
       const dayUmInfo = getUmAcademicInfo(parsedDate);
       const semBadgeEl = document.getElementById('fulltab-sem-badge');
@@ -8101,14 +8167,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (weekPillEl) weekPillEl.textContent = dayUmInfo.weekPill;
     }
 
+    const countLabel = currentLang === 'zh'
+      ? `${events.length} 项`
+      : (currentLang === 'bm'
+        ? `${events.length} item`
+        : `${events.length} item${events.length === 1 ? '' : 's'}`);
+
     if (sidebar && sidebarTitle && sidebarList) {
       if (calSection) calSection.classList.add('has-sidebar');
       sidebar.style.display = 'flex';
       sidebarTitle.textContent = formattedDate;
-      if (sidebarCount) sidebarCount.textContent = `${events.length} item${events.length === 1 ? '' : 's'}`;
+      if (sidebarCount) sidebarCount.textContent = countLabel;
 
       if (events.length === 0) {
-        sidebarList.innerHTML = `<div style="text-align:center;padding:24px 12px;color:var(--text-muted);font-size:12px;">No activities scheduled on this day.</div>`;
+        sidebarList.innerHTML = `<div style="text-align:center;padding:24px 12px;color:var(--text-muted);font-size:12px;">${t('cards', 'noActToday')}</div>`;
       } else {
         sidebarList.innerHTML = events.map(ev => {
           if (ev.type === 'task' || ev.type === 'assignment') return renderAssignmentCardHtml(ev.obj || ev);
@@ -8122,9 +8194,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. Compatibility with existing calDayAgenda drawer
     if (calDayAgenda && calAgendaDate && calAgendaList) {
       calAgendaDate.textContent = formattedDate;
-      if (calAgendaCount) calAgendaCount.textContent = `${events.length} item${events.length === 1 ? '' : 's'}`;
+      if (calAgendaCount) calAgendaCount.textContent = countLabel;
       if (events.length === 0) {
-        calAgendaList.innerHTML = `<div style="text-align:center;padding:18px;color:var(--text-muted);font-size:11.5px;">No activities on this day.</div>`;
+        calAgendaList.innerHTML = `<div style="text-align:center;padding:18px;color:var(--text-muted);font-size:11.5px;">${t('cards', 'noActToday')}</div>`;
       } else {
         calAgendaList.innerHTML = events.map(ev => {
           if (ev.type === 'task' || ev.type === 'assignment') return renderAssignmentCardHtml(ev.obj || ev);
@@ -8771,13 +8843,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isFuture = (group.date.getTime() >= nowTime);
         const d = group.date;
         const day = String(d.getDate()).padStart(2, '0');
-        const mon = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-        const wd = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-
+        let titleHtml = '';
         const todayWord = t('cards', 'today');
-        const titleHtml = isToday 
-          ? `${todayWord} <span class="spine-node-date">${day} ${mon}</span>` 
-          : `${day} ${mon} ${wd}`;
+        if (currentLang === 'zh') {
+          const mon = String(d.getMonth() + 1);
+          titleHtml = isToday 
+            ? `${todayWord} <span class="spine-node-date">${mon}月${day}日</span>` 
+            : `${mon}月${day}日`;
+        } else if (currentLang === 'bm') {
+          const mon = d.toLocaleDateString('ms-MY', { month: 'short' }).toUpperCase();
+          const wd = d.toLocaleDateString('ms-MY', { weekday: 'short' }).toUpperCase();
+          titleHtml = isToday 
+            ? `${todayWord} <span class="spine-node-date">${day} ${mon}</span>` 
+            : `${day} ${mon} ${wd}`;
+        } else {
+          const mon = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+          const wd = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+          titleHtml = isToday 
+            ? `${todayWord} <span class="spine-node-date">${day} ${mon}</span>` 
+            : `${day} ${mon} ${wd}`;
+        }
         const dotClass = isToday ? 'spine-node-dot is-today is-active' : 'spine-node-dot';
 
         // Sort cards within group: assignments (1), attendance (2, ascending by start time), notices (3)
