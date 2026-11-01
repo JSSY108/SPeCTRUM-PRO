@@ -588,8 +588,21 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
 
 
 // Expose state references on window for cross-module access
-window.coursesData = coursesData;
-window.allCoursesDiscovered = allCoursesDiscovered;
+try {
+  Object.defineProperty(window, 'coursesData', {
+    get: () => coursesData,
+    set: (val) => { coursesData = val; },
+    configurable: true
+  });
+  Object.defineProperty(window, 'allCoursesDiscovered', {
+    get: () => allCoursesDiscovered,
+    set: (val) => { allCoursesDiscovered = val; },
+    configurable: true
+  });
+} catch (e) {
+  window.coursesData = coursesData;
+  window.allCoursesDiscovered = allCoursesDiscovered;
+}
 window.announcementsData = announcementsData;
 window.assignmentsData = assignmentsData;
 window.attendancesData = attendancesData;
@@ -1881,7 +1894,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       renderCourseTreeShells();
       const needsMaterialScan = coursesData.length === 0 || coursesData.some(c => !c.loaded && (!c.sections || c.sections.length === 0));
       if (needsMaterialScan) {
-        findSpectrumTab().then(t => { if (t) scanCourses(t); });
+        const scanFn = (typeof scanCourses === 'function') ? scanCourses : (window.scanCourses || null);
+        if (scanFn) scanFn(null, false);
       }
     } else if (mode === 'preferences') {
       if (railBtnPref) railBtnPref.classList.add('active');
@@ -4813,7 +4827,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       renderCourseTreeShells();
       const needsMaterialScan = coursesData.length === 0 || coursesData.some(c => !c.loaded && (!c.sections || c.sections.length === 0));
       if (needsMaterialScan) {
-        findSpectrumTab().then(t => { if (t) scanCourses(t); });
+        const scanFn = (typeof scanCourses === 'function') ? scanCourses : (window.scanCourses || null);
+        if (scanFn) scanFn(null, false);
       }
     } else if (tabId === 'tab-filters') {
       renderOccPreferencesTable();

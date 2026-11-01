@@ -24,6 +24,16 @@
   let currentExtFilter = 'ALL';
   let currentInspectedFile = null;
 
+  const defaultSettings = {
+    extensions: ['.pdf', '.pptx', '.zip', '.docx', '.xlsx', '.ipynb', '.doc', '.ppt', '.txt'],
+    materialsOnly: true,
+    excludeSystem: true
+  };
+  let isScanningMaterials = false;
+  let isSyncingActivities = false;
+  let coursesData = (typeof window !== 'undefined' && Array.isArray(window.coursesData)) ? window.coursesData : [];
+  let allCoursesDiscovered = (typeof window !== 'undefined' && Array.isArray(window.allCoursesDiscovered)) ? window.allCoursesDiscovered : [];
+
   function populateAttendanceCourseFilterOptions() {
     if (typeof window !== 'undefined' && typeof window.populateAttendanceCourseFilterOptions === 'function') {
       window.populateAttendanceCourseFilterOptions();
@@ -91,6 +101,8 @@
     chkMaterialsOnly = document.getElementById('chk-materials-only');
     chkExcludeSystem = document.getElementById('chk-exclude-system');
     chkExts = document.querySelectorAll('.chk-ext');
+
+    bindMaterialsEventListeners();
   }
 
   // ========================================================
@@ -214,13 +226,14 @@
     }, delay);
   }
 
-  async function scanCourses(tabToUse, isRescan = false) {
+  async function scanCourses(tabToUse = null, isRescan = false) {
     if (isScanningMaterials) return;
-    if (isSyncingActivities) {
+    if (typeof window !== 'undefined' && window.isSyncingActivities) {
       logDiag('Materials:Scan', 'Activities sync currently in progress, skipping concurrent materials scan.');
       return;
     }
     isScanningMaterials = true;
+    if (typeof window !== 'undefined') window.isScanningMaterials = true;
 
     if (notOnSpectrumEl) notOnSpectrumEl.style.display = 'none';
     if (btnDownloadZip) btnDownloadZip.disabled = true;
@@ -241,19 +254,43 @@
     try {
       let rawCourses = [];
 
-      // Try direct extension fetch first
-      const fetchRes = await fetchEnrolledCoursesDirectly();
-      if (fetchRes && fetchRes.courses && fetchRes.courses.length > 0) {
-        rawCourses = fetchRes.courses;
-      } else if (tabToUse && tabToUse.id) {
-        rawCourses = await executeInTab(tabToUse.id, extractCoursesFromPage).catch(() => []);
+      // Priority 1: Check existing coursesData from window/cache
+      const existing = (typeof window !== 'undefined' && Array.isArray(window.coursesData) && window.coursesData.length > 0)
+        ? window.coursesData
+        : (Array.isArray(coursesData) && coursesData.length > 0 ? coursesData : []);
+
+      if (existing.length > 0 && !isRescan) {
+        rawCourses = existing;
+      } else {
+        logDiag('Materials:Scan', 'Fetching enrolled courses directly from SPeCTRUM...');
+        const fetchRes = await fetchEnrolledCoursesDirectly();
+        if (fetchRes && fetchRes.courses && fetchRes.courses.length > 0) {
+          rawCourses = fetchRes.courses;
+        } else if (existing.length > 0) {
+          rawCourses = existing;
+        }
       }
 
-      const filtered = filterCourses(rawCourses, chkExcludeSystem ? chkExcludeSystem.checked : true);
+      const isRealCourse = c => c && c.id && /^\d+$/.test(String(c.id));
+      const filtered = filterCourses(rawCourses, chkExcludeSystem ? chkExcludeSystem.checked : true).filter(isRealCourse);
 
       if (!filtered || filtered.length === 0) {
         if (courseLoadingEl) courseLoadingEl.style.display = 'none';
-        if (courseTreeEl) courseTreeEl.innerHTML = '<p class="settings-desc" style="text-align:center;padding:24px;">No enrolled courses found. Ensure you are logged in to SPeCTRUM.</p>';
+        if (courseTreeEl) {
+          courseTreeEl.innerHTML = `
+            <div class="empty-state" style="text-align:center;padding:32px 16px;color:var(--text-muted);">
+              <div style="font-size:24px;margin-bottom:8px;">📚</div>
+              <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">No Enrolled Courses Found</div>
+              <p style="font-size:11px;line-height:1.5;max-width:320px;margin:0 auto 14px;">Please ensure you are signed in to <a href="https://spectrum.um.edu.my" target="_blank" style="color:var(--accent-primary);text-decoration:underline;">spectrum.um.edu.my</a>, then click Rescan.</p>
+              <button type="button" id="btn-empty-rescan" class="btn-wireframe" style="padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">↻ Rescan Courses</button>
+            </div>
+          `;
+          const emptyRescan = document.getElementById('btn-empty-rescan');
+          if (emptyRescan) {
+            emptyRescan.onclick = () => scanCourses(null, true);
+          }
+        }
+        hideCourseFetchProgress(600);
         return;
       }
 
@@ -265,35 +302,45 @@
       );
 
       coursesData = filtered.map(c => {
-        const codeMatch = c.name.match(/^[A-Z]{3}\d{4}(\/[A-Z]{3}\d{4})?/);
-        const code = codeMatch ? codeMatch[0] : `Course ${c.id}`;
-        const cleanTitle = codeMatch ? c.name.replace(codeMatch[0], '').trim() : c.name;
+        const prev = existing.find(ex => String(ex.id) === String(c.id));
+        const codeMatch = (c.name || c.title || '').match(/^[A-Z]{3}\d{4}(\/[A-Z]{3}\d{4})?/);
+        const code = c.code || (codeMatch ? codeMatch[0] : `Course ${c.id}`);
+        const cleanTitle = c.title || (codeMatch ? (c.name || '').replace(codeMatch[0], '').trim() : (c.name || ''));
         return {
           id: String(c.id),
-          name: c.name,
+          name: c.name || c.title || code,
           code: code,
-          title: cleanTitle || c.name,
-          url: c.url,
-          sections: [],
+          title: cleanTitle || c.name || code,
+          url: c.url || `https://spectrum.um.edu.my/course/view.php?id=${c.id}`,
+          sections: (isRescan || !prev?.loaded) ? [] : (prev.sections || []),
           announcements: [],
           checked: true,
-          expanded: false,
-          loaded: false
+          expanded: prev ? Boolean(prev.expanded) : false,
+          loaded: (isRescan || !prev?.loaded) ? false : Boolean(prev.loaded)
         };
       });
+
+      if (typeof window !== 'undefined') window.coursesData = coursesData;
 
       renderCourseTreeShells();
       renderOccPreferencesTable();
 
-      const currentPrefs = await chrome.storage.local.get(defaultSettings);
-      const allowedExts = currentPrefs.extensions || defaultSettings.extensions;
+      let allowedExts = defaultSettings.extensions;
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        try {
+          const currentPrefs = await chrome.storage.local.get(defaultSettings);
+          if (currentPrefs && Array.isArray(currentPrefs.extensions) && currentPrefs.extensions.length > 0) {
+            allowedExts = currentPrefs.extensions;
+          }
+        } catch (e) {}
+      }
       const materialsOnly = chkMaterialsOnly ? chkMaterialsOnly.checked : true;
 
       let coursesDone = 0;
       let totalFilesFound = 0;
 
-      // Scan all course materials in batches with live step-by-step progress feedback!
-      const batchSize = 2;
+      // Scan all course materials in parallel batches of 3
+      const batchSize = 3;
       for (let i = 0; i < coursesData.length; i += batchSize) {
         const batch = coursesData.slice(i, i + batchSize);
         const batchCodes = batch.map(c => c.code || c.name).join(', ');
@@ -301,17 +348,23 @@
         const stepPct = 16 + Math.round((coursesDone / totalCourses) * 80);
         updateCourseFetchProgress(
           stepPct,
-          `Fetching: [${batchCodes}] (Course ${coursesDone + 1} of ${totalCourses})...`,
+          `Fetching materials: [${batchCodes}] (${coursesDone + 1} of ${totalCourses})...`,
           `${coursesDone} of ${totalCourses} courses · ${totalFilesFound} files found`
         );
 
         await Promise.all(batch.map(async (course) => {
+          if (course.loaded && course.sections && course.sections.length > 0 && !isRescan) {
+            coursesDone++;
+            totalFilesFound += course.sections.reduce((acc, s) => acc + (s.files?.length || 0), 0);
+            return;
+          }
+
           try {
             const rawMaterials = await fetchCourseMaterialsDirectly(course.id, allowedExts, materialsOnly);
 
             const sectionMap = new Map();
             (rawMaterials || []).forEach(mat => {
-              const secName = cleanSectionTitle(mat.section);
+              const secName = cleanSectionTitle(mat.section) || 'General';
               if (!sectionMap.has(secName)) sectionMap.set(secName, []);
               const currentSecFiles = sectionMap.get(secName);
               const fileIdx = currentSecFiles.length;
@@ -342,7 +395,7 @@
           } catch (err) {
             console.log(`Scanning materials note for course ${course.id}:`, err?.message || err);
             course.loaded = true;
-            course.sections = [];
+            if (!course.sections) course.sections = [];
             populateCourseChildren(course);
           }
 
@@ -366,10 +419,12 @@
       );
 
       const finishTime = Date.now();
-      await chrome.storage.local.set({
-        cachedCoursesData: coursesData,
-        cachedCoursesTime: finishTime
-      });
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        await chrome.storage.local.set({
+          cachedCoursesData: coursesData,
+          cachedCoursesTime: finishTime
+        });
+      }
 
       if (cacheTimeBadge) {
         cacheTimeBadge.textContent = '⚡ Cached (Just now)';
@@ -384,6 +439,7 @@
       hideCourseFetchProgress(1500);
     } finally {
       isScanningMaterials = false;
+      if (typeof window !== 'undefined') window.isScanningMaterials = false;
       if (btnRescan) {
         btnRescan.classList.remove('spinning');
         btnRescan.disabled = false;
@@ -680,20 +736,26 @@
     courseTreeEl.innerHTML = '';
 
     const isRealCourse = c => c && c.id && /^\d+$/.test(String(c.id));
-    if (Array.isArray(coursesData)) {
-      coursesData = coursesData.filter(isRealCourse);
-    } else {
-      coursesData = [];
-    }
+    const list = (typeof window !== 'undefined' && Array.isArray(window.coursesData) && window.coursesData.length > 0)
+      ? window.coursesData
+      : (Array.isArray(coursesData) ? coursesData : []);
+
+    coursesData = list.filter(isRealCourse);
+    if (typeof window !== 'undefined') window.coursesData = coursesData;
 
     if (coursesData.length === 0) {
       courseTreeEl.innerHTML = `
         <div class="empty-state" style="text-align:center;padding:32px 16px;color:var(--text-muted);">
           <div style="font-size:24px;margin-bottom:8px;">📚</div>
           <div style="font-size:12.5px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">No Enrolled Courses Synced</div>
-          <div style="font-size:11px;line-height:1.5;max-width:260px;margin:0 auto 12px;">Click the <strong>Refresh</strong> button above to discover and sync your enrolled courses directly from SPeCTRUM.</div>
+          <div style="font-size:11px;line-height:1.5;max-width:260px;margin:0 auto 12px;">Click <strong>Rescan</strong> above to discover and sync course materials directly from SPeCTRUM.</div>
+          <button type="button" id="btn-empty-rescan-shell" class="btn-wireframe" style="padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">↻ Rescan Materials</button>
         </div>
       `;
+      const btnEmptyRescan = document.getElementById('btn-empty-rescan-shell');
+      if (btnEmptyRescan) {
+        btnEmptyRescan.onclick = () => scanCourses(null, true);
+      }
       return;
     }
 
@@ -746,7 +808,8 @@
       `;
 
       const header = item.querySelector('.course-tree-header');
-      header.addEventListener('click', (e) => {
+      if (header) {
+        header.addEventListener('click', (e) => {
         if (e.target.closest('.btn-download-pack') || e.target.tagName === 'INPUT') return;
         const willExpand = !item.classList.contains('expanded');
         item.classList.toggle('expanded', willExpand);
@@ -758,7 +821,8 @@
           }
         }
         updateExpandAllButtonState();
-      });
+        });
+      }
 
       const packBtn = item.querySelector('.btn-download-pack');
       if (packBtn) {
@@ -2771,48 +2835,229 @@
     });
   }
 
-  // Extension filter pills
-  document.querySelectorAll('.mat-ext-pill').forEach(pill => {
-    pill.addEventListener('click', () => {
-      document.querySelectorAll('.mat-ext-pill').forEach(p => p.classList.remove('active'));
-      pill.classList.add('active');
-      currentExtFilter = pill.dataset.ext || 'ALL';
-      applyMaterialsFilters();
-    });
-  });
-
-  // Sort dropdown
-  const matSortSelect = document.getElementById('mat-sort-select');
-  if (matSortSelect) {
-    matSortSelect.addEventListener('change', () => {
-      const mode = matSortSelect.value;
-      coursesData.forEach(c => {
-        (c.sections || []).forEach(s => {
-          if (mode === 'name') {
-            s.files.sort((a, b) => a.title.localeCompare(b.title));
-          } else {
-            s.files.sort((a, b) => (a.id || '').localeCompare(b.id || '', undefined, { numeric: true }));
-          }
-        });
-      });
-      renderCourseTreeShells();
-    });
-  }
-
-  // Search input & clear button
-  if (filterSearchInput) {
-    filterSearchInput.addEventListener('input', () => {
-      const query = filterSearchInput.value.trim();
-      if (btnClearSearch) btnClearSearch.style.display = query ? 'block' : 'none';
-      applyMaterialsFilters();
-    });
-
-    if (btnClearSearch) {
-      btnClearSearch.addEventListener('click', () => {
-        filterSearchInput.value = '';
-        btnClearSearch.style.display = 'none';
+  function bindMaterialsEventListeners() {
+    // Extension filter pills
+    document.querySelectorAll('.mat-ext-pill').forEach(pill => {
+      pill.onclick = () => {
+        document.querySelectorAll('.mat-ext-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        currentExtFilter = pill.dataset.ext || 'ALL';
         applyMaterialsFilters();
-      });
+      };
+    });
+
+    // Sort dropdown
+    const matSortSelect = document.getElementById('mat-sort-select');
+    if (matSortSelect) {
+      matSortSelect.onchange = () => {
+        const mode = matSortSelect.value;
+        const list = (typeof window !== 'undefined' && Array.isArray(window.coursesData)) ? window.coursesData : coursesData;
+        list.forEach(c => {
+          (c.sections || []).forEach(s => {
+            if (mode === 'name') {
+              s.files.sort((a, b) => a.title.localeCompare(b.title));
+            } else {
+              s.files.sort((a, b) => (a.id || '').localeCompare(b.id || '', undefined, { numeric: true }));
+            }
+          });
+        });
+        renderCourseTreeShells();
+      };
+    }
+
+    // Search input & clear button
+    const searchInput = document.getElementById('filter-search-input');
+    const clearBtn = document.getElementById('btn-clear-search');
+    if (searchInput) {
+      searchInput.oninput = () => {
+        const query = searchInput.value.trim();
+        if (clearBtn) clearBtn.style.display = query ? 'block' : 'none';
+        applyMaterialsFilters();
+      };
+    }
+
+    if (clearBtn && searchInput) {
+      clearBtn.onclick = () => {
+        searchInput.value = '';
+        clearBtn.style.display = 'none';
+        applyMaterialsFilters();
+      };
+    }
+
+    // Clear Selection
+    const btnClearSelection = document.getElementById('btn-clear-selection');
+    if (btnClearSelection) {
+      btnClearSelection.onclick = () => {
+        const list = (typeof window !== 'undefined' && Array.isArray(window.coursesData)) ? window.coursesData : coursesData;
+        list.forEach(c => {
+          c.checked = false;
+          (c.sections || []).forEach(s => {
+            s.checked = false;
+            (s.files || []).forEach(f => { f.checked = false; });
+          });
+        });
+        document.querySelectorAll('.chk-course, .chk-section, .chk-file').forEach(chk => { chk.checked = false; });
+        document.querySelectorAll('.file-tree-item.selected, .course-tree-item.selected').forEach(el => el.classList.remove('selected'));
+        updateAllCounts();
+        debounceSaveCache();
+      };
+    }
+
+    // Mark All Synced
+    const btnMarkAllSynced = document.getElementById('btn-mark-all-synced');
+    if (btnMarkAllSynced) {
+      btnMarkAllSynced.onclick = () => {
+        const list = (typeof window !== 'undefined' && Array.isArray(window.coursesData)) ? window.coursesData : coursesData;
+        list.forEach(c => {
+          (c.sections || []).forEach(s => {
+            (s.files || []).forEach(f => {
+              f.isSynced = true;
+              f.isNew = false;
+            });
+          });
+        });
+        document.querySelectorAll('.btn-sync-now').forEach(btn => {
+          const span = document.createElement('span');
+          span.className = 'status-synced-pill';
+          span.innerHTML = `<svg class="icon-svg" viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#16A34A;fill:none;stroke-width:2.5;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Synced`;
+          btn.parentNode.replaceChild(span, btn);
+        });
+        document.querySelectorAll('.file-new-badge').forEach(badge => badge.remove());
+        btnMarkAllSynced.textContent = '✔ All Synced';
+        setTimeout(() => { btnMarkAllSynced.textContent = 'Mark All as Synced'; }, 2000);
+        debounceSaveCache();
+      };
+    }
+
+    // Expand All Button
+    if (btnToggleExpandAll) {
+      btnToggleExpandAll.onclick = () => {
+        toggleExpandAllMaterials();
+      };
+    }
+
+    // Rescan Button
+    if (btnRescan) {
+      btnRescan.onclick = async () => {
+        logDiag('Materials', 'Rescan button clicked! Starting direct materials scan...');
+        await scanCourses(null, true);
+      };
+    }
+
+    // Download Zip Button
+    if (btnDownloadZip) {
+      btnDownloadZip.onclick = async () => {
+        const list = (typeof window !== 'undefined' && Array.isArray(window.coursesData)) ? window.coursesData : coursesData;
+        const selectedFiles = [];
+        list.forEach(c => {
+          const courseFolder = `${sanitizeFilename(c.code)} ${sanitizeFilename(c.title)}`.trim();
+          (c.sections || []).forEach(s => {
+            const sectionFolder = sanitizeFilename(s.name);
+            (s.files || []).forEach(f => {
+              if (f.checked !== false) {
+                selectedFiles.push({
+                  courseFolder,
+                  sectionFolder,
+                  title: f.title,
+                  url: f.url
+                });
+              }
+            });
+          });
+        });
+
+        if (selectedFiles.length === 0) {
+          alert('No files selected. Please check at least one file to download.');
+          return;
+        }
+
+        if (typeof JSZip === 'undefined') {
+          alert('JSZip library is missing. Please reload the extension.');
+          return;
+        }
+
+        if (progressContainer) progressContainer.style.display = 'block';
+        if (progressBarFill) progressBarFill.style.width = '0%';
+        if (progressPercent) progressPercent.textContent = '0%';
+        if (progressStatusLabel) progressStatusLabel.textContent = 'Starting file download...';
+        btnDownloadZip.disabled = true;
+
+        const zip = new JSZip();
+        let totalSaved = 0;
+        let totalFailed = 0;
+
+        let allowedExts = defaultSettings.extensions;
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+          try {
+            const currentPrefs = await chrome.storage.local.get(defaultSettings);
+            if (currentPrefs && Array.isArray(currentPrefs.extensions) && currentPrefs.extensions.length > 0) {
+              allowedExts = currentPrefs.extensions;
+            }
+          } catch (e) {}
+        }
+
+        for (let i = 0; i < selectedFiles.length; i++) {
+          const item = selectedFiles[i];
+          const percent = Math.round(((i + 1) / selectedFiles.length) * 85);
+
+          if (progressBarFill) progressBarFill.style.width = `${percent}%`;
+          if (progressPercent) progressPercent.textContent = `${percent}%`;
+          if (progressCurrentFile) progressCurrentFile.textContent = item.title;
+          if (progressFileCount) progressFileCount.textContent = `${i + 1} / ${selectedFiles.length}`;
+
+          try {
+            const fileData = await fetchFileWithRedirect(item.url, item.title, allowedExts);
+            if (fileData && fileData.blob) {
+              const folderPath = `${item.courseFolder}/${item.sectionFolder}`;
+              zip.folder(folderPath).file(fileData.filename, fileData.blob);
+              totalSaved++;
+            } else {
+              totalFailed++;
+            }
+          } catch (e) {
+            console.log(`Download item note for ${item.title}:`, e?.message || e);
+            totalFailed++;
+          }
+        }
+
+        if (progressStatusLabel) progressStatusLabel.textContent = 'Compressing organized .ZIP archive...';
+        if (progressBarFill) progressBarFill.style.width = '90%';
+        if (progressPercent) progressPercent.textContent = '90%';
+
+        const zipBlob = await zip.generateAsync({
+          type: 'blob',
+          compression: 'DEFLATE',
+          compressionOptions: { level: 6 }
+        }, (meta) => {
+          const p = Math.round(90 + (meta.percent * 0.10));
+          if (progressBarFill) progressBarFill.style.width = `${p}%`;
+          if (progressPercent) progressPercent.textContent = `${p}%`;
+        });
+
+        const timestamp = new Date().toISOString().slice(0, 10);
+        const zipFilename = `SPeCTRUM_Materials_${timestamp}.zip`;
+        const blobUrl = URL.createObjectURL(zipBlob);
+
+        if (chrome.downloads && chrome.downloads.download) {
+          chrome.downloads.download({
+            url: blobUrl,
+            filename: zipFilename,
+            saveAs: true
+          });
+        } else {
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = zipFilename;
+          a.click();
+        }
+
+        if (progressBarFill) progressBarFill.style.width = '100%';
+        if (progressPercent) progressPercent.textContent = '100%';
+        if (progressStatusLabel) progressStatusLabel.textContent = `✔ Complete! (${totalSaved} files saved)`;
+        if (progressCurrentFile) progressCurrentFile.textContent = 'Saved to your Downloads folder';
+        if (btnDownloadText) btnDownloadText.textContent = '✔ Download Complete!';
+        setTimeout(updateAllCounts, 3500);
+      };
     }
   }
 
@@ -2827,172 +3072,6 @@
       }
     }
   });
-
-  // Clear Selection & Mark All Synced
-  const btnClearSelection = document.getElementById('btn-clear-selection');
-  if (btnClearSelection) {
-    btnClearSelection.addEventListener('click', () => {
-      coursesData.forEach(c => {
-        c.checked = false;
-        (c.sections || []).forEach(s => {
-          s.checked = false;
-          (s.files || []).forEach(f => { f.checked = false; });
-        });
-      });
-      document.querySelectorAll('.chk-course, .chk-section, .chk-file').forEach(chk => { chk.checked = false; });
-      document.querySelectorAll('.file-tree-item.selected, .course-tree-item.selected').forEach(el => el.classList.remove('selected'));
-      updateAllCounts();
-      debounceSaveCache();
-    });
-  }
-
-  const btnMarkAllSynced = document.getElementById('btn-mark-all-synced');
-  if (btnMarkAllSynced) {
-    btnMarkAllSynced.addEventListener('click', () => {
-      coursesData.forEach(c => {
-        (c.sections || []).forEach(s => {
-          (s.files || []).forEach(f => {
-            f.isSynced = true;
-            f.isNew = false;
-          });
-        });
-      });
-      document.querySelectorAll('.btn-sync-now').forEach(btn => {
-        const span = document.createElement('span');
-        span.className = 'status-synced-pill';
-        span.innerHTML = `<svg class="icon-svg" viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#16A34A;fill:none;stroke-width:2.5;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Synced`;
-        btn.parentNode.replaceChild(span, btn);
-      });
-      document.querySelectorAll('.file-new-badge').forEach(badge => badge.remove());
-      btnMarkAllSynced.textContent = '✔ All Synced';
-      setTimeout(() => { btnMarkAllSynced.textContent = 'Mark All as Synced'; }, 2000);
-      debounceSaveCache();
-    });
-  }
-
-  if (btnToggleExpandAll) {
-    btnToggleExpandAll.addEventListener('click', () => {
-      toggleExpandAllMaterials();
-    });
-  }
-
-  if (btnRescan) {
-    btnRescan.addEventListener('click', async () => {
-      const tabToUse = await findSpectrumTab();
-      await scanCourses(tabToUse, true);
-    });
-  }
-
-
-  // ========================================================
-  // 12. ZIP Download Execution
-  // ========================================================
-  if (btnDownloadZip) {
-    btnDownloadZip.addEventListener('click', async () => {
-      const selectedFiles = [];
-      coursesData.forEach(c => {
-        const courseFolder = `${sanitizeFilename(c.code)} ${sanitizeFilename(c.title)}`.trim();
-        c.sections.forEach(s => {
-          const sectionFolder = sanitizeFilename(s.name);
-          s.files.forEach(f => {
-            if (f.checked !== false) {
-              selectedFiles.push({
-                courseFolder,
-                sectionFolder,
-                title: f.title,
-                url: f.url
-              });
-            }
-          });
-        });
-      });
-
-      if (selectedFiles.length === 0) {
-        alert('No files selected. Please check at least one file to download.');
-        return;
-      }
-
-      if (typeof JSZip === 'undefined') {
-        alert('JSZip library is missing. Please reload the extension.');
-        return;
-      }
-
-      progressContainer.style.display = 'block';
-      progressBarFill.style.width = '0%';
-      progressPercent.textContent = '0%';
-      progressStatusLabel.textContent = 'Starting file download...';
-      btnDownloadZip.disabled = true;
-
-      const zip = new JSZip();
-      let totalSaved = 0;
-      let totalFailed = 0;
-
-      const currentPrefs = await chrome.storage.local.get(defaultSettings);
-      const allowedExts = currentPrefs.extensions || defaultSettings.extensions;
-
-      for (let i = 0; i < selectedFiles.length; i++) {
-        const item = selectedFiles[i];
-        const percent = Math.round(((i + 1) / selectedFiles.length) * 85);
-
-        progressBarFill.style.width = `${percent}%`;
-        progressPercent.textContent = `${percent}%`;
-        progressCurrentFile.textContent = item.title;
-        progressFileCount.textContent = `${i + 1} / ${selectedFiles.length}`;
-
-        try {
-          const fileData = await fetchFileWithRedirect(item.url, item.title, allowedExts);
-          if (fileData && fileData.blob) {
-            const folderPath = `${item.courseFolder}/${item.sectionFolder}`;
-            zip.folder(folderPath).file(fileData.filename, fileData.blob);
-            totalSaved++;
-          } else {
-            totalFailed++;
-          }
-        } catch (e) {
-          console.log(`Download item note for ${item.title}:`, e?.message || e);
-          totalFailed++;
-        }
-      }
-
-      progressStatusLabel.textContent = 'Compressing organized .ZIP archive...';
-      progressBarFill.style.width = '90%';
-      progressPercent.textContent = '90%';
-
-      const zipBlob = await zip.generateAsync({
-        type: 'blob',
-        compression: 'DEFLATE',
-        compressionOptions: { level: 6 }
-      }, (meta) => {
-        const p = Math.round(90 + (meta.percent * 0.10));
-        progressBarFill.style.width = `${p}%`;
-        progressPercent.textContent = `${p}%`;
-      });
-
-      const timestamp = new Date().toISOString().slice(0, 10);
-      const zipFilename = `SPeCTRUM_Materials_${timestamp}.zip`;
-      const blobUrl = URL.createObjectURL(zipBlob);
-
-      if (chrome.downloads && chrome.downloads.download) {
-        chrome.downloads.download({
-          url: blobUrl,
-          filename: zipFilename,
-          saveAs: true
-        });
-      } else {
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = zipFilename;
-        a.click();
-      }
-
-      progressBarFill.style.width = '100%';
-      progressPercent.textContent = '100%';
-      progressStatusLabel.textContent = `✔ Complete! (${totalSaved} files saved)`;
-      progressCurrentFile.textContent = 'Saved to your Downloads folder';
-      btnDownloadText.textContent = '✔ Download Complete!';
-      setTimeout(updateAllCounts, 3500);
-    });
-  }
 
   function detectFileBadge(titleOrFile, url, extraHint) {
     let title = '';

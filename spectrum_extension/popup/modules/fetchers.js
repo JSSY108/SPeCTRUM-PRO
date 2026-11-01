@@ -113,9 +113,9 @@ async function fetchEnrolledCoursesDirectly() {
         const card = a.closest('.dashboard-card, .coursebox, .card');
         if (card) {
           const titleEl = card.querySelector('.coursename, .course-name, .card-title, h3, h4, h5');
-          if (titleEl) name = titleEl.innerText.trim();
+          if (titleEl) name = (titleEl.innerText || titleEl.textContent || '').trim();
         }
-        if (!name) name = a.innerText.trim();
+        if (!name) name = (a.innerText || a.textContent || '').trim();
         name = name.replace(/^Course name\s*/i, '').trim();
         if (!name || /view course/i.test(name)) name = `Course ${id}`;
 
@@ -135,6 +135,8 @@ async function fetchEnrolledCoursesDirectly() {
 // 2. Direct Course Materials Fetcher
 async function fetchCourseMaterialsDirectly(courseId, allowedExts, materialsOnly) {
   try {
+    const defaultExts = ['.pdf', '.pptx', '.zip', '.docx', '.xlsx', '.ipynb', '.doc', '.ppt', '.txt'];
+    const exts = (Array.isArray(allowedExts) && allowedExts.length > 0) ? allowedExts : defaultExts;
     const origin = SPECTRUM_ORIGIN;
     const url = `${origin}/course/view.php?id=${courseId}`;
     const res = await fetchWithTimeout(url, { credentials: 'include' }, 12000);
@@ -168,7 +170,7 @@ async function fetchCourseMaterialsDirectly(courseId, allowedExts, materialsOnly
         } else if (!materialsOnly && lower.includes('/mod/assign/view.php')) {
           type = 'assign';
         } else {
-          const hasExt = allowedExts.some(ext => lower.endsWith(ext) || lower.includes(ext + '?'));
+          const hasExt = exts.some(ext => lower.endsWith(ext) || lower.includes(ext + '?'));
           if (hasExt) type = 'direct_file';
         }
 
@@ -179,9 +181,9 @@ async function fetchCourseMaterialsDirectly(courseId, allowedExts, materialsOnly
         if (instanceEl) {
           const clone = instanceEl.cloneNode(true);
           clone.querySelectorAll('.accesshide').forEach(el => el.remove());
-          title = clone.innerText.trim();
+          title = (clone.innerText || clone.textContent || '').trim();
         }
-        if (!title) title = a.innerText.trim();
+        if (!title) title = (a.innerText || a.textContent || '').trim();
         if (!title) title = a.getAttribute('title') || 'Resource';
 
         title = title.replace(/[\r\n\t]+/g, ' ').trim();
