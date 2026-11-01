@@ -1095,14 +1095,14 @@
     ctx.fillText(mainTitleH, titleLeftX, 114);
 
     // ── 3. Right-Aligned Tabular Metadata Pill (TERM: Year / SEM) ──
-    let academicYear = '2024/2025';
+    let academicYear = '2026/2027';
     let semType = 'SEM I';
-    if (typeof window.getUmAcademicInfo === 'function') {
-      try {
-        const um = window.getUmAcademicInfo(new Date());
-        if (um && um.academicYear) academicYear = um.academicYear;
-        if (um && um.semType) semType = um.semType;
-      } catch (e) {}
+    const termInfoH = (typeof window.detectActualAcademicTerm === 'function')
+      ? window.detectActualAcademicTerm(new Date())
+      : ((typeof window.getUmAcademicInfo === 'function') ? window.getUmAcademicInfo(new Date()) : null);
+    if (termInfoH) {
+      if (termInfoH.academicYear) academicYear = termInfoH.academicYear;
+      if (termInfoH.semType) semType = termInfoH.semType;
     }
 
     const badgeW = 270;
@@ -1456,14 +1456,14 @@
     ctx.fillText(mainTitleV, titleLeftX, 114);
 
     // ── 3. Right-Aligned Tabular Metadata Pill (TERM: Year / SEM) ──
-    let academicYear = '2024/2025';
+    let academicYear = '2026/2027';
     let semType = 'SEM I';
-    if (typeof window.getUmAcademicInfo === 'function') {
-      try {
-        const um = window.getUmAcademicInfo(new Date());
-        if (um && um.academicYear) academicYear = um.academicYear;
-        if (um && um.semType) semType = um.semType;
-      } catch (e) {}
+    const termInfoV = (typeof window.detectActualAcademicTerm === 'function')
+      ? window.detectActualAcademicTerm(new Date())
+      : ((typeof window.getUmAcademicInfo === 'function') ? window.getUmAcademicInfo(new Date()) : null);
+    if (termInfoV) {
+      if (termInfoV.academicYear) academicYear = termInfoV.academicYear;
+      if (termInfoV.semType) semType = termInfoV.semType;
     }
 
     const badgeW = 270;

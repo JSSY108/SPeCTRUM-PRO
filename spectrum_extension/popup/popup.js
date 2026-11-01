@@ -641,6 +641,18 @@ function updateTimetableTranslations() {
     if (span) span.textContent = t('timetable', 'exportPdf');
   }
 
+  const acadYearEl = document.getElementById('tt-header-acad-year');
+  const semTypeEl = document.getElementById('tt-header-sem-type');
+  const termFn = (typeof detectActualAcademicTerm === 'function')
+    ? detectActualAcademicTerm
+    : ((typeof window !== 'undefined' && typeof window.detectActualAcademicTerm === 'function') ? window.detectActualAcademicTerm : null);
+  const umFn = (typeof getUmAcademicInfo === 'function')
+    ? getUmAcademicInfo
+    : ((typeof window !== 'undefined' && typeof window.getUmAcademicInfo === 'function') ? window.getUmAcademicInfo : null);
+  const termInfo = termFn ? termFn(new Date()) : (umFn ? umFn(new Date()) : { academicYear: '2026/2027', semType: 'SEM I' });
+  if (acadYearEl && termInfo.academicYear) acadYearEl.textContent = termInfo.academicYear;
+  if (semTypeEl && termInfo.semType) semTypeEl.textContent = termInfo.semType;
+
   const countEl = document.getElementById('timetable-session-count');
   if (countEl && typeof extractWeeklyTimetableSessions === 'function') {
     const sessCount = extractWeeklyTimetableSessions().length;

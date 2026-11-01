@@ -418,6 +418,53 @@
     };
   }
 
+  function detectActualAcademicTerm(fallbackDate = new Date()) {
+    // 1. Try detecting from courses data if available
+    const courses = (typeof window !== 'undefined' && Array.isArray(window.coursesData)) ? window.coursesData : [];
+    for (const c of courses) {
+      const text = `${c.name || ''} ${c.title || ''} ${c.category || ''} ${c.code || ''}`;
+      const yearMatch = text.match(/\b(20\d{2})\/(20\d{2})\b/);
+      const semMatch = text.match(/\bSEM(?:ESTER)?\s*([12I]|II|SPECIAL)\b/i);
+      if (yearMatch) {
+        const academicYear = `${yearMatch[1]}/${yearMatch[2]}`;
+        let semType = 'SEM I';
+        if (semMatch) {
+          const s = semMatch[1].toUpperCase();
+          if (s === '2' || s === 'II') semType = 'SEM II';
+          else if (s.includes('SPEC')) semType = 'SPECIAL SEM';
+          else semType = 'SEM I';
+        }
+        return { academicYear, semType, semName: `${academicYear} ${semType}` };
+      }
+    }
+
+    // 2. Try detecting from attendances data if available
+    const atts = (typeof window !== 'undefined' && Array.isArray(window.attendancesData)) ? window.attendancesData : [];
+    for (const a of atts) {
+      const text = `${a.courseName || ''} ${a.attTitle || ''} ${a.courseCode || ''}`;
+      const yearMatch = text.match(/\b(20\d{2})\/(20\d{2})\b/);
+      const semMatch = text.match(/\bSEM(?:ESTER)?\s*([12I]|II|SPECIAL)\b/i);
+      if (yearMatch) {
+        const academicYear = `${yearMatch[1]}/${yearMatch[2]}`;
+        let semType = 'SEM I';
+        if (semMatch) {
+          const s = semMatch[1].toUpperCase();
+          if (s === '2' || s === 'II') semType = 'SEM II';
+          else if (s.includes('SPEC')) semType = 'SPECIAL SEM';
+          else semType = 'SEM I';
+        }
+        return { academicYear, semType, semName: `${academicYear} ${semType}` };
+      }
+    }
+
+    // 3. Fallback to UM official calendar algorithm
+    const um = getUmAcademicInfo(fallbackDate);
+    if (um) return um;
+
+    const yr = (fallbackDate instanceof Date ? fallbackDate : new Date()).getFullYear();
+    return { academicYear: `${yr}/${yr + 1}`, semType: 'SEM I', semName: `${yr}/${yr + 1} SEM I` };
+  }
+
   function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -504,6 +551,7 @@
   window.parseTimeRangeRobust = parseTimeRangeRobust;
   window.getAcademicMonday = getAcademicMonday;
   window.getUmAcademicInfo = getUmAcademicInfo;
+  window.detectActualAcademicTerm = detectActualAcademicTerm;
   window.escapeHtml = escapeHtml;
   window.downloadBlobFile = downloadBlobFile;
   window.generateUniqueFileId = generateUniqueFileId;
