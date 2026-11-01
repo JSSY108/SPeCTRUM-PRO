@@ -9173,7 +9173,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
      and full 2-line course title without truncation.
      Recommended: 180px - 260px (Default: 215px, previous: 115px)
      ======================================================================== */
-  --tt-horiz-col-width: 270px;
+  --tt-horiz-col-width: 280px;
 
   /* ========================================================================
      3. HORIZONTAL MODE: DAY ROW HEIGHT (VERTICAL SPACING):
@@ -9181,7 +9181,13 @@ body:not(.is-full-tab) .sync-cinematic-current {
      115px ensures cards with 2-line title, OCC, and venue fit with comfortable breathing room.
      Recommended: 100px - 140px (Default: 115px, previous: 88px)
      ======================================================================== */
-  --tt-horiz-row-height: 135px;
+  --tt-horiz-row-height: 140px;
+}
+
+/* Explicit vertical card isolation */
+.timetable-vertical-grid .tt-session-card {
+  position: absolute !important;
+  box-sizing: border-box;
 }
 
 .tt-session-card {

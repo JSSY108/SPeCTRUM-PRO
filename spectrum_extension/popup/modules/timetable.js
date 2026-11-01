@@ -352,8 +352,8 @@
     const pad = n => String(n).padStart(2, '0');
 
     // Dynamically read horizontal column width & row height from CSS tuning dashboard
-    let horizColWidth = 270;
-    let horizRowHeight = 135;
+    let horizColWidth = 280;
+    let horizRowHeight = 140;
     try {
       if (typeof document !== 'undefined') {
         const rootStyle = getComputedStyle(document.documentElement);
@@ -369,11 +369,12 @@
       }
     } catch (e) {}
 
-    // Saturday takes half a row height if empty
-    const hasSatSession = sessions.some(s => s.dayIndex === 6);
+    // Any day without a single course scheduled (e.g. Friday, Saturday) takes half a row height (weight 0.5)!
+    const hasDaySession = dIdx => sessions.some(s => s.dayIndex === dIdx);
+    const isDayHalf = dIdx => !hasDaySession(dIdx);
     const rowTracks = ['52px'];
     activeDayIndices.forEach(dIdx => {
-      if (dIdx === 6 && !hasSatSession) {
+      if (isDayHalf(dIdx)) {
         rowTracks.push(`minmax(${Math.round(horizRowHeight * 0.45)}px, 0.5fr)`);
       } else {
         rowTracks.push(`minmax(${horizRowHeight}px, 1fr)`);

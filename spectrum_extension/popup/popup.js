@@ -2332,20 +2332,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     return renderUnifiedAttendanceCardHtml(vm);
   }
 
-  // Extract start time in minutes from midnight (0..1439) for precise chronological ascending sorting
+    // Extract start time in minutes from midnight (0..1439) for precise chronological ascending sorting
   function getEventStartTimeMinutes(ev) {
     if (!ev) return 720;
 
-    // For attendance items, compute the exact card viewmodel to match displayed time with 100% precision
-    if (ev.type === 'att' || ev.type === 'attendance') {
+    const dataObj = ev.data || ev;
+    const attObj = dataObj.att || dataObj.obj || (dataObj.type === 'attendance' || dataObj.type === 'att' ? dataObj : null);
+    const sessObj = dataObj.session || dataObj.sessObj || (ev.sessObj || ev.session) || null;
+
+    if (attObj && typeof computeAttendanceCardViewModel === 'function') {
       try {
-        const att = ev.obj || ev.att || ev;
-        const sess = ev.sessObj || ev.session || ev.data?.session || null;
-        const vm = computeAttendanceCardViewModel(att, {
-          session: sess,
-          timeStr: ev.timeStr || ev.data?.timeStr || sess?.time || sess?.dateStr,
-          dateKey: ev.dateKey || (ev.date ? formatDateKey(ev.date) : undefined),
-          date: ev.date || sess?.date
+        const vm = computeAttendanceCardViewModel(attObj, {
+          session: sessObj,
+          timeStr: dataObj.timeStr || ev.timeStr || sessObj?.time || sessObj?.dateStr,
+          dateKey: dataObj.dateKey || ev.dateKey || (dataObj.date ? formatDateKey(dataObj.date) : undefined),
+          date: dataObj.date || ev.date || sessObj?.date
         });
         if (vm && typeof vm.startHour === 'number' && !isNaN(vm.startHour)) {
           return vm.startHour * 60 + (vm.startMin || 0);
@@ -2353,16 +2354,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       } catch (e) {}
     }
 
-    const sess = ev.sessObj || ev.session || ev.data?.session || (ev.data?.att ? ev.data.session : null);
     const timeCandidates = [
+      dataObj.timeStr,
       ev.timeStr,
-      ev.data?.timeStr,
-      sess?.time,
-      sess?.dateStr,
-      sess?.desc,
+      sessObj?.time,
+      sessObj?.dateStr,
+      sessObj?.desc,
+      dataObj.time,
       ev.time,
-      ev.title,
-      ev.data?.title
+      dataObj.title,
+      ev.title
     ];
 
     for (const cand of timeCandidates) {
@@ -2374,7 +2375,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    const d = ev.date || ev.data?.date || sess?.date;
+    const d = dataObj.date || ev.date || sessObj?.date;
     if (d instanceof Date && !isNaN(d.getTime())) {
       const h = d.getHours();
       const m = d.getMinutes();
