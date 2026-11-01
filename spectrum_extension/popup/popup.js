@@ -232,7 +232,7 @@ const I18N = {
       by: 'Ikut:',
       sort: 'Susun:',
       newest: 'Terkini',
-      oldest: 'Terlama',
+      oldest: 'Terawal',
       prevDay: 'Sebelum',
       today: 'Hari Ini',
       nextDay: 'Seterusnya',
@@ -384,8 +384,8 @@ const I18N = {
       byCourse: '课程',
       by: '分组:',
       sort: '排序:',
-      newest: '最新',
-      oldest: '最早',
+      newest: '最近',
+      oldest: '最久远',
       prevDay: '前一天',
       today: '今天',
       nextDay: '后一天',
@@ -732,6 +732,11 @@ function updateHeaderTranslations() {
   const tabSupp = document.querySelector('.primary-tab-btn[data-tab="tab-support"]');
   if (tabSupp) tabSupp.textContent = t('tooltips', 'tipjar');
 
+  const labelGroup = document.getElementById('label-fulllist-grouping') || document.querySelector('#fulllist-grouping-toggle .label');
+  if (labelGroup) labelGroup.textContent = t('headers', 'by');
+  const labelSort = document.getElementById('label-fulllist-sorting') || document.querySelector('#fulllist-sorting-toggle .label');
+  if (labelSort) labelSort.textContent = t('headers', 'sort');
+
   const btnGroupDate = document.getElementById('btn-fulllist-group-date');
   if (btnGroupDate) btnGroupDate.textContent = t('headers', 'byDate');
   const btnGroupCourse = document.getElementById('btn-fulllist-group-course');
@@ -740,6 +745,26 @@ function updateHeaderTranslations() {
   if (btnSortNewest) btnSortNewest.textContent = t('headers', 'newest');
   const btnSortOldest = document.getElementById('btn-fulllist-sort-oldest');
   if (btnSortOldest) btnSortOldest.textContent = t('headers', 'oldest');
+
+  const popupSortNewest = document.getElementById('btn-sort-newest');
+  if (popupSortNewest) popupSortNewest.textContent = t('headers', 'newest');
+  const popupSortOldest = document.getElementById('btn-sort-oldest');
+  if (popupSortOldest) popupSortOldest.textContent = t('headers', 'oldest');
+
+  const courseCountLabel = document.getElementById('fulllist-course-count-label') || document.querySelector('#fulllist-side-course-pane .sticky-date-month');
+  if (courseCountLabel) {
+    courseCountLabel.textContent = currentLang === 'zh' ? '个课程' : (currentLang === 'bm' ? 'KURSUS' : 'COURSES');
+  }
+  const courseItemsEl = document.getElementById('fulllist-course-items-count');
+  if (courseItemsEl && courseItemsEl.textContent) {
+    const numMatch = courseItemsEl.textContent.match(/\d+/);
+    if (numMatch) {
+      const num = numMatch[0];
+      courseItemsEl.textContent = currentLang === 'zh'
+        ? `${num} 个活动`
+        : (currentLang === 'bm' ? `${num} Aktiviti` : `${num} Activities`);
+    }
+  }
 
   const btnPrev = document.getElementById('fulllist-side-prev');
   if (btnPrev) {
@@ -8576,11 +8601,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Update Side Course Pane (Course count & navigator jump items)
       const courseCountEl = document.getElementById('fulllist-course-count');
+      const courseCountLabel = document.getElementById('fulllist-course-count-label') || document.querySelector('#fulllist-side-course-pane .sticky-date-month');
       const courseItemsEl = document.getElementById('fulllist-course-items-count');
       const courseJumpList = document.getElementById('fulllist-course-jump-list');
       if (courseCountEl) courseCountEl.textContent = courses.length;
-      if (courseItemsEl) courseItemsEl.textContent = `${totalAllActivities} Activities`;
-      if (summaryEl) summaryEl.textContent = `${courses.length} COURSES · ${totalAllActivities} ACTIVITIES`;
+      if (courseCountLabel) {
+        courseCountLabel.textContent = currentLang === 'zh' ? '个课程' : (currentLang === 'bm' ? 'KURSUS' : 'COURSES');
+      }
+      if (courseItemsEl) {
+        courseItemsEl.textContent = currentLang === 'zh'
+          ? `${totalAllActivities} 个活动`
+          : (currentLang === 'bm'
+            ? `${totalAllActivities} Aktiviti`
+            : `${totalAllActivities} Activities`);
+      }
+      if (summaryEl) summaryEl.textContent = '';
 
       if (courseJumpList) {
         courseJumpList.innerHTML = courses.map(c => {
@@ -8977,12 +9012,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       const prevActKey = [...activeDateKeys].reverse().find(k => k < targetKey);
       const nextActKey = activeDateKeys.find(k => k > targetKey);
 
-      const fullDateFormatted = fullListCurrentDate.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-      const countText = `${dayEvents.length} Activit${dayEvents.length === 1 ? 'y' : 'ies'}`;
-      const nextDateObj = new Date(fullListCurrentDate.getTime() + 86400000);
-      const nextDayShortLabel = nextDateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      let fullDateFormatted = '';
+      if (currentLang === 'zh') {
+        fullDateFormatted = `${fullListCurrentDate.getFullYear()}年${fullListCurrentDate.getMonth() + 1}月${fullListCurrentDate.getDate()}日`;
+      } else if (currentLang === 'bm') {
+        fullDateFormatted = fullListCurrentDate.toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      } else {
+        fullDateFormatted = fullListCurrentDate.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      }
+      const countText = currentLang === 'zh'
+        ? `${dayEvents.length} 个活动`
+        : (currentLang === 'bm'
+          ? `${dayEvents.length} Aktiviti`
+          : `${dayEvents.length} Activit${dayEvents.length === 1 ? 'y' : 'ies'}`);
 
-      if (summaryEl) summaryEl.textContent = countText.toUpperCase();
+      if (summaryEl) summaryEl.textContent = '';
 
       let cardsHtml = '';
       if (dayEvents.length === 0) {

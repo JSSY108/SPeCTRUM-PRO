@@ -1028,9 +1028,9 @@
               <div id="fulllist-side-course-pane" class="fulllist-side-course-pane" style="display:none;">
                 <div class="sticky-date-card fulllist-main-date-card" style="padding:16px;flex-shrink:0;">
                   <span class="sticky-date-day" id="fulllist-course-count">0</span>
-                  <span class="sticky-date-month">COURSES</span>
+                  <span class="sticky-date-month" id="fulllist-course-count-label">COURSES</span>
                   <span class="sticky-date-weekday" id="fulllist-course-items-count">0 Activities</span>
-                  <span class="sticky-date-semweek">COURSE GROUPING</span>
+                  <span class="sticky-date-semweek" style="display:none;">COURSE GROUPING</span>
                 </div>
                 <div id="fulllist-course-jump-list" class="fulllist-course-jump-list"></div>
               </div>
@@ -1041,27 +1041,20 @@
               <div class="fulllist-top-toolbar" id="fulllist-top-toolbar">
                 <div class="fulllist-toolbar-left" style="display:flex;align-items:center;gap:12px;">
                   <div class="grouping-toggle" id="fulllist-grouping-toggle">
-                    <span class="label" style="font-weight:600;">By:</span>
+                    <span class="label" id="label-fulllist-grouping" style="font-weight:600;">By:</span>
                     <button type="button" class="group-toggle-link active" id="btn-fulllist-group-date" title="View by Date">Date</button>
                     <span>|</span>
                     <button type="button" class="group-toggle-link" id="btn-fulllist-group-course" title="View by Course">Course</button>
                   </div>
                   <span style="color:var(--border-hairline);user-select:none;">·</span>
                   <div class="sorting-toggle" id="fulllist-sorting-toggle">
-                    <span class="label" style="font-weight:600;">Sort:</span>
+                    <span class="label" id="label-fulllist-sorting" style="font-weight:600;">Sort:</span>
                     <button type="button" class="sort-toggle-link active" id="btn-fulllist-sort-newest" title="Newest first">Newest</button>
                     <span>|</span>
                     <button type="button" class="sort-toggle-link" id="btn-fulllist-sort-oldest" title="Oldest first">Oldest</button>
                   </div>
                 </div>
-                <div class="fulllist-toolbar-right" id="fulllist-toolbar-summary" style="display:flex;align-items:center;gap:12px;">
-                  <div class="spine-focal-tune-wrap" title="Adjust the vertical screen position where timeline date dots light up (Default: 50% Middle of Screen)">
-                    <span class="spine-focal-tune-label">Dot Focus:</span>
-                    <input type="range" id="toolbar-spine-focal-slider" min="15" max="85" value="50" step="5" class="spine-focal-range" title="Tune active dot trigger position">
-                    <span id="toolbar-spine-focal-val" class="spine-focal-val">50% Mid</span>
-                  </div>
-                  <span style="font-size:11px;color:var(--text-muted);font-weight:600;letter-spacing:0.3px;">ACTIVITIES LIST</span>
-                </div>
+                <div class="fulllist-toolbar-right" id="fulllist-toolbar-summary" style="display:none;"></div>
               </div>
               <div id="fulllist-feed-body" style="display:flex;flex-direction:column;gap:12px;"></div>
             </div>
