@@ -356,6 +356,89 @@
     return '';
   }
 
+  let isOnePageMode = false;
+  try {
+    const savedFit = localStorage.getItem('spectrum_pro_timetable_one_page');
+    if (savedFit !== null) {
+      isOnePageMode = (savedFit === 'true');
+    }
+  } catch (e) {}
+
+  function updateOnePageButtonUI() {
+    const btn = document.getElementById('btn-tt-one-page');
+    if (!btn) return;
+    btn.classList.toggle('active', isOnePageMode);
+    btn.setAttribute('aria-pressed', isOnePageMode ? 'true' : 'false');
+    const labelSpan = document.getElementById('btn-tt-one-page-label');
+    if (labelSpan) {
+      labelSpan.textContent = getTimetableText('timetable', 'onePage', '1 Page');
+    }
+    btn.title = isOnePageMode
+      ? 'Switch to Standard Scroll View'
+      : 'Fit full timetable to 1 page without scrolling';
+  }
+
+  function toggleOnePageMode() {
+    isOnePageMode = !isOnePageMode;
+    try {
+      localStorage.setItem('spectrum_pro_timetable_one_page', isOnePageMode ? 'true' : 'false');
+    } catch (e) {}
+    updateOnePageButtonUI();
+    renderTimetableMode();
+  }
+
+  function applyOnePageScaling() {
+    const frame = document.getElementById('timetable-scroll-frame');
+    const grid = document.getElementById('timetable-grid');
+    const scaler = document.getElementById('timetable-scaler');
+    if (!frame || !grid) return;
+
+    if (!isOnePageMode) {
+      frame.classList.remove('is-one-page-frame');
+      grid.classList.remove('is-one-page-grid');
+      grid.style.transform = '';
+      grid.style.transformOrigin = '';
+      grid.style.width = '';
+      if (scaler) {
+        scaler.style.width = '';
+        scaler.style.height = '';
+        scaler.style.margin = '';
+      }
+      return;
+    }
+
+    frame.classList.add('is-one-page-frame');
+    grid.classList.add('is-one-page-grid');
+
+    if (frame.clientWidth <= 0 || frame.clientHeight <= 0) return;
+
+    grid.style.transform = 'none';
+
+    const availW = Math.max(280, frame.clientWidth - 32);
+    const availH = Math.max(200, frame.clientHeight - 24);
+
+    const naturalW = Math.max(grid.scrollWidth, grid.offsetWidth, 700);
+    const naturalH = Math.max(grid.scrollHeight, grid.offsetHeight, 380);
+
+    grid.style.width = `${naturalW}px`;
+
+    const scaleX = availW / naturalW;
+    const scaleY = availH / naturalH;
+    const scale = Math.min(scaleX, scaleY, 1.0);
+
+    const scaledW = Math.round(naturalW * scale);
+    const scaledH = Math.round(naturalH * scale);
+
+    if (scaler) {
+      scaler.style.width = `${scaledW}px`;
+      scaler.style.height = `${scaledH}px`;
+      scaler.style.margin = '0 auto';
+    }
+
+    grid.style.transformOrigin = 'top left';
+    grid.style.transform = `scale(${scale})`;
+  }
+
   function renderHorizontalGrid(gridEl, sessions) {
     const esc = getSafeEscapeHtml();
     const DAY_NAMES = getTimetableDayNames();
@@ -377,19 +460,21 @@
     const pad = n => String(n).padStart(2, '0');
 
     // Dynamically read horizontal column width & row height from CSS tuning dashboard
-    let horizColWidth = 280;
-    let horizRowHeight = 140;
+    let horizColWidth = isOnePageMode ? 195 : 280;
+    let horizRowHeight = isOnePageMode ? 112 : 140;
     try {
       if (typeof document !== 'undefined') {
         const rootStyle = getComputedStyle(document.documentElement);
         const gridStyle = getComputedStyle(gridEl);
-        const colVal = parseInt(rootStyle.getPropertyValue('--tt-horiz-col-width') || gridStyle.getPropertyValue('--tt-horiz-col-width'), 10);
-        if (!isNaN(colVal) && colVal >= 120 && colVal <= 400) {
-          horizColWidth = colVal;
-        }
-        const rowVal = parseInt(rootStyle.getPropertyValue('--tt-horiz-row-height') || gridStyle.getPropertyValue('--tt-horiz-row-height'), 10);
-        if (!isNaN(rowVal) && rowVal >= 60 && rowVal <= 300) {
-          horizRowHeight = rowVal;
+        if (!isOnePageMode) {
+          const colVal = parseInt(rootStyle.getPropertyValue('--tt-horiz-col-width') || gridStyle.getPropertyValue('--tt-horiz-col-width'), 10);
+          if (!isNaN(colVal) && colVal >= 120 && colVal <= 400) {
+            horizColWidth = colVal;
+          }
+          const rowVal = parseInt(rootStyle.getPropertyValue('--tt-horiz-row-height') || gridStyle.getPropertyValue('--tt-horiz-row-height'), 10);
+          if (!isNaN(rowVal) && rowVal >= 60 && rowVal <= 300) {
+            horizRowHeight = rowVal;
+          }
         }
       }
     } catch (e) {}
@@ -406,7 +491,7 @@
       }
     });
 
-    gridEl.className = 'timetable-grid timetable-horizontal-grid';
+    gridEl.className = 'timetable-grid timetable-horizontal-grid' + (isOnePageMode ? ' is-one-page-grid' : '');
     gridEl.style.gridTemplateColumns = `140px repeat(${totalCols}, minmax(${horizColWidth}px, 1fr))`;
     gridEl.style.gridTemplateRows = rowTracks.join(' ');
     gridEl.style.minWidth = `${140 + totalCols * horizColWidth}px`;
@@ -559,14 +644,16 @@
       if (s.endMin > 0 && typeof s.endHour === 'number' && !isNaN(s.endHour) && s.endHour >= maxHour) maxHour = s.endHour + 1;
     });
 
-    let hourHeight = 115;
+    let hourHeight = isOnePageMode ? 72 : 115;
     try {
       if (typeof document !== 'undefined') {
-        const rootVal = getComputedStyle(document.documentElement).getPropertyValue('--tt-hour-row-height') ||
-                       getComputedStyle(gridEl).getPropertyValue('--tt-hour-row-height');
-        const parsed = parseInt(rootVal, 10);
-        if (!isNaN(parsed) && parsed >= 60 && parsed <= 300) {
-          hourHeight = parsed;
+        if (!isOnePageMode) {
+          const rootVal = getComputedStyle(document.documentElement).getPropertyValue('--tt-hour-row-height') ||
+                         getComputedStyle(gridEl).getPropertyValue('--tt-hour-row-height');
+          const parsed = parseInt(rootVal, 10);
+          if (!isNaN(parsed) && parsed >= 60 && parsed <= 300) {
+            hourHeight = parsed;
+          }
         }
       }
     } catch (e) {}
@@ -587,7 +674,7 @@
       return sum + (isDayHalf(dIdx) ? 95 : 185);
     }, 0);
 
-    gridEl.className = 'timetable-grid timetable-vertical-grid';
+    gridEl.className = 'timetable-grid timetable-vertical-grid' + (isOnePageMode ? ' is-one-page-grid' : '');
     gridEl.style.gridTemplateColumns = `75px ${colTracks.join(' ')}`;
     gridEl.style.gridTemplateRows = 'none';
     gridEl.style.minWidth = `${totalMinWidth}px`;
@@ -727,6 +814,7 @@
 
   function renderTimetableMode() {
     updateLayoutSwitchUI();
+    updateOnePageButtonUI();
     const gridEl = document.getElementById('timetable-grid');
     const countEl = document.getElementById('timetable-session-count');
     if (!gridEl) return;
@@ -737,6 +825,13 @@
     }
 
     if (sessions.length === 0) {
+      const scalerEl = document.getElementById('timetable-scaler');
+      if (scalerEl) {
+        scalerEl.style.width = '100%';
+        scalerEl.style.height = 'auto';
+        scalerEl.style.margin = '';
+      }
+      gridEl.style.transform = 'none';
       gridEl.className = 'timetable-grid';
       gridEl.style.gridTemplateColumns = '1fr';
       gridEl.style.gridTemplateRows = 'none';
@@ -782,6 +877,11 @@
           currentVenue: card.dataset.venue || ''
         });
       });
+    }
+
+    applyOnePageScaling();
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => applyOnePageScaling());
     }
   }
 
@@ -1963,6 +2063,22 @@
     }
     updateLayoutSwitchUI();
 
+    const btnOnePage = document.getElementById('btn-tt-one-page');
+    if (btnOnePage && !btnOnePage._hasOnePageListener) {
+      btnOnePage._hasOnePageListener = true;
+      btnOnePage.addEventListener('click', toggleOnePageMode);
+    }
+    updateOnePageButtonUI();
+
+    if (typeof window !== 'undefined' && !window._hasTimetableResizeListener) {
+      window._hasTimetableResizeListener = true;
+      window.addEventListener('resize', () => {
+        if (isOnePageMode) {
+          applyOnePageScaling();
+        }
+      });
+    }
+
     const btnCsv = document.getElementById('btn-export-timetable-csv');
     const btnPng = document.getElementById('btn-export-timetable-png');
     const btnPdf = document.getElementById('btn-export-timetable-pdf');
@@ -1986,6 +2102,9 @@
   window.extractWeeklyTimetableSessions = extractWeeklyTimetableSessions;
   window.computeSessionColumns = computeSessionColumns;
   window.renderTimetableMode = renderTimetableMode;
+  window.toggleOnePageMode = toggleOnePageMode;
+  window.applyOnePageScaling = applyOnePageScaling;
+  window.isOnePageMode = () => isOnePageMode;
   window.renderTimetableToCanvas = renderTimetableToCanvas;
   window.setTimetableLayout = setTimetableLayout;
   window.currentTimetableLayout = () => currentTimetableLayout;

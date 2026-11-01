@@ -181,6 +181,7 @@ const I18N = {
       singleContactSession: '1 Contact Session',
       vertical: 'Vertical',
       horizontal: 'Horizontal',
+      onePage: '1 Page',
       exportCsv: 'Export CSV',
       exportPng: 'Export PNG',
       exportPdf: 'Export PDF',
@@ -353,6 +354,7 @@ const I18N = {
       singleContactSession: '1 Sesi Kuliah',
       vertical: 'Menegak',
       horizontal: 'Melintang',
+      onePage: '1 Halaman',
       exportCsv: 'Eksport CSV',
       exportPng: 'Eksport PNG',
       exportPdf: 'Eksport PDF',
@@ -525,6 +527,7 @@ const I18N = {
       singleContactSession: '1 节课',
       vertical: '纵向',
       horizontal: '横向',
+      onePage: '单页',
       exportCsv: '导出 CSV',
       exportPng: '导出 PNG',
       exportPdf: '导出 PDF',
@@ -621,6 +624,12 @@ function updateTimetableTranslations() {
   if (btnHorizontal) {
     const span = btnHorizontal.querySelector('span');
     if (span) span.textContent = t('timetable', 'horizontal');
+  }
+
+  const btnOnePage = document.getElementById('btn-tt-one-page');
+  if (btnOnePage) {
+    const span = document.getElementById('btn-tt-one-page-label') || btnOnePage.querySelector('span');
+    if (span) span.textContent = t('timetable', 'onePage');
   }
 
   const btnCsv = document.getElementById('btn-export-timetable-csv');

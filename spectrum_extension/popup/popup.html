@@ -390,6 +390,12 @@
                 </button>
               </div>
 
+              <!-- 1-Page Fit Mode Toggle Button -->
+              <button type="button" id="btn-tt-one-page" class="btn-timetable-export btn-tt-one-page" title="Toggle 1-Page Fit (Show entire timetable without scrolling)">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                <span id="btn-tt-one-page-label">1 Page</span>
+              </button>
+
               <div class="timetable-toolbar-divider"></div>
 
               <button type="button" id="btn-export-timetable-csv" class="btn-timetable-export" title="Export as CSV spreadsheet (Excel, Notion, Google Calendar)">
@@ -409,8 +415,10 @@
 
           <!-- Timetable Scroll Track & Grid Container -->
           <div class="timetable-scroll-frame" id="timetable-scroll-frame">
-            <div class="timetable-grid" id="timetable-grid">
-              <!-- Dynamically populated by renderTimetableMode() -->
+            <div class="timetable-scaler" id="timetable-scaler">
+              <div class="timetable-grid" id="timetable-grid">
+                <!-- Dynamically populated by renderTimetableMode() -->
+              </div>
             </div>
           </div>
         </div>

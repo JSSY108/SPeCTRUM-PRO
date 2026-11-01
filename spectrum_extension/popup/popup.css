@@ -9090,6 +9090,44 @@ body:not(.is-full-tab) .sync-cinematic-current {
   border-color: #27272A;
 }
 
+/* ==========================================================================
+   TIMETABLE 1-PAGE FIT MODE (PROPORTIONAL SCALING)
+   ========================================================================== */
+.timetable-scaler {
+  width: 100%;
+  position: relative;
+}
+
+.timetable-scroll-frame.is-one-page-frame {
+  overflow: hidden !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+  padding: 12px 16px !important;
+}
+
+.timetable-scroll-frame.is-one-page-frame .timetable-scaler {
+  flex-shrink: 0;
+  overflow: visible;
+  transition: width 0.18s cubic-bezier(0.2, 0, 0, 1), height 0.18s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.timetable-grid.is-one-page-grid {
+  transform-origin: top left;
+  transition: transform 0.18s cubic-bezier(0.2, 0, 0, 1);
+  will-change: transform;
+}
+
+.timetable-grid.is-one-page-grid .tt-session-card {
+  transition: transform 0.18s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.18s cubic-bezier(0.2, 0, 0, 1) !important;
+}
+
+.timetable-grid.is-one-page-grid .tt-session-card:hover {
+  transform: scale(1.08) !important;
+  z-index: 60 !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22), 0 3px 8px rgba(0, 0, 0, 0.12) !important;
+}
+
 .timetable-scroll-frame {
   flex: 1;
   min-height: 0;
@@ -9577,6 +9615,38 @@ body:not(.is-full-tab) .sync-cinematic-current {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
+/* 1-Page Fit Mode Toggle */
+.btn-tt-one-page {
+  gap: 5px;
+  padding: 6px 11px;
+}
+
+.btn-tt-one-page svg {
+  width: 13.5px;
+  height: 13.5px;
+}
+
+.btn-tt-one-page.active {
+  background: #18181B !important;
+  color: #FFFFFF !important;
+  border-color: #18181B !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.btn-tt-one-page.active svg {
+  stroke: #FFFFFF !important;
+}
+
+[data-theme="dark"] .btn-tt-one-page.active {
+  background: #FAFAFA !important;
+  color: #18181B !important;
+  border-color: #FAFAFA !important;
+}
+
+[data-theme="dark"] .btn-tt-one-page.active svg {
+  stroke: #18181B !important;
+}
+
 .timetable-toolbar-divider {
   width: 1px;
   height: 22px;
@@ -9828,6 +9898,12 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
   .timetable-export-toolbar {
     display: none !important;
+  }
+
+  .timetable-scaler {
+    width: 100% !important;
+    height: auto !important;
+    transform: none !important;
   }
 
   .timetable-scroll-frame {
