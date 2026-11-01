@@ -1678,19 +1678,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         const escapedCode = codeTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const codeRegex = new RegExp('^\\s*(?:\\[?\\s*' + escapedCode + '\\s*\\]?|[\\(\\[]?\\s*' + escapedCode + '\\s*[\\)\\]]?)\\s*[-:·/|—–_~]*\\s*', 'i');
         name = name.replace(codeRegex, '').trim();
-        if (codeTrimmed.includes('/')) {
-          const parts = codeTrimmed.split('/').map(p => p.trim()).filter(Boolean);
-          for (const p of parts) {
-            const escP = p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const partRegex = new RegExp('^\\s*(?:\\[?\\s*' + escP + '\\s*\\]?|[\\(\\[]?\\s*' + escP + '\\s*[\\)\\]]?)\\s*[-:·/|—–_~]*\\s*', 'i');
-            name = name.replace(partRegex, '').trim();
-          }
+        const parts = codeTrimmed.split(/[\/\\\u2013\u2014\-]/).map(p => p.trim()).filter(Boolean);
+        for (const p of parts) {
+          const escP = p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const partRegex = new RegExp('^\\s*(?:\\[?\\s*' + escP + '\\s*\\]?|[\\(\\[]?\\s*' + escP + '\\s*[\\)\\]]?)\\s*[-:·/|—–_~]*\\s*', 'i');
+          name = name.replace(partRegex, '').trim();
         }
       }
     }
-    name = name.replace(/^\s*(?:\[\s*[A-Z]{2,4}\d{4}(?:\s*\/\s*[A-Z]{2,4}\d{4})*\s*\]|[A-Z]{2,4}\d{4}(?:\s*\/\s*[A-Z]{2,4}\d{4})*)\s*[-:·/|—–_~]*\s*/i, '').trim();
-    name = name.replace(/^[-:·/|—–_~]\s*/, '').trim();
-    return name;
+
+    let prev;
+    do {
+      prev = name;
+      name = name.replace(/^\s*(?:\[\s*|\(\s*)?[-:·/|—–_~\s]*(?:[A-Z]{2,4}\d{4}[A-Z]?)(?:\s*[-:·/|—–_~\s]+(?:[A-Z]{2,4}\d{4}[A-Z]?))*(?:\s*\]|\s*\))?\s*[-:·/|—–_~\s]*/i, '').trim();
+      name = name.replace(/^[-:·/|—–_~\s]+/, '').trim();
+    } while (name !== prev && name.length > 0);
+
+    return name || courseName;
   }
 
   function isAttendanceAlive(att) {

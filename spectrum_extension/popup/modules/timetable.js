@@ -104,12 +104,27 @@
   }
   function cleanTimetableCourseName(name, code) {
     if (!name) return '';
-    let str = String(name).trim();
+    let str = String(name).replace(/[\r\n\t]+/g, ' ').trim();
     if (code) {
-      const codeClean = String(code).replace(/[^a-zA-Z0-9]/g, '.*');
-      str = str.replace(new RegExp('^' + codeClean + '\\s*[-–—:]?\\s*', 'i'), '');
+      const codeTrimmed = String(code).trim();
+      if (codeTrimmed) {
+        const escapedCode = codeTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        str = str.replace(new RegExp('^\\s*(?:\\[?\\s*' + escapedCode + '\\s*\\]?|[\\(\\[]?\\s*' + escapedCode + '\\s*[\\)\\]]?)\\s*[-:·/|—–_~]*\\s*', 'i'), '').trim();
+        const parts = codeTrimmed.split(/[\/\\\u2013\u2014\-]/).map(p => p.trim()).filter(Boolean);
+        for (const p of parts) {
+          const escP = p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          str = str.replace(new RegExp('^\\s*(?:\\[?\\s*' + escP + '\\s*\\]?|[\\(\\[]?\\s*' + escP + '\\s*[\\)\\]]?)\\s*[-:·/|—–_~]*\\s*', 'i'), '').trim();
+        }
+      }
     }
-    str = str.replace(/^[A-Z]{2,4}\d{4}(?:\/[A-Z]{2,4}\d{4})*\s*[-–—:]?\s*/i, '');
+
+    let prev;
+    do {
+      prev = str;
+      str = str.replace(/^\s*(?:\[\s*|\(\s*)?[-:·/|—–_~\s]*(?:[A-Z]{2,4}\d{4}[A-Z]?)(?:\s*[-:·/|—–_~\s]+(?:[A-Z]{2,4}\d{4}[A-Z]?))*(?:\s*\]|\s*\))?\s*[-:·/|—–_~\s]*/i, '').trim();
+      str = str.replace(/^[-:·/|—–_~\s]+/, '').trim();
+    } while (str !== prev && str.length > 0);
+
     if (str === str.toUpperCase() && str.length > 3) {
       str = str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
     }
@@ -126,7 +141,7 @@
     records.forEach(att => {
       const rawCourseCode = att.courseCode || '';
       const courseCode = cleanSingleCourseCode(rawCourseCode);
-      const courseName = cleanTimetableCourseName(att.courseName || '', courseCode);
+      const courseName = cleanTimetableCourseName(att.courseName || '', rawCourseCode || courseCode);
       const userOcc = att.userOcc || '';
 
       const allSess = [];
