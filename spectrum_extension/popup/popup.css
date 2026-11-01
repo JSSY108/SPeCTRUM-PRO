@@ -7865,6 +7865,12 @@ body:not(.is-full-tab) .sync-cinematic-current {
   text-transform: uppercase;
 }
 
+.att-status-pill.pill-upcoming {
+  background: var(--bg-hover) !important;
+  color: var(--text-muted) !important;
+  border: 1px solid var(--border-hairline) !important;
+}
+
 .att-status-pill.pill-recorded {
   background: var(--signal-attendance-bg, #ECFDF5) !important;
   color: #047857 !important;

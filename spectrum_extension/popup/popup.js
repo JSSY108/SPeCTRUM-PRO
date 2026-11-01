@@ -2049,16 +2049,44 @@ document.addEventListener('DOMContentLoaded', async () => {
   function computeAttendanceCardViewModel(att, sessionData = {}) {
     const now = new Date();
     const todayKey = formatDateKey(now);
-    const targetDateKey = sessionData.dateKey || (typeof activeDateFilter !== 'undefined' && activeDateFilter ? activeDateFilter : todayKey);
 
     // 1. Resolve matching session for this card
-    const matchedSession = Array.isArray(att.sessions)
-      ? (att.sessions.find(s => s.dateKey === targetDateKey) || 
-         (targetDateKey === todayKey ? att.sessions.find(s => s.isToday) : null))
-      : null;
+    let session = sessionData.session || null;
+    if (!session) {
+      if (sessionData.dateKey) {
+        session = Array.isArray(att.sessions) ? att.sessions.find(s => s.dateKey === sessionData.dateKey) : null;
+      } else if (typeof activeDateFilter !== 'undefined' && activeDateFilter) {
+        session = Array.isArray(att.sessions) ? att.sessions.find(s => s.dateKey === activeDateFilter) : null;
+      }
+    }
+    if (!session) {
+      session = att.activeSession || 
+        (Array.isArray(att.sessions) ? att.sessions.find(s => s.isToday || s.dateKey === todayKey) : null) || 
+        att.nextSession || 
+        (Array.isArray(att.sessions) && att.sessions.length > 0 ? att.sessions[0] : null);
+    }
 
-    const session = sessionData.session || matchedSession || att.activeSession || att.nextSession || null;
-    const isLive = Boolean(sessionData.isLive || (att.activeSession && (targetDateKey === todayKey)));
+    // Resolve target date and dateKey accurately for this specific session
+    let targetDate = null;
+    if (sessionData.date) {
+      targetDate = (sessionData.date instanceof Date) ? sessionData.date : new Date(sessionData.date);
+    } else if (session?.date) {
+      targetDate = (session.date instanceof Date) ? session.date : new Date(session.date);
+    } else if (sessionData.dateKey) {
+      targetDate = new Date(sessionData.dateKey + 'T12:00:00');
+    } else if (session?.dateKey) {
+      targetDate = new Date(session.dateKey + 'T12:00:00');
+    } else if (typeof activeDateFilter !== 'undefined' && activeDateFilter) {
+      targetDate = new Date(activeDateFilter + 'T12:00:00');
+    }
+    if (!targetDate || isNaN(targetDate.getTime())) {
+      targetDate = new Date();
+    }
+
+    const effectiveDateKey = sessionData.dateKey || session?.dateKey || formatDateKey(targetDate);
+    const targetDateKey = effectiveDateKey;
+
+    const isLive = Boolean(sessionData.isLive || (att.activeSession && (effectiveDateKey === todayKey)));
     const isVerified = Boolean(
       sessionData.isVerified || 
       (session && (session.isPresent || session.statusType === 'present' || session.statusType === 'submitted')) ||
@@ -2116,10 +2144,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const timeRangeStr = parsedTime ? parsedTime.formatted : '14:00 — 16:00';
 
     // 3. Date, Elapsed & Window Status Calculation
-    const targetDate = sessionData.date 
-      ? (sessionData.date instanceof Date ? sessionData.date : new Date(sessionData.date)) 
-      : (session?.date instanceof Date ? session.date : (targetDateKey ? new Date(targetDateKey + 'T00:00:00') : new Date()));
-
     const targetDayZero = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
     const nowDayZero = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const dayDiff = Math.round((nowDayZero.getTime() - targetDayZero.getTime()) / (24 * 3600 * 1000));
@@ -2134,15 +2158,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     let isFuture = false;
     let endedMins = 0;
 
-    if (now.getTime() < startMs) {
+    if (dayDiff < 0 || (dayDiff === 0 && now.getTime() < startMs)) {
+      // Future date or upcoming class time today: UPCOMING (never ended)
       progressPct = 0;
       isFuture = true;
-    } else if (now.getTime() >= startMs && now.getTime() <= endMs) {
+      isEnded = false;
+    } else if (dayDiff === 0 && now.getTime() >= startMs && now.getTime() <= endMs) {
+      // Current active window today
       progressPct = Math.min(100, Math.max(8, Math.round(((now.getTime() - startMs) / totalDurationMs) * 100)));
       minsLeft = Math.max(1, Math.round((endMs - now.getTime()) / 60000));
+      isFuture = false;
+      isEnded = false;
     } else {
+      // Past day or class has already ended earlier today: ENDED
       progressPct = 100;
       isEnded = true;
+      isFuture = false;
       endedMins = Math.round((now.getTime() - endMs) / 60000);
     }
 
@@ -2249,8 +2280,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       actionBtnHtml = `<a href="${escapeHtml(takeUrl)}" target="_blank" class="btn-att-action btn-att-faint" title="Open attendance in SPeCTRUM">Check Portal ↗</a>`;
     } else if (isFuture) {
       stateClass = '';
-      statusPillHtml = `<span class="att-status-pill">SCHEDULED</span>`;
-      stateBadgeHtml = `<span class="att-state-badge state-locked">SCHEDULED</span>`;
+      statusPillHtml = `<span class="att-status-pill pill-upcoming">UPCOMING</span>`;
+      stateBadgeHtml = `<span class="att-state-badge state-locked">UPCOMING</span>`;
       let upcomingLabel = `Opens at ${pad(startHour)}:${pad(startMin)}`;
       if (dayDiff < 0) {
         const absDays = Math.abs(dayDiff);
@@ -6562,14 +6593,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Dedicated Timeline & Day Agenda Attendance Card Renderer
-  function renderTimelineAttendanceCardHtml(ev) {
+  function renderTimelineAttendanceCardHtml(ev, fallbackDateKey) {
     const att = ev.obj || {};
+    const dKey = ev.dateKey || fallbackDateKey || ev.sessObj?.dateKey;
     const vm = computeAttendanceCardViewModel(att, {
       session: ev.sessObj,
-      timeStr: ev.timeStr,
+      timeStr: ev.timeStr || ev.sessObj?.time || ev.sessObj?.dateStr,
       isLive: ev.status === 'active',
       isVerified: ev.status === 'present' || ev.status === 'submitted',
-      dateKey: ev.dateKey,
+      dateKey: dKey,
+      date: ev.date || ev.sessObj?.date,
       cid: ev.courseId || att.courseId
     });
     return renderUnifiedAttendanceCardHtml(vm);
@@ -6951,7 +6984,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 timeStr: sess.dateStr || '',
                 url: att.attUrl,
                 obj: att,
-                sessObj: sess
+                sessObj: sess,
+                dateKey: sess.dateKey,
+                date: sess.date
               });
             }
           });
@@ -7122,7 +7157,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         sidebarList.innerHTML = events.map(ev => {
           if (ev.type === 'task' || ev.type === 'assignment') return renderAssignmentCardHtml(ev.obj || ev);
-          if (ev.type === 'att' || ev.type === 'attendance') return renderTimelineAttendanceCardHtml(ev);
+          if (ev.type === 'att' || ev.type === 'attendance') return renderTimelineAttendanceCardHtml(ev, dateKey);
           return renderAnnouncementCardHtml(ev.obj || ev);
         }).join('');
         attachAttendanceActions(sidebarList);
