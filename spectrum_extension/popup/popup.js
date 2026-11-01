@@ -8402,8 +8402,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             allAssignments.push(...assignRes.value);
           }
           if (attRes.status === 'fulfilled' && attRes.value) {
+            const countBefore = allAttendances.length;
             if (Array.isArray(attRes.value)) allAttendances.push(...attRes.value);
             else allAttendances.push(attRes.value);
+            const added = allAttendances.length - countBefore;
+            logDiag('Attendance:SyncBatch', `[${courseId}] Enqueued ${added} attendance activity record(s).`);
           } else if (attRes.status === 'rejected') {
             logDiag('Attendance:Err', `Course ${courseId} attendance rejected: ${attRes.reason?.message || attRes.reason}`);
           }
@@ -8419,6 +8422,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       if (allAttendances.length > 0) {
         attendancesData = sanitizeAttendances(allAttendances);
+        logDiag('Attendance:State', `Updated attendancesData with ${attendancesData.length} activity record(s) (${attendancesData.reduce((acc, a) => acc + (a.sessions?.length || 0), 0)} total session(s)).`);
+      } else if (attendancesData.length === 0) {
+        const cached = await chrome.storage.local.get(['cachedAttendances']);
+        if (cached && Array.isArray(cached.cachedAttendances) && cached.cachedAttendances.length > 0) {
+          attendancesData = sanitizeAttendances(cached.cachedAttendances);
+          logDiag('Attendance:CacheFallback', `Preserved ${attendancesData.length} attendance record(s) from local cache (${attendancesData.reduce((acc, a) => acc + (a.sessions?.length || 0), 0)} total session(s)).`);
+        }
       }
 
       logDiag('Sync:Summary', `Sync finished. Total notices: ${allAnnouncements.length}, tasks: ${allAssignments.length}, attendance activities: ${allAttendances.length}`);
@@ -8857,6 +8867,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (allFresh.length > 0) {
       attendancesData = sanitizeAttendances(allFresh);
       await chrome.storage.local.set({ cachedAttendances: attendancesData, cachedAttendancesTime: Date.now() });
+      logDiag('Attendance:FastScan', `Updated attendancesData with ${attendancesData.length} activities (${attendancesData.reduce((acc, a) => acc + (a.sessions?.length || 0), 0)} total sessions).`);
       renderAttendanceList();
       renderTimelineVisualizer();
       updateKpiCards();

@@ -972,6 +972,36 @@ function calculateAssignmentTiming(dueDateStr, statusText, now = new Date(), cou
   return { dueDate, isSubmitted, isOverdue, isDueSoon, timeRemaining, badgeClass, badgeLabel };
 }
 
+// Extract ONLY time (e.g. "2PM - 4PM", "14:00 - 16:00", "2:00PM - 4:00PM") and remove redundant Day, Date, Month, Year
+function extractOnlyTime(s) {
+  if (!s) return '';
+  const str = String(s).trim();
+
+  // 1. Time range with AM/PM (e.g. "2PM - 4PM", "2:00PM - 4:00PM", "8.00AM - 10.00AM") or Malay indicators
+  const rangeMatch = str.match(/\b(\d{1,2}(?:[:.]\d{2})?\s*(?:AM|PM|pagi|petang|ptg|malam|mlm|tgh)?\s*(?:[-–—~]|to|hingga)\s*\d{1,2}(?:[:.]\d{2})?\s*(?:AM|PM|pagi|petang|ptg|malam|mlm|tgh))\b/i);
+  if (rangeMatch) return rangeMatch[1].trim();
+
+  // 2. 24-hour time range (e.g. "14:00 - 16:00", "08:30 - 10:30")
+  const range24 = str.match(/\b(\d{1,2}:\d{2}\s*(?:[-–—~]|to|hingga)\s*\d{1,2}:\d{2})\b/);
+  if (range24) return range24[1].trim();
+
+  // 3. Single time with AM/PM or Malay
+  const singleMatch = str.match(/\b(\d{1,2}(?:[:.]\d{2})?\s*(?:AM|PM|pagi|petang|ptg|malam|mlm|tgh))\b/i);
+  if (singleMatch) return singleMatch[1].trim();
+
+  // 4. Single 24-hr time (e.g. "14:00")
+  const single24 = str.match(/\b(\d{1,2}:\d{2})\b/);
+  if (single24) return single24[1].trim();
+
+  // 5. Fallback: strip leading day of week, day number, month, year
+  const stripped = str.replace(/^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun|Isnin|Selasa|Rabu|Khamis|Jumaat|Sabtu|Ahad)[a-z]*,?\s*/i, '')
+                      .replace(/^\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{2,4}\s*/i, '')
+                      .replace(/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\s*/, '')
+                      .replace(/^[@,\-–—\s]+/, '')
+                      .trim();
+  return stripped || str;
+}
+
 // 5. Direct Course Attendance Fetcher (Lightning-Fast: Early OCC Prune + Current & Future 1 Only)
 async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, minTimestamp = 0) {
   const origin = SPECTRUM_ORIGIN;
@@ -1103,7 +1133,10 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
     function parseSessionsFromDoc(doc) {
       if (!doc) return [];
       const list = [];
-      const rows = doc.querySelectorAll('table.userattendance tr, table.generaltable tr, table.attlist tr, table.attwidth tr, table tr');
+      const attTable = doc.querySelector('table.userattendance, table.attlist, table.generaltable, table.attwidth');
+      const rows = attTable ? attTable.querySelectorAll('tr') : doc.querySelectorAll('table tr');
+      let parsedRowCount = 0;
+      let skippedOccCount = 0;
 
       for (const row of Array.from(rows)) {
         if (row.closest('thead')) continue;
@@ -1169,6 +1202,7 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
         }
 
         if (sessDate && !isNaN(sessDate.getTime())) {
+          parsedRowCount++;
           const isFuture = sessDate.getTime() > now.getTime();
           const isToday = formatDateKey(sessDate) === formatDateKey(now);
           const isPresent = /present|hadir|\b[PH]\b|2\s*\/\s*2|100%/i.test(statusColText);
@@ -1237,42 +1271,31 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
       const { url: fullAttUrl, label: initialLabel } = candidateLinks[i];
       let attHtml = '';
 
-      // 1. Fetch complete semester view (mode=1&view=5 for Moodle Attendance)
-      // This ensures all sessions across November, December, January are returned rather than only past/current month!
-      let targetAttUrl = fullAttUrl;
-      if (!/[?&]view=/i.test(targetAttUrl)) {
-        targetAttUrl += (targetAttUrl.includes('?') ? '&' : '?') + 'mode=1&view=5';
-      }
-
+      logDiag('Attendance:Fetch', `[${courseId}] [${i + 1}/${candidateLinks.length}] Requesting student attendance: "${initialLabel}" -> ${fullAttUrl}`);
       try {
-        const res = await fetchWithTimeout(targetAttUrl, { credentials: 'include' }, 12000);
-        logDiag('Attendance:Inst', `[${courseId}] [${i + 1}/${candidateLinks.length}] HTTP ${res.status} ("${initialLabel}")`);
+        const res = await fetchWithTimeout(fullAttUrl, { credentials: 'include' }, 12000);
+        logDiag('Attendance:Fetch', `[${courseId}] Base URL HTTP ${res.status} ("${initialLabel}") from ${res.url}`);
         if (res.ok && !res.url.includes('/login/')) {
           attHtml = await res.text();
         }
       } catch (err) {
-        logDiag('Attendance:Inst', `[${courseId}] Fetch error on ${targetAttUrl}: ${err?.message || err}`);
+        logDiag('Attendance:Fetch', `[${courseId}] Fetch error on ${fullAttUrl}: ${err?.message || err}`);
       }
 
-      // Fallback: if targetAttUrl failed or returned login/error, try bare URL
-      if (!attHtml && targetAttUrl !== fullAttUrl) {
-        try {
-          const resFallback = await fetchWithTimeout(fullAttUrl, { credentials: 'include' }, 12000);
-          if (resFallback.ok && !resFallback.url.includes('/login/')) {
-            attHtml = await resFallback.text();
-          }
-        } catch (fErr) {}
+      if (!attHtml) {
+        logDiag('Attendance:Skip', `[${courseId}] Empty response or error for "${initialLabel}". Skipping.`);
+        continue;
       }
-
-      if (!attHtml) continue;
 
       // Skip restricted / locked attendance activities where the student lacks permission
       if (/you do not have permission|tiada kebenaran|not available unless|access denied|tidak dibenarkan/i.test(attHtml)) {
-        logDiag('Attendance:Inst', `[${courseId}] 🔒 Restricted activity (student lacks permission) for "${initialLabel}"`);
+        logDiag('Attendance:Restricted', `[${courseId}] 🔒 Restricted activity (student lacks permission) for "${initialLabel}"`);
         continue;
       }
 
       let attDoc = parser.parseFromString(attHtml, 'text/html');
+      let baseSessions = parseSessionsFromDoc(attDoc);
+      logDiag('Attendance:Sessions', `[${courseId}] Base student view parsed ${baseSessions.length} session(s) for "${initialLabel}"`);
 
       // Check if page has an explicit "All Sessions" tab link provided by Moodle (e.g. view=5 or view=all)
       const allTabLink = Array.from(attDoc.querySelectorAll('a')).find(a => {
@@ -1281,28 +1304,38 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
         return (/^(?:all|all\s+sessions?|semua|semua\s+sesi)$/i.test(txt) || /[?&]view=(?:5|all)\b/i.test(href)) && href.includes('view.php');
       });
 
+      let probeAllUrl = '';
       if (allTabLink) {
-        let allUrl = allTabLink.getAttribute('href') || allTabLink.href || '';
-        if (allUrl.startsWith('/')) allUrl = `${origin}${allUrl}`;
-        else if (!allUrl.startsWith('http')) allUrl = `${origin}/mod/attendance/${allUrl}`;
+        let rawHref = allTabLink.getAttribute('href') || allTabLink.href || '';
+        if (rawHref.startsWith('/')) probeAllUrl = `${origin}${rawHref}`;
+        else if (rawHref.startsWith('http')) probeAllUrl = rawHref;
+        else probeAllUrl = `${origin}/mod/attendance/${rawHref}`;
+      } else if (!/[?&]view=/i.test(fullAttUrl)) {
+        // Probe view=5 (Moodle ATT_VIEW_ALL for students - WITHOUT mode=1!)
+        probeAllUrl = fullAttUrl + (fullAttUrl.includes('?') ? '&' : '?') + 'view=5';
+      }
 
-        // If the All tab URL differs from what we fetched, fetch it to guarantee full semester coverage!
-        if (allUrl && allUrl !== targetAttUrl && allUrl !== fullAttUrl) {
-          try {
-            const allRes = await fetchWithTimeout(allUrl, { credentials: 'include' }, 12000);
-            if (allRes.ok && !allRes.url.includes('/login/')) {
-              const fullHtml = await allRes.text();
-              const fullDoc = parser.parseFromString(fullHtml, 'text/html');
-              const fullSessions = parseSessionsFromDoc(fullDoc);
-              if (fullSessions.length > parseSessionsFromDoc(attDoc).length) {
-                logDiag('Attendance:AllView', `[${courseId}] Upgraded to Moodle All Sessions tab (${fullSessions.length} total sessions).`);
-                attHtml = fullHtml;
-                attDoc = fullDoc;
+      if (probeAllUrl && probeAllUrl !== fullAttUrl) {
+        try {
+          logDiag('Attendance:AllView', `[${courseId}] Probing full semester view (view=5): ${probeAllUrl}`);
+          const probeRes = await fetchWithTimeout(probeAllUrl, { credentials: 'include' }, 12000);
+          if (probeRes.ok && !probeRes.url.includes('/login/')) {
+            const probeHtml = await probeRes.text();
+            // Guard against permission denied on probed URL
+            if (!/you do not have permission|tiada kebenaran|not available unless|access denied|tidak dibenarkan/i.test(probeHtml)) {
+              const probeDoc = parser.parseFromString(probeHtml, 'text/html');
+              const probeSessions = parseSessionsFromDoc(probeDoc);
+              logDiag('Attendance:AllView', `[${courseId}] Full view probe parsed ${probeSessions.length} session(s) vs base view ${baseSessions.length} session(s).`);
+              if (probeSessions.length >= baseSessions.length) {
+                attHtml = probeHtml;
+                attDoc = probeDoc;
               }
+            } else {
+              logDiag('Attendance:AllView', `[${courseId}] Full view probe returned permission restriction. Safely keeping base view sessions.`);
             }
-          } catch (tErr) {
-            logDiag('Attendance:AllView', `[${courseId}] All tab fetch note: ${tErr?.message || tErr}`);
           }
+        } catch (tErr) {
+          logDiag('Attendance:AllView', `[${courseId}] Full view probe note: ${tErr?.message || tErr}. Keeping base view.`);
         }
       }
 

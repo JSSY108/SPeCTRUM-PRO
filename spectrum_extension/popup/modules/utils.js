@@ -114,6 +114,36 @@
     return str.replace(/^occ\s*[-–—:]?\s*/i, '').trim();
   }
 
+  // Extract ONLY time (e.g. "2PM - 4PM", "14:00 - 16:00", "2:00PM - 4:00PM") and remove redundant Day, Date, Month, Year
+  function extractOnlyTime(s) {
+    if (!s) return '';
+    const str = String(s).trim();
+
+    // 1. Time range with AM/PM (e.g. "2PM - 4PM", "2:00PM - 4:00PM", "8.00AM - 10.00AM") or Malay indicators
+    const rangeMatch = str.match(/\b(\d{1,2}(?:[:.]\d{2})?\s*(?:AM|PM|pagi|petang|ptg|malam|mlm|tgh)?\s*(?:[-–—~]|to|hingga)\s*\d{1,2}(?:[:.]\d{2})?\s*(?:AM|PM|pagi|petang|ptg|malam|mlm|tgh))\b/i);
+    if (rangeMatch) return rangeMatch[1].trim();
+
+    // 2. 24-hour time range (e.g. "14:00 - 16:00", "08:30 - 10:30")
+    const range24 = str.match(/\b(\d{1,2}:\d{2}\s*(?:[-–—~]|to|hingga)\s*\d{1,2}:\d{2})\b/);
+    if (range24) return range24[1].trim();
+
+    // 3. Single time with AM/PM or Malay
+    const singleMatch = str.match(/\b(\d{1,2}(?:[:.]\d{2})?\s*(?:AM|PM|pagi|petang|ptg|malam|mlm|tgh))\b/i);
+    if (singleMatch) return singleMatch[1].trim();
+
+    // 4. Single 24-hr time (e.g. "14:00")
+    const single24 = str.match(/\b(\d{1,2}:\d{2})\b/);
+    if (single24) return single24[1].trim();
+
+    // 5. Fallback: strip leading day of week, day number, month, year
+    const stripped = str.replace(/^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun|Isnin|Selasa|Rabu|Khamis|Jumaat|Sabtu|Ahad)[a-z]*,?\s*/i, '')
+                        .replace(/^\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{2,4}\s*/i, '')
+                        .replace(/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\s*/, '')
+                        .replace(/^[@,\-–—\s]+/, '')
+                        .trim();
+    return stripped || str;
+  }
+
   function cleanSectionTitle(text) {
     if (!text || typeof text !== 'string') return 'General';
 
@@ -466,6 +496,7 @@
   window.extractOccs = extractOccs;
   window.formatOccTag = formatOccTag;
   window.cleanOccNumber = cleanOccNumber;
+  window.extractOnlyTime = extractOnlyTime;
   window.cleanSectionTitle = cleanSectionTitle;
   window.cleanDisplayCourseName = cleanDisplayCourseName;
   window.generateCourseAcronym = generateCourseAcronym;
