@@ -2552,44 +2552,66 @@ document.addEventListener('DOMContentLoaded', async () => {
     const stream = isFullTabList ? (document.getElementById('fulllist-cards-feed') || fulllistWrap) : (document.getElementById('popup-cards-stream') || document.querySelector('.split-cards-stream'));
     const streamRect = stream ? stream.getBoundingClientRect() : { top: 0, height: window.innerHeight };
 
-    // Focal line: uses spineFocalRatio (default 0.50 = middle of viewport / scroll container)
-    const ratio = (typeof spineFocalRatio === 'number' && !isNaN(spineFocalRatio)) ? spineFocalRatio : 0.50;
+    // Focal line: uses spineFocalRatio (default 0.40 = balanced focal zone)
+    const ratio = (typeof spineFocalRatio === 'number' && !isNaN(spineFocalRatio)) ? spineFocalRatio : 0.40;
     const focalLine = streamRect.top + (streamRect.height * ratio);
 
-    let activeGroup = groups[0];
+    const todayGroup = groups.find(g => g.classList.contains('group-today'));
+
+    let activeGroup = null;
 
     // Priority 1: Scrolled to top
     if (stream && stream.scrollTop <= 15) {
-      activeGroup = groups[0];
+      if (todayGroup) {
+        const tRect = todayGroup.getBoundingClientRect();
+        // If today is within upper viewport area, start with Today as default active
+        if (tRect.top >= streamRect.top - 20 && tRect.top <= streamRect.top + (streamRect.height * 0.65)) {
+          activeGroup = todayGroup;
+        }
+      }
+      if (!activeGroup) activeGroup = groups[0];
     }
     // Priority 2: Scrolled to bottom
     else if (stream && (stream.scrollTop + stream.clientHeight >= stream.scrollHeight - 25)) {
       activeGroup = groups[groups.length - 1];
     }
-    // Priority 3: Determine which date group / card is occupying the focal line (middle of screen)
+    // Priority 3: Determine which date group / card is occupying the focal line
     else {
-      for (let i = 0; i < groups.length; i++) {
-        const g = groups[i];
-        const gr = g.getBoundingClientRect();
-
-        // If the group (header + cards) spans across the focal line
-        if (gr.top <= focalLine && gr.bottom >= focalLine) {
-          activeGroup = g;
-          break;
+      // First check if todayGroup is in the focal vicinity (±45px)
+      if (todayGroup) {
+        const tRect = todayGroup.getBoundingClientRect();
+        if (tRect.top - 45 <= focalLine && tRect.bottom + 45 >= focalLine) {
+          activeGroup = todayGroup;
         }
+      }
 
-        // If group is before focalLine, keep as candidate
-        if (gr.top <= focalLine) {
-          activeGroup = g;
-        } else {
-          // This group starts below the focalLine
-          break;
+      if (!activeGroup) {
+        for (let i = 0; i < groups.length; i++) {
+          const g = groups[i];
+          const gr = g.getBoundingClientRect();
+          const isEmpty = !g.querySelector('.spine-date-cards') || g.querySelectorAll('.spectrum-card').length === 0;
+          const topBound = isEmpty ? (gr.top - 35) : gr.top;
+          const bottomBound = isEmpty ? (gr.bottom + 35) : gr.bottom;
+
+          // If the group (header + cards, or empty node reach) spans across the focal line
+          if (topBound <= focalLine && bottomBound >= focalLine) {
+            activeGroup = g;
+            break;
+          }
+
+          // If group is before focalLine, keep as candidate
+          if (gr.top <= focalLine) {
+            activeGroup = g;
+          } else {
+            // This group starts below the focalLine
+            break;
+          }
         }
       }
     }
 
     if (!activeGroup && groups.length > 0) {
-      activeGroup = groups[0];
+      activeGroup = todayGroup || groups[0];
     }
 
     groups.forEach(g => {
@@ -2605,33 +2627,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     const todayGroup = container.querySelector('.spine-date-group.group-today');
     if (!todayGroup) return;
 
+    // Immediately grant active focal dot to TODAY so it starts solid black without waiting
+    const allGroups = container.querySelectorAll('.spine-date-group');
+    allGroups.forEach(g => {
+      const isTarget = (g === todayGroup);
+      g.classList.toggle('is-active', isTarget);
+      const dot = g.querySelector('.spine-node-dot');
+      if (dot) dot.classList.toggle('is-active', isTarget);
+    });
+
     const doScroll = () => {
       const cRect = container.getBoundingClientRect();
       if (cRect.height <= 0) return;
       const tRect = todayGroup.getBoundingClientRect();
       const currentScrollTop = container.scrollTop;
-      // Position Today nicely around 28% from top of container for optimal visibility
-      const ratio = 0.28;
-      const targetScroll = Math.max(0, (tRect.top - cRect.top) + currentScrollTop - (cRect.height * ratio));
+      // Position Today directly at focal line for optimal active focal dot alignment
+      const focalRatio = (typeof spineFocalRatio === 'number' && !isNaN(spineFocalRatio)) ? spineFocalRatio : 0.40;
+      const targetScroll = Math.max(0, (tRect.top - cRect.top) + currentScrollTop - (cRect.height * focalRatio));
 
       if (immediate) {
         const prevBehavior = container.style.scrollBehavior;
         container.style.scrollBehavior = 'auto';
         container.scrollTop = targetScroll;
+        if (typeof container.scrollTo === 'function') {
+          container.scrollTo({ top: targetScroll, behavior: 'auto' });
+        }
         requestAnimationFrame(() => {
           container.style.scrollBehavior = prevBehavior || 'smooth';
           updateActiveSpineNode();
         });
       } else {
-        container.scrollTo({ top: targetScroll, behavior: 'smooth' });
+        if (typeof container.scrollTo === 'function') {
+          container.scrollTo({ top: targetScroll, behavior: 'smooth' });
+        } else {
+          container.scrollTop = targetScroll;
+        }
         setTimeout(updateActiveSpineNode, 100);
       }
     };
 
-    requestAnimationFrame(() => {
-      doScroll();
-      setTimeout(doScroll, 60);
-      setTimeout(doScroll, 180);
+    // Staggered attempts to guarantee container layout has settled
+    [0, 50, 150, 300, 500].forEach(delay => {
+      setTimeout(doScroll, delay);
     });
   }
 
@@ -2897,7 +2934,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const titleHtml = isToday 
         ? `TODAY <span class="spine-node-date">${day} ${mon}</span>` 
         : `${day} ${mon} ${wd}`;
-      const dotClass = isToday ? 'spine-node-dot is-today' : 'spine-node-dot';
+      const dotClass = isToday ? 'spine-node-dot is-today is-active' : 'spine-node-dot';
       const badgeText = isToday 
         ? `${group.events.length} Event${group.events.length !== 1 ? 's' : ''}` 
         : (isFuture 
@@ -2927,7 +2964,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }).join('');
 
       spineHtml += `
-        <div class="spine-date-group ${isToday ? 'group-today' : ''}" data-date-key="${escapeHtml(group.dateKey)}">
+        <div class="spine-date-group ${isToday ? 'group-today is-active' : ''}" data-date-key="${escapeHtml(group.dateKey)}">
           <div class="spine-node-header">
             <span class="${dotClass}"></span>
             <div class="spine-node-title">${titleHtml}</div>
@@ -3021,6 +3058,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         selectedCourseFilterCode = code;
         renderPopupMonograms();
         syncPopupActivityStreams();
+        const stream = document.getElementById('popup-cards-stream');
+        if (stream) scrollSpineToToday(stream, true);
       });
 
       // Floating tooltip on hover (using #rail-tooltip-overlay)
@@ -3302,6 +3341,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     syncPopupActivityStreams();
+    if (popupSidebarMode === 'courses') {
+      const stream = document.getElementById('popup-cards-stream');
+      if (stream) scrollSpineToToday(stream, true);
+    }
     chrome.storage.local.set({ cachedPopupSidebarMode: popupSidebarMode }).catch(() => {});
   }
 
@@ -3354,6 +3397,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       btnSidebarCrs.addEventListener('click', (e) => {
         e.preventDefault();
         setPopupSidebarMode('courses');
+        const stream = document.getElementById('popup-cards-stream');
+        if (stream) scrollSpineToToday(stream, true);
       });
     }
 
@@ -4073,9 +4118,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderAllActivities();
     if (currentActivitiesMode === 'timeline') initStickyDateObserver();
 
+    if (currentActivitiesMode === 'bycourse' && !isFullTab) {
+      setPopupSidebarMode('courses');
+    }
+
     const fulllistWrap = document.getElementById('fulllist-wrapper');
     if (fulllistWrap && fulllistWrap.style.display !== 'none') {
       renderFullListMode();
+      const scrollTarget = document.getElementById('fulllist-cards-feed') || fulllistWrap;
+      if (scrollTarget) scrollSpineToToday(scrollTarget, true);
+    } else {
+      const stream = document.getElementById('popup-cards-stream');
+      if (stream && popupSidebarMode === 'courses') {
+        scrollSpineToToday(stream, true);
+      }
     }
   }
 
@@ -7627,6 +7683,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             selectedCourseFilterId = item.dataset.courseId;
             selectedCourseFilterCode = item.dataset.courseCode;
             renderFullListMode();
+            const scrollTarget = document.getElementById('fulllist-cards-feed') || document.getElementById('fulllist-wrapper');
+            if (scrollTarget) scrollSpineToToday(scrollTarget, true);
           });
         });
       }
@@ -7869,7 +7927,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const titleHtml = isToday 
           ? `TODAY <span class="spine-node-date">${day} ${mon}</span>` 
           : `${day} ${mon} ${wd}`;
-        const dotClass = isToday ? 'spine-node-dot is-today' : 'spine-node-dot';
+        const dotClass = isToday ? 'spine-node-dot is-today is-active' : 'spine-node-dot';
 
         // Sort cards within group: assignments (1), attendance (2, ascending by start time), notices (3)
         const sortedEvents = group.events.sort((a, b) => {
@@ -7894,7 +7952,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).join('');
 
         spineHtml += `
-          <div class="spine-date-group ${isToday ? 'group-today' : ''}" data-date-key="${escapeHtml(group.dateKey)}">
+          <div class="spine-date-group ${isToday ? 'group-today is-active' : ''}" data-date-key="${escapeHtml(group.dateKey)}">
             <div class="spine-node-header">
               <span class="${dotClass}"></span>
               <div class="spine-node-title">${titleHtml}</div>
