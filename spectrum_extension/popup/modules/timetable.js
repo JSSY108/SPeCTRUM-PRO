@@ -662,6 +662,104 @@
     flashExportButtonSuccess(document.getElementById('btn-export-timetable-csv'));
   }
 
+  /**
+   * Draws the official SPeCTRUM PRO prism brand mark onto an HTML5 Canvas.
+   * Rendered with pure mathematical vector paths for pin-sharp export at any DPI.
+   */
+  function drawCanvasPrismLogo(ctx, x, y, size) {
+    ctx.save();
+    const radius = 10;
+    ctx.fillStyle = '#18181B';
+    ctx.beginPath();
+    if (typeof ctx.roundRect === 'function') {
+      ctx.roundRect(x, y, size, size, radius);
+    } else {
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + size, y, x + size, y + size, radius);
+      ctx.arcTo(x + size, y + size, x, y + size, radius);
+      ctx.arcTo(x, y + size, x, y, radius);
+      ctx.arcTo(x, y, x + size, y, radius);
+    }
+    ctx.fill();
+
+    const s = size / 200;
+    const toX = vx => x + vx * s;
+    const toY = vy => y + vy * s;
+
+    // 1. Triangular Prism Outline
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = Math.max(1.8, 2.2 * s);
+    ctx.lineJoin = 'miter';
+    ctx.beginPath();
+    ctx.moveTo(toX(100), toY(36.4));
+    ctx.lineTo(toX(32.7), toY(149.5));
+    ctx.lineTo(toX(167.3), toY(149.5));
+    ctx.closePath();
+    ctx.stroke();
+
+    // Base subline
+    ctx.beginPath();
+    ctx.moveTo(toX(35.7), toY(145.9));
+    ctx.lineTo(toX(164.3), toY(145.9));
+    ctx.stroke();
+
+    // 2. Incident Beam (entering from left)
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.moveTo(toX(0.2), toY(141.4));
+    ctx.lineTo(toX(50.9), toY(124.6));
+    ctx.lineTo(toX(49.3), toY(120.0));
+    ctx.lineTo(toX(-0.2), toY(140.2));
+    ctx.closePath();
+    ctx.fill();
+
+    // 3. Internal Refraction & Lightning Zig-Zag
+    ctx.lineWidth = Math.max(1.5, 2.0 * s);
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(toX(50.1), toY(120.7));
+    ctx.lineTo(toX(100.7), toY(105.4));
+    ctx.lineTo(toX(75.6), toY(87.4));
+    ctx.lineTo(toX(122.4), toY(71.1));
+    ctx.lineTo(toX(123.7), toY(78.2));
+    ctx.lineTo(toX(98.6), toY(91.1));
+    ctx.lineTo(toX(129.9), toY(111.6));
+    ctx.lineTo(toX(50.1), toY(123.9));
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // 4. Refracted Spectral Rays (exiting right)
+    // Ray 1
+    ctx.beginPath();
+    ctx.moveTo(toX(122.8), toY(72.1));
+    ctx.lineTo(toX(200.1), toY(39.8));
+    ctx.lineTo(toX(199.9), toY(39.2));
+    ctx.lineTo(toX(122.0), toY(70.1));
+    ctx.closePath();
+    ctx.fill();
+
+    // Ray 2
+    ctx.beginPath();
+    ctx.moveTo(toX(123.1), toY(75.9));
+    ctx.lineTo(toX(200.1), toY(51.7));
+    ctx.lineTo(toX(199.9), toY(50.9));
+    ctx.lineTo(toX(122.7), toY(74.3));
+    ctx.closePath();
+    ctx.fill();
+
+    // Ray 3
+    ctx.beginPath();
+    ctx.moveTo(toX(124.1), toY(79.9));
+    ctx.lineTo(toX(200.1), toY(64.4));
+    ctx.lineTo(toX(199.9), toY(63.6));
+    ctx.lineTo(toX(123.7), toY(78.3));
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+
   function renderTimetableToCanvas() {
     const sessions = extractWeeklyTimetableSessions();
     const DAY_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
@@ -695,26 +793,72 @@
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, width, height);
 
-    // Header Kicker
-    ctx.fillStyle = '#71717A';
-    ctx.font = '700 19px "JetBrains Mono", monospace';
-    ctx.fillText('ACADEMIC SCHEDULE · SEMESTER MASTER VIEW', 60, 68);
+    // ── 1. SPeCTRUM PRO Brand Mark (Icon Square) ──
+    const iconSize = 74;
+    const iconX = 60;
+    const iconY = 46;
+    drawCanvasPrismLogo(ctx, iconX, iconY, iconSize);
 
-    // Title
+    // ── 2. Elevated Brand & Title Typography ──
+    const titleLeftX = iconX + iconSize + 20; // 154px
     ctx.fillStyle = '#18181B';
-    ctx.font = '800 38px "Hanken Grotesk", -apple-system, sans-serif';
-    ctx.fillText('WEEKLY ACADEMIC TIMETABLE', 60, 114);
+    ctx.font = '800 17px "JetBrains Mono", monospace';
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '1.5px';
+    ctx.fillText('SPECTRUM PRO', titleLeftX, 70);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 
-    // Subtitle
+    ctx.font = '800 42px "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('ACADEMIC TIMETABLE', titleLeftX, 114);
+
+    // ── 3. Right-Aligned Tabular Metadata Pill (TERM: Year / SEM) ──
+    let academicYear = '2024/2025';
+    let semType = 'SEM I';
+    if (typeof window.getUmAcademicInfo === 'function') {
+      try {
+        const um = window.getUmAcademicInfo(new Date());
+        if (um && um.academicYear) academicYear = um.academicYear;
+        if (um && um.semType) semType = um.semType;
+      } catch (e) {}
+    }
+
+    const badgeW = 270;
+    const badgeH = 74;
+    const badgeX = width - 60 - badgeW; // 1870px
+    const badgeY = 46;
+    const badgeR = 10;
+
+    // Pill background container
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    if (typeof ctx.roundRect === 'function') {
+      ctx.roundRect(badgeX, badgeY, badgeW, badgeH, badgeR);
+    } else {
+      ctx.rect(badgeX, badgeY, badgeW, badgeH);
+    }
+    ctx.fill();
+    ctx.strokeStyle = '#E4E4E7';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // "TERM:" label on left of badge
     ctx.fillStyle = '#71717A';
-    ctx.font = '600 20px "Hanken Grotesk", -apple-system, sans-serif';
-    ctx.fillText('Constructed from Course Attendance Sessions · Days of Week (MYT / UTC+8)', 60, 144);
+    ctx.font = '700 18px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('TERM:', badgeX + 22, badgeY + 44);
 
-    // Grid Coordinates
+    // Year & Sem right-aligned on badge
+    ctx.fillStyle = '#18181B';
+    ctx.font = '800 19px "JetBrains Mono", monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(academicYear, badgeX + badgeW - 22, badgeY + 33);
+    ctx.fillText(semType, badgeX + badgeW - 22, badgeY + 59);
+    ctx.textAlign = 'left';
+
+    // ── 4. Grid Coordinates (Gained 30px vertical height from eliminated subheads) ──
     const gridX = 60;
-    const gridY = 175;
+    const gridY = 145;
     const gridW = width - 120; // 2080px
-    const gridH = height - 235; // 1215px
+    const gridH = height - gridY - 55; // 1250px (was 1215px, +35px extra space)
     const headerH = 65;
     const timeColW = 115;
     const dayColW = (gridW - timeColW) / totalDays;
@@ -874,11 +1018,11 @@
           }
           ctx.fillText(title, cardX + 16, cardY + 56);
 
-          // Subtitle (if 2+ hours or cardH >= 95)
-          if (cardH >= 95) {
+          // Subtitle (if 2+ hours or cardH >= 120): ONLY show OCC, NO duplicate venue beside OCC!
+          if (cardH >= 120) {
             ctx.fillStyle = '#71717A';
             ctx.font = '600 15px "JetBrains Mono", monospace';
-            let sub = s.venue ? `${s.occ} · ${s.venue}` : s.occ;
+            let sub = s.occ || '';
             if (ctx.measureText(sub).width > cardW - 28) {
               while (sub.length > 4 && ctx.measureText(sub + '…').width > cardW - 28) {
                 sub = sub.slice(0, -1);
@@ -888,19 +1032,28 @@
             ctx.fillText(sub, cardX + 16, cardY + 84);
           }
 
-          // Footer (Venue left, Time right)
-          if (cardH >= 70) {
+          // Footer (Venue left with pin, Time right)
+          if (cardH >= 65) {
             if (s.venue) {
               ctx.fillStyle = '#71717A';
-              ctx.font = '600 14px "JetBrains Mono", monospace';
-              let vText = `${s.venue}`;
-              ctx.fillText(vText, cardX + 16, cardY + cardH - 12);
+              ctx.font = '600 15px "JetBrains Mono", monospace';
+              const vText = `${s.venueIcon || '📍'} ${s.venue}`;
+              const timeW = ctx.measureText(s.timeStr).width;
+              const maxVenueW = cardW - 32 - timeW - 14;
+              let displayVenue = vText;
+              if (ctx.measureText(displayVenue).width > maxVenueW) {
+                while (displayVenue.length > 4 && ctx.measureText(displayVenue + '…').width > maxVenueW) {
+                  displayVenue = displayVenue.slice(0, -1);
+                }
+                displayVenue += '…';
+              }
+              ctx.fillText(displayVenue, cardX + 16, cardY + cardH - 14);
             }
 
             ctx.fillStyle = '#71717A';
-            ctx.font = '600 14px "JetBrains Mono", monospace';
+            ctx.font = '600 15px "JetBrains Mono", monospace';
             ctx.textAlign = 'right';
-            ctx.fillText(s.timeStr, cardX + cardW - 14, cardY + cardH - 12);
+            ctx.fillText(s.timeStr, cardX + cardW - 14, cardY + cardH - 14);
             ctx.textAlign = 'left';
           }
         });
