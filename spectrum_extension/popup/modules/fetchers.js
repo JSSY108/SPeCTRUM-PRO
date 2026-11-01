@@ -135,7 +135,7 @@ async function fetchEnrolledCoursesDirectly() {
 // 2. Direct Course Materials Fetcher
 async function fetchCourseMaterialsDirectly(courseId, allowedExts, materialsOnly) {
   try {
-    const defaultExts = ['.pdf', '.pptx', '.zip', '.docx', '.xlsx', '.ipynb', '.doc', '.ppt', '.txt'];
+    const defaultExts = ['.pdf', '.pptx', '.zip', '.docx', '.xlsx', '.doc', '.ppt', '.txt'];
     const exts = (Array.isArray(allowedExts) && allowedExts.length > 0) ? allowedExts : defaultExts;
     const origin = SPECTRUM_ORIGIN;
     const url = `${origin}/course/view.php?id=${courseId}`;

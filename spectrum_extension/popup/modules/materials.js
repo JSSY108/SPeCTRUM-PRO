@@ -31,7 +31,7 @@
   let currentInspectedFile = null;
 
   const defaultSettings = {
-    extensions: ['.pdf', '.pptx', '.zip', '.docx', '.xlsx', '.ipynb', '.doc', '.ppt', '.txt'],
+    extensions: ['.pdf', '.pptx', '.zip', '.docx', '.xlsx', '.doc', '.ppt', '.txt'],
     materialsOnly: true,
     excludeSystem: true
   };
@@ -539,7 +539,7 @@
               { id: 'f_wia2003_lec06', title: 'Lecture Slides - Estimation & Confidence Intervals.pdf', url: 'https://spectrum.um.edu.my/mod/resource/view.php?id=200356', sizeBytes: 6815744, sizeStr: '6.5 MB', uploadDate: '25 Oct 2024, 11:20:00 UTC', uploadDateShort: '25 Oct 2024', sha256: '33cb8911de5523ab0771cb5500ef89a12005672133ee5...', isSynced: true, isNew: false, checked: false },
               { id: 'f_wia2003_lec05', title: 'Lecture Slides - Hypothesis Testing & P-Values.pptx', url: 'https://spectrum.um.edu.my/mod/resource/view.php?id=200355', sizeBytes: 11744051, sizeStr: '11.2 MB', uploadDate: '18 Oct 2024, 15:40:00 UTC', uploadDateShort: '18 Oct 2024', sha256: '22ba7811cd4412ba0661ba4400de78a11004561022ff4...', isSynced: true, isNew: false, checked: false },
               { id: 'f_wia2003_lec04', title: 'Lecture Slides - Central Limit Theorem Proofs.pdf', url: 'https://spectrum.um.edu.my/mod/resource/view.php?id=200354', sizeBytes: 5033164, sizeStr: '4.8 MB', uploadDate: '11 Oct 2024, 14:00:00 UTC', uploadDateShort: '11 Oct 2024', sha256: '11aa6710bc3301ab0551aa3300cd67a10003450911aa3...', isSynced: true, isNew: false, checked: false },
-              { id: 'f_wia2003_lab', title: 'R_Statistical_Computing_Lab_Workbook.ipynb', url: 'https://spectrum.um.edu.my/mod/resource/view.php?id=200353', sizeBytes: 3774873, sizeStr: '3.6 MB', uploadDate: '04 Oct 2024, 13:10:00 UTC', uploadDateShort: '04 Oct 2024', sha256: '00995609ab2290ba0441992200bc56a09002349800bb2...', isSynced: true, isNew: false, checked: false },
+              { id: 'f_wia2003_lab', title: 'R_Statistical_Computing_Lab_Workbook.pdf', url: 'https://spectrum.um.edu.my/mod/resource/view.php?id=200353', sizeBytes: 3774873, sizeStr: '3.6 MB', uploadDate: '04 Oct 2024, 13:10:00 UTC', uploadDateShort: '04 Oct 2024', sha256: '00995609ab2290ba0441992200bc56a09002349800bb2...', isSynced: true, isNew: false, checked: false },
               { id: 'f_wia2003_cheat', title: 'Probability_Distributions_Summary_Cheatsheet.pdf', url: 'https://spectrum.um.edu.my/mod/resource/view.php?id=200352', sizeBytes: 1572864, sizeStr: '1.5 MB', uploadDate: '27 Sep 2024, 16:50:00 UTC', uploadDateShort: '27 Sep 2024', sha256: 'ff8845089a1189ba0331881100ab45a08001238799cc1...', isSynced: true, isNew: false, checked: false }
             ]
           }
