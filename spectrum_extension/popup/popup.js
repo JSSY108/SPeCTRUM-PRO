@@ -2818,28 +2818,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       groupsMap.get(ev.dateKey).events.push(ev);
     });
 
-    // Chronological spine sort:
-    // 1. TODAY group first (if any)
-    // 2. Upcoming dates: sorted ASCENDING (nearest upcoming deadline/session first, e.g. 03 Nov then 27 Nov)
-    // 3. Past dates: sorted DESCENDING (most recent past first, e.g. 28 Oct then 14 Oct)
+    // Unified chronological spine sort:
+    // Guarantees continuous monotonic ordering across all months (Oct -> Nov -> Dec -> Jan)
+    // Respects currentSortOrder ('oldest' = chronological ascending, 'newest' = reverse chronological descending)
     const groups = Array.from(groupsMap.values()).sort((a, b) => {
-      const aIsToday = (a.dateKey === todayKey);
-      const bIsToday = (b.dateKey === todayKey);
-      if (aIsToday) return -1;
-      if (bIsToday) return 1;
-
-      const aTime = a.date.getTime();
-      const bTime = b.date.getTime();
-      const aIsFuture = (aTime >= nowTime);
-      const bIsFuture = (bTime >= nowTime);
-
-      if (aIsFuture && !bIsFuture) return -1;
-      if (!aIsFuture && bIsFuture) return 1;
-
-      if (aIsFuture && bIsFuture) {
-        return aTime - bTime;
+      const keyA = a.dateKey || (a.date ? formatDateKey(a.date) : '');
+      const keyB = b.dateKey || (b.date ? formatDateKey(b.date) : '');
+      const comp = keyA.localeCompare(keyB);
+      if (comp !== 0) {
+        return (currentSortOrder === 'newest') ? -comp : comp;
       }
-      return bTime - aTime;
+      const aTime = (a.date instanceof Date && !isNaN(a.date.getTime())) ? a.date.getTime() : 0;
+      const bTime = (b.date instanceof Date && !isNaN(b.date.getTime())) ? b.date.getTime() : 0;
+      return (currentSortOrder === 'newest') ? (bTime - aTime) : (aTime - bTime);
     });
 
     let spineHtml = '<div class="chronological-spine-timeline">';
@@ -7776,28 +7767,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         groupsMap.get(ev.dateKey).events.push(ev);
       });
 
-      // Chronological spine sort:
-      // 1. TODAY group first (if any)
-      // 2. Upcoming dates: sorted ASCENDING (nearest first)
-      // 3. Past dates: sorted DESCENDING (most recent first)
+      // Unified chronological spine sort:
+      // Guarantees continuous monotonic ordering across all months (Oct -> Nov -> Dec -> Jan)
+      // Respects currentSortOrder ('oldest' = chronological ascending, 'newest' = reverse chronological descending)
       const groups = Array.from(groupsMap.values()).sort((a, b) => {
-        const aIsToday = (a.dateKey === todayKey);
-        const bIsToday = (b.dateKey === todayKey);
-        if (aIsToday) return -1;
-        if (bIsToday) return 1;
-
-        const aTime = a.date.getTime();
-        const bTime = b.date.getTime();
-        const aIsFuture = (aTime >= nowTime);
-        const bIsFuture = (bTime >= nowTime);
-
-        if (aIsFuture && !bIsFuture) return -1;
-        if (!aIsFuture && bIsFuture) return 1;
-
-        if (aIsFuture && bIsFuture) {
-          return currentSortOrder === 'oldest' ? (bTime - aTime) : (aTime - bTime);
+        const keyA = a.dateKey || (a.date ? formatDateKey(a.date) : '');
+        const keyB = b.dateKey || (b.date ? formatDateKey(b.date) : '');
+        const comp = keyA.localeCompare(keyB);
+        if (comp !== 0) {
+          return (currentSortOrder === 'newest') ? -comp : comp;
         }
-        return currentSortOrder === 'oldest' ? (aTime - bTime) : (bTime - aTime);
+        const aTime = (a.date instanceof Date && !isNaN(a.date.getTime())) ? a.date.getTime() : 0;
+        const bTime = (b.date instanceof Date && !isNaN(b.date.getTime())) ? b.date.getTime() : 0;
+        return (currentSortOrder === 'newest') ? (bTime - aTime) : (aTime - bTime);
       });
 
       let spineHtml = '<div class="chronological-spine-timeline">';
