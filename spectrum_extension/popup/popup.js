@@ -106,6 +106,27 @@ function extractOccs(text) {
   return Array.from(set);
 }
 
+function formatOccTag(rawOcc) {
+  if (!rawOcc) return '';
+  const str = String(rawOcc).trim();
+  const numMatch = str.match(/\d+/);
+  if (numMatch) {
+    return `OCC ${parseInt(numMatch[0], 10)}`;
+  }
+  const clean = str.replace(/^occ\s*[-–—:]?\s*/i, '').trim();
+  return clean ? `OCC ${clean}` : str.toUpperCase();
+}
+
+function cleanOccNumber(rawOcc) {
+  if (!rawOcc) return '';
+  const str = String(rawOcc).trim();
+  const numMatch = str.match(/\d+/);
+  if (numMatch) {
+    return String(parseInt(numMatch[0], 10));
+  }
+  return str.replace(/^occ\s*[-–—:]?\s*/i, '').trim();
+}
+
 // Universal Helper to clean Moodle 4 section titles from screen reader text and boilerplate buttons
 function cleanSectionTitle(text) {
   if (!text || typeof text !== 'string') return 'General';
@@ -1718,15 +1739,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       : code;
 
     const rawOcc = assign.userOcc || (assign.courseId && courseOccs[assign.courseId]) || defaultOcc || '';
-    let occFormatted = '';
-    if (rawOcc) {
-      const numMatch = String(rawOcc).match(/\d+/);
-      if (numMatch) {
-        occFormatted = `OCC-${String(parseInt(numMatch[0], 10)).padStart(2, '0')}`;
-      } else {
-        occFormatted = String(rawOcc).toUpperCase();
-      }
-    }
+    const occFormatted = formatOccTag(rawOcc);
 
     // 2. Assignment Title
     const title = assign.title || assign.name || 'Assignment';
@@ -2145,8 +2158,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const code = att.courseCode || sessionData.courseCode || 'COURSE';
     const rawName = att.courseName || sessionData.courseName || code;
     const cleanName = (typeof cleanDisplayCourseName === 'function') ? cleanDisplayCourseName(rawName, code) : rawName;
-    const occRaw = att.userOcc || sessionData.userOcc || courseOccs[att.courseId || sessionData.cid] || defaultOcc || '01';
-    const occNum = String(occRaw).replace(/^occ\s*/i, '').trim();
+    const occRaw = att.userOcc || sessionData.userOcc || courseOccs[att.courseId || sessionData.cid] || defaultOcc || '1';
+    const occNum = cleanOccNumber(occRaw) || '1';
 
     // 5. Action / Status Routing
     const rawAttId = att.id || sessionData.cardId || '';
@@ -2533,7 +2546,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (scopeBar) scopeBar.style.display = 'flex';
     if (scopeCode) scopeCode.textContent = cInfo.courseCode;
-    let occClean = cInfo.userOcc ? String(cInfo.userOcc).replace(/^occ\s*/i, '').trim() : '';
+    let occClean = cInfo.userOcc ? cleanOccNumber(cInfo.userOcc) : '';
     if (scopeOcc) {
       scopeOcc.textContent = occClean ? `OCC ${occClean}` : '';
       scopeOcc.style.display = occClean ? 'inline-block' : 'none';
@@ -2834,7 +2847,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       let occText = '';
       if (c.userOcc) {
-        const clean = String(c.userOcc).replace(/^occ\s*/i, '').trim();
+        const clean = cleanOccNumber(c.userOcc);
         if (clean) occText = ` (OCC ${clean})`;
       }
       const titleText = `${c.courseCode}: ${c.courseName}${occText} - ${cTotal} active item${cTotal !== 1 ? 's' : ''}`;
@@ -3069,7 +3082,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           const c = courses.find(item => String(item.courseId) === String(cid) || item.courseCode === btn.dataset.courseCode);
           if (!c) return;
 
-          const occText = c.userOcc ? ('OCC ' + String(c.userOcc).replace(/^occ\s*/i, '')) : 'All Cohorts';
+          const occText = c.userOcc ? formatOccTag(c.userOcc) : 'All Cohorts';
           const activeTasks = (c.pendingCount !== undefined) ? c.pendingCount : (c.taskCount || 0);
           const cTotal = (c.annCount || 0) + activeTasks + (c.attCount || 0);
           const instructor = c.lecturer || 'Course Instructor · Faculty of CSIT';
@@ -5328,7 +5341,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function applyUserOcc(cid, occ) {
-    const trimmed = String(occ || '').trim();
+    const trimmed = cleanOccNumber(occ);
     if (trimmed) {
       courseOccs[cid] = trimmed;
     } else {
@@ -5398,11 +5411,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <span class="occ-course-name-text" title="${escapeHtml(c.courseName)}">${escapeHtml(c.courseName)}</span>
               </div>
               <div class="occ-actions-box">
-                <span class="occ-actions-label">${c.hasUserOcc ? `Current: OCC ${escapeHtml(c.userOcc)}` : 'Select Group:'}</span>
+                <span class="occ-actions-label">${c.hasUserOcc ? `Current: OCC ${escapeHtml(cleanOccNumber(c.userOcc))}` : 'Select Group:'}</span>
                 <div class="occ-pills-list">
-                  ${c.detectedOccs.map(occ => `
-                    <button type="button" class="btn-occ-pill-select ${String(c.userOccNum) === String(occ) ? 'active' : ''}" data-course-id="${c.courseId}" data-occ="${occ}">OCC ${occ}</button>
-                  `).join('')}
+                  ${c.detectedOccs.map(occ => {
+                    const cleanO = cleanOccNumber(occ);
+                    return `<button type="button" class="btn-occ-pill-select ${String(c.userOccNum) === String(cleanO) ? 'active' : ''}" data-course-id="${c.courseId}" data-occ="${cleanO}">OCC ${cleanO}</button>`;
+                  }).join('')}
                 </div>
                 <div class="occ-custom-input-box">
                   <input type="text" class="occ-custom-input" id="occ-input-banner-${c.courseId}" value="${c.userOcc || ''}" placeholder="Other" maxlength="4" />
@@ -6378,9 +6392,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       attendanceListEl.innerHTML = sortedCourseEntries.map(([cid, group]) => {
-        const userOcc = group.userOcc;
+        const userOcc = cleanOccNumber(group.userOcc);
         const hasOpen = group.items.some(a => a.activeSession != null);
         const hasMultipleOccs = group.detectedOccs && group.detectedOccs.length > 1;
+        const detectedOccsFormatted = (group.detectedOccs || []).map(cleanOccNumber).filter(Boolean);
 
         const cleanGroupCourse = cleanDisplayCourseName(group.courseName, group.courseCode);
 
@@ -6398,7 +6413,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <span class="occ-tag-pill">OCC ${escapeHtml(userOcc)}</span>
                     <button class="btn-text-action btn-edit-occ" data-card-id="${cid}" data-course-id="${cid}" style="padding:1px 6px;font-size:10px;">Edit</button>
                   ` : hasMultipleOccs ? `
-                    <span style="color:var(--warning);font-weight:600;">Multiple Available (${group.detectedOccs.join(', ')})</span>
+                    <span style="color:var(--warning);font-weight:600;">Multiple Available (${detectedOccsFormatted.join(', ')})</span>
                     <button class="btn-text-action btn-edit-occ" data-card-id="${cid}" data-course-id="${cid}" style="padding:1px 6px;font-size:10px;">Set</button>
                   ` : `
                     <span style="color:var(--text-muted);">Standard (All OCCs)</span>
@@ -7419,7 +7434,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         courseJumpList.innerHTML = courses.map(c => {
           const isSel = (cInfo && (String(cInfo.courseId) === String(c.courseId) || cInfo.courseCode === c.courseCode));
           const monogram = (typeof generateCourseAcronym === 'function') ? generateCourseAcronym(c.courseName, c.courseCode) : (c.courseCode || 'CO').slice(0, 3).toUpperCase();
-          const occClean = c.userOcc ? String(c.userOcc).replace(/^occ\s*/i, '').trim() : '';
+          const occClean = c.userOcc ? cleanOccNumber(c.userOcc) : '';
           const cCount = courseCountsMap.get(String(c.courseId)) || 0;
           return `
             <button type="button" class="fulllist-course-nav-item ${isSel ? 'active' : ''}" data-course-id="${escapeHtml(String(c.courseId))}" data-course-code="${escapeHtml(c.courseCode || '')}">
@@ -7593,7 +7608,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       // Focused Scope Bar Header
-      let occClean = cInfo.userOcc ? String(cInfo.userOcc).replace(/^occ\s*/i, '').trim() : '';
+      let occClean = cInfo.userOcc ? cleanOccNumber(cInfo.userOcc) : '';
       const scopeBarHtml = `
         <div class="popup-focused-scope-bar" style="margin-bottom:16px;">
           <div class="scope-bar-top-row">

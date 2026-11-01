@@ -91,11 +91,12 @@
 
         let occStr = '';
         if (userOcc) {
-          occStr = String(userOcc).trim();
+          const occM = String(userOcc).match(/\d+/);
+          occStr = occM ? `OCC ${parseInt(occM[0], 10)}` : String(userOcc).trim();
           if (!occStr.toLowerCase().startsWith('occ')) occStr = `OCC ${occStr}`;
         } else {
           const occM = (sess.desc || '').match(/OCC[- ]*(\d+)/i);
-          occStr = occM ? `OCC ${occM[1]}` : 'OCC 1';
+          occStr = occM ? `OCC ${parseInt(occM[1], 10)}` : 'OCC 1';
         }
 
         let venue = (sess.desc || '').replace(/^(?:lecture|tutorial|lab|workshop)\s*[-–—:]?\s*/i, '').trim();

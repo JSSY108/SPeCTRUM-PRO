@@ -93,6 +93,27 @@
     return Array.from(set);
   }
 
+  function formatOccTag(rawOcc) {
+    if (!rawOcc) return '';
+    const str = String(rawOcc).trim();
+    const numMatch = str.match(/\d+/);
+    if (numMatch) {
+      return `OCC ${parseInt(numMatch[0], 10)}`;
+    }
+    const clean = str.replace(/^occ\s*[-–—:]?\s*/i, '').trim();
+    return clean ? `OCC ${clean}` : str.toUpperCase();
+  }
+
+  function cleanOccNumber(rawOcc) {
+    if (!rawOcc) return '';
+    const str = String(rawOcc).trim();
+    const numMatch = str.match(/\d+/);
+    if (numMatch) {
+      return String(parseInt(numMatch[0], 10));
+    }
+    return str.replace(/^occ\s*[-–—:]?\s*/i, '').trim();
+  }
+
   function cleanSectionTitle(text) {
     if (!text || typeof text !== 'string') return 'General';
 
@@ -443,6 +464,8 @@
   window.formatDateKey = formatDateKey;
   window.formatDateKeyToShort = formatDateKeyToShort;
   window.extractOccs = extractOccs;
+  window.formatOccTag = formatOccTag;
+  window.cleanOccNumber = cleanOccNumber;
   window.cleanSectionTitle = cleanSectionTitle;
   window.cleanDisplayCourseName = cleanDisplayCourseName;
   window.generateCourseAcronym = generateCourseAcronym;
