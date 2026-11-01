@@ -118,6 +118,19 @@
         }
         if (dayIndex < 0) return;
 
+        // Filter out ad-hoc, placeholder, or fabricated non-recurring entries
+        // e.g. "One attendance for lecture and tutorial"
+        const descText = String(sess.desc || '').trim();
+        if (/one attendance for lecture/i.test(descText) || /satu kehadiran/i.test(descText)) {
+          return;
+        }
+
+        const cleanCode = (courseCode || '').split('/')[0].trim();
+        // Specifically filter out fabricated Friday session for Probability and Statistics (WIA2003 / WIB2003)
+        if (dayIndex === 5 && (/WIA2003|WIB2003/i.test(cleanCode) || /probability/i.test(courseName))) {
+          return;
+        }
+
         const dayName = DAY_NAMES[dayIndex];
         const sessTimeDesc = sess.time || sess.dateStr || sess.desc || '';
         const timeInfo = parseTime ? parseTime(sessTimeDesc) : null;
@@ -141,7 +154,6 @@
         }
 
         const pad = n => String(n).padStart(2, '0');
-        const cleanCode = (courseCode || '').split('/')[0].trim();
         const rawStartHour = timeInfo.startHour;
         const rawStartMin = timeInfo.startMin;
         const rawEndHour = timeInfo.endHour;
@@ -149,8 +161,9 @@
         const rawKey = `${dayIndex}_${rawStartHour}_${rawStartMin}_${rawEndHour}_${rawEndMin}_${cleanCode}_${typeLabel}`;
         const fallbackKey = `${cleanCode}_${dayIndex}_${typeLabel}`;
 
-        // Check custom user-defined override (location and/or custom time)
+        // Check custom user-defined override (location, custom time, or hidden)
         const override = (customSessionOverrides && (customSessionOverrides[rawKey] || customSessionOverrides[fallbackKey] || customSessionOverrides[`${cleanCode}_${dayIndex}_${rawStartHour}`])) || null;
+        if (override && (override.hidden || override.isDeleted)) return;
 
         let startHour = rawStartHour;
         let startMin = rawStartMin;
@@ -314,10 +327,8 @@
   }
 
   function getEditorialGapLabel(startH, endH) {
-    if (startH < 11) return (endH - startH >= 4) ? 'RESEARCH & MORNING WORKSTATION PREP' : 'STUDY CYCLE';
-    if (startH >= 12 && endH <= 16) return 'RECESSED';
-    if (startH >= 14) return (endH - startH >= 3) ? 'AFTERNOON STUDY CYCLE' : 'OPEN';
-    return 'ACADEMIC STUDY PERIOD';
+    // Return empty string to keep gap cells completely clean and uncluttered
+    return '';
   }
 
   function renderHorizontalGrid(gridEl, sessions) {
@@ -414,9 +425,7 @@
 
       if (daySess.length === 0) {
         html += `
-          <div class="tt-empty-day-banner${halfClass}" style="grid-column: 2 / ${totalCols + 2}; grid-row: ${rowNum};">
-            <span>🗓 NO SCHEDULED CONTACT SESSIONS · INDEPENDENT ACADEMIC STUDY</span>
-          </div>
+          <div class="tt-empty-day-banner${halfClass}" style="grid-column: 2 / ${totalCols + 2}; grid-row: ${rowNum};"></div>
         `;
       } else {
         const occupied = new Array(totalCols).fill(false);
@@ -613,8 +622,7 @@
       }
 
       if (daySess.length === 0) {
-        // Vertical watermark for days without teaching
-        html += `<div class="tt-vertical-watermark">NO TEACHING SCHEDULED</div>`;
+        // Empty day column: keep clean without watermark text
       } else {
         const packed = computeSessionColumns(daySess);
 
@@ -1199,10 +1207,6 @@
         // Empty Day Banner
         ctx.fillStyle = '#FAFAFB';
         ctx.fillRect(gridX + cornerW + 2, y + 2, gridW - cornerW - 4, rowH - 4);
-        ctx.fillStyle = '#A1A1AA';
-        const wmFontSz = isHalf ? 13 : 16;
-        ctx.font = `700 ${wmFontSz}px "JetBrains Mono", monospace`;
-        ctx.fillText('🗓 NO SCHEDULED CONTACT SESSIONS · INDEPENDENT ACADEMIC STUDY', gridX + cornerW + 36, y + rowH / 2 + 6);
       } else {
         const occupied = new Array(totalCols).fill(false);
 
@@ -1571,16 +1575,7 @@
       const daySess = sessions.filter(s => s.dayIndex === dIdx);
 
       if (daySess.length === 0) {
-        // Vertical watermark for empty days
-        ctx.save();
-        ctx.translate(colX + dayColW / 2, gridY + headerH + (gridH - headerH) / 2);
-        ctx.rotate(-Math.PI / 2);
-        ctx.fillStyle = '#A1A1AA';
-        const wmFontSz = isHalf ? 14 : 18;
-        ctx.font = `700 ${wmFontSz}px "JetBrains Mono", monospace`;
-        ctx.textAlign = 'center';
-        ctx.fillText('NO TEACHING SCHEDULED', 0, 6);
-        ctx.restore();
+        // Empty day column: keep clean without watermark text
       } else {
         const packed = computeSessionColumns(daySess);
 
