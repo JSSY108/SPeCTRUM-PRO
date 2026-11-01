@@ -1013,8 +1013,9 @@
     const totalCols = maxHour - minHour;
     const totalDays = activeDayIndices.length;
 
-    const width = 2400;
-    const height = 1400;
+    // High resolution canvas (A4 landscape ratio compatible: 2200 x 1450 - exact same as vertical)
+    const width = 2200;
+    const height = 1450;
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
@@ -1025,52 +1026,67 @@
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, width, height);
 
-    // Verified Brand Mark (Prism Icon)
-    drawSpectrumPrismIcon(ctx, 60, 42, 88);
+    // ── 1. SPeCTRUM PRO Brand Mark (Icon Square) ──
+    const iconSize = 74;
+    const iconX = 60;
+    const iconY = 46;
+    drawCanvasPrismLogo(ctx, iconX, iconY, iconSize);
 
-    // Bold, Authoritative Brand Typography
+    // ── 2. Elevated Brand & Title Typography ──
+    const titleLeftX = iconX + iconSize + 20; // 154px
     ctx.fillStyle = '#18181B';
-    ctx.font = '800 24px "JetBrains Mono", monospace';
-    ctx.fillText('SPECTRUM PRO', 165, 74);
+    ctx.font = '800 17px "JetBrains Mono", monospace';
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '1.5px';
+    ctx.fillText('SPECTRUM PRO', titleLeftX, 70);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 
-    ctx.fillStyle = '#18181B';
-    ctx.font = '800 42px "Hanken Grotesk", -apple-system, sans-serif';
-    ctx.fillText('WEEKLY ACADEMIC TIMETABLE', 165, 118);
+    ctx.font = '800 42px "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('ACADEMIC TIMETABLE', titleLeftX, 114);
 
-    // Right-aligned Tabular Academic Metadata Badge
-    const termBadgeW = 280;
-    const termBadgeH = 72;
-    const termBadgeX = width - 60 - termBadgeW;
-    const termBadgeY = 48;
+    // ── 3. Right-Aligned Tabular Metadata Pill (TERM: Year / SEM) ──
+    let academicYear = '2024/2025';
+    let semType = 'SEM I';
+    if (typeof window.getUmAcademicInfo === 'function') {
+      try {
+        const um = window.getUmAcademicInfo(new Date());
+        if (um && um.academicYear) academicYear = um.academicYear;
+        if (um && um.semType) semType = um.semType;
+      } catch (e) {}
+    }
+
+    const badgeW = 270;
+    const badgeH = 74;
+    const badgeX = width - 60 - badgeW;
+    const badgeY = 46;
 
     ctx.fillStyle = '#F4F4F5';
     ctx.beginPath();
     if (typeof ctx.roundRect === 'function') {
-      ctx.roundRect(termBadgeX, termBadgeY, termBadgeW, termBadgeH, 8);
+      ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 8);
     } else {
-      ctx.rect(termBadgeX, termBadgeY, termBadgeW, termBadgeH);
+      ctx.rect(badgeX, badgeY, badgeW, badgeH);
     }
     ctx.fill();
 
     ctx.fillStyle = '#71717A';
     ctx.font = '700 18px "JetBrains Mono", monospace';
-    ctx.fillText('TERM:', termBadgeX + 20, termBadgeY + 44);
+    ctx.fillText('TERM:', badgeX + 24, badgeY + 44);
 
     ctx.fillStyle = '#18181B';
-    ctx.font = '800 20px "JetBrains Mono", monospace';
-    ctx.fillText('2024/2025', termBadgeX + 90, termBadgeY + 34);
-    ctx.fillText('SEM I', termBadgeX + 90, termBadgeY + 58);
+    ctx.font = '800 21px "JetBrains Mono", monospace';
+    ctx.fillText(academicYear, badgeX + 96, badgeY + 35);
+    ctx.fillText(semType, badgeX + 96, badgeY + 61);
 
-    // Grid Dimensions
+    // ── 4. Grid Dimensions (Identical Outer Frame to Vertical) ──
     const gridX = 60;
-    const gridY = 160;
-    const gridW = width - 120; // 2280px
-    const gridH = height - 215; // 1185px
-    const headerH = 70;
-    const cornerW = 210;
+    const gridY = 145;
+    const gridW = width - 120; // 2080px
+    const gridH = height - gridY - 55; // 1250px
+    const headerH = 65;
+    const cornerW = 180;
     const colW = (gridW - cornerW) / totalCols;
 
-    // Saturday half-row height if no sessions
+    // Saturday takes half row height if empty
     const hasSatSession = sessions.some(s => s.dayIndex === 6);
     const dayRowWeights = activeDayIndices.map(dIdx => (dIdx === 6 && !hasSatSession) ? 0.5 : 1.0);
     const totalRowWeight = dayRowWeights.reduce((a, b) => a + b, 0);
@@ -1103,12 +1119,13 @@
     ctx.stroke();
 
     // Corner Header Cell
-    ctx.fillStyle = '#18181B';
-    ctx.font = '800 16px "JetBrains Mono", monospace';
-    ctx.fillText('ACADEMIC WK', gridX + 22, gridY + 32);
     ctx.fillStyle = '#71717A';
-    ctx.font = '600 15px "JetBrains Mono", monospace';
-    ctx.fillText('TIME (MYT)', gridX + 22, gridY + 54);
+    ctx.font = '800 17px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('UTC+8', gridX + cornerW / 2, gridY + 36);
+    ctx.fillStyle = '#A1A1AA';
+    ctx.font = '600 13px "JetBrains Mono", monospace';
+    ctx.fillText('TIME (MYT)', gridX + cornerW / 2, gridY + 54);
 
     ctx.beginPath();
     ctx.moveTo(gridX + cornerW, gridY);
@@ -1119,7 +1136,7 @@
 
     const pad = n => String(n).padStart(2, '0');
 
-    // Time Slot Columns
+    // Time Slot Columns (Col 2..N)
     for (let c = 0; c < totalCols; c++) {
       const h = minHour + c;
       const colX = gridX + cornerW + c * colW;
@@ -1132,13 +1149,13 @@
       ctx.stroke();
 
       ctx.fillStyle = '#18181B';
-      ctx.font = '800 20px "JetBrains Mono", monospace';
+      ctx.font = '800 19px "JetBrains Mono", monospace';
       ctx.textAlign = 'center';
       ctx.fillText(`${pad(h)}:00`, colX + colW / 2, gridY + 32);
 
       ctx.fillStyle = '#71717A';
-      ctx.font = '600 16px "JetBrains Mono", monospace';
-      ctx.fillText(`${pad(h + 1)}:00`, colX + colW / 2, gridY + 54);
+      ctx.font = '600 14px "JetBrains Mono", monospace';
+      ctx.fillText(`${pad(h + 1)}:00`, colX + colW / 2, gridY + 52);
     }
     ctx.textAlign = 'left';
 
@@ -1157,19 +1174,20 @@
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Day Label Cell
+      // Day Label Cell (Col 1)
       if (isToday) {
         ctx.fillStyle = '#E4E4E7';
         ctx.fillRect(gridX + 1, y + 1, cornerW - 1, rowH - 1);
         ctx.fillStyle = '#18181B';
-        const dFontSz = isHalf ? 16 : 22;
+        const dFontSz = isHalf ? 15 : 20;
         ctx.font = `800 ${dFontSz}px "Hanken Grotesk", sans-serif`;
-        ctx.fillText(`● ${dayName} (TODAY)`, gridX + 16, y + rowH / 2 + 7);
+        const label = isHalf ? `● ${dayName}` : `● ${dayName} (TODAY)`;
+        ctx.fillText(label, gridX + 16, y + rowH / 2 + 7);
       } else {
         ctx.fillStyle = '#18181B';
-        const dFontSz = isHalf ? 16 : 22;
+        const dFontSz = isHalf ? 15 : 20;
         ctx.font = `800 ${dFontSz}px "Hanken Grotesk", sans-serif`;
-        ctx.fillText(dayName, gridX + 22, y + rowH / 2 + 7);
+        ctx.fillText(dayName, gridX + 20, y + rowH / 2 + 7);
       }
 
       if (daySess.length === 0) {
@@ -1177,7 +1195,7 @@
         ctx.fillStyle = '#FAFAFB';
         ctx.fillRect(gridX + cornerW + 2, y + 2, gridW - cornerW - 4, rowH - 4);
         ctx.fillStyle = '#A1A1AA';
-        const wmFontSz = isHalf ? 14 : 17;
+        const wmFontSz = isHalf ? 13 : 16;
         ctx.font = `700 ${wmFontSz}px "JetBrains Mono", monospace`;
         ctx.fillText('🗓 NO SCHEDULED CONTACT SESSIONS · INDEPENDENT ACADEMIC STUDY', gridX + cornerW + 36, y + rowH / 2 + 6);
       } else {
@@ -1200,56 +1218,88 @@
           ctx.lineWidth = 1.5;
           ctx.strokeRect(cardX, cardY, cardW, cardH);
 
-          // Left Black Accent Stripe
+          // Left Black Accent Stripe (Visual Anchor from reference design)
           ctx.fillStyle = '#18181B';
-          ctx.fillRect(cardX, cardY, 6.5, cardH);
+          ctx.fillRect(cardX, cardY, 6, cardH);
 
-          // Card Header: Code + Type + Time
+          // Card Header: Code + Tag Badge + Time Range
           ctx.fillStyle = '#18181B';
           ctx.font = '800 18px "JetBrains Mono", monospace';
-          ctx.fillText(s.courseCode, cardX + 18, cardY + 26);
+          ctx.fillText(s.courseCode, cardX + 16, cardY + 26);
 
+          const tagW = Math.max(44, ctx.measureText(s.typeLabel).width + 16);
+          const codeW = ctx.measureText(s.courseCode).width;
+          const tagX = cardX + 16 + codeW + 10;
+          
+          ctx.fillStyle = '#F4F4F5';
+          ctx.fillRect(tagX, cardY + 11, tagW, 20);
+          ctx.strokeStyle = '#E4E4E7';
+          ctx.strokeRect(tagX, cardY + 11, tagW, 20);
           ctx.fillStyle = '#71717A';
-          ctx.font = '700 15px "JetBrains Mono", monospace';
-          ctx.fillText(s.typeLabel, cardX + 18 + ctx.measureText(s.courseCode).width + 8, cardY + 26);
+          ctx.font = '700 13px "JetBrains Mono", monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(s.typeLabel, tagX + tagW / 2, cardY + 25);
+          ctx.textAlign = 'left';
 
           ctx.fillStyle = '#71717A';
           ctx.font = '600 15px "JetBrains Mono", monospace';
           const timeText = s.timeStr;
           const timeWidth = ctx.measureText(timeText).width;
-          if (cardW > timeWidth + 140) {
-            ctx.fillText(timeText, cardX + cardW - timeWidth - 12, cardY + 26);
+          if (cardW > timeWidth + codeW + tagW + 48) {
+            ctx.fillText(timeText, cardX + cardW - timeWidth - 14, cardY + 26);
           }
 
-          // OCC Badge (Subtitle - OCC only, NO redundant venue!)
-          ctx.fillStyle = '#71717A';
-          ctx.font = '700 15px "JetBrains Mono", monospace';
-          ctx.fillText(s.occ, cardX + 18, cardY + 52);
+          // Subtitle: OCC only (No redundant venue!)
+          if (cardH >= 95) {
+            ctx.fillStyle = '#71717A';
+            ctx.font = '700 14px "JetBrains Mono", monospace';
+            ctx.fillText(s.occ, cardX + 16, cardY + 52);
+          }
 
           // Course Title
           ctx.fillStyle = '#18181B';
-          ctx.font = '800 20px "Hanken Grotesk", sans-serif';
+          ctx.font = '800 19px "Hanken Grotesk", sans-serif';
           let title = s.courseName;
-          if (ctx.measureText(title).width > cardW - 32) {
-            while (title.length > 4 && ctx.measureText(title + '…').width > cardW - 32) {
+          const maxTitleW = cardW - 32;
+          if (ctx.measureText(title).width > maxTitleW) {
+            while (title.length > 4 && ctx.measureText(title + '…').width > maxTitleW) {
               title = title.slice(0, -1);
             }
             title += '…';
           }
-          ctx.fillText(title, cardX + 18, cardY + 80);
+          const titleY = (cardH >= 95) ? (cardY + 78) : (cardY + 54);
+          ctx.fillText(title, cardX + 16, titleY);
 
-          // Venue Footer
-          if (cardH >= 65 && s.venue) {
-            ctx.fillStyle = '#71717A';
-            ctx.font = '600 15px "JetBrains Mono", monospace';
-            let venueText = `${s.venueIcon || '📍'} ${s.venue}`;
-            if (ctx.measureText(venueText).width > cardW - 32) {
-              while (venueText.length > 4 && ctx.measureText(venueText + '…').width > cardW - 32) {
-                venueText = venueText.slice(0, -1);
+          // Footer: Venue left with pin, Duration right
+          if (cardH >= 65) {
+            if (s.venue) {
+              ctx.fillStyle = '#71717A';
+              ctx.font = '600 14px "JetBrains Mono", monospace';
+              let vText = `${s.venueIcon || '📍'} ${s.venue}`;
+              const maxVenueW = cardW - 80;
+              if (ctx.measureText(vText).width > maxVenueW) {
+                while (vText.length > 4 && ctx.measureText(vText + '…').width > maxVenueW) {
+                  vText = vText.slice(0, -1);
+                }
+                vText += '…';
               }
-              venueText += '…';
+              ctx.fillText(vText, cardX + 16, cardY + cardH - 14);
             }
-            ctx.fillText(venueText, cardX + 18, cardY + cardH - 14);
+
+            // Duration tag on right
+            if (s.durText) {
+              const durW = Math.max(36, ctx.measureText(s.durText).width + 12);
+              const durX = cardX + cardW - durW - 14;
+              ctx.fillStyle = '#F4F4F5';
+              ctx.fillRect(durX, cardY + cardH - 26, durW, 18);
+              ctx.strokeStyle = '#E4E4E7';
+              ctx.strokeRect(durX, cardY + cardH - 26, durW, 18);
+              ctx.fillStyle = '#71717A';
+              ctx.font = '700 12px "JetBrains Mono", monospace';
+              ctx.textAlign = 'center';
+              ctx.fillText(s.durText, durX + durW / 2, cardY + cardH - 13);
+              ctx.textAlign = 'left';
+            }
           }
         });
 
@@ -1290,10 +1340,10 @@
       }
     });
 
-    // Bottom Watermark
+    // Bottom Watermark (Identical to Vertical Export)
     ctx.fillStyle = '#A1A1AA';
     ctx.font = '600 14px "JetBrains Mono", monospace';
-    ctx.fillText('SPeCTRUM PRO · ACADEMIC SUITE · UNIVERSITI MALAYA', 60, height - 22);
+    ctx.fillText('SPeCTRUM PRO · ACADEMIC SUITE · UNIVERSITI MALAYA', 60, height - 25);
 
     return canvas;
   }
