@@ -332,9 +332,10 @@
     let minHour = 8;
     let maxHour = 18;
     sessions.forEach(s => {
-      if (s.startHour < minHour) minHour = s.startHour;
-      if (s.endHour > maxHour) maxHour = s.endHour;
-      if (s.endMin > 0 && s.endHour >= maxHour) maxHour = s.endHour + 1;
+      if (!s) return;
+      if (typeof s.startHour === 'number' && !isNaN(s.startHour) && s.startHour < minHour) minHour = s.startHour;
+      if (typeof s.endHour === 'number' && !isNaN(s.endHour) && s.endHour > maxHour) maxHour = s.endHour;
+      if (s.endMin > 0 && typeof s.endHour === 'number' && !isNaN(s.endHour) && s.endHour >= maxHour) maxHour = s.endHour + 1;
     });
     const totalCols = maxHour - minHour;
     const pad = n => String(n).padStart(2, '0');
@@ -514,9 +515,10 @@
     let minHour = 8;
     let maxHour = 18;
     sessions.forEach(s => {
-      if (s.startHour < minHour) minHour = s.startHour;
-      if (s.endHour > maxHour) maxHour = s.endHour;
-      if (s.endMin > 0 && s.endHour >= maxHour) maxHour = s.endHour + 1;
+      if (!s) return;
+      if (typeof s.startHour === 'number' && !isNaN(s.startHour) && s.startHour < minHour) minHour = s.startHour;
+      if (typeof s.endHour === 'number' && !isNaN(s.endHour) && s.endHour > maxHour) maxHour = s.endHour;
+      if (s.endMin > 0 && typeof s.endHour === 'number' && !isNaN(s.endHour) && s.endHour >= maxHour) maxHour = s.endHour + 1;
     });
 
     let hourHeight = 115;
@@ -1006,9 +1008,10 @@
     let minHour = 8;
     let maxHour = 18;
     sessions.forEach(s => {
-      if (s.startHour < minHour) minHour = s.startHour;
-      if (s.endHour > maxHour) maxHour = s.endHour;
-      if (s.endMin > 0 && s.endHour >= maxHour) maxHour = s.endHour + 1;
+      if (!s) return;
+      if (typeof s.startHour === 'number' && !isNaN(s.startHour) && s.startHour < minHour) minHour = s.startHour;
+      if (typeof s.endHour === 'number' && !isNaN(s.endHour) && s.endHour > maxHour) maxHour = s.endHour;
+      if (s.endMin > 0 && typeof s.endHour === 'number' && !isNaN(s.endHour) && s.endHour >= maxHour) maxHour = s.endHour + 1;
     });
     const totalCols = maxHour - minHour;
     const totalDays = activeDayIndices.length;
@@ -1367,9 +1370,10 @@
     let minHour = 8;
     let maxHour = 18;
     sessions.forEach(s => {
-      if (s.startHour < minHour) minHour = s.startHour;
-      if (s.endHour > maxHour) maxHour = s.endHour;
-      if (s.endMin > 0 && s.endHour >= maxHour) maxHour = s.endHour + 1;
+      if (!s) return;
+      if (typeof s.startHour === 'number' && !isNaN(s.startHour) && s.startHour < minHour) minHour = s.startHour;
+      if (typeof s.endHour === 'number' && !isNaN(s.endHour) && s.endHour > maxHour) maxHour = s.endHour;
+      if (s.endMin > 0 && typeof s.endHour === 'number' && !isNaN(s.endHour) && s.endHour >= maxHour) maxHour = s.endHour + 1;
     });
 
     const totalHours = maxHour - minHour;

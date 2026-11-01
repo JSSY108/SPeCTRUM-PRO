@@ -2328,6 +2328,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     return renderUnifiedAttendanceCardHtml(vm);
   }
 
+  // Extract start time in minutes from midnight (0..1439) for precise chronological ascending sorting
+  function getEventStartTimeMinutes(ev) {
+    if (!ev) return 720;
+    const sess = ev.sessObj || ev.session || ev.data?.session || (ev.data?.att ? ev.data.session : null);
+    const timeCandidates = [
+      ev.timeStr,
+      ev.data?.timeStr,
+      sess?.time,
+      sess?.dateStr,
+      sess?.desc,
+      ev.time,
+      ev.title,
+      ev.data?.title
+    ];
+
+    for (const cand of timeCandidates) {
+      if (cand && typeof cand === 'string') {
+        const parsed = (typeof parseTimeRangeRobust === 'function') ? parseTimeRangeRobust(cand) : null;
+        if (parsed && typeof parsed.startHour === 'number' && !isNaN(parsed.startHour)) {
+          return parsed.startHour * 60 + (parsed.startMin || 0);
+        }
+      }
+    }
+
+    const d = ev.date || ev.data?.date || sess?.date;
+    if (d instanceof Date && !isNaN(d.getTime())) {
+      const h = d.getHours();
+      const m = d.getMinutes();
+      if (h !== 0 || m !== 0) {
+        return h * 60 + m;
+      }
+    }
+
+    return 720;
+  }
+
   // ========================================================================
   // TIMELINE SPINE ACTIVE DOT FOCAL CONTROLLER
   // - Lights up date dots when cards cross the focal line
@@ -2772,10 +2808,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             ? (group.events.some(e => e.type === 'assignment') ? 'Deadline' : 'Upcoming') 
             : 'Milestone');
 
-      // Sort cards within group: assignments first, then attendance, then notices
+      // Sort cards within group: assignments first, then attendance (ascending by start time), then notices
       const sortedEvents = group.events.sort((a, b) => {
         const order = { assignment: 1, attendance: 2, notice: 3 };
-        return (order[a.type] || 9) - (order[b.type] || 9);
+        const diff = (order[a.type] || 9) - (order[b.type] || 9);
+        if (diff !== 0) return diff;
+        if (a.type === 'attendance') {
+          const timeA = getEventStartTimeMinutes(a);
+          const timeB = getEventStartTimeMinutes(b);
+          if (timeA !== timeB) return timeA - timeB; // Ascending order!
+        }
+        return (a.courseCode || '').localeCompare(b.courseCode || '');
       });
 
       const cardsHtml = sortedEvents.map(ev => {
@@ -5972,7 +6015,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (s.dateKey) return new Date(s.dateKey + 'T12:00:00').getTime();
           return 0;
         }).filter(t => t > 0);
-        if (ts.length > 0) return currentSortOrder === 'newest' ? Math.max(...ts) : Math.min(...ts);
+        if (ts.length > 0) return Math.min(...ts);
       }
     }
     return 0;
@@ -6014,8 +6057,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return sortAssignments(items, 'oldest');
   }
 
-  function sortAttendanceItems(items, sortOrder = 'newest') {
-    const isNewest = (sortOrder === 'newest');
+  function sortAttendanceItems(items, sortOrder = 'oldest') {
     return [...items].sort((a, b) => {
       // Active open session always first
       if (a.activeSession && !b.activeSession) return -1;
@@ -6024,7 +6066,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const timeA = getItemTimestamp(a, 'attendance');
       const timeB = getItemTimestamp(b, 'attendance');
       if (timeA > 0 && timeB > 0) {
-        if (timeA !== timeB) return isNewest ? (timeB - timeA) : (timeA - timeB);
+        if (timeA !== timeB) return timeA - timeB; // Ascending order!
       } else if (timeA > 0) return -1;
       else if (timeB > 0) return 1;
 
@@ -6361,19 +6403,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       const sortedCourseEntries = Array.from(courseMap.entries()).map(([cid, group]) => {
-        // Sort sessions inside each attendance item according to currentSortOrder
+        // Sort sessions inside each attendance item in ascending chronological order
         group.items.forEach(att => {
           if (Array.isArray(att.sessions)) {
             att.sessions.sort((s1, s2) => {
               const t1 = s1.date ? new Date(s1.date).getTime() : (s1.dateKey ? new Date(s1.dateKey + 'T12:00:00').getTime() : 0);
               const t2 = s2.date ? new Date(s2.date).getTime() : (s2.dateKey ? new Date(s2.dateKey + 'T12:00:00').getTime() : 0);
-              return currentSortOrder === 'newest' ? (t2 - t1) : (t1 - t2);
+              if (t1 !== t2) return t1 - t2;
+              const min1 = getEventStartTimeMinutes(s1);
+              const min2 = getEventStartTimeMinutes(s2);
+              return min1 - min2;
             });
           }
         });
 
-        // Sort items inside course: active first, then by sort order
-        group.items = sortAttendanceItems(group.items, currentSortOrder);
+        // Sort items inside course: active first, then ascending order
+        group.items = sortAttendanceItems(group.items, 'oldest');
         return [cid, group];
       });
 
@@ -6453,7 +6498,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         itemsByCourse[cid].push(it);
       });
 
-      const sorted = sortAttendanceItems(filteredAtt, currentSortOrder);
+      const sorted = sortAttendanceItems(filteredAtt, 'oldest');
       attendanceListEl.innerHTML = sorted.map(att => {
         const cid = String(att.courseId || 'general');
         const courseItems = itemsByCourse[cid] || [att];
@@ -7690,10 +7735,17 @@ document.addEventListener('DOMContentLoaded', async () => {
           : `${day} ${mon} ${wd}`;
         const dotClass = isToday ? 'spine-node-dot is-today' : 'spine-node-dot';
 
-        // Sort cards within group: assignments (1), attendance (2), notices (3)
+        // Sort cards within group: assignments (1), attendance (2, ascending by start time), notices (3)
         const sortedEvents = group.events.sort((a, b) => {
           const order = { assignment: 1, attendance: 2, notice: 3 };
-          return (order[a.type] || 9) - (order[b.type] || 9);
+          const diff = (order[a.type] || 9) - (order[b.type] || 9);
+          if (diff !== 0) return diff;
+          if (a.type === 'attendance') {
+            const timeA = getEventStartTimeMinutes(a);
+            const timeB = getEventStartTimeMinutes(b);
+            if (timeA !== timeB) return timeA - timeB; // Ascending order!
+          }
+          return (a.courseCode || '').localeCompare(b.courseCode || '');
         });
 
         const cardsHtml = sortedEvents.map(ev => {
@@ -7771,18 +7823,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Collect activities for this specific date
       const dayEvents = getFullListActivitiesForDate(targetKey, showTasks, showAtt, showAnn);
 
-      // Sort activities on this day according to currentSortOrder
+      // Sort activities on this day chronologically in ascending order (earliest time first: e.g. 11:00, 12:00, 15:00, 16:00)
       dayEvents.sort((a, b) => {
         if (a.status === 'active' && b.status !== 'active') return -1;
         if (a.status !== 'active' && b.status === 'active') return 1;
 
-        const tA = getItemTimestamp(a.obj || a, a.type === 'task' ? 'assignment' : (a.type === 'att' ? 'attendance' : 'announcement'));
-        const tB = getItemTimestamp(b.obj || b, b.type === 'task' ? 'assignment' : (b.type === 'att' ? 'attendance' : 'announcement'));
-        if (tA > 0 && tB > 0) {
-          return currentSortOrder === 'newest' ? (tB - tA) : (tA - tB);
-        } else if (tA > 0) return -1;
-        else if (tB > 0) return 1;
-        return 0;
+        const timeA = getEventStartTimeMinutes(a);
+        const timeB = getEventStartTimeMinutes(b);
+        if (timeA !== timeB) return timeA - timeB; // Ascending order!
+
+        return (a.courseCode || '').localeCompare(b.courseCode || '');
       });
 
       // Active event dates for jump buttons
@@ -7813,7 +7863,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         cardsHtml = dayEvents.map(ev => {
           if (ev.type === 'task' || ev.type === 'assignment') return renderScopedAssignmentCard(ev.obj || ev);
-          if (ev.type === 'att' || ev.type === 'attendance') return renderScopedAttendanceCard(ev.obj || ev);
+          if (ev.type === 'att' || ev.type === 'attendance') {
+            return renderScopedAttendanceCard({
+              att: ev.obj || ev.att || ev,
+              session: ev.sessObj || ev.session,
+              isLive: ev.status === 'active',
+              isVerified: ev.status === 'submitted',
+              timeStr: ev.timeStr || ev.sessObj?.time || ev.sessObj?.dateStr,
+              date: ev.date,
+              dateKey: ev.dateKey
+            });
+          }
           return renderScopedNoticeCard(ev.obj || ev);
         }).join('');
       }

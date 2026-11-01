@@ -1463,7 +1463,17 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
 
       // 3. Parse all sessions present in the default view
       const allSessions = parseSessionsFromDoc(attDoc);
-      allSessions.sort((a, b) => a.date.getTime() - b.date.getTime());
+      allSessions.sort((a, b) => {
+        const dDiff = a.date.getTime() - b.date.getTime();
+        if (dDiff !== 0) return dDiff;
+        const parseMin = (s) => {
+          const t = extractOnlyTime(s.time || s.dateStr || '');
+          const m = t.match(/(\d{1,2})[:.](\d{2})/);
+          if (m) return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+          return 0;
+        };
+        return parseMin(a) - parseMin(b);
+      });
 
       // Extract overall Attendance Stats from attDoc text if present
       let pastStats = null;
