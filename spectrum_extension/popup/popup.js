@@ -58,6 +58,14 @@ let currentSyncAbortController = null;
 let syncStartTime = 0;
 let saveCacheTimeout = null;
 
+// Expose state references on window for cross-module access
+window.coursesData = coursesData;
+window.allCoursesDiscovered = allCoursesDiscovered;
+window.announcementsData = announcementsData;
+window.assignmentsData = assignmentsData;
+window.attendancesData = attendancesData;
+window.courseOccs = courseOccs;
+
 // Universal Date Helper (Accessible in both UI and fetchers)
 function formatDateKey(d) {
   if (!d) return '';
@@ -224,6 +232,8 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 12000) {
     if (callerSignal) callerSignal.removeEventListener('abort', onCallerAbort);
   }
 }
+
+window.fetchWithTimeout = fetchWithTimeout;
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Elements - Header & Tabs
@@ -420,6 +430,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const diagBadgeSession = document.getElementById('diag-badge-session');
   const diagBadgeCourses = document.getElementById('diag-badge-courses');
   const diagBadgeAtt = document.getElementById('diag-badge-att');
+
+  // Expose controller handlers onto window for cross-module invocations
+  window.populateAttendanceCourseFilterOptions = populateAttendanceCourseFilterOptions;
+  window.renderOccPreferencesTable = renderOccPreferencesTable;
+  window.debounceSaveCache = debounceSaveCache;
 
 
   function setDiagBadge(badgeEl, status, text) {

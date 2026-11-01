@@ -7,6 +7,39 @@
 (function(window) {
   'use strict';
 
+  // Safe resolution of shared utilities from window / utils.js
+  const cleanHtmlForParser = (typeof window !== 'undefined' && window.cleanHtmlForParser) ? window.cleanHtmlForParser : ((h) => h);
+  const logDiag = (typeof window !== 'undefined' && window.logDiag) ? window.logDiag : ((cat, msg) => console.log(`[${cat}] ${msg}`));
+  const formatDateKey = (typeof window !== 'undefined' && window.formatDateKey) ? window.formatDateKey : ((d) => '');
+  const cleanSectionTitle = (typeof window !== 'undefined' && window.cleanSectionTitle) ? window.cleanSectionTitle : ((t) => t);
+  const cleanDisplayCourseName = (typeof window !== 'undefined' && window.cleanDisplayCourseName) ? window.cleanDisplayCourseName : ((n) => n);
+  const getCourseCategoryTag = (typeof window !== 'undefined' && window.getCourseCategoryTag) ? window.getCourseCategoryTag : ((code, title) => 'CORE');
+  const generateUniqueFileId = (typeof window !== 'undefined' && window.generateUniqueFileId) ? window.generateUniqueFileId : ((c, s, i, u, t) => `f_${c}_${i}`);
+  const findSpectrumTab = (typeof window !== 'undefined' && window.findSpectrumTab) ? window.findSpectrumTab : (async () => null);
+  const fetchCourseMaterialsDirectly = (typeof window !== 'undefined' && window.fetchCourseMaterialsDirectly) ? window.fetchCourseMaterialsDirectly : (async () => null);
+  const fetchEnrolledCoursesDirectly = (typeof window !== 'undefined' && window.fetchEnrolledCoursesDirectly) ? window.fetchEnrolledCoursesDirectly : (async () => null);
+  const executeInTab = (typeof window !== 'undefined' && window.executeInTab) ? window.executeInTab : (async () => null);
+  const fetchWithTimeout = (typeof window !== 'undefined' && window.fetchWithTimeout) ? window.fetchWithTimeout : (typeof fetch !== 'undefined' ? fetch : null);
+
+  let currentExtFilter = 'ALL';
+  let currentInspectedFile = null;
+
+  function populateAttendanceCourseFilterOptions() {
+    if (typeof window !== 'undefined' && typeof window.populateAttendanceCourseFilterOptions === 'function') {
+      window.populateAttendanceCourseFilterOptions();
+    }
+  }
+  function renderOccPreferencesTable() {
+    if (typeof window !== 'undefined' && typeof window.renderOccPreferencesTable === 'function') {
+      window.renderOccPreferencesTable();
+    }
+  }
+  function debounceSaveCache() {
+    if (typeof window !== 'undefined' && typeof window.debounceSaveCache === 'function') {
+      window.debounceSaveCache();
+    }
+  }
+
   // DOM Elements cache for Materials Tab
   let filterSearchInput = null;
   let btnClearSearch = null;

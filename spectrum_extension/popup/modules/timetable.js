@@ -736,3 +736,4 @@
     initTimetableControls();
   }
 })(typeof window !== 'undefined' ? window : this);
+
