@@ -28,6 +28,31 @@
     return (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  function getTimetableLang() {
+    if (typeof currentLang !== 'undefined') return currentLang;
+    if (typeof window !== 'undefined' && window.currentLang) return window.currentLang;
+    return 'en';
+  }
+
+  function getTimetableText(section, key, fallback) {
+    if (typeof window !== 'undefined' && typeof window.t === 'function') {
+      const res = window.t(section, key);
+      if (res && res !== key) return res;
+    }
+    return fallback;
+  }
+
+  function getTimetableDayNames() {
+    const lang = getTimetableLang();
+    if (lang === 'zh') {
+      return ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+    }
+    if (lang === 'bm') {
+      return ['AHAD', 'ISNIN', 'SELASA', 'RABU', 'KHAMIS', 'JUMAAT', 'SABTU'];
+    }
+    return ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+  }
+
   let customSessionOverrides = {};
   let customOverridesLoaded = false;
 
@@ -333,7 +358,7 @@
 
   function renderHorizontalGrid(gridEl, sessions) {
     const esc = getSafeEscapeHtml();
-    const DAY_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+    const DAY_NAMES = getTimetableDayNames();
     // Always include Monday to Saturday (days 1..6)
     const activeDayIndices = [1, 2, 3, 4, 5, 6];
     if (sessions.some(s => s.dayIndex === 0)) activeDayIndices.push(0);
@@ -389,10 +414,12 @@
     let html = '';
 
     // Corner Header Cell (Row 1, Col 1)
+    const acadWkText = getTimetableText('timetable', 'academicWk', 'ACADEMIC WK');
+    const timeMytText = getTimetableText('timetable', 'timeMyt', 'TIME (MYT)');
     html += `
       <div class="tt-header-cell tt-corner-cell" style="grid-column: 1; grid-row: 1;">
-        <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.8px; color: var(--text-primary);">ACADEMIC WK</div>
-        <div style="font-size: 9.5px; font-weight: 600; color: var(--text-muted); margin-top: 2px;">TIME (MYT)</div>
+        <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.8px; color: var(--text-primary);">${esc(acadWkText)}</div>
+        <div style="font-size: 9.5px; font-weight: 600; color: var(--text-muted); margin-top: 2px;">${esc(timeMytText)}</div>
       </div>
     `;
 
@@ -440,9 +467,10 @@
           for (let i = startIdx; i < endIdx; i++) occupied[i] = true;
 
           const hasVenue = Boolean(s.venue && s.venue.trim().length > 0);
+          const venuePlaceholder = getTimetableText('timetable', 'venuePlaceholder', '+ Add Location');
           const venueHtml = hasVenue
             ? `<span class="tt-venue" title="${esc(s.venue)}">${s.venueIcon || '📍'} ${esc(s.venue)}</span>`
-            : `<span class="tt-venue tt-venue-empty" title="Click to add location"><span class="tt-venue-add-icon">📍</span> <span class="tt-venue-placeholder">+ Add Location</span></span>`;
+            : `<span class="tt-venue tt-venue-empty" title="${esc(venuePlaceholder)}"><span class="tt-venue-add-icon">📍</span> <span class="tt-venue-placeholder">${esc(venuePlaceholder)}</span></span>`;
 
           const startTimeVal = `${pad(s.startHour)}:${pad(s.startMin)}`;
           const endTimeVal = `${pad(s.endHour)}:${pad(s.endMin)}`;
@@ -515,7 +543,7 @@
 
   function renderVerticalGrid(gridEl, sessions) {
     const esc = getSafeEscapeHtml();
-    const DAY_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+    const DAY_NAMES = getTimetableDayNames();
     // Always include Monday to Saturday (days 1..6)
     const activeDayIndices = [1, 2, 3, 4, 5, 6];
     if (sessions.some(s => s.dayIndex === 0)) activeDayIndices.push(0);
@@ -567,10 +595,11 @@
     let html = '';
 
     // Row 1, Col 1: Corner Header Cell
+    const timeMytVertText = getTimetableText('timetable', 'timeMyt', 'TIME (MYT)');
     html += `
       <div class="tt-header-cell tt-corner-cell" style="grid-column: 1; grid-row: 1;">
         <span class="tt-corner-tz">UTC+8</span>
-        <span class="tt-corner-label">TIME (MYT)</span>
+        <span class="tt-corner-label">${esc(timeMytVertText)}</span>
       </div>
     `;
 
@@ -582,8 +611,9 @@
       const isHalf = isDayHalf(dIdx);
       const todayClass = isToday ? ' is-today' : '';
       const halfClass = isHalf ? ' is-half-cell' : '';
+      const todayTagText = getTimetableText('timetable', 'today', 'TODAY');
       const headerContent = isToday
-        ? `<span class="tt-today-indicator">●</span> ${dayName} ${isHalf ? '' : '<span class="tt-today-tag">(TODAY)</span>'}`
+        ? `<span class="tt-today-indicator">●</span> ${dayName} ${isHalf ? '' : `<span class="tt-today-tag">(${todayTagText})</span>`}`
         : dayName;
 
       html += `
@@ -645,9 +675,10 @@
 
           const hasVenue = Boolean(s.venue && s.venue.trim().length > 0);
           const subtitleText = esc(s.occ);
+          const venuePlaceholder = getTimetableText('timetable', 'venuePlaceholder', '+ Add Location');
           const venueHtml = hasVenue
             ? `<span class="tt-venue" title="${esc(s.venue)}">${s.venueIcon || '📍'} ${esc(s.venue)}</span>`
-            : `<span class="tt-venue tt-venue-empty" title="Click to add location"><span class="tt-venue-add-icon">📍</span> <span class="tt-venue-placeholder">+ Add Location</span></span>`;
+            : `<span class="tt-venue tt-venue-empty" title="${esc(venuePlaceholder)}"><span class="tt-venue-add-icon">📍</span> <span class="tt-venue-placeholder">${esc(venuePlaceholder)}</span></span>`;
 
           const startTimeVal = `${pad(s.startHour)}:${pad(s.startMin)}`;
           const endTimeVal = `${pad(s.endHour)}:${pad(s.endMin)}`;
@@ -861,13 +892,19 @@
   function flashExportButtonSuccess(btn) {
     if (!btn) return;
     const origContent = btn.innerHTML;
+    const lang = getTimetableLang();
+    const expText = (lang === 'zh') ? '已导出' : ((lang === 'bm') ? 'Telah Dieksport' : 'Exported');
     btn.innerHTML = `
       <svg class="icon-svg" viewBox="0 0 24 24" style="stroke:#10B981;width:14px;height:14px;"><polyline points="20 6 9 17 4 12"/></svg>
-      <span style="color:#10B981;">Exported</span>
+      <span style="color:#10B981;">${expText}</span>
     `;
     btn.disabled = true;
     setTimeout(() => {
-      btn.innerHTML = origContent;
+      if (typeof window !== 'undefined' && typeof window.updateTimetableTranslations === 'function') {
+        window.updateTimetableTranslations();
+      } else {
+        btn.innerHTML = origContent;
+      }
       btn.disabled = false;
     }, 2000);
   }
@@ -1008,7 +1045,7 @@
 
   function renderHorizontalTimetableToCanvas() {
     const sessions = extractWeeklyTimetableSessions();
-    const DAY_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+    const DAY_NAMES = getTimetableDayNames();
     // Always include Monday to Saturday (days 1..6)
     const activeDayIndices = [1, 2, 3, 4, 5, 6];
     if (sessions.some(s => s.dayIndex === 0)) activeDayIndices.push(0);
@@ -1054,7 +1091,8 @@
     if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 
     ctx.font = '800 42px "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('ACADEMIC TIMETABLE', titleLeftX, 114);
+    const mainTitleH = getTimetableText('timetable', 'mainTitle', 'ACADEMIC TIMETABLE');
+    ctx.fillText(mainTitleH, titleLeftX, 114);
 
     // ── 3. Right-Aligned Tabular Metadata Pill (TERM: Year / SEM) ──
     let academicYear = '2024/2025';
@@ -1367,7 +1405,7 @@
 
   function renderVerticalTimetableToCanvas() {
     const sessions = extractWeeklyTimetableSessions();
-    const DAY_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+    const DAY_NAMES = getTimetableDayNames();
     // Always include Monday to Saturday (days 1..6)
     const activeDayIndices = [1, 2, 3, 4, 5, 6];
     if (sessions.some(s => s.dayIndex === 0)) activeDayIndices.push(0);
@@ -1414,7 +1452,8 @@
     if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 
     ctx.font = '800 42px "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('ACADEMIC TIMETABLE', titleLeftX, 114);
+    const mainTitleV = getTimetableText('timetable', 'mainTitle', 'ACADEMIC TIMETABLE');
+    ctx.fillText(mainTitleV, titleLeftX, 114);
 
     // ── 3. Right-Aligned Tabular Metadata Pill (TERM: Year / SEM) ──
     let academicYear = '2024/2025';

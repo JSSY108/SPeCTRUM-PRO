@@ -174,6 +174,25 @@ const I18N = {
       savePreferences: 'Save Preferences',
       savedToast: 'Preferences Saved'
     },
+    timetable: {
+      mainTitle: 'ACADEMIC TIMETABLE',
+      term: 'TERM:',
+      contactSessions: '{n} Contact Sessions',
+      singleContactSession: '1 Contact Session',
+      vertical: 'Vertical',
+      horizontal: 'Horizontal',
+      exportCsv: 'Export CSV',
+      exportPng: 'Export PNG',
+      exportPdf: 'Export PDF',
+      academicWk: 'ACADEMIC WK',
+      timeMyt: 'TIME (MYT)',
+      today: 'TODAY',
+      addLocation: '+ Add Location',
+      editSession: '✏️ Edit Class Session',
+      venuePlaceholder: '+ Add Location',
+      noSessionsFound: 'No Timetable Sessions Found',
+      noSessionsSub: 'Attendance sessions for your enrolled courses will appear here automatically.'
+    },
     materials: {
       searchPlaceholder: 'Search files...',
       all: 'ALL',
@@ -327,6 +346,25 @@ const I18N = {
       savePreferences: 'Simpan Tetapan',
       savedToast: 'Tetapan Disimpan'
     },
+    timetable: {
+      mainTitle: 'JADUAL WAKTU AKADEMIK',
+      term: 'SEMESTER:',
+      contactSessions: '{n} Sesi Kuliah',
+      singleContactSession: '1 Sesi Kuliah',
+      vertical: 'Menegak',
+      horizontal: 'Melintang',
+      exportCsv: 'Eksport CSV',
+      exportPng: 'Eksport PNG',
+      exportPdf: 'Eksport PDF',
+      academicWk: 'MG AKADEMIK',
+      timeMyt: 'MASA (MYT)',
+      today: 'HARI INI',
+      addLocation: '+ Tambah Lokasi',
+      editSession: '✏️ Edit Sesi Kuliah',
+      venuePlaceholder: '+ Tambah Lokasi',
+      noSessionsFound: 'Tiada Sesi Jadual Waktu Ditemui',
+      noSessionsSub: 'Sesi kehadiran kursus anda akan dipaparkan di sini secara automatik.'
+    },
     materials: {
       searchPlaceholder: 'Cari fail...',
       all: 'SEMUA',
@@ -375,7 +413,7 @@ const I18N = {
       diag: '日志',
       autoTake: '自动签到',
       fullWorkstation: '全屏',
-      timetableTitle: '每周课表',
+      timetableTitle: '课表',
       materialsTitle: '课件下载',
       preferencesTitle: '设置',
       byCourseFeed: '按课程',
@@ -480,6 +518,25 @@ const I18N = {
       savePreferences: '保存设置',
       savedToast: '设置已保存'
     },
+    timetable: {
+      mainTitle: '课表',
+      term: '学期:',
+      contactSessions: '{n} 节课',
+      singleContactSession: '1 节课',
+      vertical: '纵向',
+      horizontal: '横向',
+      exportCsv: '导出 CSV',
+      exportPng: '导出 PNG',
+      exportPdf: '导出 PDF',
+      academicWk: '教学周',
+      timeMyt: '时间 (MYT)',
+      today: '今天',
+      addLocation: '+ 添加地点',
+      editSession: '✏️ 编辑课程',
+      venuePlaceholder: '+ 添加地点',
+      noSessionsFound: '未找到课表安排',
+      noSessionsSub: '已选课程的考勤与课表安排将自动显示在此处。'
+    },
     materials: {
       searchPlaceholder: '搜索文件...',
       all: '全部',
@@ -533,6 +590,71 @@ function t(section, key, params = {}) {
   }
   return text;
 }
+
+function formatMonthYearHeading(d) {
+  const dt = (d instanceof Date) ? d : new Date(d);
+  if (isNaN(dt.getTime())) return '';
+  if (currentLang === 'zh') {
+    return `${dt.getFullYear()}年 ${dt.getMonth() + 1}月`;
+  }
+  if (currentLang === 'bm') {
+    const monthNamesBm = ['JANUARI', 'FEBRUARI', 'MAC', 'APRIL', 'MEI', 'JUN', 'JULAI', 'OGOS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DISEMBER'];
+    return `${monthNamesBm[dt.getMonth()]} ${dt.getFullYear()}`;
+  }
+  return dt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+}
+
+function updateTimetableTranslations() {
+  const mainTitle = document.querySelector('.timetable-main-title');
+  if (mainTitle) mainTitle.textContent = t('timetable', 'mainTitle');
+
+  const termLabel = document.querySelector('.tt-term-label');
+  if (termLabel) termLabel.textContent = t('timetable', 'term');
+
+  const btnVertical = document.getElementById('btn-tt-vertical');
+  if (btnVertical) {
+    const span = btnVertical.querySelector('span');
+    if (span) span.textContent = t('timetable', 'vertical');
+  }
+
+  const btnHorizontal = document.getElementById('btn-tt-horizontal');
+  if (btnHorizontal) {
+    const span = btnHorizontal.querySelector('span');
+    if (span) span.textContent = t('timetable', 'horizontal');
+  }
+
+  const btnCsv = document.getElementById('btn-export-timetable-csv');
+  if (btnCsv) {
+    const span = btnCsv.querySelector('span');
+    if (span) span.textContent = t('timetable', 'exportCsv');
+  }
+
+  const btnPng = document.getElementById('btn-export-timetable-png');
+  if (btnPng) {
+    const span = btnPng.querySelector('span');
+    if (span) span.textContent = t('timetable', 'exportPng');
+  }
+
+  const btnPdf = document.getElementById('btn-export-timetable-pdf');
+  if (btnPdf) {
+    const span = btnPdf.querySelector('span');
+    if (span) span.textContent = t('timetable', 'exportPdf');
+  }
+
+  const countEl = document.getElementById('timetable-session-count');
+  if (countEl && typeof extractWeeklyTimetableSessions === 'function') {
+    const sessCount = extractWeeklyTimetableSessions().length;
+    if (currentLang === 'zh') {
+      countEl.textContent = `${sessCount} 节课`;
+    } else if (currentLang === 'bm') {
+      countEl.textContent = `${sessCount} Sesi Kuliah`;
+    } else {
+      countEl.textContent = `${sessCount} Contact Session${sessCount === 1 ? '' : 's'}`;
+    }
+  }
+}
+window.updateTimetableTranslations = updateTimetableTranslations;
+window.formatMonthYearHeading = formatMonthYearHeading;
 
 function updateSidebarLabels() {
   const map = {
@@ -697,6 +819,7 @@ function updateMaterialsTranslations() {
 }
 
 function updateHeaderTranslations() {
+  updateTimetableTranslations();
   const syncBtn = document.getElementById('btn-fulltab-sync');
   if (syncBtn) {
     const s = syncBtn.querySelector('span');
@@ -1924,11 +2047,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else if (currentFullTabMode === 'timetable') {
         monthHeading.textContent = t('headers', 'timetableTitle');
       } else if (currentFullTabMode === 'timeline') {
-        monthHeading.textContent = t('headers', 'timelineFeed');
+        monthHeading.textContent = formatMonthYearHeading(now);
       } else if (currentFullTabMode === 'list') {
-        monthHeading.textContent = t('headers', 'byCourseFeed');
+        monthHeading.textContent = (fullListGroupingMode === 'course')
+          ? t('headers', 'byCourseFeed')
+          : formatMonthYearHeading(fullListCurrentDate || now);
       } else {
-        monthHeading.textContent = info.monthYearStr;
+        monthHeading.textContent = formatMonthYearHeading(now);
       }
     }
     if (weekPill) weekPill.textContent = info.weekPill;
@@ -2159,7 +2284,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (mode === 'timeline') {
       if (tlSec) tlSec.style.display = 'flex';
       if (monthHeading) {
-        monthHeading.textContent = t('headers', 'timelineFeed');
+        monthHeading.textContent = formatMonthYearHeading(new Date());
       }
       renderTimelineVisualizer();
     } else if (mode === 'calendar') {
@@ -5023,7 +5148,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (monthHeading && currentFullTabMode === 'list') {
       monthHeading.textContent = (fullListGroupingMode === 'course')
         ? 'BY COURSE · ACADEMIC FEED'
-        : (fullListCurrentDate || new Date()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+        : formatMonthYearHeading(fullListCurrentDate || new Date());
     }
 
     // Update popup sticky box
@@ -6959,25 +7084,50 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       if (populatedDays.length === 0) {
+        const noEvText = (currentLang === 'zh')
+          ? '📅 该时段暂无活动或安排。'
+          : ((currentLang === 'bm') ? '📅 Tiada aktiviti dijadualkan dalam tempoh ini.' : '📅 No events or activities scheduled in this period.');
         timelineTrack.innerHTML = `
           <div style="padding: 32px; color: var(--text-muted); font-size: 13px; text-align: center; width: 100%;">
-            📅 No events or activities scheduled in this period.
+            ${noEvText}
           </div>
         `;
       } else {
+        const daysEn = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+        const daysBm = ['AHD', 'ISN', 'SEL', 'RAB', 'KHA', 'JUM', 'SAB'];
+        const daysZh = ['日', '一', '二', '三', '四', '五', '六'];
+
         timelineTrack.innerHTML = populatedDays.map(day => {
           const dayDate = day.date instanceof Date ? day.date : new Date(day.date);
           const dayNum = dayDate.getDate();
-          const wDay = dayDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+          const dIdx = dayDate.getDay();
+
+          let dateHeaderStr = '';
+          let todayPillStr = '';
+          let countStr = '';
+
+          if (currentLang === 'zh') {
+            dateHeaderStr = `${dayNum}日 (${daysZh[dIdx]})`;
+            todayPillStr = day.isToday ? '<span class="kanban-today-pill">今天</span>' : '';
+            countStr = `${day.events.length} 项`;
+          } else if (currentLang === 'bm') {
+            dateHeaderStr = `${dayNum} ${daysBm[dIdx]}`;
+            todayPillStr = day.isToday ? '<span class="kanban-today-pill">HARI INI</span>' : '';
+            countStr = `${day.events.length} item`;
+          } else {
+            dateHeaderStr = `${dayNum} ${daysEn[dIdx]}`;
+            todayPillStr = day.isToday ? '<span class="kanban-today-pill">TODAY</span>' : '';
+            countStr = `${day.events.length} ${day.events.length === 1 ? 'item' : 'items'}`;
+          }
 
           return `
             <div class="kanban-day-column ${day.isToday ? 'is-today' : ''}" data-date-key="${formatDateKey(day.date)}">
               <div class="kanban-col-header">
                 <span class="kanban-col-date">
-                  ${dayNum} ${wDay}
-                  ${day.isToday ? '<span class="kanban-today-pill">TODAY</span>' : ''}
+                  ${dateHeaderStr}
+                  ${todayPillStr}
                 </span>
-                <span class="kanban-col-count">${day.events.length} ${day.events.length === 1 ? 'item' : 'items'}</span>
+                <span class="kanban-col-count">${countStr}</span>
               </div>
               <div class="kanban-col-cards">
                 ${day.events.map(ev => {
@@ -6999,7 +7149,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const topDay = populatedDays.find(d => d.isToday) || populatedDays[0];
         if (topDay) {
           const dObj = topDay.date instanceof Date ? topDay.date : new Date(topDay.date);
-          topMonthHeading.textContent = dObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+          topMonthHeading.textContent = formatMonthYearHeading(dObj);
+        } else {
+          topMonthHeading.textContent = formatMonthYearHeading(new Date());
         }
       }
 
@@ -8989,7 +9141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Update Header month display
       const monthHeading = document.getElementById('fulltab-month-heading');
       if (monthHeading) {
-        monthHeading.textContent = fullListCurrentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+        monthHeading.textContent = formatMonthYearHeading(fullListCurrentDate);
       }
 
       // Collect activities for this specific date
@@ -11453,6 +11605,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateHeaderTranslations();
     updatePreferencesTranslations();
     updateMaterialsTranslations();
+    updateTimetableTranslations();
     updateFullTabHeader();
 
     const isFull = document.body.classList.contains('is-full-tab');
