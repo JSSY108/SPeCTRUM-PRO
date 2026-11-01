@@ -1072,18 +1072,27 @@
       }
     }
 
+    const t = (typeof window !== 'undefined' && typeof window.t === 'function')
+      ? window.t
+      : (sec, key) => (key === 'collapseAll' ? 'Collapse All' : 'Expand All');
+
+    const collapseText = t('materials', 'collapseAll');
+    const expandText = t('materials', 'expandAll');
+
     if (anyExpanded) {
-      if (labelEl) labelEl.textContent = 'Collapse All';
+      if (labelEl) labelEl.textContent = collapseText;
       if (iconEl) {
         iconEl.innerHTML = '<polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/>';
       }
-      btnToggleExpandAll.setAttribute('title', 'Collapse all courses and sections');
+      btnToggleExpandAll.setAttribute('title', collapseText);
+      btnToggleExpandAll.classList.add('all-expanded');
     } else {
-      if (labelEl) labelEl.textContent = 'Expand All';
+      if (labelEl) labelEl.textContent = expandText;
       if (iconEl) {
         iconEl.innerHTML = '<polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/>';
       }
-      btnToggleExpandAll.setAttribute('title', 'Expand all courses and sections');
+      btnToggleExpandAll.setAttribute('title', expandText);
+      btnToggleExpandAll.classList.remove('all-expanded');
     }
   }
 

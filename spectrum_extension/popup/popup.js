@@ -796,10 +796,16 @@ function updateMaterialsTranslations() {
     if (sortSelect.options[1]) sortSelect.options[1].textContent = t('materials', 'sortMoodle');
   }
 
-  const expandLabel = document.getElementById('btn-toggle-expand-label');
-  if (expandLabel) {
-    const isExpanded = document.getElementById('btn-toggle-expand-all')?.classList.contains('all-expanded');
-    expandLabel.textContent = isExpanded ? t('materials', 'collapseAll') : t('materials', 'expandAll');
+  if (typeof updateExpandAllButtonState === 'function') {
+    updateExpandAllButtonState();
+  } else if (typeof window !== 'undefined' && typeof window.updateExpandAllButtonState === 'function') {
+    window.updateExpandAllButtonState();
+  } else {
+    const expandLabel = document.getElementById('btn-toggle-expand-label');
+    if (expandLabel) {
+      const isExpanded = document.getElementById('btn-toggle-expand-all')?.classList.contains('all-expanded');
+      expandLabel.textContent = isExpanded ? t('materials', 'collapseAll') : t('materials', 'expandAll');
+    }
   }
 
   const rescanLabel = document.getElementById('btn-rescan-label');
