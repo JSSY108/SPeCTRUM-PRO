@@ -7130,7 +7130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         const daysEn = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
         const daysBm = ['AHD', 'ISN', 'SEL', 'RAB', 'KHA', 'JUM', 'SAB'];
-        const daysZh = ['日', '一', '二', '三', '四', '五', '六'];
+        const daysZh = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 
         timelineTrack.innerHTML = populatedDays.map(day => {
           const dayDate = day.date instanceof Date ? day.date : new Date(day.date);
@@ -7142,7 +7142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           let countStr = '';
 
           if (currentLang === 'zh') {
-            dateHeaderStr = `${dayNum}日 (${daysZh[dIdx]})`;
+            dateHeaderStr = `${dayNum}日 ${daysZh[dIdx]}`;
             todayPillStr = day.isToday ? '<span class="kanban-today-pill">今天</span>' : '';
             countStr = `${day.events.length} 项`;
           } else if (currentLang === 'bm') {
