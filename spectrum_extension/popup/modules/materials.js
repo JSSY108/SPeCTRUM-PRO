@@ -286,9 +286,9 @@
           courseTreeEl.innerHTML = `
             <div class="empty-state" style="text-align:center;padding:32px 16px;color:var(--text-muted);">
               <div style="font-size:24px;margin-bottom:8px;">📚</div>
-              <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">No Enrolled Courses Found</div>
-              <p style="font-size:11px;line-height:1.5;max-width:320px;margin:0 auto 14px;">Please ensure you are signed in to <a href="https://spectrum.um.edu.my" target="_blank" style="color:var(--accent-primary);text-decoration:underline;">spectrum.um.edu.my</a>, then click Rescan.</p>
-              <button type="button" id="btn-empty-rescan" class="btn-wireframe" style="padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">↻ Rescan Courses</button>
+              <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">${t('materials', 'noCoursesFound')}</div>
+              <p style="font-size:11px;line-height:1.5;max-width:320px;margin:0 auto 14px;">${t('materials', 'loginPrompt')}</p>
+              <button type="button" id="btn-empty-rescan" class="btn-wireframe" style="padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">${t('materials', 'rescanCoursesBtn')}</button>
             </div>
           `;
           const emptyRescan = document.getElementById('btn-empty-rescan');
@@ -810,7 +810,7 @@
           </button>
         </div>
         <div class="course-tree-children">
-          ${course.loaded ? '' : '<p class="settings-desc" style="padding:8px 16px;font-size:11px;color:var(--text-muted);">Scanning course contents...</p>'}
+          ${course.loaded ? '' : `<p class="settings-desc" style="padding:8px 16px;font-size:11px;color:var(--text-muted);">${t('materials', 'scanningContents')}</p>`}
         </div>
       `;
 
