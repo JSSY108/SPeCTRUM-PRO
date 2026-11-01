@@ -341,8 +341,8 @@
     const pad = n => String(n).padStart(2, '0');
 
     // Dynamically read horizontal column width & row height from CSS tuning dashboard
-    let horizColWidth = 215;
-    let horizRowHeight = 115;
+    let horizColWidth = 270;
+    let horizRowHeight = 135;
     try {
       if (typeof document !== 'undefined') {
         const rootStyle = getComputedStyle(document.documentElement);
@@ -400,7 +400,7 @@
       const rowNum = dayRowOffset + 2;
       const dayName = DAY_NAMES[dIdx];
       const isToday = (dIdx === todayDayIndex);
-      const isHalf = (dIdx === 6 && !hasSatSession);
+      const isHalf = isDayHalf(dIdx);
       const todayClass = isToday ? ' is-today' : '';
       const halfClass = isHalf ? ' is-half-row' : '';
       const daySess = sessions.filter(s => s.dayIndex === dIdx);
@@ -538,14 +538,15 @@
     const totalHeight = totalHours * HOUR_HEIGHT;
     const pad = n => String(n).padStart(2, '0');
 
-    // Saturday takes only half a cell (0.5fr) if it has no courses scheduled!
-    const hasSatSession = sessions.some(s => s.dayIndex === 6);
+    // Any day without a single course scheduled (e.g. Friday, Saturday) takes half a cell (0.5fr)!
+    const hasDaySession = dIdx => sessions.some(s => s.dayIndex === dIdx);
+    const isDayHalf = dIdx => !hasDaySession(dIdx);
     const colTracks = activeDayIndices.map(dIdx => {
-      const isHalf = (dIdx === 6 && !hasSatSession);
+      const isHalf = isDayHalf(dIdx);
       return isHalf ? 'minmax(95px, 0.5fr)' : 'minmax(185px, 1fr)';
     });
     const totalMinWidth = 75 + activeDayIndices.reduce((sum, dIdx) => {
-      return sum + ((dIdx === 6 && !hasSatSession) ? 95 : 185);
+      return sum + (isDayHalf(dIdx) ? 95 : 185);
     }, 0);
 
     gridEl.className = 'timetable-grid timetable-vertical-grid';
@@ -568,7 +569,7 @@
       const col = colOffset + 2;
       const dayName = DAY_NAMES[dIdx];
       const isToday = (dIdx === todayDayIndex);
-      const isHalf = (dIdx === 6 && !hasSatSession);
+      const isHalf = isDayHalf(dIdx);
       const todayClass = isToday ? ' is-today' : '';
       const halfClass = isHalf ? ' is-half-cell' : '';
       const headerContent = isToday
@@ -598,7 +599,7 @@
     // Row 2, Col 2..N: Day Columns
     activeDayIndices.forEach((dIdx, colOffset) => {
       const col = colOffset + 2;
-      const isHalf = (dIdx === 6 && !hasSatSession);
+      const isHalf = isDayHalf(dIdx);
       const halfClass = isHalf ? ' is-half-cell' : '';
       const daySess = sessions.filter(s => s.dayIndex === dIdx);
 
@@ -1089,9 +1090,10 @@
     const cornerW = 180;
     const colW = (gridW - cornerW) / totalCols;
 
-    // Saturday takes half row height if empty
-    const hasSatSession = sessions.some(s => s.dayIndex === 6);
-    const dayRowWeights = activeDayIndices.map(dIdx => (dIdx === 6 && !hasSatSession) ? 0.5 : 1.0);
+    // Any day without a single course scheduled (e.g. Friday, Saturday) takes half row height (weight 0.5)!
+    const hasDaySession = dIdx => sessions.some(s => s.dayIndex === dIdx);
+    const isDayHalf = dIdx => !hasDaySession(dIdx);
+    const dayRowWeights = activeDayIndices.map(dIdx => isDayHalf(dIdx) ? 0.5 : 1.0);
     const totalRowWeight = dayRowWeights.reduce((a, b) => a + b, 0);
     const availableGridH = gridH - headerH;
     const unitRowH = availableGridH / totalRowWeight;
@@ -1463,9 +1465,10 @@
     const availableW = gridW - timeColW;
     const hourH = (gridH - headerH) / totalHours;
 
-    // Saturday takes half a cell (weight 0.5) if it has no courses scheduled!
-    const hasSatSession = sessions.some(s => s.dayIndex === 6);
-    const dayWeights = activeDayIndices.map(dIdx => (dIdx === 6 && !hasSatSession) ? 0.5 : 1.0);
+    // Any day without a single course scheduled (e.g. Friday, Saturday) takes half a cell (weight 0.5)!
+    const hasDaySession = dIdx => sessions.some(s => s.dayIndex === dIdx);
+    const isDayHalf = dIdx => !hasDaySession(dIdx);
+    const dayWeights = activeDayIndices.map(dIdx => isDayHalf(dIdx) ? 0.5 : 1.0);
     const totalWeight = dayWeights.reduce((a, b) => a + b, 0);
     const unitW = availableW / totalWeight;
 

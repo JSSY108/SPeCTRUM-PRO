@@ -2275,7 +2275,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       actionBtnHtml,
       rawAttId,
       cid,
-      dateKey: targetDateKey
+      dateKey: targetDateKey,
+      startHour,
+      startMin,
+      endHour,
+      endMin
     };
   }
 
@@ -2331,6 +2335,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Extract start time in minutes from midnight (0..1439) for precise chronological ascending sorting
   function getEventStartTimeMinutes(ev) {
     if (!ev) return 720;
+
+    // For attendance items, compute the exact card viewmodel to match displayed time with 100% precision
+    if (ev.type === 'att' || ev.type === 'attendance') {
+      try {
+        const att = ev.obj || ev.att || ev;
+        const sess = ev.sessObj || ev.session || ev.data?.session || null;
+        const vm = computeAttendanceCardViewModel(att, {
+          session: sess,
+          timeStr: ev.timeStr || ev.data?.timeStr || sess?.time || sess?.dateStr,
+          dateKey: ev.dateKey || (ev.date ? formatDateKey(ev.date) : undefined),
+          date: ev.date || sess?.date
+        });
+        if (vm && typeof vm.startHour === 'number' && !isNaN(vm.startHour)) {
+          return vm.startHour * 60 + (vm.startMin || 0);
+        }
+      } catch (e) {}
+    }
+
     const sess = ev.sessObj || ev.session || ev.data?.session || (ev.data?.att ? ev.data.session : null);
     const timeCandidates = [
       ev.timeStr,
@@ -5334,6 +5356,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function shouldIncludeInTimelineOrCalendar(att, sess = null) {
+    // 0. Sliding 2-Week Window Filter (front and after 14 days from today)
+    // Filters out distant past and far future sessions from calendar & timeline to prevent information overload
+    if (sess) {
+      const isSessionLive = sess.isLive || sess.statusType === 'active';
+      if (!isSessionLive) {
+        const sessDate = (sess.date instanceof Date && !isNaN(sess.date.getTime()))
+          ? sess.date
+          : (sess.date ? new Date(sess.date) : (sess.dateKey ? new Date(sess.dateKey + 'T12:00:00') : null));
+        if (sessDate && !isNaN(sessDate.getTime())) {
+          const now = new Date();
+          const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+          const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
+          const minTime = startOfToday - FOURTEEN_DAYS_MS;
+          const maxTime = startOfToday + FOURTEEN_DAYS_MS + (24 * 60 * 60 * 1000 - 1);
+          const sessTime = sessDate.getTime();
+          if (sessTime < minTime || sessTime > maxTime) {
+            return false;
+          }
+        }
+      }
+    }
+
     const occState = getCourseOccState(att.courseId);
 
     // 1. If multi-OCC course and student HAS NOT selected their OCC:

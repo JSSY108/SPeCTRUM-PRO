@@ -8858,15 +8858,60 @@ body:not(.is-full-tab) .sync-cinematic-current {
   gap: 14px;
 }
 
-.timetable-academic-kicker {
+.timetable-brand-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tt-prism-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.timetable-brand-kicker {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  color: var(--text-primary);
   text-transform: uppercase;
   display: block;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
+}
+
+.timetable-term-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-hairline);
+  border-radius: 6px;
+  margin-left: 2px;
+}
+
+.tt-term-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.tt-term-values {
+  display: flex;
+  flex-direction: column;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--text-primary);
 }
 
 .timetable-main-title {
@@ -9128,7 +9173,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
      and full 2-line course title without truncation.
      Recommended: 180px - 260px (Default: 215px, previous: 115px)
      ======================================================================== */
-  --tt-horiz-col-width: 215px;
+  --tt-horiz-col-width: 270px;
 
   /* ========================================================================
      3. HORIZONTAL MODE: DAY ROW HEIGHT (VERTICAL SPACING):
@@ -9136,7 +9181,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
      115px ensures cards with 2-line title, OCC, and venue fit with comfortable breathing room.
      Recommended: 100px - 140px (Default: 115px, previous: 88px)
      ======================================================================== */
-  --tt-horiz-row-height: 115px;
+  --tt-horiz-row-height: 135px;
 }
 
 .tt-session-card {
