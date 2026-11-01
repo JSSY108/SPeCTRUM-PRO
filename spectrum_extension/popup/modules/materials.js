@@ -8,6 +8,12 @@
   'use strict';
 
   // Safe resolution of shared utilities from window / utils.js
+  const t = (section, key, params = {}) => {
+    if (typeof window !== 'undefined' && typeof window.t === 'function') {
+      return window.t(section, key, params);
+    }
+    return key;
+  };
   const cleanHtmlForParser = (typeof window !== 'undefined' && window.cleanHtmlForParser) ? window.cleanHtmlForParser : ((h) => h);
   const logDiag = (typeof window !== 'undefined' && window.logDiag) ? window.logDiag : ((cat, msg) => console.log(`[${cat}] ${msg}`));
   const formatDateKey = (typeof window !== 'undefined' && window.formatDateKey) ? window.formatDateKey : ((d) => '');
@@ -747,9 +753,9 @@
       courseTreeEl.innerHTML = `
         <div class="empty-state" style="text-align:center;padding:32px 16px;color:var(--text-muted);">
           <div style="font-size:24px;margin-bottom:8px;">📚</div>
-          <div style="font-size:12.5px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">No Enrolled Courses Synced</div>
-          <div style="font-size:11px;line-height:1.5;max-width:260px;margin:0 auto 12px;">Click <strong>Rescan</strong> above to discover and sync course materials directly from SPeCTRUM.</div>
-          <button type="button" id="btn-empty-rescan-shell" class="btn-wireframe" style="padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">↻ Rescan Materials</button>
+          <div style="font-size:12.5px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">${t('materials', 'noCoursesSynced')}</div>
+          <div style="font-size:11px;line-height:1.5;max-width:260px;margin:0 auto 12px;">${t('materials', 'noCoursesSub')}</div>
+          <button type="button" id="btn-empty-rescan-shell" class="btn-wireframe" style="padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">${t('materials', 'rescanMaterials')}</button>
         </div>
       `;
       const btnEmptyRescan = document.getElementById('btn-empty-rescan-shell');
@@ -779,7 +785,8 @@
         });
       });
       const totalMb = (totalSizeBytes / (1024 * 1024)).toFixed(1);
-      const updatedTimeStr = idx === 0 ? 'Updated 2 hours ago' : (idx === 1 ? 'Updated Yesterday' : (idx === 2 ? 'Updated 3 days ago' : 'Updated 5 days ago'));
+      const updatedTimeStr = idx === 0 ? t('materials', 'updated2Hours') : (idx === 1 ? t('materials', 'updatedYesterday') : (idx === 2 ? t('materials', 'updated3Days') : t('materials', 'updated5Days')));
+      const fileWord = totalFiles === 1 ? t('materials', 'fileSingle') : t('materials', 'filePlural');
 
       item.innerHTML = `
         <div class="course-tree-header">
@@ -795,11 +802,11 @@
                 <span class="course-title-txt" title="${escapeHtml(course.title)}">${escapeHtml(course.title)}</span>
               ` : ''}
             </div>
-            <div class="course-sub-meta">${totalFiles} Files &nbsp;·&nbsp; ${totalMb} MB &nbsp;·&nbsp; ${updatedTimeStr}</div>
+            <div class="course-sub-meta">${totalFiles} ${fileWord} &nbsp;·&nbsp; ${totalMb} MB &nbsp;·&nbsp; ${updatedTimeStr}</div>
           </div>
-          <button type="button" class="btn-download-pack" data-course-id="${course.id}" title="Download Course Pack (.zip)">
+          <button type="button" class="btn-download-pack" data-course-id="${course.id}" title="${t('materials', 'downloadCoursePack')}">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            <span>Download Course Pack (.zip)</span>
+            <span>${t('materials', 'downloadCoursePack')}</span>
           </button>
         </div>
         <div class="course-tree-children">
@@ -854,7 +861,7 @@
 
     const totalFiles = (course.sections || []).reduce((acc, s) => acc + (s.files ? s.files.length : 0), 0);
     if (totalFiles === 0) {
-      childrenContainer.innerHTML = '<p class="settings-desc" style="padding:10px 16px;font-size:11px;color:var(--text-muted);">No downloadable files found in this course.</p>';
+      childrenContainer.innerHTML = `<p class="settings-desc" style="padding:10px 16px;font-size:11px;color:var(--text-muted);">${t('materials', 'noFilesFound')}</p>`;
       return;
     }
 

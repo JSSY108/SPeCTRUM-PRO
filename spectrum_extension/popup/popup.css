@@ -3162,6 +3162,14 @@ body.mode-preferences #fulltab-week-pill {
   overflow: visible;
 }
 
+.rail-top-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  overflow: visible;
+}
+
 .rail-top-utilities {
   display: flex;
   flex-direction: column;
@@ -3526,7 +3534,7 @@ body.mode-preferences #fulltab-week-pill {
 
 .rail-mode-item:hover .rail-expand-label {
   opacity: 1;
-  max-width: 140px;
+  max-width: 165px;
   padding-right: 12px;
 }
 

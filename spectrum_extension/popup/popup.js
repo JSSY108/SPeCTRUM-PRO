@@ -64,9 +64,31 @@ let saveCacheTimeout = null;
 const I18N = {
   en: {
     langLabel: 'English',
+    headers: {
+      sync: 'Sync',
+      diag: 'Diagnostics',
+      autoTake: 'Auto-Take Now',
+      fullWorkstation: 'Full Workstation',
+      timetableTitle: 'WEEKLY ACADEMIC TIMETABLE',
+      materialsTitle: 'COURSE MATERIALS & DOWNLOADS',
+      preferencesTitle: 'PREFERENCES & AUTOMATION',
+      byCourseFeed: 'BY COURSE · ACADEMIC FEED',
+      timelineFeed: 'TIMELINE ACTIVITY FEED',
+      byDate: 'Date',
+      byCourse: 'Course',
+      by: 'By:',
+      sort: 'Sort:',
+      newest: 'Newest',
+      oldest: 'Oldest',
+      prevDay: 'Prev',
+      today: 'Today',
+      nextDay: 'Next',
+      prevEvent: '⏮ Prev Event',
+      nextEvent: 'Next Event ⏭'
+    },
     tooltips: {
       pref: 'Preferences',
-      mat: 'Materials',
+      mat: 'Course Materials',
       assign: 'Tutorials',
       att: 'Attendance',
       notice: 'Notices',
@@ -74,7 +96,8 @@ const I18N = {
       cal: 'Calendar',
       list: 'List View',
       timetable: 'Timetable',
-      tipjar: 'Tip Jar'
+      tipjar: 'Tip Jar',
+      activities: 'Activities'
     },
     cards: {
       today: 'TODAY',
@@ -159,26 +182,70 @@ const I18N = {
       clearSelection: 'Clear Selection',
       markSynced: 'Mark All as Synced',
       downloadZip: 'Download Selected (.zip)',
+      downloadCoursePack: 'Download Course Pack (.zip)',
+      fileSingle: 'File',
+      filePlural: 'Files',
       docDetails: 'DOCUMENT DETAILS',
       preview: 'Preview',
       fullReader: 'Full Reader',
       downloadFile: 'Download Local Copy (.pdf)',
-      loadingPreview: 'Loading preview...'
+      loadingPreview: 'Loading preview...',
+      noCoursesSynced: 'No Enrolled Courses Synced',
+      noCoursesSub: 'Click Rescan above to discover and sync course materials directly from SPeCTRUM.',
+      rescanMaterials: '↻ Rescan Materials',
+      noFilesFound: 'No downloadable files found in this course.',
+      noCoursesFound: 'No Enrolled Courses Found',
+      loginPrompt: 'Please ensure you are signed in to spectrum.um.edu.my, then click Rescan.',
+      rescanCoursesBtn: '↻ Rescan Courses',
+      discoveringCourses: 'Connecting to SPeCTRUM & discovering enrolled courses...',
+      step1Of2: 'Step 1 of 2: Discovering courses',
+      rescanningTitle: 'RESCANNING SPeCTRUM COURSES',
+      fetchingTitle: 'FETCHING COURSES & MATERIALS',
+      scanComplete: 'SCAN COMPLETE',
+      scanSuccess: '✔ All {c} courses & {f} files successfully indexed!',
+      completedCount: '{c} of {c} completed',
+      updated2Hours: 'Updated 2 hours ago',
+      updatedYesterday: 'Updated Yesterday',
+      updated3Days: 'Updated 3 days ago',
+      updated5Days: 'Updated 5 days ago'
     }
   },
   bm: {
     langLabel: 'Bahasa Melayu',
+    headers: {
+      sync: 'Segerak',
+      diag: 'Diagnostik',
+      autoTake: 'Daftar Automatik',
+      fullWorkstation: 'Stesen Kerja Penuh',
+      timetableTitle: 'JADUAL WAKTU AKADEMIK MINGGUAN',
+      materialsTitle: 'BAHAN KURSUS & MUAT TURUN',
+      preferencesTitle: 'TETAPAN & AUTOMATIK',
+      byCourseFeed: 'MENGIKUT KURSUS · SUAPAN AKADEMIK',
+      timelineFeed: 'SUAPAN AKTIVITI GARIS MASA',
+      byDate: 'Tarikh',
+      byCourse: 'Kursus',
+      by: 'Ikut:',
+      sort: 'Susun:',
+      newest: 'Terkini',
+      oldest: 'Terlama',
+      prevDay: 'Sebelum',
+      today: 'Hari Ini',
+      nextDay: 'Seterusnya',
+      prevEvent: '⏮ Acara Sebelum',
+      nextEvent: 'Acara Seterusnya ⏭'
+    },
     tooltips: {
       pref: 'Tetapan',
       mat: 'Bahan Kursus',
       assign: 'Tutorial',
       att: 'Kehadiran',
-      notice: 'Notis',
+      notice: 'Pengumuman',
       timeline: 'Garis Masa',
       cal: 'Kalendar',
       list: 'Paparan Senarai',
       timetable: 'Jadual Waktu',
-      tipjar: 'Tip Jar'
+      tipjar: 'Tip Jar',
+      activities: 'Aktiviti'
     },
     cards: {
       today: 'HARI INI',
@@ -219,30 +286,30 @@ const I18N = {
     },
     settings: {
       occSettingsTitle: 'TETAPAN KUMPULAN (OCC)',
-      occSettingsDesc: 'Tentukan penapis kohort OCC untuk semakan kehadiran terpilih.',
-      defaultOccTitle: 'Kohort OCC Akademik Lalai',
-      defaultOccSub: 'Sandaran untuk modul tanpa penetapan khusus',
-      perCourseOverrides: 'PENGECUALIAN MENGIKUT KURSUS',
-      resetAll: 'Set Semula Semua',
+      occSettingsDesc: 'Tentukan penapis kumpulan OCC untuk daftar masuk terpilih.',
+      defaultOccTitle: 'Kumpulan OCC Akademik Lalai',
+      defaultOccSub: 'Sandaran untuk modul tanpa pemetaan',
+      perCourseOverrides: 'TETAPAN KHAS MENGIKUT KURSUS',
+      resetAll: 'Tetapkan Semula Semua',
       resetOccCleared: '✔ Semua tetapan OCC telah dikosongkan!',
-      attAutoTitle: 'AUTOMASI KEHADIRAN',
+      attAutoTitle: 'AUTOMATIK KEHADIRAN',
       attAutoBadgeActive: 'DAEMON AKTIF',
-      attAutoBadgeOff: 'BERSEDIA',
+      attAutoBadgeOff: 'SEDIA',
       attAutoCheckTitle: 'Dayakan semakan kehadiran automatik',
       attAutoCheckSub: 'Berjalan secara berkala di latar belakang dan menandakan kehadiran',
       cadenceLabel: 'Kekerapan Pengesahan:',
       every10m: 'Setiap 10 minit',
-      every15m: 'Setiap 15 minit (Standard)',
+      every15m: 'Setiap 15 minit (Piawai)',
       every30m: 'Setiap 30 minit',
       every1h: 'Setiap 1 jam',
       hiddenAttTitle: 'KEHADIRAN PENDUA TERSEMBUNYI',
-      hiddenAttDesc: 'Slot lewah ditapis daripada paparan garis masa harian.',
+      hiddenAttDesc: 'Slot berlebihan ditapis daripada paparan garis masa harian.',
       restoreAll: 'Pulihkan Semua',
       hiddenCount: '{n} Aktiviti Tersembunyi',
-      noHidden: '✔ Tiada kehadiran pendua yang tersembunyi pada masa ini.',
+      noHidden: '✔ Tiada kehadiran pendua tersembunyi pada masa ini.',
       timelineFocalTitle: 'KEDUDUKAN PEMICU TITIK GARIS MASA',
-      timelineFocalDesc: 'Laraskan kedudukan menegak skrin di mana titik tarikh garis masa menyala hitam pekat semasa aktiviti diskrol.',
-      focalHeight: 'Ketinggian Pemicu Fokus',
+      timelineFocalDesc: 'Laraskan kedudukan menegak skrin di mana titik tarikh garis masa bernyawa dan menyala hitam pekat semasa aktiviti ditatal melepasi.',
+      focalHeight: 'Ketinggian Pemicu Titik',
       focalMid: 'Tengah Skrin',
       presetUpper: 'Atas (30%)',
       presetMiddle: 'Tengah (50% Lalai)',
@@ -263,15 +330,58 @@ const I18N = {
       clearSelection: 'Kosongkan Pilihan',
       markSynced: 'Tandakan Semua Disegerakkan',
       downloadZip: 'Muat Turun Pilihan (.zip)',
+      downloadCoursePack: 'Muat Turun Pakej Kursus (.zip)',
+      fileSingle: 'Fail',
+      filePlural: 'Fail',
       docDetails: 'BUTIRAN DOKUMEN',
       preview: 'Pratonton',
       fullReader: 'Pembaca Penuh',
       downloadFile: 'Muat Turun Salinan Tempatan (.pdf)',
-      loadingPreview: 'Memuatkan pratonton...'
+      loadingPreview: 'Memuatkan pratonton...',
+      noCoursesSynced: 'Tiada Kursus Didaftarkan Disegerakkan',
+      noCoursesSub: 'Klik Imbas Semula di atas untuk mengesan dan menyegerakkan bahan kursus terus daripada SPeCTRUM.',
+      rescanMaterials: '↻ Imbas Semula Bahan',
+      noFilesFound: 'Tiada fail yang boleh dimuat turun ditemui dalam kursus ini.',
+      noCoursesFound: 'Tiada Kursus Didaftarkan Ditemui',
+      loginPrompt: 'Sila pastikan anda telah log masuk ke spectrum.um.edu.my, kemudian klik Imbas Semula.',
+      rescanCoursesBtn: '↻ Imbas Semula Kursus',
+      discoveringCourses: 'Menyambung ke SPeCTRUM & mengesan kursus yang didaftarkan...',
+      step1Of2: 'Langkah 1 daripada 2: Mengesan kursus',
+      rescanningTitle: 'MENGIMBAS SEMULA KURSUS SPeCTRUM',
+      fetchingTitle: 'MEMPEROLEH KURSUS & BAHAN',
+      scanComplete: 'IMBASAN SELESAI',
+      scanSuccess: '✔ Kesemua {c} kursus & {f} fail berjaya diindeks!',
+      completedCount: '{c} daripada {c} selesai',
+      updated2Hours: 'Dikemaskini 2 jam lalu',
+      updatedYesterday: 'Dikemaskini Semalam',
+      updated3Days: 'Dikemaskini 3 hari lalu',
+      updated5Days: 'Dikemaskini 5 hari lalu'
     }
   },
   zh: {
     langLabel: '中文',
+    headers: {
+      sync: '同步',
+      diag: '运行日志',
+      autoTake: '一键考勤',
+      fullWorkstation: '全屏工作台',
+      timetableTitle: '每周课程表',
+      materialsTitle: '课件资料与下载',
+      preferencesTitle: '设置与自动化',
+      byCourseFeed: '按课程 · 课程动态',
+      timelineFeed: '时间轴动态',
+      byDate: '日期',
+      byCourse: '课程',
+      by: '分组:',
+      sort: '排序:',
+      newest: '最新',
+      oldest: '最早',
+      prevDay: '上一天',
+      today: '今天',
+      nextDay: '下一天',
+      prevEvent: '⏮ 上一活动',
+      nextEvent: '下一活动 ⏭'
+    },
     tooltips: {
       pref: '系统设置',
       mat: '课件资料',
@@ -282,7 +392,8 @@ const I18N = {
       cal: '日历视图',
       list: '列表视图',
       timetable: '每周课表',
-      tipjar: '支持作者'
+      tipjar: '支持作者',
+      activities: '课程动态'
     },
     cards: {
       today: '今天',
@@ -367,11 +478,32 @@ const I18N = {
       clearSelection: '清除选择',
       markSynced: '全部标记为已同步',
       downloadZip: '下载所选文件 (.zip)',
+      downloadCoursePack: '下载整门课件 (.zip)',
+      fileSingle: '个文件',
+      filePlural: '个文件',
       docDetails: '文档详情',
       preview: '预览',
       fullReader: '全屏阅读器',
       downloadFile: '下载本地副本 (.pdf)',
-      loadingPreview: '正在加载预览...'
+      loadingPreview: '正在加载预览...',
+      noCoursesSynced: '未同步已注册的课程',
+      noCoursesSub: '点击上方的“重新扫描”直接从 SPeCTRUM 同步课件资料。',
+      rescanMaterials: '↻ 重新扫描课件',
+      noFilesFound: '本课程暂无可下载的文件。',
+      noCoursesFound: '未找到已注册课程',
+      loginPrompt: '请确保您已登录 spectrum.um.edu.my，然后点击“重新扫描”。',
+      rescanCoursesBtn: '↻ 重新扫描课程',
+      discoveringCourses: '正在连接 SPeCTRUM 并检索已注册课程...',
+      step1Of2: '第 1 步 (共 2 步)：发现课程',
+      rescanningTitle: '重新扫描 SPeCTRUM 课程',
+      fetchingTitle: '获取课程与课件资料',
+      scanComplete: '扫描完成',
+      scanSuccess: '✔ 全部 {c} 门课程和 {f} 个文件已建立索引！',
+      completedCount: '已完成 {c} / {c}',
+      updated2Hours: '2 小时前更新',
+      updatedYesterday: '昨天更新',
+      updated3Days: '3 天前更新',
+      updated5Days: '5 天前更新'
     }
   }
 };
@@ -547,6 +679,85 @@ function updateMaterialsTranslations() {
   if (inspDownloadText) inspDownloadText.textContent = t('materials', 'downloadFile');
 }
 
+function updateHeaderTranslations() {
+  const syncBtn = document.getElementById('btn-fulltab-sync');
+  if (syncBtn) {
+    const s = syncBtn.querySelector('span');
+    if (s) s.textContent = t('headers', 'sync');
+  }
+
+  const diagBtn = document.getElementById('btn-fulltab-diag');
+  if (diagBtn) {
+    const s = diagBtn.querySelector('span');
+    if (s) s.textContent = t('headers', 'diag');
+  }
+
+  const autoTakeText = document.getElementById('btn-fulltab-quick-auto-take-text');
+  if (autoTakeText) autoTakeText.textContent = t('headers', 'autoTake');
+
+  const popupSyncLabel = document.getElementById('btn-refresh-activities-label');
+  if (popupSyncLabel) popupSyncLabel.textContent = t('headers', 'sync');
+
+  const popupOpenTab = document.getElementById('btn-open-tab');
+  if (popupOpenTab) {
+    const s = popupOpenTab.querySelector('span');
+    if (s) s.textContent = t('headers', 'fullWorkstation');
+  }
+
+  const tabActs = document.querySelector('.primary-tab-btn[data-tab="tab-activities"]');
+  if (tabActs) tabActs.textContent = t('tooltips', 'activities');
+  const tabTt = document.querySelector('.primary-tab-btn[data-tab="tab-timetable"]');
+  if (tabTt) tabTt.textContent = t('tooltips', 'timetable');
+  const tabMat = document.querySelector('.primary-tab-btn[data-tab="tab-materials"]');
+  if (tabMat) tabMat.textContent = t('tooltips', 'mat');
+  const tabPref = document.querySelector('.primary-tab-btn[data-tab="tab-filters"]');
+  if (tabPref) tabPref.textContent = t('tooltips', 'pref');
+  const tabSupp = document.querySelector('.primary-tab-btn[data-tab="tab-support"]');
+  if (tabSupp) tabSupp.textContent = t('tooltips', 'tipjar');
+
+  const btnGroupDate = document.getElementById('btn-fulllist-group-date');
+  if (btnGroupDate) btnGroupDate.textContent = t('headers', 'byDate');
+  const btnGroupCourse = document.getElementById('btn-fulllist-group-course');
+  if (btnGroupCourse) btnGroupCourse.textContent = t('headers', 'byCourse');
+  const btnSortNewest = document.getElementById('btn-fulllist-sort-newest');
+  if (btnSortNewest) btnSortNewest.textContent = t('headers', 'newest');
+  const btnSortOldest = document.getElementById('btn-fulllist-sort-oldest');
+  if (btnSortOldest) btnSortOldest.textContent = t('headers', 'oldest');
+
+  const btnPrev = document.getElementById('fulllist-side-prev');
+  if (btnPrev) {
+    const s = btnPrev.querySelector('.side-btn-text');
+    if (s) s.textContent = t('headers', 'prevDay');
+  }
+  const btnToday = document.getElementById('fulllist-side-today');
+  if (btnToday) {
+    const s = btnToday.querySelector('.side-btn-text');
+    if (s) s.textContent = t('headers', 'today');
+  }
+  const btnNext = document.getElementById('fulllist-side-next');
+  if (btnNext) {
+    const s = btnNext.querySelector('.side-btn-text');
+    if (s) s.textContent = t('headers', 'nextDay');
+  }
+  const btnPrevAct = document.getElementById('fulllist-side-prev-act');
+  if (btnPrevAct) btnPrevAct.textContent = t('headers', 'prevEvent');
+  const btnNextAct = document.getElementById('fulllist-side-next-act');
+  if (btnNextAct) btnNextAct.textContent = t('headers', 'nextEvent');
+}
+
+window.t = t;
+window.I18N = I18N;
+window.setAppLanguage = setAppLanguage;
+try {
+  Object.defineProperty(window, 'currentLang', {
+    get: () => currentLang,
+    set: (v) => { currentLang = v; },
+    configurable: true
+  });
+} catch (e) {
+  window.currentLang = currentLang;
+}
+
 function setAppLanguage(lang, broadcast = true) {
   if (!['en', 'bm', 'zh'].includes(lang)) lang = 'en';
   currentLang = lang;
@@ -565,8 +776,10 @@ function setAppLanguage(lang, broadcast = true) {
   });
 
   updateSidebarLabels();
+  updateHeaderTranslations();
   updatePreferencesTranslations();
   updateMaterialsTranslations();
+  if (typeof updateFullTabHeader === 'function') updateFullTabHeader();
 
   if (typeof renderAllActivities === 'function') renderAllActivities();
   if (typeof renderByCourseScopedFeed === 'function') renderByCourseScopedFeed();
@@ -575,6 +788,9 @@ function setAppLanguage(lang, broadcast = true) {
   if (typeof renderCalendarView === 'function') renderCalendarView(calCurrentYear, calCurrentMonth);
   if (document.getElementById('fulllist-wrapper')?.style.display !== 'none' && typeof renderFullListMode === 'function') {
     renderFullListMode();
+  }
+  if (typeof renderCourseTreeShells === 'function') {
+    renderCourseTreeShells();
   }
 }
 
@@ -1640,9 +1856,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (clockDisp) clockDisp.textContent = info.clockStr;
     if (monthHeading) {
       if (currentFullTabMode === 'materials') {
-        monthHeading.textContent = 'COURSE MATERIALS & DOWNLOADS';
+        monthHeading.textContent = t('headers', 'materialsTitle');
       } else if (currentFullTabMode === 'preferences') {
-        monthHeading.textContent = 'PREFERENCES & AUTOMATION';
+        monthHeading.textContent = t('headers', 'preferencesTitle');
       } else {
         monthHeading.textContent = info.monthYearStr;
       }
@@ -1874,7 +2090,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       fullListGroupingMode = 'course';
       fullListCurrentDate = new Date();
       if (monthHeading) {
-        monthHeading.textContent = 'BY COURSE · ACADEMIC FEED';
+        monthHeading.textContent = t('headers', 'byCourseFeed');
       }
       renderFullListMode(fullListCurrentDate, 1);
     } else if (mode === 'timetable') {
@@ -1882,7 +2098,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ttSec.style.display = 'flex';
         ttSec.classList.add('active');
       }
-      if (monthHeading) monthHeading.textContent = 'WEEKLY ACADEMIC TIMETABLE';
+      if (monthHeading) monthHeading.textContent = t('headers', 'timetableTitle');
       if (typeof renderTimetableMode === 'function') renderTimetableMode();
     } else if (mode === 'materials') {
       if (railBtnMat) railBtnMat.classList.add('active');
