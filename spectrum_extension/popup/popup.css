@@ -8745,6 +8745,10 @@ body:not(.is-full-tab) .sync-cinematic-current {
   width: 100%;
 }
 
+.spine-date-cards:empty {
+  display: none !important;
+}
+
 /* Spine Focal Trigger Guideline & Slider UI */
 .spine-focal-guideline {
   position: absolute;

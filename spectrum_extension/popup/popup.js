@@ -2602,6 +2602,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  function scrollSpineToToday(container, immediate = true) {
+    if (!container) return;
+    const todayGroup = container.querySelector('.spine-date-group.group-today');
+    if (!todayGroup) return;
+
+    const doScroll = () => {
+      const cRect = container.getBoundingClientRect();
+      if (cRect.height <= 0) return;
+      const tRect = todayGroup.getBoundingClientRect();
+      const currentScrollTop = container.scrollTop;
+      // Position Today nicely around 28% from top of container for optimal visibility
+      const ratio = 0.28;
+      const targetScroll = Math.max(0, (tRect.top - cRect.top) + currentScrollTop - (cRect.height * ratio));
+
+      if (immediate) {
+        const prevBehavior = container.style.scrollBehavior;
+        container.style.scrollBehavior = 'auto';
+        container.scrollTop = targetScroll;
+        requestAnimationFrame(() => {
+          container.style.scrollBehavior = prevBehavior || 'smooth';
+          updateActiveSpineNode();
+        });
+      } else {
+        container.scrollTo({ top: targetScroll, behavior: 'smooth' });
+        setTimeout(updateActiveSpineNode, 100);
+      }
+    };
+
+    requestAnimationFrame(() => {
+      doScroll();
+      setTimeout(doScroll, 60);
+      setTimeout(doScroll, 180);
+    });
+  }
+
   function renderByCourseScopedFeed() {
     const feedEl = document.getElementById('bycourse-activities-feed');
     if (!feedEl) return;
@@ -2818,6 +2853,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       groupsMap.get(ev.dateKey).events.push(ev);
     });
 
+    // Always guarantee TODAY node is present in the chronological spine
+    // If today has activities: render them as usual; if no activity: render node with no cards
+    if (!groupsMap.has(todayKey)) {
+      groupsMap.set(todayKey, {
+        dateKey: todayKey,
+        date: new Date(),
+        events: []
+      });
+    }
+
     // Unified chronological spine sort:
     // Guarantees continuous monotonic ordering across all months (Oct -> Nov -> Dec -> Jan)
     // Respects currentSortOrder ('oldest' = chronological ascending, 'newest' = reverse chronological descending)
@@ -2874,14 +2919,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       }).join('');
 
       spineHtml += `
-        <div class="spine-date-group ${isToday ? 'group-today' : ''}">
+        <div class="spine-date-group ${isToday ? 'group-today' : ''}" data-date-key="${escapeHtml(group.dateKey)}">
           <div class="spine-node-header">
             <span class="${dotClass}"></span>
             <div class="spine-node-title">${titleHtml}</div>
           </div>
-          <div class="spine-date-cards">
-            ${cardsHtml}
-          </div>
+          ${cardsHtml ? `
+            <div class="spine-date-cards">
+              ${cardsHtml}
+            </div>
+          ` : ''}
         </div>
       `;
     });
@@ -2904,6 +2951,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     initSpineFocalControls();
     requestAnimationFrame(updateActiveSpineNode);
     setTimeout(updateActiveSpineNode, 50);
+
+    // Default scroll position: centered at TODAY
+    scrollSpineToToday(stream, true);
   }
 
   function renderPopupMonograms() {
@@ -7569,8 +7619,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             selectedCourseFilterId = item.dataset.courseId;
             selectedCourseFilterCode = item.dataset.courseCode;
             renderFullListMode();
-            const feed = document.getElementById('fulllist-cards-feed');
-            if (feed) feed.scrollTop = 0;
           });
         });
       }
@@ -7767,6 +7815,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         groupsMap.get(ev.dateKey).events.push(ev);
       });
 
+      // Always guarantee TODAY node is present in the chronological spine
+      // If today has activities: render them as usual; if no activity: render node with no cards
+      if (!groupsMap.has(todayKey)) {
+        groupsMap.set(todayKey, {
+          dateKey: todayKey,
+          date: new Date(),
+          events: []
+        });
+      }
+
       // Unified chronological spine sort:
       // Guarantees continuous monotonic ordering across all months (Oct -> Nov -> Dec -> Jan)
       // Respects currentSortOrder ('oldest' = chronological ascending, 'newest' = reverse chronological descending)
@@ -7818,14 +7876,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).join('');
 
         spineHtml += `
-          <div class="spine-date-group ${isToday ? 'group-today' : ''}">
+          <div class="spine-date-group ${isToday ? 'group-today' : ''}" data-date-key="${escapeHtml(group.dateKey)}">
             <div class="spine-node-header">
               <span class="${dotClass}"></span>
               <div class="spine-node-title">${titleHtml}</div>
             </div>
-            <div class="spine-date-cards">
-              ${cardsHtml}
-            </div>
+            ${cardsHtml ? `
+              <div class="spine-date-cards">
+                ${cardsHtml}
+              </div>
+            ` : ''}
           </div>
         `;
       });
@@ -7848,6 +7908,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       initSpineFocalControls();
       requestAnimationFrame(updateActiveSpineNode);
       setTimeout(updateActiveSpineNode, 50);
+
+      // Default scroll position: centered at TODAY
+      scrollSpineToToday(scrollTarget, true);
 
     } else {
       // ----------------------------------------------------
