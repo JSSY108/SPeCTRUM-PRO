@@ -784,6 +784,9 @@ body:not(.is-full-tab) .fulltab-only {
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
   margin-bottom: 4px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 .fulllist-top-toolbar .grouping-toggle,
@@ -3900,30 +3903,98 @@ body.mode-preferences #fulltab-week-pill {
   flex: 1;
   width: 100%;
   height: 100%;
-  overflow-y: auto;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden; /* Two-pane split: children scroll independently */
   display: flex;
   justify-content: center;
-  padding: 24px;
-  scroll-behavior: smooth;
+  padding: 20px 24px;
+  box-sizing: border-box;
 }
 
 .fulllist-centered-container {
   width: 100%;
-  max-width: 960px;
+  max-width: 1000px;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
   display: flex;
   gap: 24px;
-  align-items: flex-start;
+  align-items: stretch; /* Both left panel and right feed stretch full height */
+  box-sizing: border-box;
 }
 
 .fulllist-sticky-date-col {
-  width: 190px;
+  width: 220px;
   flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  height: fit-content;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  border-right: 1px solid var(--border-hairline); /* Clean vertical divider line */
+  padding-right: 20px;
+  box-sizing: border-box;
+}
+
+.fulllist-side-date-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.fulllist-side-course-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+}
+
+.fulllist-course-jump-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  box-sizing: border-box;
+}
+
+.fulllist-course-jump-list::-webkit-scrollbar,
+.fulllist-side-date-pane::-webkit-scrollbar {
+  width: 5px;
+}
+.fulllist-course-jump-list::-webkit-scrollbar-track,
+.fulllist-side-date-pane::-webkit-scrollbar-track {
+  background: transparent;
+}
+.fulllist-course-jump-list::-webkit-scrollbar-thumb,
+.fulllist-side-date-pane::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: 999px;
+}
+.fulllist-course-jump-list::-webkit-scrollbar-thumb:hover,
+.fulllist-side-date-pane::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.32);
+}
+[data-theme="dark"] .fulllist-course-jump-list::-webkit-scrollbar-thumb,
+[data-theme="dark"] .fulllist-side-date-pane::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+[data-theme="dark"] .fulllist-course-jump-list::-webkit-scrollbar-thumb:hover,
+[data-theme="dark"] .fulllist-side-date-pane::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .fulllist-main-date-card {
@@ -4099,10 +4170,39 @@ body.mode-preferences #fulltab-week-pill {
 /* Card Feed & Day Pagination Header */
 .fulllist-card-feed {
   flex: 1;
+  min-width: 0;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-width: 0;
+  padding-right: 8px;
+  padding-bottom: 32px;
+  scroll-behavior: smooth;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.fulllist-card-feed::-webkit-scrollbar {
+  width: 6px;
+}
+.fulllist-card-feed::-webkit-scrollbar-track {
+  background: transparent;
+}
+.fulllist-card-feed::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+}
+.fulllist-card-feed::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+[data-theme="dark"] .fulllist-card-feed::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+[data-theme="dark"] .fulllist-card-feed::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .fulllist-day-header-bar {

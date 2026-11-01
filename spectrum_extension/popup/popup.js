@@ -2380,7 +2380,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function renderSpineFocalGuideline() {
     const fulllistWrap = document.getElementById('fulllist-wrapper');
     const isFullTabList = fulllistWrap && fulllistWrap.style.display !== 'none';
-    const stream = isFullTabList ? fulllistWrap : (document.getElementById('popup-cards-stream') || document.querySelector('.split-cards-stream'));
+    const stream = isFullTabList ? (document.getElementById('fulllist-cards-feed') || fulllistWrap) : (document.getElementById('popup-cards-stream') || document.querySelector('.split-cards-stream'));
     if (!stream) return;
 
     let guideline = stream.querySelector('#spine-focal-guideline');
@@ -2461,7 +2461,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const fulllistWrap = document.getElementById('fulllist-wrapper');
     const isFullTabList = fulllistWrap && fulllistWrap.style.display !== 'none';
-    const stream = isFullTabList ? fulllistWrap : (document.getElementById('popup-cards-stream') || document.querySelector('.split-cards-stream'));
+    const stream = isFullTabList ? (document.getElementById('fulllist-cards-feed') || fulllistWrap) : (document.getElementById('popup-cards-stream') || document.querySelector('.split-cards-stream'));
     const streamRect = stream ? stream.getBoundingClientRect() : { top: 0, height: window.innerHeight };
 
     // Focal line: uses spineFocalRatio (default 0.50 = middle of viewport / scroll container)
@@ -7453,6 +7453,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             selectedCourseFilterId = item.dataset.courseId;
             selectedCourseFilterCode = item.dataset.courseCode;
             renderFullListMode();
+            const feed = document.getElementById('fulllist-cards-feed');
+            if (feed) feed.scrollTop = 0;
           });
         });
       }
@@ -7719,11 +7721,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       attachAttendanceActions(feedBody);
 
+      const fulllistFeed = document.getElementById('fulllist-cards-feed');
       const fulllistWrap = document.getElementById('fulllist-wrapper');
-      if (fulllistWrap && !fulllistWrap._hasFullListScrollListener) {
-        fulllistWrap._hasFullListScrollListener = true;
-        fulllistWrap.addEventListener('scroll', updateActiveSpineNode, { passive: true });
-        fulllistWrap.addEventListener('wheel', () => requestAnimationFrame(updateActiveSpineNode), { passive: true });
+      const scrollTarget = fulllistFeed || fulllistWrap;
+      if (scrollTarget && !scrollTarget._hasFullListScrollListener) {
+        scrollTarget._hasFullListScrollListener = true;
+        scrollTarget.addEventListener('scroll', updateActiveSpineNode, { passive: true });
+        scrollTarget.addEventListener('wheel', () => requestAnimationFrame(updateActiveSpineNode), { passive: true });
         window.addEventListener('scroll', updateActiveSpineNode, { passive: true });
       }
 
@@ -7879,6 +7883,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Reset scroll smoothly to top of feed
+    if (feed) feed.scrollTop = 0;
     const wrapper = document.getElementById('fulllist-wrapper');
     if (wrapper) wrapper.scrollTop = 0;
 
@@ -7897,21 +7902,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Scroll / Wheel Down and Keyboard Day Navigation Handlers
   function initFullListMoveHandlers() {
+    const feed = document.getElementById('fulllist-cards-feed');
     const wrapper = document.getElementById('fulllist-wrapper');
-    if (!wrapper || wrapper._hasMoveHandlers) return;
-    wrapper._hasMoveHandlers = true;
-    wrapper.tabIndex = 0;
+    const scrollTarget = feed || wrapper;
+    if (!scrollTarget || scrollTarget._hasMoveHandlers) return;
+    scrollTarget._hasMoveHandlers = true;
+    scrollTarget.tabIndex = 0;
 
     let wheelDeltaAccumulator = 0;
 
-    // Detect user moving down past the bottom of the day page to step to next day
-    wrapper.addEventListener('wheel', (e) => {
-      if (wrapper.style.display === 'none') return;
+    // Detect user moving down past the bottom of the day page to step to next day (Date mode only)
+    scrollTarget.addEventListener('wheel', (e) => {
+      if (wrapper && wrapper.style.display === 'none') return;
+      if (fullListGroupingMode === 'course') return; // Do not step days when viewing by course
       const now = Date.now();
       if (now - fullListWheelCooldown < 450) return;
 
-      const isAtBottom = (wrapper.scrollTop + wrapper.clientHeight >= wrapper.scrollHeight - 15);
-      const isAtTop = (wrapper.scrollTop <= 5);
+      const isAtBottom = (scrollTarget.scrollTop + scrollTarget.clientHeight >= scrollTarget.scrollHeight - 15);
+      const isAtTop = (scrollTarget.scrollTop <= 5);
 
       if (e.deltaY > 25 && isAtBottom) {
         wheelDeltaAccumulator += e.deltaY;
@@ -7933,8 +7941,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, { passive: true });
 
     // Keyboard Arrow navigation for Day Page
-    wrapper.addEventListener('keydown', (e) => {
-      if (wrapper.style.display === 'none') return;
+    const handleKeyNav = (e) => {
+      if (wrapper && wrapper.style.display === 'none') return;
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
 
       if (e.key === 'ArrowRight' || e.key === 'PageDown') {
@@ -7947,7 +7955,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         e.preventDefault();
         goToFullListDay(new Date());
       }
-    });
+    };
+
+    scrollTarget.addEventListener('keydown', handleKeyNav);
+    if (wrapper && wrapper !== scrollTarget) wrapper.addEventListener('keydown', handleKeyNav);
   }
 
   // ACADEMIC WEEKLY TIMETABLE MODE & EXPORT SYSTEM (Spec 5.0)
