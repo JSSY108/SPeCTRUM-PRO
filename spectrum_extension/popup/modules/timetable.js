@@ -45,7 +45,7 @@
   function getTimetableDayNames() {
     const lang = getTimetableLang();
     if (lang === 'zh') {
-      return ['日', '一', '二', '三', '四', '五', '六'];
+      return ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
     }
     if (lang === 'bm') {
       return ['AHAD', 'ISNIN', 'SELASA', 'RABU', 'KHAMIS', 'JUMAAT', 'SABTU'];
