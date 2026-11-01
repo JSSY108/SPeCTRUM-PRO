@@ -500,10 +500,31 @@
       }
     });
 
+    // Any hour without a single course across the week takes half a column width (0.45x)!
+    const isHourHalf = h => !sessions.some(s => {
+      if (!s) return false;
+      const sStart = (typeof s.startHour === 'number') ? s.startHour + (s.startMin || 0) / 60 : 0;
+      const sEnd = (typeof s.endHour === 'number') ? s.endHour + (s.endMin || 0) / 60 : 0;
+      return sStart < (h + 1) && sEnd > h;
+    });
+
+    const colTracks = [];
+    let totalColWidth = 0;
+    for (let h = minHour; h < maxHour; h++) {
+      if (isHourHalf(h)) {
+        const cW = Math.round(horizColWidth * 0.45);
+        colTracks.push(`minmax(${cW}px, 0.45fr)`);
+        totalColWidth += cW;
+      } else {
+        colTracks.push(`minmax(${horizColWidth}px, 1fr)`);
+        totalColWidth += horizColWidth;
+      }
+    }
+
     gridEl.className = 'timetable-grid timetable-horizontal-grid' + (isOnePageMode ? ' is-one-page-grid' : '');
-    gridEl.style.gridTemplateColumns = `140px repeat(${totalCols}, minmax(${horizColWidth}px, 1fr))`;
+    gridEl.style.gridTemplateColumns = `140px ${colTracks.join(' ')}`;
     gridEl.style.gridTemplateRows = rowTracks.join(' ');
-    gridEl.style.minWidth = `${140 + totalCols * horizColWidth}px`;
+    gridEl.style.minWidth = `${140 + totalColWidth}px`;
 
     let html = '';
 
@@ -520,8 +541,9 @@
     // Time Columns Header (Row 1, Col 2..N)
     for (let h = minHour; h < maxHour; h++) {
       const colIdx = (h - minHour) + 2;
+      const halfClass = isHourHalf(h) ? ' is-half-hour' : '';
       html += `
-        <div class="tt-header-cell tt-time-col-header" style="grid-column: ${colIdx}; grid-row: 1;">
+        <div class="tt-header-cell tt-time-col-header${halfClass}" style="grid-column: ${colIdx}; grid-row: 1;">
           <span class="tt-time-top">${pad(h)}:00</span>
           <span class="tt-time-bot">${pad(h + 1)}:00</span>
         </div>
@@ -669,7 +691,6 @@
 
     const totalHours = maxHour - minHour;
     const HOUR_HEIGHT = hourHeight;
-    const totalHeight = totalHours * HOUR_HEIGHT;
     const pad = n => String(n).padStart(2, '0');
 
     // Any day without a single course scheduled (e.g. Friday, Saturday) takes half a cell (0.5fr)!
@@ -682,6 +703,34 @@
     const totalMinWidth = 75 + activeDayIndices.reduce((sum, dIdx) => {
       return sum + (isDayHalf(dIdx) ? 95 : 185);
     }, 0);
+
+    // Any hour without a single course across the week takes half cell height (0.45x)!
+    const isHourHalf = h => !sessions.some(s => {
+      if (!s) return false;
+      const sStart = (typeof s.startHour === 'number') ? s.startHour + (s.startMin || 0) / 60 : 0;
+      const sEnd = (typeof s.endHour === 'number') ? s.endHour + (s.endMin || 0) / 60 : 0;
+      return sStart < (h + 1) && sEnd > h;
+    });
+
+    const hourHeights = {};
+    let totalHeight = 0;
+    for (let h = minHour; h < maxHour; h++) {
+      const hH = isHourHalf(h) ? Math.round(HOUR_HEIGHT * 0.45) : HOUR_HEIGHT;
+      hourHeights[h] = hH;
+      totalHeight += hH;
+    }
+
+    function getVerticalTop(h, m) {
+      let top = 0;
+      for (let hr = minHour; hr < h && hr < maxHour; hr++) {
+        top += hourHeights[hr];
+      }
+      if (h < maxHour) {
+        const fraction = Math.min(60, Math.max(0, m || 0)) / 60;
+        top += Math.round(fraction * hourHeights[h]);
+      }
+      return top;
+    }
 
     gridEl.className = 'timetable-grid timetable-vertical-grid' + (isOnePageMode ? ' is-one-page-grid' : '');
     gridEl.style.gridTemplateColumns = `75px ${colTracks.join(' ')}`;
@@ -723,8 +772,10 @@
       <div class="tt-time-track" style="grid-column: 1; grid-row: 2; height: ${totalHeight}px;">
     `;
     for (let h = minHour; h < maxHour; h++) {
+      const isHalf = isHourHalf(h);
+      const halfClass = isHalf ? ' is-half-hour' : '';
       html += `
-        <div class="tt-time-cell" style="height: ${HOUR_HEIGHT}px;">
+        <div class="tt-time-cell${halfClass}" style="height: ${hourHeights[h]}px;">
           <span class="tt-time-text">${pad(h)}:00</span>
         </div>
       `;
@@ -743,8 +794,10 @@
       `;
 
       // Background hourly grid lines
-      for (let i = 0; i < totalHours; i++) {
-        html += `<div class="tt-grid-hour-line" style="height: ${HOUR_HEIGHT}px;"></div>`;
+      for (let h = minHour; h < maxHour; h++) {
+        const isHalf = isHourHalf(h);
+        const halfClass = isHalf ? ' is-half-hour' : '';
+        html += `<div class="tt-grid-hour-line${halfClass}" style="height: ${hourHeights[h]}px;"></div>`;
       }
 
       if (daySess.length === 0) {
@@ -753,9 +806,10 @@
         const packed = computeSessionColumns(daySess);
 
         packed.forEach(s => {
-          const startOffset = (s.startHour - minHour) + (s.startMin / 60);
-          const topPx = Math.round(startOffset * HOUR_HEIGHT) + 4;
-          const heightPx = Math.max(52, Math.round(s.durHours * HOUR_HEIGHT) - 8);
+          const startTop = getVerticalTop(s.startHour, s.startMin);
+          const endTop = getVerticalTop(s.endHour, s.endMin);
+          const topPx = startTop + 4;
+          const heightPx = Math.max(48, endTop - startTop - 8);
           const isCompact = s.durHours < 1.5;
           const compactClass = isCompact ? ' is-compact' : '';
 
@@ -1245,7 +1299,6 @@
     const gridH = height - gridY - 55; // 1250px
     const headerH = 65;
     const cornerW = 180;
-    const colW = (gridW - cornerW) / totalCols;
 
     // Any day without a single course scheduled (e.g. Friday, Saturday) takes half row height (weight 0.5)!
     const hasDaySession = dIdx => sessions.some(s => s.dayIndex === dIdx);
@@ -1262,6 +1315,44 @@
       dayRows.push({ dIdx, y: curRowY, h: rH, isHalf: dayRowWeights[i] === 0.5 });
       curRowY += rH;
     });
+
+    // Any hour without a single course across the week takes half column width (weight 0.45)!
+    const isHourHalf = h => !sessions.some(s => {
+      if (!s) return false;
+      const sStart = (typeof s.startHour === 'number') ? s.startHour + (s.startMin || 0) / 60 : 0;
+      const sEnd = (typeof s.endHour === 'number') ? s.endHour + (s.endMin || 0) / 60 : 0;
+      return sStart < (h + 1) && sEnd > h;
+    });
+    const hourColWeights = [];
+    for (let h = minHour; h < maxHour; h++) {
+      hourColWeights.push(isHourHalf(h) ? 0.45 : 1.0);
+    }
+    const totalHourColWeight = hourColWeights.reduce((a, b) => a + b, 0);
+    const availableHourW = gridW - cornerW;
+    const unitHourW = availableHourW / totalHourColWeight;
+
+    const hourCols = [];
+    let curColX = gridX + cornerW;
+    for (let c = 0; c < totalCols; c++) {
+      const h = minHour + c;
+      const cW = hourColWeights[c] * unitHourW;
+      hourCols.push({ h, x: curColX, w: cW, isHalf: hourColWeights[c] === 0.45 });
+      curColX += cW;
+    }
+
+    function getCanvasHorizontalX(h, m) {
+      let x = gridX + cornerW;
+      for (let hr = minHour; hr < h && hr < maxHour; hr++) {
+        const idx = hr - minHour;
+        x += hourCols[idx].w;
+      }
+      if (h < maxHour) {
+        const idx = h - minHour;
+        const fraction = Math.min(60, Math.max(0, m || 0)) / 60;
+        x += fraction * hourCols[idx].w;
+      }
+      return x;
+    }
 
     // Outer Grid Border & Background
     ctx.fillStyle = '#FFFFFF';
@@ -1300,8 +1391,11 @@
 
     // Time Slot Columns (Col 2..N)
     for (let c = 0; c < totalCols; c++) {
-      const h = minHour + c;
-      const colX = gridX + cornerW + c * colW;
+      const colInfo = hourCols[c];
+      const h = colInfo.h;
+      const colX = colInfo.x;
+      const colW = colInfo.w;
+      const isHalf = colInfo.isHalf;
 
       ctx.beginPath();
       ctx.moveTo(colX, gridY);
@@ -1311,12 +1405,12 @@
       ctx.stroke();
 
       ctx.fillStyle = '#18181B';
-      ctx.font = '800 19px "JetBrains Mono", monospace';
+      ctx.font = `800 ${isHalf ? 15 : 19}px "JetBrains Mono", monospace`;
       ctx.textAlign = 'center';
       ctx.fillText(`${pad(h)}:00`, colX + colW / 2, gridY + 32);
 
       ctx.fillStyle = '#71717A';
-      ctx.font = '600 14px "JetBrains Mono", monospace';
+      ctx.font = `600 ${isHalf ? 11 : 14}px "JetBrains Mono", monospace`;
       ctx.fillText(`${pad(h + 1)}:00`, colX + colW / 2, gridY + 52);
     }
     ctx.textAlign = 'left';
@@ -1354,9 +1448,11 @@
           const endIdx = Math.min(totalCols, (s.endHour - minHour) + (s.endMin > 0 ? 1 : 0));
           for (let i = startIdx; i < endIdx; i++) occupied[i] = true;
 
-          const cardX = gridX + cornerW + startIdx * colW + 8;
+          const startX = getCanvasHorizontalX(s.startHour, s.startMin);
+          const endX = getCanvasHorizontalX(s.endHour, s.endMin);
+          const cardX = startX + 8;
           const cardY = y + 8;
-          const cardW = Math.max(80, (endIdx - startIdx) * colW - 16);
+          const cardW = Math.max(80, endX - startX - 16);
           const cardH = rowH - 16;
 
           // Card Background & Border
@@ -1458,9 +1554,10 @@
             if (gapStart === null) gapStart = i;
           } else {
             if (gapStart !== null) {
-              const gapX = gridX + cornerW + gapStart * colW + 4;
+              const gapX = getCanvasHorizontalX(gapStart + minHour, 0) + 4;
               const gapY = y + 4;
-              const gapW = (i - gapStart) * colW - 8;
+              const gapEndColX = getCanvasHorizontalX(i + minHour, 0);
+              const gapW = Math.max(20, (gapEndColX - gapX) - 8);
               const gapH = rowH - 8;
 
               ctx.fillStyle = 'rgba(0, 0, 0, 0.012)';
@@ -1607,7 +1704,6 @@
     const headerH = 65;
     const timeColW = 115;
     const availableW = gridW - timeColW;
-    const hourH = (gridH - headerH) / totalHours;
 
     // Any day without a single course scheduled (e.g. Friday, Saturday) takes half a cell (weight 0.5)!
     const hasDaySession = dIdx => sessions.some(s => s.dayIndex === dIdx);
@@ -1624,6 +1720,44 @@
       dayCols.push({ dIdx, x: curColX, w: colW, isHalf: dayWeights[i] === 0.5 });
       curColX += colW;
     });
+
+    // Any hour without a single course across the week takes half cell height (weight 0.45)!
+    const isHourHalf = h => !sessions.some(s => {
+      if (!s) return false;
+      const sStart = (typeof s.startHour === 'number') ? s.startHour + (s.startMin || 0) / 60 : 0;
+      const sEnd = (typeof s.endHour === 'number') ? s.endHour + (s.endMin || 0) / 60 : 0;
+      return sStart < (h + 1) && sEnd > h;
+    });
+    const hourRowWeights = [];
+    for (let h = minHour; h < maxHour; h++) {
+      hourRowWeights.push(isHourHalf(h) ? 0.45 : 1.0);
+    }
+    const totalHourRowWeight = hourRowWeights.reduce((a, b) => a + b, 0);
+    const availableHourH = gridH - headerH;
+    const unitHourH = availableHourH / totalHourRowWeight;
+
+    const hourRows = [];
+    let curRowY = gridY + headerH;
+    for (let i = 0; i < totalHours; i++) {
+      const h = minHour + i;
+      const rH = hourRowWeights[i] * unitHourH;
+      hourRows.push({ h, y: curRowY, h: rH, isHalf: hourRowWeights[i] === 0.45 });
+      curRowY += rH;
+    }
+
+    function getCanvasVerticalY(h, m) {
+      let y = gridY + headerH;
+      for (let hr = minHour; hr < h && hr < maxHour; hr++) {
+        const idx = hr - minHour;
+        y += hourRows[idx].h;
+      }
+      if (h < maxHour) {
+        const idx = h - minHour;
+        const fraction = Math.min(60, Math.max(0, m || 0)) / 60;
+        y += fraction * hourRows[idx].h;
+      }
+      return y;
+    }
 
     // Grid outer border & fill
     ctx.fillStyle = '#FFFFFF';
@@ -1685,8 +1819,11 @@
     });
 
     // Time Column Labels & Horizontal Grid Lines
-    for (let h = minHour; h < maxHour; h++) {
-      const rowY = gridY + headerH + (h - minHour) * hourH;
+    for (let i = 0; i < totalHours; i++) {
+      const rowInfo = hourRows[i];
+      const h = rowInfo.h;
+      const rowY = rowInfo.y;
+      const isHalf = rowInfo.isHalf;
 
       ctx.beginPath();
       ctx.moveTo(gridX, rowY);
@@ -1696,9 +1833,9 @@
       ctx.stroke();
 
       ctx.fillStyle = '#71717A';
-      ctx.font = '700 18px "JetBrains Mono", monospace';
+      ctx.font = `700 ${isHalf ? 14 : 18}px "JetBrains Mono", monospace`;
       ctx.textAlign = 'center';
-      ctx.fillText(`${pad(h)}:00`, gridX + timeColW / 2, rowY + 24);
+      ctx.fillText(`${pad(h)}:00`, gridX + timeColW / 2, rowY + (isHalf ? 18 : 24));
     }
     ctx.textAlign = 'left';
 
@@ -1713,9 +1850,10 @@
         const packed = computeSessionColumns(daySess);
 
         packed.forEach(s => {
-          const startOffset = (s.startHour - minHour) + (s.startMin / 60);
-          const cardY = gridY + headerH + startOffset * hourH + 6;
-          const cardH = Math.max(50, s.durHours * hourH - 12);
+          const startY = getCanvasVerticalY(s.startHour, s.startMin);
+          const endY = getCanvasVerticalY(s.endHour, s.endMin);
+          const cardY = startY + 6;
+          const cardH = Math.max(40, endY - startY - 12);
 
           let cardX = colX + 8;
           let cardW = dayColW - 16;
