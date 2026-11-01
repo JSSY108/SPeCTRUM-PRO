@@ -9096,7 +9096,18 @@ body:not(.is-full-tab) .sync-cinematic-current {
 }
 
 /* Session Card */
+/* ==========================================================================
+   TIMETABLE CARD FONT SIZE CONTROLS (CENTRALIZED TUNING DASHBOARD):
+   Tune any or all font sizes of the timetable session card right here:
+   ========================================================================== */
 .tt-session-card {
+  --tt-font-code: 11.5px;      /* 1. Course Code (e.g. WIX2001) */
+  --tt-font-type: 10px;        /* 2. Type Tag Pill (e.g. LEC, TUT, LAB) */
+  --tt-font-title: 13px;       /* 3. Course Full Name (e.g. Thinking And Comm...) */
+  --tt-font-occ: 10.5px;       /* 4. Subtitle OCC (e.g. OCC 3) */
+  --tt-font-venue: 12px;       /* 5. Venue / Location (e.g. 📍 Auditorium CS) */
+  --tt-font-time: 10.5px;      /* 6. Time Range (e.g. 08:00 - 10:00) */
+
   cursor: pointer;
   user-select: none;
   position: absolute;
@@ -9136,14 +9147,14 @@ body:not(.is-full-tab) .sync-cinematic-current {
 }
 
 .tt-code {
-  font-size: 11px;
+  font-size: var(--tt-font-code, 11.5px);
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: 0.2px;
 }
 
 .tt-type-tag {
-  font-size: 9.5px;
+  font-size: var(--tt-font-type, 10px);
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 3px;
@@ -9161,7 +9172,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 .tt-card-title {
   font-family: 'Hanken Grotesk', -apple-system, sans-serif;
-  font-size: 12.5px;
+  font-size: var(--tt-font-title, 13px);
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.25;
@@ -9174,7 +9185,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 .tt-card-subtitle {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-size: var(--tt-font-occ, 10.5px);
   font-weight: 600;
   color: var(--text-muted);
   overflow: hidden;
@@ -9197,7 +9208,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
      VENUE FONT SIZE SETTING:
      Adjust this value (default: 12px = 1.25x of original 9.5px) to scale venue text
      ======================================================================== */
-  font-size: 12px;
+  font-size: var(--tt-font-venue, 12px);
   font-weight: 600;
   color: var(--text-muted);
   overflow: hidden;
@@ -9257,7 +9268,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 .tt-time-range {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9.5px;
+  font-size: var(--tt-font-time, 10.5px);
   font-weight: 600;
   color: var(--text-muted);
   white-space: nowrap;
