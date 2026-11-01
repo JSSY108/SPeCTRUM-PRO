@@ -1421,11 +1421,7 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
         const futureLecSessions = lecSessions.filter(s => s.isFuture);
         const currentLec = lecSessions.find(s => s.isToday || s.statusType === 'active') || 
                            (pastLecSessions.length > 0 ? pastLecSessions[pastLecSessions.length - 1] : null);
-        const trimmedLecSessions = [];
-        if (currentLec) trimmedLecSessions.push(currentLec);
-        const nextFutureLec = futureLecSessions.find(s => !trimmedLecSessions.some(ts => ts.dateKey === s.dateKey));
-        if (nextFutureLec) trimmedLecSessions.push(nextFutureLec);
-        const nextLec = nextFutureLec || (currentLec && (currentLec.isFuture || currentLec.isToday) ? currentLec : null);
+        const nextLec = futureLecSessions[0] || (currentLec && (currentLec.isFuture || currentLec.isToday) ? currentLec : null);
 
         let activeLecSession = null;
         if (activeSession) {
@@ -1456,11 +1452,7 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
         const futureTutSessions = tutSessions.filter(s => s.isFuture);
         const currentTut = tutSessions.find(s => s.isToday || s.statusType === 'active') || 
                            (pastTutSessions.length > 0 ? pastTutSessions[pastTutSessions.length - 1] : null);
-        const trimmedTutSessions = [];
-        if (currentTut) trimmedTutSessions.push(currentTut);
-        const nextFutureTut = futureTutSessions.find(s => !trimmedTutSessions.some(ts => ts.dateKey === s.dateKey));
-        if (nextFutureTut) trimmedTutSessions.push(nextFutureTut);
-        const nextTut = nextFutureTut || (currentTut && (currentTut.isFuture || currentTut.isToday) ? currentTut : null);
+        const nextTut = futureTutSessions[0] || (currentTut && (currentTut.isFuture || currentTut.isToday) ? currentTut : null);
 
         let activeTutSession = null;
         if (activeSession) {
@@ -1491,9 +1483,9 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
           activeLecSession = activeSession;
         }
 
-        logDiag('Attendance:Sessions', `[${courseId}] "${attTitle || 'Attendance'}" (Combined Page) -> Split into Lecture (${trimmedLecSessions.length} sess) + Tutorial (${trimmedTutSessions.length} sess)`);
+        logDiag('Attendance:Sessions', `[${courseId}] "${attTitle || 'Attendance'}" (Combined Page) -> Split into Lecture (${lecSessions.length} sess) + Tutorial (${tutSessions.length} sess)`);
 
-        if (trimmedLecSessions.length > 0 || activeLecSession) {
+        if (lecSessions.length > 0 || activeLecSession) {
           attendancesFound.push({
             id: `att_${courseId}_${attInstanceId}_lec`,
             cmid: attInstanceId,
@@ -1509,11 +1501,11 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
             nextSession: nextLec,
             pastStats: pastStatsLec,
             lastRecordedStatus: lastRecordedLecStatus,
-            sessions: trimmedLecSessions
+            sessions: lecSessions
           });
         }
 
-        if (trimmedTutSessions.length > 0 || activeTutSession) {
+        if (tutSessions.length > 0 || activeTutSession) {
           attendancesFound.push({
             id: `att_${courseId}_${attInstanceId}_tut`,
             cmid: attInstanceId,
@@ -1529,32 +1521,20 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
             nextSession: nextTut,
             pastStats: pastStatsTut,
             lastRecordedStatus: lastRecordedTutStatus,
-            sessions: trimmedTutSessions
+            sessions: tutSessions
           });
         }
       } else {
-        // 4. PERFORMANCE OPTIMIZATION: Keep ONLY the most current session + next future 1 session!
+        // 4. Retain all semester sessions in storage so Calendar, Timetable, and History have full data
         const pastSessions = allSessions.filter(s => !s.isFuture);
         const futureSessions = allSessions.filter(s => s.isFuture);
 
-        const trimmedSessions = [];
-
-        // A. Most current session:
-        // Either active session today, or the latest past session for status verification
+        // A. Most current session (active today, or latest past session for status verification)
         const currentSession = allSessions.find(s => s.isToday || s.statusType === 'active') || 
                                (pastSessions.length > 0 ? pastSessions[pastSessions.length - 1] : null);
-        if (currentSession) {
-          trimmedSessions.push(currentSession);
-        }
 
-        // B. Next 1 future session:
-        // The earliest upcoming session not already in trimmedSessions
-        const nextFuture1 = futureSessions.find(s => !trimmedSessions.some(ts => ts.dateKey === s.dateKey));
-        if (nextFuture1) {
-          trimmedSessions.push(nextFuture1);
-        }
-
-        const nextSession = nextFuture1 || (currentSession && (currentSession.isFuture || currentSession.isToday) ? currentSession : null);
+        // B. Next upcoming session
+        const nextSession = futureSessions[0] || (currentSession && (currentSession.isFuture || currentSession.isToday) ? currentSession : null);
 
         if (!pastStats && allSessions.length > 0) {
           const attended = pastSessions.filter(s => s.isPresent).length;
@@ -1568,9 +1548,9 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
           }
         }
 
-        logDiag('Attendance:Sessions', `[${courseId}] "${attTitle || 'Attendance'}" -> Kept ${trimmedSessions.length} session(s) (Most current + Future 1). Overall stats: ${pastStats?.percentage || 'N/A'}%`);
+        logDiag('Attendance:Sessions', `[${courseId}] "${attTitle || 'Attendance'}" -> Kept all ${allSessions.length} session(s). Overall stats: ${pastStats?.percentage || 'N/A'}%`);
 
-        if (hasUserOcc && trimmedSessions.length === 0 && !activeSession) {
+        if (hasUserOcc && allSessions.length === 0 && !activeSession) {
           logDiag('Attendance:Sessions', `[${courseId}] "${attTitle || 'Attendance'}" has 0 matching sessions and no active session for OCC ${userOccNum}. Skipping.`);
           continue;
         }
@@ -1597,7 +1577,7 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
           nextSession,
           pastStats,
           lastRecordedStatus,
-          sessions: trimmedSessions
+          sessions: allSessions
         });
       }
     }
