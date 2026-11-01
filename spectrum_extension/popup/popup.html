@@ -697,6 +697,34 @@
           </div>
         </div>
 
+        <!-- CARD 4: TIMELINE DOT TRIGGER POSITION -->
+        <div class="pref-card" id="group-timeline-focal">
+          <div class="pref-card-header">
+            <div class="pref-card-title-wrap">
+              <span class="pref-bullet pref-bullet-black">●</span>
+              <h3 class="pref-card-title">TIMELINE DOT TRIGGER POSITION</h3>
+            </div>
+            <span class="pref-badge pref-badge-subtle" id="pref-spine-focal-badge">50% MID</span>
+          </div>
+          <p class="pref-card-desc">Adjust the vertical screen position where timeline date dots animate and light up solid black as activities scroll past.</p>
+          <div class="pref-row-box" style="flex-direction:column;gap:12px;align-items:stretch;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:12px;font-weight:700;color:var(--text-primary);">Focal Trigger Height</span>
+              <span id="pref-spine-focal-label" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:800;color:var(--text-primary);">50% (Middle of Screen)</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span style="font-size:10px;font-weight:700;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">TOP (15%)</span>
+              <input type="range" id="pref-spine-focal-slider" min="15" max="85" value="50" step="5" class="pref-slider" style="flex:1;cursor:pointer;">
+              <span style="font-size:10px;font-weight:700;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">BOTTOM (85%)</span>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:2px;">
+              <button type="button" class="pref-wireframe-btn btn-focal-preset" data-val="30">Upper (30%)</button>
+              <button type="button" class="pref-wireframe-btn btn-focal-preset" data-val="50">Middle (50% Default)</button>
+              <button type="button" class="pref-wireframe-btn btn-focal-preset" data-val="70">Lower (70%)</button>
+            </div>
+          </div>
+        </div>
+
 
         <!-- STICKY ACTION FOOTER BAR -->
         <div class="pref-sticky-footer">
@@ -979,8 +1007,13 @@
                     <button type="button" class="sort-toggle-link" id="btn-fulllist-sort-oldest" title="Oldest first">Oldest</button>
                   </div>
                 </div>
-                <div class="fulllist-toolbar-right" id="fulllist-toolbar-summary" style="font-size:11px;color:var(--text-muted);font-weight:600;letter-spacing:0.3px;">
-                  ACTIVITIES LIST
+                <div class="fulllist-toolbar-right" id="fulllist-toolbar-summary" style="display:flex;align-items:center;gap:12px;">
+                  <div class="spine-focal-tune-wrap" title="Adjust the vertical screen position where timeline date dots light up (Default: 50% Middle of Screen)">
+                    <span class="spine-focal-tune-label">Dot Focus:</span>
+                    <input type="range" id="toolbar-spine-focal-slider" min="15" max="85" value="50" step="5" class="spine-focal-range" title="Tune active dot trigger position">
+                    <span id="toolbar-spine-focal-val" class="spine-focal-val">50% Mid</span>
+                  </div>
+                  <span style="font-size:11px;color:var(--text-muted);font-weight:600;letter-spacing:0.3px;">ACTIVITIES LIST</span>
                 </div>
               </div>
               <div id="fulllist-feed-body" style="display:flex;flex-direction:column;gap:12px;"></div>

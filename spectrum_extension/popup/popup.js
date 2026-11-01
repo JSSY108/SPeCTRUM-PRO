@@ -830,7 +830,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await chrome.storage.local.set({
       hiddenAttendanceIds: hiddenAttendanceIds,
-      hiddenAttendanceDetails: hiddenAttendanceDetails
+      hiddenAttendanceDetails: hiddenAttendanceDetails,
+      spineFocalRatio: spineFocalRatio
     });
 
     logDiag('Attendance:Restore', `Restored attendance [${attId}]. Remaining hidden: ${hiddenAttendanceIds.length}`);
@@ -2314,6 +2315,132 @@ document.addEventListener('DOMContentLoaded', async () => {
     return renderUnifiedAttendanceCardHtml(vm);
   }
 
+  // ========================================================================
+  // TIMELINE SPINE ACTIVE DOT FOCAL CONTROLLER
+  // - Lights up date dots when cards cross the focal line
+  // - Defaults to 50% (middle of the screen/container)
+  // - User-tunable via toolbar slider, preferences slider, and presets
+  // ========================================================================
+  let spineFocalRatio = 0.50; // Default: 50% (middle of screen)
+
+  try {
+    const savedFocal = localStorage.getItem('spectrum_spine_focal_ratio');
+    if (savedFocal !== null) {
+      const parsed = parseFloat(savedFocal);
+      if (!isNaN(parsed) && parsed >= 0.15 && parsed <= 0.85) {
+        spineFocalRatio = parsed;
+      }
+    }
+  } catch (e) {}
+
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    chrome.storage.local.get(['spineFocalRatio'], (res) => {
+      if (res && res.spineFocalRatio !== undefined) {
+        const parsed = parseFloat(res.spineFocalRatio);
+        if (!isNaN(parsed) && parsed >= 0.15 && parsed <= 0.85) {
+          spineFocalRatio = parsed;
+          syncSpineFocalUI();
+          updateActiveSpineNode();
+        }
+      }
+    });
+  }
+
+  function setSpineFocalRatio(ratio, showGuideline = false) {
+    const r = Math.max(0.15, Math.min(0.85, ratio));
+    spineFocalRatio = r;
+    try {
+      localStorage.setItem('spectrum_spine_focal_ratio', String(r));
+    } catch (e) {}
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.set({ spineFocalRatio: r });
+    }
+    syncSpineFocalUI();
+    updateActiveSpineNode();
+
+    if (showGuideline) {
+      renderSpineFocalGuideline();
+    }
+  }
+
+  let guidelineTimeout = null;
+  function renderSpineFocalGuideline() {
+    const fulllistWrap = document.getElementById('fulllist-wrapper');
+    const isFullTabList = fulllistWrap && fulllistWrap.style.display !== 'none';
+    const stream = isFullTabList ? fulllistWrap : (document.getElementById('popup-cards-stream') || document.querySelector('.split-cards-stream'));
+    if (!stream) return;
+
+    let guideline = stream.querySelector('#spine-focal-guideline');
+    if (!guideline) {
+      guideline = document.createElement('div');
+      guideline.id = 'spine-focal-guideline';
+      guideline.className = 'spine-focal-guideline';
+      guideline.innerHTML = `<span class="focal-guideline-badge">● Dot Trigger: ${Math.round(spineFocalRatio * 100)}%</span>`;
+      stream.appendChild(guideline);
+    }
+
+    const targetY = stream.scrollTop + (stream.clientHeight * spineFocalRatio);
+    guideline.style.top = `${targetY}px`;
+    const badge = guideline.querySelector('.focal-guideline-badge');
+    if (badge) {
+      const pct = Math.round(spineFocalRatio * 100);
+      badge.textContent = `● Dot Trigger: ${pct}% ${pct === 50 ? '(Middle)' : ''}`;
+    }
+
+    guideline.classList.add('is-visible');
+    clearTimeout(guidelineTimeout);
+    guidelineTimeout = setTimeout(() => {
+      guideline.classList.remove('is-visible');
+    }, 1400);
+  }
+
+  function syncSpineFocalUI() {
+    const percent = Math.round(spineFocalRatio * 100);
+    const labelText = `${percent}% ${percent === 50 ? '(Mid)' : (percent < 50 ? '(Upper)' : '(Lower)')}`;
+
+    const toolSlider = document.getElementById('toolbar-spine-focal-slider');
+    const toolVal = document.getElementById('toolbar-spine-focal-val');
+    if (toolSlider) toolSlider.value = percent;
+    if (toolVal) toolVal.textContent = labelText;
+
+    const prefSlider = document.getElementById('pref-spine-focal-slider');
+    const prefVal = document.getElementById('pref-spine-focal-label');
+    const prefBadge = document.getElementById('pref-spine-focal-badge');
+    if (prefSlider) prefSlider.value = percent;
+    if (prefVal) prefVal.textContent = `${percent}% ${percent === 50 ? '(Middle of Screen)' : ''}`;
+    if (prefBadge) prefBadge.textContent = `${percent}% ${percent === 50 ? 'MID' : ''}`;
+  }
+
+  function initSpineFocalControls() {
+    syncSpineFocalUI();
+
+    const toolSlider = document.getElementById('toolbar-spine-focal-slider');
+    if (toolSlider && !toolSlider._hasFocalListener) {
+      toolSlider._hasFocalListener = true;
+      toolSlider.addEventListener('input', (e) => {
+        setSpineFocalRatio(parseFloat(e.target.value) / 100, true);
+      });
+    }
+
+    const prefSlider = document.getElementById('pref-spine-focal-slider');
+    if (prefSlider && !prefSlider._hasFocalListener) {
+      prefSlider._hasFocalListener = true;
+      prefSlider.addEventListener('input', (e) => {
+        setSpineFocalRatio(parseFloat(e.target.value) / 100, true);
+      });
+    }
+
+    document.querySelectorAll('.btn-focal-preset').forEach(btn => {
+      if (!btn._hasPresetListener) {
+        btn._hasPresetListener = true;
+        btn.addEventListener('click', () => {
+          const val = parseFloat(btn.dataset.val);
+          if (!isNaN(val)) setSpineFocalRatio(val / 100, true);
+        });
+      }
+    });
+  }
+
   function updateActiveSpineNode() {
     // Collect all visible date groups across feeds
     const groups = Array.from(document.querySelectorAll('.spine-date-group')).filter(g => g.offsetParent !== null);
@@ -2323,21 +2450,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isFullTabList = fulllistWrap && fulllistWrap.style.display !== 'none';
     const stream = isFullTabList ? fulllistWrap : (document.getElementById('popup-cards-stream') || document.querySelector('.split-cards-stream'));
     const streamRect = stream ? stream.getBoundingClientRect() : { top: 0, height: window.innerHeight };
-    const focalLine = streamRect.top + 80;
+
+    // Focal line: uses spineFocalRatio (default 0.50 = middle of viewport / scroll container)
+    const ratio = (typeof spineFocalRatio === 'number' && !isNaN(spineFocalRatio)) ? spineFocalRatio : 0.50;
+    const focalLine = streamRect.top + (streamRect.height * ratio);
 
     let activeGroup = groups[0];
-    for (const g of groups) {
-      const header = g.querySelector('.spine-node-header') || g;
-      const hr = header.getBoundingClientRect();
-      if (hr.top <= focalLine) {
-        activeGroup = g;
-      } else {
-        break;
-      }
-    }
 
-    if (stream && (stream.scrollTop + stream.clientHeight >= stream.scrollHeight - 20)) {
+    // Priority 1: Scrolled to top
+    if (stream && stream.scrollTop <= 15) {
+      activeGroup = groups[0];
+    }
+    // Priority 2: Scrolled to bottom
+    else if (stream && (stream.scrollTop + stream.clientHeight >= stream.scrollHeight - 25)) {
       activeGroup = groups[groups.length - 1];
+    }
+    // Priority 3: Determine which date group / card is occupying the focal line (middle of screen)
+    else {
+      for (let i = 0; i < groups.length; i++) {
+        const g = groups[i];
+        const gr = g.getBoundingClientRect();
+
+        // If the group (header + cards) spans across the focal line
+        if (gr.top <= focalLine && gr.bottom >= focalLine) {
+          activeGroup = g;
+          break;
+        }
+
+        // If group is before focalLine, keep as candidate
+        if (gr.top <= focalLine) {
+          activeGroup = g;
+        } else {
+          // This group starts below the focalLine
+          break;
+        }
+      }
     }
 
     if (!activeGroup && groups.length > 0) {
@@ -2653,6 +2800,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Immediately trigger so the initial in-sight date dot is filled solid black
+    initSpineFocalControls();
     requestAnimationFrame(updateActiveSpineNode);
     setTimeout(updateActiveSpineNode, 50);
   }
@@ -4307,10 +4455,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     autoAttendanceEnabled: true,
     autoAttendanceInterval: 15,
     hiddenAttendanceIds: [],
-    hiddenAttendanceDetails: {}
+    hiddenAttendanceDetails: {},
+    spineFocalRatio: 0.50
   };
 
   const stored = await chrome.storage.local.get(defaultSettings);
+  if (stored.spineFocalRatio !== undefined) {
+    setSpineFocalRatio(parseFloat(stored.spineFocalRatio), false);
+  }
+  initSpineFocalControls();
   if (chkMaterialsOnly) chkMaterialsOnly.checked = stored.materialsOnly !== false;
   if (chkExcludeSystem) chkExcludeSystem.checked = stored.excludeSystem !== false;
   if (chkExts && chkExts.length > 0) {
@@ -4471,7 +4624,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       autoAttendanceEnabled: autoAtt,
       autoAttendanceInterval: autoInt,
       hiddenAttendanceIds: hiddenAttendanceIds,
-      hiddenAttendanceDetails: hiddenAttendanceDetails
+      hiddenAttendanceDetails: hiddenAttendanceDetails,
+      spineFocalRatio: spineFocalRatio
     });
 
     chrome.runtime.sendMessage({ type: 'UPDATE_ALARM_SETTINGS' });
@@ -7558,6 +7712,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.addEventListener('scroll', updateActiveSpineNode, { passive: true });
       }
 
+      initSpineFocalControls();
       requestAnimationFrame(updateActiveSpineNode);
       setTimeout(updateActiveSpineNode, 50);
 

@@ -8639,6 +8639,90 @@ body:not(.is-full-tab) .sync-cinematic-current {
   width: 100%;
 }
 
+/* Spine Focal Trigger Guideline & Slider UI */
+.spine-focal-guideline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1.5px dashed rgba(0, 0, 0, 0.45);
+  z-index: 99;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 20px;
+}
+
+.spine-focal-guideline.is-visible {
+  opacity: 1;
+}
+
+[data-theme="dark"] .spine-focal-guideline {
+  border-top-color: rgba(255, 255, 255, 0.45);
+}
+
+.focal-guideline-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  background: #18181B;
+  color: #FFFFFF;
+  padding: 2px 7px;
+  border-radius: 4px;
+  transform: translateY(-50%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  letter-spacing: 0.3px;
+}
+
+[data-theme="dark"] .focal-guideline-badge {
+  background: #FAFAFA;
+  color: #18181B;
+}
+
+/* Toolbar focal tuner slider */
+.spine-focal-tune-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 8px;
+  background: var(--bg-hover, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--border-hairline);
+  border-radius: 6px;
+  user-select: none;
+}
+
+.spine-focal-tune-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.spine-focal-range {
+  width: 65px;
+  height: 4px;
+  accent-color: #18181B;
+  cursor: pointer;
+  margin: 0;
+}
+
+[data-theme="dark"] .spine-focal-range {
+  accent-color: #FAFAFA;
+}
+
+.spine-focal-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 48px;
+}
+
 /* ==========================================================================
    ACADEMIC WEEKLY TIMETABLE MODE & EXPORT SYSTEM (Spec 5.0)
    - Visual parity with Editorial Master Timetable
