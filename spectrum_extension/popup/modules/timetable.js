@@ -28,38 +28,44 @@
     return (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  let customLocations = {};
-  let customLocationsLoaded = false;
+  let customSessionOverrides = {};
+  let customOverridesLoaded = false;
 
   async function loadCustomLocations() {
     try {
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        const res = await chrome.storage.local.get(['timetableLocations']);
-        if (res && res.timetableLocations && typeof res.timetableLocations === 'object') {
-          customLocations = res.timetableLocations;
+        const res = await chrome.storage.local.get(['timetableLocations', 'timetableSessionOverrides']);
+        if (res) {
+          const locs = (res.timetableLocations && typeof res.timetableLocations === 'object') ? res.timetableLocations : {};
+          const ovrs = (res.timetableSessionOverrides && typeof res.timetableSessionOverrides === 'object') ? res.timetableSessionOverrides : {};
+          customSessionOverrides = Object.assign({}, locs, ovrs);
         }
       }
     } catch (e) {
-      console.warn('Failed to load custom locations:', e);
+      console.warn('Failed to load custom timetable session overrides:', e);
     }
-    customLocationsLoaded = true;
-    return customLocations;
+    customOverridesLoaded = true;
+    return customSessionOverrides;
   }
 
-  async function saveCustomLocation(key, location) {
-    if (!key) return;
-    const cleanLoc = (location || '').trim();
-    if (cleanLoc) {
-      customLocations[key] = cleanLoc;
+  async function saveSessionOverride(key, fallbackKey, overrideData) {
+    if (!key && !fallbackKey) return;
+    if (!overrideData || (!overrideData.venue && !overrideData.hasCustomTime)) {
+      if (key) delete customSessionOverrides[key];
+      if (fallbackKey) delete customSessionOverrides[fallbackKey];
     } else {
-      delete customLocations[key];
+      if (key) customSessionOverrides[key] = overrideData;
+      if (fallbackKey) customSessionOverrides[fallbackKey] = overrideData;
     }
     try {
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        await chrome.storage.local.set({ timetableLocations: customLocations });
+        await chrome.storage.local.set({
+          timetableLocations: customSessionOverrides,
+          timetableSessionOverrides: customSessionOverrides
+        });
       }
     } catch (e) {
-      console.warn('Failed to save custom location:', e);
+      console.warn('Failed to save timetable session override:', e);
     }
   }
 
@@ -113,8 +119,8 @@
         if (dayIndex < 0) return;
 
         const dayName = DAY_NAMES[dayIndex];
-        const rawTimeStr = sess.time || sess.dateStr || sess.desc || '';
-        const timeInfo = parseTime ? parseTime(rawTimeStr) : null;
+        const sessTimeDesc = sess.time || sess.dateStr || sess.desc || '';
+        const timeInfo = parseTime ? parseTime(sessTimeDesc) : null;
         if (!timeInfo) return;
 
         let typeLabel = 'LEC';
@@ -135,20 +141,45 @@
         }
 
         const pad = n => String(n).padStart(2, '0');
-        const timeStr = `${pad(timeInfo.startHour)}:${pad(timeInfo.startMin)} - ${pad(timeInfo.endHour)}:${pad(timeInfo.endMin)}`;
-
         const cleanCode = (courseCode || '').split('/')[0].trim();
-        const key = `${dayIndex}_${timeInfo.startHour}_${timeInfo.startMin}_${timeInfo.endHour}_${timeInfo.endMin}_${cleanCode}_${typeLabel}`;
+        const rawStartHour = timeInfo.startHour;
+        const rawStartMin = timeInfo.startMin;
+        const rawEndHour = timeInfo.endHour;
+        const rawEndMin = timeInfo.endMin;
+        const rawKey = `${dayIndex}_${rawStartHour}_${rawStartMin}_${rawEndHour}_${rawEndMin}_${cleanCode}_${typeLabel}`;
+        const fallbackKey = `${cleanCode}_${dayIndex}_${typeLabel}`;
 
-        // Check custom user-defined location first
-        const customLoc = (customLocations && (customLocations[key] || customLocations[`${cleanCode}_${dayIndex}_${timeInfo.startHour}`] || customLocations[`${cleanCode}_${typeLabel}`])) || '';
+        // Check custom user-defined override (location and/or custom time)
+        const override = (customSessionOverrides && (customSessionOverrides[rawKey] || customSessionOverrides[fallbackKey] || customSessionOverrides[`${cleanCode}_${dayIndex}_${rawStartHour}`])) || null;
+
+        let startHour = rawStartHour;
+        let startMin = rawStartMin;
+        let endHour = rawEndHour;
+        let endMin = rawEndMin;
+        let isCustomTime = false;
+        let customLoc = '';
+
+        if (override) {
+          if (typeof override === 'object') {
+            if (override.venue) customLoc = override.venue.trim();
+            if (override.hasCustomTime && typeof override.startHour === 'number' && typeof override.endHour === 'number') {
+              startHour = override.startHour;
+              startMin = override.startMin;
+              endHour = override.endHour;
+              endMin = override.endMin;
+              isCustomTime = true;
+            }
+          } else if (typeof override === 'string') {
+            customLoc = override.trim();
+          }
+        }
 
         let venue = customLoc || '';
         if (!venue) {
           const rawDesc = (sess.desc || '').replace(/^(?:lecture|tutorial|lab|workshop)\s*[-–—:]?\s*/i, '').trim();
-          // Filter out dummy/placeholder session descriptions from Spectrum Moodle
+          // Filter out dummy/placeholder session descriptions from Spectrum Moodle (including "sessions", "session")
           const isDummyDesc = !rawDesc ||
-            /^(?:regular\s+class(?:\s+session)?|sesi\s+kelas\s+biasa|class\s+session|sesi\s+kelas|none|null|tba|tbd)$/i.test(rawDesc) ||
+            /^(?:regular\s+class(?:\s+session)?|sesi\s+kelas\s+biasa|class\s+sessions?|sessions?|sesi\s+kelas|none|null|tba|tbd)$/i.test(rawDesc) ||
             /^occ[- ]*\d+$/i.test(rawDesc) ||
             /^(?:all\s+groups?|kumpulan\s+semua)$/i.test(rawDesc);
           if (!isDummyDesc && rawDesc.length >= 2) {
@@ -158,12 +189,15 @@
 
         const isOnline = /online|zoom|teams|google meet|meet|webex/i.test(venue);
         const venueIcon = isOnline ? '🌐' : '📍';
-        const durHours = Math.max(0.5, (timeInfo.endHour + timeInfo.endMin / 60) - (timeInfo.startHour + timeInfo.startMin / 60));
+        const durHours = Math.max(0.5, (endHour + endMin / 60) - (startHour + startMin / 60));
         const durText = `${durHours.toFixed(durHours % 1 === 0 ? 0 : 1)}h`;
+        const timeStr = `${pad(startHour)}:${pad(startMin)} - ${pad(endHour)}:${pad(endMin)}`;
+        const rawTimeStr = `${pad(rawStartHour)}:${pad(rawStartMin)} - ${pad(rawEndHour)}:${pad(rawEndMin)}`;
         const venueDisplay = venue ? `${venueIcon} ${venue} · ${durText}` : durText;
 
         rawSlots.push({
-          key,
+          key: rawKey,
+          fallbackKey,
           dayIndex,
           dayName,
           courseCode,
@@ -171,10 +205,16 @@
           typeLabel,
           occ: occStr,
           timeStr,
-          startHour: timeInfo.startHour,
-          startMin: timeInfo.startMin,
-          endHour: timeInfo.endHour,
-          endMin: timeInfo.endMin,
+          rawTimeStr,
+          startHour,
+          startMin,
+          endHour,
+          endMin,
+          rawStartHour,
+          rawStartMin,
+          rawEndHour,
+          rawEndMin,
+          isCustomTime,
           durHours,
           durText,
           venue,
@@ -381,14 +421,29 @@
             ? `<span class="tt-venue" title="${esc(s.venue)}">${s.venueIcon || '📍'} ${esc(s.venue)}</span>`
             : `<span class="tt-venue tt-venue-empty" title="Click to add location"><span class="tt-venue-add-icon">📍</span> <span class="tt-venue-placeholder">+ Add Location</span></span>`;
 
+          const startTimeVal = `${pad(s.startHour)}:${pad(s.startMin)}`;
+          const endTimeVal = `${pad(s.endHour)}:${pad(s.endMin)}`;
+          const rawStartTimeVal = `${pad(s.rawStartHour)}:${pad(s.rawStartMin)}`;
+          const rawEndTimeVal = `${pad(s.rawEndHour)}:${pad(s.rawEndMin)}`;
+
           html += `
             <div class="tt-session-card${compactClass}"
                  data-session-key="${esc(s.key)}"
+                 data-fallback-key="${esc(s.fallbackKey)}"
                  data-course-code="${esc(s.courseCode)}"
                  data-course-name="${esc(s.courseName)}"
-                 data-time-str="${esc(s.dayName)} ${esc(s.timeStr)} · ${esc(s.occ)}"
+                 data-type-label="${esc(s.typeLabel)}"
+                 data-occ="${esc(s.occ)}"
+                 data-day-name="${esc(s.dayName)}"
+                 data-time-str="${esc(s.timeStr)}"
+                 data-raw-time-str="${esc(s.rawTimeStr)}"
+                 data-start-time="${startTimeVal}"
+                 data-end-time="${endTimeVal}"
+                 data-raw-start-time="${rawStartTimeVal}"
+                 data-raw-end-time="${rawEndTimeVal}"
+                 data-is-custom-time="${s.isCustomTime ? '1' : '0'}"
                  data-venue="${esc(s.venue || '')}"
-                 title="Click to set or edit location"
+                 title="Click to edit session time or location"
                  style="top: ${topPx}px; height: ${heightPx}px; ${posStyle}">
               <div class="tt-card-header">
                 <span class="tt-code">${esc(s.courseCode)}</span>
@@ -415,17 +470,59 @@
       gridEl.addEventListener('click', (e) => {
         const card = e.target.closest('.tt-session-card');
         if (!card) return;
-        const key = card.dataset.sessionKey;
-        const courseCode = card.dataset.courseCode;
-        const courseName = card.dataset.courseName;
-        const timeStr = card.dataset.timeStr;
-        const currentVenue = card.dataset.venue || '';
-        openLocationModal({ key, courseCode, courseName, timeStr, currentVenue });
+        openLocationModal({
+          key: card.dataset.sessionKey,
+          fallbackKey: card.dataset.fallbackKey,
+          courseCode: card.dataset.courseCode,
+          courseName: card.dataset.courseName,
+          typeLabel: card.dataset.typeLabel,
+          occ: card.dataset.occ,
+          dayName: card.dataset.dayName,
+          timeStr: card.dataset.timeStr,
+          rawTimeStr: card.dataset.rawTimeStr,
+          startTime: card.dataset.startTime,
+          endTime: card.dataset.endTime,
+          rawStartTime: card.dataset.rawStartTime,
+          rawEndTime: card.dataset.rawEndTime,
+          isCustomTime: card.dataset.isCustomTime === '1',
+          currentVenue: card.dataset.venue || ''
+        });
       });
     }
   }
 
   let activeSessionForLocation = null;
+
+  function formatDurationMinutes(mins) {
+    if (mins <= 0) return '0h 00m';
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${h}h ${String(m).padStart(2, '0')}m`;
+  }
+
+  function parseMinutes(timeStr) {
+    if (!timeStr || !timeStr.includes(':')) return 0;
+    const parts = timeStr.split(':');
+    return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+  }
+
+  function updateDurationPreview() {
+    const startInp = document.getElementById('tt-time-start');
+    const endInp = document.getElementById('tt-time-end');
+    const previewEl = document.getElementById('tt-time-duration-preview');
+    if (!startInp || !endInp || !previewEl) return;
+
+    const startM = parseMinutes(startInp.value);
+    const endM = parseMinutes(endInp.value);
+
+    if (endM <= startM) {
+      previewEl.textContent = 'Invalid (End <= Start)';
+      previewEl.style.color = '#ef4444';
+    } else {
+      previewEl.textContent = formatDurationMinutes(endM - startM);
+      previewEl.style.color = 'var(--primary-accent)';
+    }
+  }
 
   function openLocationModal(sessInfo) {
     activeSessionForLocation = sessInfo;
@@ -433,26 +530,40 @@
     if (!modal) return;
 
     const codeEl = document.getElementById('tt-location-course-code');
+    const typeEl = document.getElementById('tt-location-course-type');
     const nameEl = document.getElementById('tt-location-course-name');
     const timeEl = document.getElementById('tt-location-session-time');
     const inp = document.getElementById('tt-location-input');
+    const startInp = document.getElementById('tt-time-start');
+    const endInp = document.getElementById('tt-time-end');
     const btnDel = document.getElementById('btn-delete-tt-location');
 
     if (codeEl) codeEl.textContent = sessInfo.courseCode || 'Course';
-    if (nameEl) nameEl.textContent = sessInfo.courseName ? ` · ${sessInfo.courseName}` : '';
-    if (timeEl) timeEl.textContent = sessInfo.timeStr || '';
-    if (inp) {
-      inp.value = sessInfo.currentVenue || '';
+    if (typeEl) {
+      typeEl.textContent = sessInfo.typeLabel || 'CLASS';
+      typeEl.style.display = 'inline-block';
     }
+    if (nameEl) nameEl.textContent = sessInfo.courseName || '';
+    if (timeEl) {
+      const origNote = sessInfo.isCustomTime ? ` (Default: ${sessInfo.rawTimeStr})` : '';
+      timeEl.textContent = `${sessInfo.dayName || ''} · ${sessInfo.occ || ''}${origNote}`;
+    }
+
+    if (inp) inp.value = sessInfo.currentVenue || '';
+    if (startInp) startInp.value = sessInfo.startTime || sessInfo.rawStartTime || '08:00';
+    if (endInp) endInp.value = sessInfo.endTime || sessInfo.rawEndTime || '10:00';
+
+    updateDurationPreview();
+
     if (btnDel) {
-      btnDel.style.display = sessInfo.currentVenue ? 'inline-block' : 'none';
+      const hasOverrides = Boolean(sessInfo.currentVenue || sessInfo.isCustomTime);
+      btnDel.style.display = hasOverrides ? 'inline-block' : 'none';
     }
 
     modal.style.display = 'flex';
     setTimeout(() => {
-      if (inp) {
-        inp.focus();
-        inp.select();
+      if (startInp) {
+        startInp.focus();
       }
     }, 50);
   }
@@ -891,6 +1002,10 @@
     const inp = document.getElementById('tt-location-input');
     const chipsWrap = document.getElementById('tt-quick-location-chips');
 
+    const startInp = document.getElementById('tt-time-start');
+    const endInp = document.getElementById('tt-time-end');
+    const btnResetTime = document.getElementById('btn-reset-tt-time');
+
     if (modal && !modal._hasLocationListeners) {
       modal._hasLocationListeners = true;
 
@@ -901,20 +1016,87 @@
       if (btnClose) btnClose.addEventListener('click', closeLocationModal);
       if (btnCancel) btnCancel.addEventListener('click', closeLocationModal);
 
-      if (btnSave) {
-        btnSave.addEventListener('click', async () => {
-          if (!activeSessionForLocation) return;
-          const locVal = inp ? inp.value.trim() : '';
-          await saveCustomLocation(activeSessionForLocation.key, locVal);
-          closeLocationModal();
-          renderTimetableMode();
+      if (startInp) startInp.addEventListener('input', updateDurationPreview);
+      if (endInp) endInp.addEventListener('input', updateDurationPreview);
+
+      // Quick duration buttons
+      modal.querySelectorAll('.btn-dur-quick').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (!startInp || !endInp) return;
+          const dur = parseFloat(btn.dataset.dur) || 1;
+          const startM = parseMinutes(startInp.value);
+          const newEndM = startM + Math.round(dur * 60);
+          const endH = Math.min(23, Math.floor(newEndM / 60));
+          const endMin = newEndM % 60;
+          const pad = n => String(n).padStart(2, '0');
+          endInp.value = `${pad(endH)}:${pad(endMin)}`;
+          updateDurationPreview();
         });
+      });
+
+      // Reset to Moodle time button
+      if (btnResetTime) {
+        btnResetTime.addEventListener('click', () => {
+          if (!activeSessionForLocation) return;
+          if (startInp) startInp.value = activeSessionForLocation.rawStartTime || '08:00';
+          if (endInp) endInp.value = activeSessionForLocation.rawEndTime || '10:00';
+          updateDurationPreview();
+        });
+      }
+
+      const saveCurrentModalValues = async () => {
+        if (!activeSessionForLocation) return;
+        const locVal = inp ? inp.value.trim() : '';
+        const startVal = startInp ? startInp.value.trim() : '';
+        const endVal = endInp ? endInp.value.trim() : '';
+
+        let hasCustomTime = false;
+        let startHour = 0, startMin = 0, endHour = 0, endMin = 0;
+
+        if (startVal && endVal && startVal.includes(':') && endVal.includes(':')) {
+          const sM = parseMinutes(startVal);
+          const eM = parseMinutes(endVal);
+          if (eM <= sM) {
+            alert('End time must be later than start time.');
+            if (endInp) endInp.focus();
+            return;
+          }
+          const sParts = startVal.split(':');
+          const eParts = endVal.split(':');
+          startHour = parseInt(sParts[0], 10);
+          startMin = parseInt(sParts[1], 10);
+          endHour = parseInt(eParts[0], 10);
+          endMin = parseInt(eParts[1], 10);
+
+          if (startVal !== activeSessionForLocation.rawStartTime || endVal !== activeSessionForLocation.rawEndTime) {
+            hasCustomTime = true;
+          }
+        }
+
+        const overrideData = {
+          venue: locVal,
+          startTime: startVal,
+          endTime: endVal,
+          startHour,
+          startMin,
+          endHour,
+          endMin,
+          hasCustomTime
+        };
+
+        await saveSessionOverride(activeSessionForLocation.key, activeSessionForLocation.fallbackKey, overrideData);
+        closeLocationModal();
+        renderTimetableMode();
+      };
+
+      if (btnSave) {
+        btnSave.addEventListener('click', saveCurrentModalValues);
       }
 
       if (btnDelete) {
         btnDelete.addEventListener('click', async () => {
           if (!activeSessionForLocation) return;
-          await saveCustomLocation(activeSessionForLocation.key, '');
+          await saveSessionOverride(activeSessionForLocation.key, activeSessionForLocation.fallbackKey, null);
           closeLocationModal();
           renderTimetableMode();
         });
@@ -924,10 +1106,7 @@
         inp.addEventListener('keydown', async (e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
-            if (!activeSessionForLocation) return;
-            await saveCustomLocation(activeSessionForLocation.key, inp.value.trim());
-            closeLocationModal();
-            renderTimetableMode();
+            await saveCurrentModalValues();
           } else if (e.key === 'Escape') {
             e.preventDefault();
             closeLocationModal();

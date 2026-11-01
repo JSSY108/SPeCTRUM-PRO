@@ -9233,6 +9233,24 @@ body:not(.is-full-tab) .sync-cinematic-current {
   color: var(--text-primary);
 }
 
+.btn-dur-quick {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-hairline);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-dur-quick:hover {
+  background: var(--primary-accent);
+  color: #fff;
+  border-color: var(--primary-accent);
+}
+
 .tt-time-range {
   font-family: 'JetBrains Mono', monospace;
   font-size: 9.5px;
