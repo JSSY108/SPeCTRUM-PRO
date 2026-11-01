@@ -1,4 +1,4 @@
-# 🎓 SPeCTRUM Pro v2.0 — Course, Activities & Attendance Hub
+# SPeCTRUM PRO™
 
 SPeCTRUM Pro is a **complete student productivity hub** for **Universiti Malaya's SPeCTRUM** (`spectrum.um.edu.my`).
 
@@ -85,3 +85,9 @@ The updated extension package is zipped and ready to share at:
 ```text
 c:\Users\jonat\Projects\Spectrum PRO\spectrum_extension.zip
 ```
+
+---
+
+## License & Trademarks
+
+The source code of this project is licensed under the [MIT License](LICENSE). However, the brand identity, name, and logo are strictly protected. Please read the [Trademark Policy](TRADEMARK.md) before forking or distributing this project.
