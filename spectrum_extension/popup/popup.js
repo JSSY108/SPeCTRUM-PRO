@@ -1134,32 +1134,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (full) window.scrollTo(0, 0);
       updateFullTabHeader();
       ensureTabsInCorrectSurface();
-  const btnStatusFullTab = document.getElementById('btn-status-open-fulltab');
-  if (btnStatusFullTab) {
-    btnStatusFullTab.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (chrome && chrome.tabs && chrome.tabs.create) {
-        chrome.tabs.create({ url: chrome.runtime.getURL('popup/popup.html?mode=full') });
-      } else {
-        window.open(location.pathname + '?mode=full', '_blank');
-      }
-    });
-  }
+
     }
   });
   updateFullTabHeader();
   ensureTabsInCorrectSurface();
-  const btnStatusFullTab = document.getElementById('btn-status-open-fulltab');
-  if (btnStatusFullTab) {
-    btnStatusFullTab.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (chrome && chrome.tabs && chrome.tabs.create) {
-        chrome.tabs.create({ url: chrome.runtime.getURL('popup/popup.html?mode=full') });
-      } else {
-        window.open(location.pathname + '?mode=full', '_blank');
-      }
-    });
-  }
+
 
   // 1. Full Tab & Close Button Handling
   if (btnOpenTab) {
