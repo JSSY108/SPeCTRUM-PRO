@@ -330,8 +330,25 @@
       if (s.endMin > 0 && s.endHour >= maxHour) maxHour = s.endHour + 1;
     });
 
+    // ========================================================================
+    // TIMETABLE GRID ROW HEIGHT (HOUR CELL SPACING):
+    // Default: 115px (increased from 80px so 1-hour cards fit comfortably with larger fonts).
+    // Dynamically reads --tt-hour-row-height from popup.css (:root or .timetable-grid).
+    // ========================================================================
+    let hourHeight = 115;
+    try {
+      if (typeof document !== 'undefined') {
+        const rootVal = getComputedStyle(document.documentElement).getPropertyValue('--tt-hour-row-height') ||
+                       getComputedStyle(gridEl).getPropertyValue('--tt-hour-row-height');
+        const parsed = parseInt(rootVal, 10);
+        if (!isNaN(parsed) && parsed >= 60 && parsed <= 300) {
+          hourHeight = parsed;
+        }
+      }
+    } catch (e) {}
+
     const totalHours = maxHour - minHour;
-    const HOUR_HEIGHT = 80;
+    const HOUR_HEIGHT = hourHeight;
     const totalHeight = totalHours * HOUR_HEIGHT;
     const pad = n => String(n).padStart(2, '0');
 

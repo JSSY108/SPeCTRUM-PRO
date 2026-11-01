@@ -9097,10 +9097,21 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 /* Session Card */
 /* ==========================================================================
-   TIMETABLE CARD FONT SIZE CONTROLS (CENTRALIZED TUNING DASHBOARD):
-   Tune any or all font sizes of the timetable session card right here:
+   TIMETABLE GRID & CARD TUNING DASHBOARD (SPACING & FONT SIZE CONTROLS):
+   Tune hour cell distance and all card font sizes right here in one place:
    ========================================================================== */
+:root {
+  /* ========================================================================
+     1. HOUR CELL DISTANCE / ROW HEIGHT (VERTICAL SPACING):
+     Adjust this value to increase or decrease the distance between hourly lines.
+     115px ensures 1-hour cards fit course code, title, and venue without overlap.
+     Recommended: 100px - 135px (Default: 115px, previous: 80px)
+     ======================================================================== */
+  --tt-hour-row-height: 115px;
+}
+
 .tt-session-card {
+  --tt-hour-row-height: var(--tt-hour-row-height, 115px);
   --tt-font-code: 11.5px;      /* 1. Course Code (e.g. WIX2001) */
   --tt-font-type: 10px;        /* 2. Type Tag Pill (e.g. LEC, TUT, LAB) */
   --tt-font-title: 13px;       /* 3. Course Full Name (e.g. Thinking And Comm...) */
@@ -9277,8 +9288,8 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 /* Compact 1-hour session styles */
 .tt-session-card.is-compact {
-  padding: 6px 8px;
-  gap: 2px;
+  padding: 8px 10px;
+  gap: 3px;
 }
 
 .tt-session-card.is-compact .tt-card-subtitle {
@@ -9286,8 +9297,9 @@ body:not(.is-full-tab) .sync-cinematic-current {
 }
 
 .tt-session-card.is-compact .tt-card-title {
-  -webkit-line-clamp: 1;
-  white-space: nowrap;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  line-height: 1.25;
 }
 
 /* Dark Mode Support for Timetable */
