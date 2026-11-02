@@ -98,7 +98,9 @@ const I18N = {
       list: 'List',
       timetable: 'Timetable',
       tipjar: 'Tip Jar',
-      activities: 'Activities'
+      activities: 'Activities',
+      switchToDark: 'Switch to Dark Mode',
+      switchToLight: 'Switch to Light Mode'
     },
     cards: {
       today: 'TODAY',
@@ -273,7 +275,9 @@ const I18N = {
       list: 'Senarai',
       timetable: 'Jadual Waktu',
       tipjar: 'Sokong',
-      activities: 'Aktiviti'
+      activities: 'Aktiviti',
+      switchToDark: 'Tukar ke Mod Gelap',
+      switchToLight: 'Tukar ke Mod Cerah'
     },
     cards: {
       today: 'HARI INI',
@@ -448,7 +452,9 @@ const I18N = {
       list: '列表',
       timetable: '课表',
       tipjar: '支持',
-      activities: '动态'
+      activities: '动态',
+      switchToDark: '切换至深色模式',
+      switchToLight: '切换至浅色模式'
     },
     cards: {
       today: '今天',
@@ -881,6 +887,13 @@ function updateHeaderTranslations() {
     if (s) s.textContent = t('headers', 'fullWorkstation');
   }
 
+  // Update Theme Switch Tooltips
+  const isThemeDark = currentTheme === 'dark';
+  const themeTooltipText = isThemeDark ? t('tooltips', 'switchToLight') : t('tooltips', 'switchToDark');
+  document.querySelectorAll('.theme-switch-btn').forEach(btn => {
+    btn.title = themeTooltipText || (isThemeDark ? 'Switch to Light Mode' : 'Switch to Dark Mode');
+  });
+
   const tabActs = document.querySelector('.primary-tab-btn[data-tab="tab-activities"]');
   if (tabActs) tabActs.textContent = t('tooltips', 'activities');
   const tabTt = document.querySelector('.primary-tab-btn[data-tab="tab-timetable"]');
@@ -1023,6 +1036,71 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
     }
   });
 }
+
+// ── Theme Management Engine (Light / Dark Mode) ──
+let currentTheme = 'light';
+
+try {
+  Object.defineProperty(window, 'currentTheme', {
+    get: () => currentTheme,
+    set: (v) => { currentTheme = v; },
+    configurable: true
+  });
+} catch (e) {
+  window.currentTheme = currentTheme;
+}
+
+function setAppTheme(theme, broadcast = true) {
+  if (!['light', 'dark'].includes(theme)) theme = 'light';
+  currentTheme = theme;
+
+  const isDark = theme === 'dark';
+
+  // Apply to both documentElement and body for complete CSS compatibility
+  if (document.documentElement) {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+  if (document.body) {
+    document.body.setAttribute('data-theme', theme);
+  }
+
+  // Update theme switch buttons across popup and fulltab headers
+  const tooltipText = isDark ? t('tooltips', 'switchToLight') : t('tooltips', 'switchToDark');
+  document.querySelectorAll('.theme-switch-btn').forEach(btn => {
+    btn.setAttribute('aria-checked', isDark ? 'true' : 'false');
+    btn.classList.toggle('is-dark', isDark);
+    btn.title = tooltipText || (isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode');
+  });
+
+  // Persist to storage
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    chrome.storage.local.set({ appTheme: theme });
+    if (broadcast && chrome.runtime && chrome.runtime.sendMessage) {
+      try {
+        chrome.runtime.sendMessage({ type: 'THEME_CHANGED', theme });
+      } catch (e) {}
+    }
+  }
+
+  try {
+    localStorage.setItem('spectrum_theme', theme);
+  } catch (e) {}
+
+  if (typeof window.onThemeChange === 'function') {
+    try {
+      window.onThemeChange(theme);
+    } catch (e) {}
+  }
+}
+
+if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg && msg.type === 'THEME_CHANGED' && msg.theme && msg.theme !== currentTheme) {
+      setAppTheme(msg.theme, false);
+    }
+  });
+}
+
 
 
 // Expose state references on window for cross-module access
@@ -2202,6 +2280,50 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     setAppLanguage('en', false);
   }
+
+  // Load Saved Theme & Initialize Header Switches
+  function initThemeControls() {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get(['appTheme'], (res) => {
+        let savedTheme = res && res.appTheme;
+        if (!savedTheme) {
+          try {
+            savedTheme = localStorage.getItem('spectrum_theme');
+          } catch (e) {}
+        }
+        if (savedTheme && ['light', 'dark'].includes(savedTheme)) {
+          setAppTheme(savedTheme, false);
+        } else {
+          const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          setAppTheme(prefersDark ? 'dark' : 'light', false);
+        }
+      });
+    } else {
+      let savedTheme;
+      try {
+        savedTheme = localStorage.getItem('spectrum_theme');
+      } catch (e) {}
+      if (savedTheme && ['light', 'dark'].includes(savedTheme)) {
+        setAppTheme(savedTheme, false);
+      } else {
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setAppTheme(prefersDark ? 'dark' : 'light', false);
+      }
+    }
+
+    // Attach click listeners to all theme switch buttons (in popup & fulltab headers)
+    document.querySelectorAll('.theme-switch-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        setAppTheme(nextTheme, true);
+      });
+    });
+  }
+
+  initThemeControls();
+
 
   // 1. Full Tab & Close Button Handling
   if (btnOpenTab) {

@@ -85,6 +85,57 @@
   --radius-lg: 12px;
 }
 
+/* ==========================================================================
+   SPeCTRUM PRO v3.0 — Dark Mode Master Semantic Tokens
+   ========================================================================== */
+:root[data-theme="dark"],
+body[data-theme="dark"],
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* 90% Monochrome Architecture (Inverted Dark) */
+  --bg-canvas: #09090B;
+  --bg-surface: #141417;
+  --bg-card-hover: #1C1C21;
+  --bg-subtle: #202025;
+  --bg-primary-cta: #FAFAFA;
+  --bg-cta-hover: #E4E4E7;
+
+  --text-primary: #F4F4F5;
+  --text-secondary: #A1A1AA;
+  --text-muted: #71717A;
+  --text-on-dark: #09090B;
+
+  --border-hairline: #27272A;
+  --border-subtle: #1E1E22;
+  --border-strong: #E4E4E7;
+
+  /* 10% Semantic Signals tuned for dark backgrounds */
+  --signal-attendance: #34D399;
+  --signal-attendance-bg: rgba(16, 185, 129, 0.16);
+  --signal-attendance-border: rgba(16, 185, 129, 0.4);
+
+  --signal-assignment: #FB923C;
+  --signal-assignment-bg: rgba(249, 115, 22, 0.16);
+  --signal-assignment-border: rgba(249, 115, 22, 0.4);
+
+  --signal-notice: #60A5FA;
+  --signal-notice-bg: rgba(37, 99, 235, 0.16);
+  --signal-notice-border: rgba(37, 99, 235, 0.4);
+
+  --signal-urgent: #F43F5E;
+  --signal-urgent-bg: rgba(225, 29, 72, 0.16);
+  --signal-urgent-border: rgba(225, 29, 72, 0.4);
+
+  --signal-verified: #34D399;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.7);
+}
+
+
+
 /* Base Reset */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -3342,6 +3393,123 @@ body.mode-preferences #fulltab-week-pill {
   background: var(--text-primary);
   color: var(--bg-surface) !important;
 }
+
+/* ==========================================================================
+   HEADER THEME SWITCH (DARK / LIGHT MODE TOGGLE)
+   ========================================================================== */
+.theme-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+  border-radius: 9999px;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  user-select: none;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.theme-switch-btn:hover {
+  opacity: 0.92;
+}
+
+.theme-switch-btn:active {
+  transform: scale(0.96);
+}
+
+.theme-switch-btn:focus-visible {
+  box-shadow: 0 0 0 2px var(--border-strong);
+}
+
+.theme-switch-track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 44px;
+  height: 24px;
+  padding: 2px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: 9999px;
+  box-sizing: border-box;
+  transition: background 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.25s ease;
+}
+
+.theme-switch-btn:hover .theme-switch-track {
+  border-color: var(--text-muted);
+}
+
+.theme-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 0.5px 1px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background-color 0.2s ease,
+              box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.theme-icon {
+  width: 11px;
+  height: 11px;
+  display: block;
+  transition: opacity 0.2s ease, transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+}
+
+.theme-icon-sun {
+  color: #D97706; /* Amber sun */
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+.theme-icon-moon {
+  color: #60A5FA; /* Cool sky blue moon */
+  opacity: 0;
+  position: absolute;
+  transform: rotate(-90deg) scale(0.5);
+}
+
+/* Dark Mode Active State for Switch */
+[data-theme="dark"] .theme-switch-track,
+.theme-switch-btn.is-dark .theme-switch-track {
+  background: #202025;
+  border-color: #3F3F46;
+}
+
+[data-theme="dark"] .theme-switch-thumb,
+.theme-switch-btn.is-dark .theme-switch-thumb {
+  transform: translateX(20px);
+  background: #18181B;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .theme-icon-sun,
+.theme-switch-btn.is-dark .theme-icon-sun {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.5);
+}
+
+[data-theme="dark"] .theme-icon-moon,
+.theme-switch-btn.is-dark .theme-icon-moon {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
 
 /* Middle Stadium Pill (Multi-Select Checklist) */
 .rail-checklist-stadium {
@@ -10275,3 +10443,111 @@ body:not(.is-full-tab) .sync-cinematic-current {
 }
 
 
+
+
+/* ==========================================================================
+   GLOBAL DARK MODE POLISH & EXTENSIONS
+   ========================================================================== */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  color-scheme: dark;
+}
+
+[data-theme="dark"] .file-tree-item {
+  background: var(--bg-surface) !important;
+  border-bottom-color: var(--border-hairline) !important;
+}
+
+[data-theme="dark"] .file-tree-item:hover {
+  background: var(--bg-card-hover) !important;
+}
+
+[data-theme="dark"] .mat-search-input:focus {
+  background: var(--bg-surface) !important;
+  border-color: var(--border-strong) !important;
+  box-shadow: 0 0 0 1px var(--border-strong) !important;
+}
+
+[data-theme="dark"] .pref-stepper {
+  background: var(--bg-subtle) !important;
+  border-color: var(--border-hairline) !important;
+}
+
+[data-theme="dark"] .pref-course-card:hover {
+  background: var(--bg-card-hover) !important;
+}
+
+[data-theme="dark"] .pref-wireframe-btn {
+  background: var(--bg-subtle) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-hairline) !important;
+}
+
+[data-theme="dark"] .pref-wireframe-btn:hover {
+  background: var(--bg-card-hover) !important;
+  border-color: var(--border-strong) !important;
+}
+
+[data-theme="dark"] .pref-square-chk {
+  background: var(--bg-subtle) !important;
+  border-color: var(--border-hairline) !important;
+}
+
+[data-theme="dark"] .rail-btn-icon.active {
+  background: var(--bg-primary-cta) !important;
+  color: var(--text-on-dark) !important;
+}
+
+[data-theme="dark"] .rail-btn-icon.active svg {
+  stroke: var(--text-on-dark) !important;
+}
+
+[data-theme="dark"] .mat-ext-pill.active {
+  background: var(--bg-primary-cta) !important;
+  color: var(--text-on-dark) !important;
+  border-color: var(--bg-primary-cta) !important;
+}
+
+[data-theme="dark"] .pref-mime-pill.active {
+  background: var(--bg-primary-cta) !important;
+  color: var(--text-on-dark) !important;
+  border-color: var(--bg-primary-cta) !important;
+}
+
+[data-theme="dark"] .radio-pill-btn.active {
+  background: var(--bg-primary-cta) !important;
+  color: var(--text-on-dark) !important;
+  border-color: var(--bg-primary-cta) !important;
+}
+
+[data-theme="dark"] .seg-btn.active {
+  background: #27272A !important;
+  color: #FAFAFA !important;
+}
+
+[data-theme="dark"] .insp-preview-canvas {
+  background: #121214 !important;
+}
+
+[data-theme="dark"] .course-tree-item.is-selected {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+[data-theme="dark"] .popup-lang-switcher,
+[data-theme="dark"] .rail-lang-switcher {
+  background: var(--bg-surface);
+  border-color: var(--border-hairline);
+}
+
+[data-theme="dark"] .popup-lang-btn.active,
+[data-theme="dark"] .rail-lang-btn.active {
+  background: #FAFAFA !important;
+  color: #111111 !important;
+}
+
+[data-theme="dark"] .tipjar-qr {
+  background: #FFFFFF;
+  padding: 8px;
+  box-sizing: content-box;
+}
