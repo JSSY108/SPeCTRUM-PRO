@@ -3,11 +3,10 @@
   "version": "3.0.0",
   "description": "SPeCTRUM PRO — Minimalist Academic Suite Chrome Extension",
   "scripts": {
-    "test": "node -e \"console.log('Testing pptx-viewer...'); const { PPTXViewer } = require('./spectrum_extension/libs/pptx-viewer.cjs'); console.log('PPTXViewer loaded:', Boolean(PPTXViewer));\""
+    "test": "node -e \"console.log('Testing PPTX engine...'); const p = require('pptx-vanilla-viewer'); console.log('pptx-vanilla-viewer loaded:', Boolean(p.createPptxViewer));\""
   },
   "dependencies": {
-    "pptx-vanilla-viewer": "^3.61.0",
-    "pptx-viewer": "^0.2.2"
+    "pptx-vanilla-viewer": "^3.61.0"
   },
   "license": "MIT"
 }

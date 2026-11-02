@@ -1882,79 +1882,46 @@
     hidePageNavControls();
     contentArea.innerHTML = '';
 
-    const ViewerClass = (window.PPTXViewer && window.PPTXViewer.PPTXViewer) || window.PPTXViewer;
-    if (!ViewerClass) {
-      renderPlaceholder(contentArea, file, 'PPTX viewer library loading... Click Full Reader.');
-      return;
-    }
-
     const pptxWrap = document.createElement('div');
     pptxWrap.className = 'insp-pptx-embed-wrap';
-    pptxWrap.style.cssText = 'width:100%;height:100%;min-height:280px;position:relative;display:flex;align-items:center;justify-content:center;background:#0d0f12;border-radius:8px;overflow:hidden;cursor:pointer;';
-    pptxWrap.title = 'Double-click to open in Full PPTX Reader';
+    pptxWrap.style.cssText = 'width:100%;height:100%;min-height:260px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg-card,#181c22);border:1px solid var(--border-medium,rgba(255,255,255,0.12));border-radius:10px;padding:24px;text-align:center;gap:14px;cursor:pointer;';
+    pptxWrap.title = 'Click to open in PowerPoint Viewer';
 
-    const viewerBox = document.createElement('div');
-    viewerBox.id = 'insp-pptx-viewer-box';
-    viewerBox.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;';
-    pptxWrap.appendChild(viewerBox);
+    const iconBox = document.createElement('div');
+    iconBox.style.cssText = 'width:56px;height:56px;border-radius:12px;background:rgba(251,146,60,0.12);border:1px solid rgba(251,146,60,0.25);display:flex;align-items:center;justify-content:center;color:var(--signal-assignment,#fb923c);';
+    iconBox.innerHTML = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>';
+
+    const infoBox = document.createElement('div');
+    const titleEl = document.createElement('div');
+    titleEl.style.cssText = 'font-size:14px;font-weight:700;color:var(--text-primary,#f1f5f9);margin-bottom:4px;word-break:break-word;max-width:280px;';
+    titleEl.textContent = file.title || 'PowerPoint Presentation';
+
+    const descEl = document.createElement('div');
+    descEl.style.cssText = 'font-size:12px;color:var(--text-secondary,#94a3b8);';
+    descEl.textContent = 'High-fidelity slide viewer ready';
+
+    infoBox.appendChild(titleEl);
+    infoBox.appendChild(descEl);
+
+    const openBtn = document.createElement('button');
+    openBtn.type = 'button';
+    openBtn.className = 'btn is-primary';
+    openBtn.style.cssText = 'display:inline-flex;align-items:center;gap:8px;padding:8px 18px;background:#f8fafc;color:#0f172a;border:none;border-radius:6px;font-size:12.5px;font-weight:700;cursor:pointer;transition:transform 0.15s ease;';
+    openBtn.innerHTML = '<span>🖥️</span> Open Full Presentation';
+    openBtn.onclick = (e) => {
+      e.stopPropagation();
+      openPptxFullReader(file);
+    };
+
+    pptxWrap.appendChild(iconBox);
+    pptxWrap.appendChild(infoBox);
+    pptxWrap.appendChild(openBtn);
+
+    pptxWrap.onclick = () => {
+      openPptxFullReader(file);
+    };
+
     contentArea.appendChild(pptxWrap);
-
-    try {
-      const viewer = new ViewerClass(viewerBox, {
-        keyboardNavigation: true,
-        showControls: false,
-        onSlideChange: (index) => {
-          if (activeDocPreview && activeDocPreview.pptxViewer === viewer) {
-            activeDocPreview.currentPage = index + 1;
-            updatePageNavControls(index + 1, viewer.getSlideCount());
-          }
-        },
-        onLoad: (pres) => {
-          const count = pres?.slides?.length || viewer.getSlideCount() || 1;
-          activeDocPreview = {
-            type: 'pptx',
-            fileId: file.url || file.id,
-            pptxViewer: viewer,
-            numPages: count,
-            currentPage: viewer.getCurrentSlide() + 1,
-            file: file
-          };
-          updatePageNavControls(viewer.getCurrentSlide() + 1, count);
-        },
-        onError: (err) => {
-          console.warn('[SPeCTRUM Pro] PPTX Viewer Error:', err);
-        }
-      });
-
-      await viewer.load(arrayBuffer);
-
-      const total = viewer.getSlideCount() || 1;
-      const current = viewer.getCurrentSlide() + 1;
-      activeDocPreview = {
-        type: 'pptx',
-        fileId: file.url || file.id,
-        pptxViewer: viewer,
-        numPages: total,
-        currentPage: current,
-        file: file
-      };
-      updatePageNavControls(current, total);
-
-      previewCache.set(file.url || file.id, {
-        type: 'pptx_loaded',
-        arrayBuffer: arrayBuffer,
-        totalSlides: total,
-        realDownloadUrl: file.realDownloadUrl || file.url
-      });
-
-      pptxWrap.ondblclick = (e) => {
-        e.stopPropagation();
-        openPptxFullReader(file);
-      };
-    } catch (err) {
-      console.warn('[SPeCTRUM Pro] renderPptxWithLibrary failed:', err);
-      renderPlaceholder(contentArea, file, 'Unable to render slides in preview. Click Full Reader.');
-    }
   }
 
 

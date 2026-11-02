@@ -1,11 +1,28 @@
-# Temporary scratch directory
-scratch/
+# Dependencies & Packages
 node_modules/
 package-lock.json
 
-# OS metadata
+# Temporary scratch & build directories
+scratch/
+.agent/
+*temp*/
+*_temp/
+ooxml*/
+pptx-viewer*/
+clone*/
+
+# Presentation test assets & downloads
+*.pptx
+*.ppt
+*.ppsx
+*.potx
+*.pdf
+spectrum_extension.zip
+
+# OS & Editor metadata
 Thumbs.db
 .DS_Store
 *.tmp
-
-
+*.log
+.vscode/
+.idea/
