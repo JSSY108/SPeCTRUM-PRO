@@ -236,7 +236,23 @@ const I18N = {
       updated2Hours: '2 hours ago',
       updatedYesterday: 'Yesterday',
       updated3Days: '3 days ago',
-      updated5Days: '5 days ago'
+      updated5Days: '5 days ago',
+      colNameAsset: 'NAME & ASSET IDENTIFIER',
+      colStatusActions: 'STATUS / ACTIONS',
+      synced: 'Synced',
+      syncNow: 'Sync Now',
+      courseOverviewProforma: 'COURSE OVERVIEW & PROFORMA',
+      inspectDoc: 'Inspect Document',
+      downloadFileAction: 'Download File',
+      downloadLocalCopy: 'Download Local Copy',
+      newBadge: 'NEW',
+      noFilesInSection: 'No downloadable files found in this section.',
+      matchingFiles: '{count} of {total} files',
+      selectedPrefix: 'Selected:',
+      downloading: 'Downloading...',
+      noFilesSelected: 'No files selected. Please check at least one file to download.',
+      preparing: 'Preparing...',
+      downloadComplete: '✔ Complete! ({count} files saved)'
     }
   },
   bm: {
@@ -413,7 +429,23 @@ const I18N = {
       updated2Hours: '2 jam lalu',
       updatedYesterday: 'Semalam',
       updated3Days: '3 hari lalu',
-      updated5Days: '5 hari lalu'
+      updated5Days: '5 hari lalu',
+      colNameAsset: 'NAMA & PENGENAL PASTI ASET',
+      colStatusActions: 'STATUS / TINDAKAN',
+      synced: 'Disegerak',
+      syncNow: 'Segerak Sekarang',
+      courseOverviewProforma: 'GAMBARAN KESELURUHAN & PROFORMA',
+      inspectDoc: 'Periksa Dokumen',
+      downloadFileAction: 'Muat Turun Fail',
+      downloadLocalCopy: 'Muat Turun Salinan',
+      newBadge: 'BAHARU',
+      noFilesInSection: 'Tiada fail boleh dimuat turun di bahagian ini.',
+      matchingFiles: '{count} drp {total} fail',
+      selectedPrefix: 'Dipilih:',
+      downloading: 'Memuat turun...',
+      noFilesSelected: 'Tiada fail dipilih. Sila pilih sekurang-kurangnya satu fail.',
+      preparing: 'Menyediakan...',
+      downloadComplete: '✔ Selesai! ({count} fail disimpan)'
     }
   },
   zh: {
@@ -590,7 +622,23 @@ const I18N = {
       updated2Hours: '2 小时前',
       updatedYesterday: '昨天',
       updated3Days: '3 天前',
-      updated5Days: '5 天前'
+      updated5Days: '5 天前',
+      colNameAsset: '名称与课件标识',
+      colStatusActions: '状态 / 操作',
+      synced: '已同步',
+      syncNow: '立即同步',
+      courseOverviewProforma: '课程概览与教学大纲',
+      inspectDoc: '查看文档',
+      downloadFileAction: '下载文件',
+      downloadLocalCopy: '下载本地副本',
+      newBadge: '最新',
+      noFilesInSection: '本章节暂无可下载文件。',
+      matchingFiles: '{count} / {total} 个文件',
+      selectedPrefix: '已选：',
+      downloading: '正在下载...',
+      noFilesSelected: '未选择任何文件。请勾选至少一个文件后再下载。',
+      preparing: '准备中...',
+      downloadComplete: '✔ 下载完成！（已保存 {count} 个文件）'
     }
   }
 };
@@ -859,6 +907,43 @@ function updateMaterialsTranslations() {
 
   const inspDownloadText = document.getElementById('insp-download-text');
   if (inspDownloadText) inspDownloadText.textContent = t('materials', 'downloadFile');
+
+  // Dynamic Materials Table & Row Elements Translations
+  document.querySelectorAll('.col-head-name').forEach(el => {
+    el.textContent = t('materials', 'colNameAsset');
+  });
+  document.querySelectorAll('.col-head-status').forEach(el => {
+    el.textContent = t('materials', 'colStatusActions');
+  });
+  document.querySelectorAll('.status-synced-pill').forEach(el => {
+    el.innerHTML = `<svg class="icon-svg" viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#16A34A;fill:none;stroke-width:2.5;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${t('materials', 'synced')}`;
+  });
+  document.querySelectorAll('.btn-sync-now').forEach(el => {
+    el.textContent = `⚡ ${t('materials', 'syncNow')}`;
+  });
+  document.querySelectorAll('.btn-inspect-file').forEach(el => {
+    el.title = t('materials', 'inspectDoc');
+  });
+  document.querySelectorAll('.btn-single-download').forEach(el => {
+    el.title = t('materials', 'downloadFileAction');
+  });
+  document.querySelectorAll('.file-new-badge').forEach(el => {
+    el.textContent = t('materials', 'newBadge');
+  });
+  document.querySelectorAll('.btn-download-pack').forEach(btn => {
+    btn.title = t('materials', 'downloadCoursePack');
+    const s = btn.querySelector('span');
+    if (s) s.textContent = t('materials', 'downloadCoursePack');
+  });
+
+  const selPrefix = document.getElementById('lbl-mat-selected-prefix');
+  if (selPrefix) selPrefix.textContent = t('materials', 'selectedPrefix');
+
+  if (typeof updateAllCounts === 'function') {
+    updateAllCounts();
+  } else if (typeof window !== 'undefined' && typeof window.updateAllCounts === 'function') {
+    window.updateAllCounts();
+  }
 }
 
 function updateHeaderTranslations() {
@@ -11789,6 +11874,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isFull) {
       if (typeof setFullTabMode === 'function') {
         setFullTabMode(currentFullTabMode);
+      }
+      if (currentFullTabMode === 'materials') {
+        if (typeof renderCourseTreeShells === 'function') renderCourseTreeShells();
+        else if (typeof window !== 'undefined' && typeof window.renderCourseTreeShells === 'function') window.renderCourseTreeShells();
       }
     } else {
       const activeBtn = document.querySelector('.primary-tab-btn.active');

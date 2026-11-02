@@ -912,12 +912,13 @@
       const isSecChecked = sec.checked !== false;
 
       let displayName = cleanSectionTitle(sec.name);
-      if (/^general$/i.test(displayName) || /^am$/i.test(displayName)) {
-        displayName = 'COURSE OVERVIEW & PROFORMA';
+      if (/^general$/i.test(displayName) || /^am$/i.test(displayName) || /^course overview/i.test(displayName)) {
+        displayName = t('materials', 'courseOverviewProforma');
       }
 
       const fileCount = (sec.files && Array.isArray(sec.files)) ? sec.files.length : 0;
-      const countLabel = `${fileCount} ${fileCount === 1 ? 'file' : 'files'}`;
+      const fileWord = fileCount === 1 ? t('materials', 'fileSingle') : t('materials', 'filePlural');
+      const countLabel = `${fileCount} ${fileWord}`;
 
       const secItem = document.createElement('div');
       secItem.className = `section-tree-item${isSecExpanded ? ' expanded' : ''}`;
@@ -937,8 +938,8 @@
             <label class="mat-chk-wrap">
               <input type="checkbox" class="chk-section" data-course-id="${course.id}" data-sec-name="${encodeURIComponent(sec.name)}" ${isSecChecked ? 'checked' : ''}>
             </label>
-            <span class="col-head-name">NAME & ASSET IDENTIFIER</span>
-            <span class="col-head-status">STATUS / ACTIONS</span>
+            <span class="col-head-name">${t('materials', 'colNameAsset')}</span>
+            <span class="col-head-status">${t('materials', 'colStatusActions')}</span>
           </div>
           <div class="files-rows-wrap"></div>
         </div>
@@ -971,7 +972,7 @@
       const filesRowsWrap = secItem.querySelector('.files-rows-wrap');
 
       if (!sec.files || sec.files.length === 0) {
-        filesRowsWrap.innerHTML = '<div style="padding:9px 14px;font-size:11px;color:var(--text-muted);font-style:italic;">No downloadable files found in this section.</div>';
+        filesRowsWrap.innerHTML = `<div style="padding:9px 14px;font-size:11px;color:var(--text-muted);font-style:italic;">${t('materials', 'noFilesInSection')}</div>`;
       } else {
         sec.files.forEach((file, fileIdx) => {
           file.id = generateUniqueFileId(course.id, sec.name, fileIdx, file.url, file.title);
@@ -984,10 +985,10 @@
           fileItem.className = 'file-tree-item' + (isFileChecked ? ' selected' : '');
           fileItem.dataset.fileId = file.id;
 
-          const newBadgeHtml = meta.isNew ? '<span class="file-new-badge">NEW</span>' : '';
+          const newBadgeHtml = meta.isNew ? `<span class="file-new-badge">${t('materials', 'newBadge')}</span>` : '';
           const statusHtml = meta.isSynced
-            ? `<span class="status-synced-pill"><svg class="icon-svg" viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#16A34A;fill:none;stroke-width:2.5;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Synced</span>`
-            : `<button type="button" class="btn-sync-now" data-file-id="${file.id}">⚡ Sync Now</button>`;
+            ? `<span class="status-synced-pill"><svg class="icon-svg" viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#16A34A;fill:none;stroke-width:2.5;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${t('materials', 'synced')}</span>`
+            : `<button type="button" class="btn-sync-now" data-file-id="${file.id}">⚡ ${t('materials', 'syncNow')}</button>`;
 
           fileItem.innerHTML = `
             <label class="mat-chk-wrap">
@@ -998,10 +999,10 @@
             ${newBadgeHtml}
             <div class="file-status-col">${statusHtml}</div>
             <div class="file-actions-col">
-              <button type="button" class="btn-mat-action btn-inspect-file" data-file-id="${file.id}" title="Inspect Document">
+              <button type="button" class="btn-mat-action btn-inspect-file" data-file-id="${file.id}" title="${t('materials', 'inspectDoc')}">
                 <svg class="icon-svg" viewBox="0 0 24 24" style="width:13px;height:13px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>
-              <button type="button" class="btn-mat-action btn-single-download" data-file-id="${file.id}" title="Download File">
+              <button type="button" class="btn-mat-action btn-single-download" data-file-id="${file.id}" title="${t('materials', 'downloadFileAction')}">
                 <svg class="icon-svg" viewBox="0 0 24 24" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               </button>
             </div>
@@ -1045,7 +1046,7 @@
               e.stopPropagation();
               file.isSynced = true;
               file.isNew = false;
-              syncNowBtn.outerHTML = `<span class="status-synced-pill"><svg class="icon-svg" viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#16A34A;fill:none;stroke-width:2.5;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Synced</span>`;
+              syncNowBtn.outerHTML = `<span class="status-synced-pill"><svg class="icon-svg" viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#16A34A;fill:none;stroke-width:2.5;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${t('materials', 'synced')}</span>`;
               const badgeEl = fileItem.querySelector('.file-new-badge');
               if (badgeEl) badgeEl.remove();
               debounceSaveCache();
@@ -2540,7 +2541,7 @@
     if (inspDownloadText) {
       const extMatch = (file.title || '').match(/\.[a-zA-Z0-9]+$/);
       const ext = extMatch ? extMatch[0].toLowerCase() : '';
-      inspDownloadText.textContent = ext ? `Download Local Copy (${ext})` : 'Download File';
+      inspDownloadText.textContent = ext ? `${t('materials', 'downloadLocalCopy')} (${ext})` : t('materials', 'downloadFileAction');
     }
 
     fileInspectorPane.style.display = 'flex';
@@ -2587,7 +2588,7 @@
     const dlBtns = document.querySelectorAll(`.btn-single-download[data-file-id="${file.id}"]`);
     const inspDlText = document.getElementById('insp-download-text');
     const prevInspText = inspDlText ? inspDlText.textContent : '';
-    if (inspDlText) inspDlText.textContent = 'Downloading...';
+    if (inspDlText) inspDlText.textContent = t('materials', 'downloading');
     dlBtns.forEach(btn => {
       btn.disabled = true;
       btn.style.opacity = '0.5';
@@ -2814,7 +2815,10 @@
 
     const totalSizeMb = (totalSizeBytes / (1024 * 1024)).toFixed(1);
 
-    if (selectedCountEl) selectedCountEl.textContent = `${totalSelected} files`;
+    if (selectedCountEl) {
+      const fileWord = totalSelected === 1 ? t('materials', 'fileSingle') : t('materials', 'filePlural');
+      selectedCountEl.textContent = `${totalSelected} ${fileWord}`;
+    }
     const selectedSizeTextEl = document.getElementById('selected-size-text');
     if (selectedSizeTextEl) selectedSizeTextEl.style.display = 'none';
 
@@ -2895,9 +2899,10 @@
         const countBadge = secItem.querySelector('.section-count-badge');
         if (countBadge && secTotalCount > 0) {
           if (ext !== 'ALL' || q) {
-            countBadge.textContent = `${secMatchingCount} of ${secTotalCount} files`;
+            countBadge.textContent = t('materials', 'matchingFiles', { count: secMatchingCount, total: secTotalCount });
           } else {
-            countBadge.textContent = `${secTotalCount} ${secTotalCount === 1 ? 'file' : 'files'}`;
+            const fWord = secTotalCount === 1 ? t('materials', 'fileSingle') : t('materials', 'filePlural');
+            countBadge.textContent = `${secTotalCount} ${fWord}`;
           }
         }
       });
@@ -3034,7 +3039,7 @@
         });
 
         if (selectedFiles.length === 0) {
-          alert('No files selected. Please check at least one file to download.');
+          alert(t('materials', 'noFilesSelected'));
           return;
         }
 
@@ -3120,7 +3125,7 @@
 
         if (progressBarFill) progressBarFill.style.width = '100%';
         if (progressPercent) progressPercent.textContent = '100%';
-        if (progressStatusLabel) progressStatusLabel.textContent = `✔ Complete! (${totalSaved} files saved)`;
+        if (progressStatusLabel) progressStatusLabel.textContent = t('materials', 'downloadComplete', { count: totalSaved });;
         if (progressCurrentFile) progressCurrentFile.textContent = 'Saved to your Downloads folder';
         if (btnDownloadText) btnDownloadText.textContent = '✔ Download Complete!';
         setTimeout(updateAllCounts, 3500);
