@@ -139,9 +139,10 @@ async function handleFetchFilePreview(fileUrl, retryCount = 0) {
       }
     }
     
-    // Limit to 12MB for preview payload
-    const bufferSlice = arrayBuffer.byteLength > 12 * 1024 * 1024 
-      ? arrayBuffer.slice(0, 12 * 1024 * 1024) 
+    // Limit to 64MB for preview payload (allows full presentation slide decks & large PDFs)
+    const maxPreviewBytes = 64 * 1024 * 1024;
+    const bufferSlice = arrayBuffer.byteLength > maxPreviewBytes 
+      ? arrayBuffer.slice(0, maxPreviewBytes) 
       : arrayBuffer;
 
     let binary = '';
