@@ -1382,6 +1382,23 @@
           } catch (e) {}
         }
 
+        // Slide Dimensions (default 16:9 widescreen: 12192000 x 6858000 EMUs)
+        let slideW = 12192000;
+        let slideH = 6858000;
+        const presFile = zip.file('ppt/presentation.xml');
+        if (presFile) {
+          try {
+            const presXml = await presFile.async('text');
+            const sldSzMatch = presXml.match(/<(?:\w+:)?sldSz\s+[^>]*?cx="(\d+)"\s+cy="(\d+)"/i) ||
+                               presXml.match(/<(?:\w+:)?sldSz\s+[^>]*?cy="(\d+)"\s+cx="(\d+)"/i);
+            if (sldSzMatch) {
+              slideW = parseInt(sldSzMatch[1], 10) || 12192000;
+              slideH = parseInt(sldSzMatch[2], 10) || 6858000;
+            }
+          } catch (e) {}
+        }
+        const slideAspectRatio = (slideW / slideH).toFixed(4);
+
         // Find all slide XML files in ppt/slides/
         const slideFileNames = Object.keys(zip.files).filter(k => /^ppt\/slides\/slide\d+\.xml$/i.test(k));
         const totalSlides = slideFileNames.length || 1;
@@ -1452,36 +1469,110 @@
           return paragraphs;
         }
 
-        // Helper: Extract images referenced in slide rels
-        async function extractSlideImages(slideIndex) {
+        // Helper: Extract map of relationship ID -> image blob URL
+        async function extractSlideImageMap(slideIndex) {
           const relsPath = `ppt/slides/_rels/slide${slideIndex}.xml.rels`;
           const relsFile = zip.file(relsPath);
-          if (!relsFile) return [];
+          const imgMap = {};
+          if (!relsFile) return imgMap;
           try {
             const relsText = await relsFile.async('text');
             const relRegex = /<Relationship\s+[^>]*>/gi;
-            const imgUrls = [];
             let m;
             while ((m = relRegex.exec(relsText)) !== null) {
               const tag = m[0];
               if (tag.includes('/relationships/image')) {
+                const idM = tag.match(/Id="([^"]+)"/i);
                 const targetM = tag.match(/Target="([^"]+)"/i);
-                if (targetM) {
+                if (idM && targetM) {
                   let imgPath = targetM[1].replace(/^\.\.\//, 'ppt/');
                   if (!imgPath.startsWith('ppt/')) imgPath = 'ppt/' + imgPath;
                   const imgZipFile = zip.file(imgPath);
                   if (imgZipFile) {
                     const imgBlob = await imgZipFile.async('blob');
                     const imgUrl = URL.createObjectURL(imgBlob);
-                    imgUrls.push(imgUrl);
+                    imgMap[idM[1]] = imgUrl;
                   }
                 }
               }
             }
-            return imgUrls;
+            return imgMap;
           } catch (e) {
-            return [];
+            return {};
           }
+        }
+
+        // Helper: Extract slide elements with exact coordinate percentages
+        function extractSlideElements(xmlText, imgMap, sW, sH) {
+          const elements = [];
+
+          function parseCoords(fragment) {
+            const offM = fragment.match(/<(?:\w+:)?off\s+[^>]*?x="(\d+)"\s+y="(\d+)"/i) ||
+                         fragment.match(/<(?:\w+:)?off\s+[^>]*?y="(\d+)"\s+x="(\d+)"/i);
+            const extM = fragment.match(/<(?:\w+:)?ext\s+[^>]*?cx="(\d+)"\s+cy="(\d+)"/i) ||
+                         fragment.match(/<(?:\w+:)?ext\s+[^>]*?cy="(\d+)"\s+cx="(\d+)"/i);
+            if (!offM || !extM) return null;
+            const x = parseInt(offM[1], 10) || 0;
+            const y = parseInt(offM[2], 10) || 0;
+            const cx = parseInt(extM[1], 10) || 0;
+            const cy = parseInt(extM[2], 10) || 0;
+            return {
+              left: Math.max(0, Math.min(100, Number(((x / sW) * 100).toFixed(2)))),
+              top: Math.max(0, Math.min(100, Number(((y / sH) * 100).toFixed(2)))),
+              width: Math.max(5, Math.min(100, Number(((cx / sW) * 100).toFixed(2)))),
+              height: Math.max(5, Math.min(100, Number(((cy / sH) * 100).toFixed(2))))
+            };
+          }
+
+          // 1. Shapes with text (titles, body text boxes)
+          const spRegex = /<(?:\w+:)?sp(?:[\s>][\s\S]*?<\/(?:\w+:)?sp>)/gi;
+          let spMatch;
+          while ((spMatch = spRegex.exec(xmlText)) !== null) {
+            const spXml = spMatch[0];
+            const coords = parseCoords(spXml);
+            const isTitle = /type="(?:title|ctrTitle)"/i.test(spXml);
+            const paragraphs = extractSlideParagraphs(spXml);
+
+            if (paragraphs.length > 0) {
+              elements.push({
+                type: 'text',
+                isTitle,
+                left: coords ? coords.left : (isTitle ? 5.6 : 5.6),
+                top: coords ? coords.top : (isTitle ? 6.5 : 26),
+                width: coords ? coords.width : (isTitle ? 88.8 : 46),
+                height: coords ? coords.height : (isTitle ? 16 : 65),
+                hasCoords: Boolean(coords),
+                paragraphs
+              });
+            }
+          }
+
+          // 2. Embedded pictures
+          const picRegex = /<(?:\w+:)?pic(?:[\s>][\s\S]*?<\/(?:\w+:)?pic>)/gi;
+          let picMatch;
+          while ((picMatch = picRegex.exec(xmlText)) !== null) {
+            const picXml = picMatch[0];
+            const coords = parseCoords(picXml);
+            const blipM = picXml.match(/<(?:\w+:)?blip\s+[^>]*?embed="([^"]+)"/i) ||
+                          picXml.match(/r:embed="([^"]+)"/i);
+            const embedId = blipM ? blipM[1] : '';
+            const imgUrl = (imgMap && imgMap[embedId]) ? imgMap[embedId] : (Object.values(imgMap || {})[0] || '');
+
+            if (imgUrl) {
+              elements.push({
+                type: 'picture',
+                imgUrl,
+                embedId,
+                left: coords ? coords.left : 53,
+                top: coords ? coords.top : 26,
+                width: coords ? coords.width : 42,
+                height: coords ? coords.height : 65,
+                hasCoords: Boolean(coords)
+              });
+            }
+          }
+
+          return elements;
         }
 
         const slidesData = [];
@@ -1492,7 +1583,9 @@
             try {
               const xmlText = await sFile.async('text');
               const paragraphs = extractSlideParagraphs(xmlText);
-              const images = await extractSlideImages(slideNum);
+              const imgMap = await extractSlideImageMap(slideNum);
+              const images = Object.values(imgMap);
+              const elements = extractSlideElements(xmlText, imgMap, slideW, slideH);
 
               let slideTitle = paragraphs[0]?.text || `Slide ${slideNum}`;
               let slidePoints = paragraphs.slice(1);
@@ -1507,6 +1600,8 @@
                 title: slideTitle,
                 points: slidePoints,
                 images: images,
+                elements: elements,
+                aspectRatio: slideAspectRatio,
                 thumbnailUrl: (slideNum === 1 && coverThumbUrl) ? coverThumbUrl : null
               });
             } catch (slideErr) {
@@ -2121,6 +2216,7 @@
     const totalSlides = activeDocPreview.numPages || slides.length || 1;
     slideNum = Math.max(1, Math.min(slideNum, totalSlides));
     activeDocPreview.currentPage = slideNum;
+    activeDocPreview.pptxViewMode = activeDocPreview.pptxViewMode || 'canvas';
 
     updatePageNavControls(slideNum, totalSlides);
 
@@ -2132,79 +2228,151 @@
       slideIndex: slideNum,
       title: `Slide ${slideNum}`,
       points: [],
-      images: []
+      images: [],
+      elements: []
     };
 
     contentArea.innerHTML = '';
     const slideCard = document.createElement('div');
     slideCard.className = 'insp-slide-canvas-card';
 
-    // Slide header
+    // Slide header with View Mode Switcher
     const headerHtml = `
       <div class="insp-slide-card-header">
         <div class="insp-slide-badge-wrap">
           <span class="insp-slide-badge">📊 PPTX</span>
           <span class="insp-slide-num-pill">Slide ${slideNum} / ${totalSlides}</span>
         </div>
-        <span class="insp-slide-kicker">PRESENTATION VIEW</span>
+        <div class="insp-slide-mode-toggle" role="group" aria-label="Slide View Mode">
+          <button type="button" class="insp-slide-mode-btn ${activeDocPreview.pptxViewMode === 'canvas' ? 'active' : ''}" data-view="canvas" title="Actual Slide Layout">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <span>Slide</span>
+          </button>
+          <button type="button" class="insp-slide-mode-btn ${activeDocPreview.pptxViewMode === 'outline' ? 'active' : ''}" data-view="outline" title="Outline / Document View">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <span>Outline</span>
+          </button>
+        </div>
       </div>
     `;
 
-    // Cover Thumbnail (if on Slide 1 and thumbnail is available)
-    let coverThumbHtml = '';
-    if (slideNum === 1 && currentSlide.thumbnailUrl) {
-      coverThumbHtml = `
-        <div class="insp-slide-cover-wrap">
-          <img class="insp-slide-cover-img" src="${currentSlide.thumbnailUrl}" alt="${escapeHtml(currentSlide.title)}" />
+    // Slide Stage or Outline View
+    let bodyHtml = '';
+    const hasElements = Array.isArray(currentSlide.elements) && currentSlide.elements.length > 0;
+
+    if (activeDocPreview.pptxViewMode === 'canvas' && hasElements) {
+      const aspectRatio = currentSlide.aspectRatio || '1.7778';
+      
+      const elementsHtml = currentSlide.elements.map((el, elIdx) => {
+        if (el.type === 'text') {
+          if (el.isTitle) {
+            const tText = el.paragraphs.map(p => p.text).join(' ').replace(/<[^>]+>/g, '').trim();
+            return `
+              <div class="insp-slide-pos-box is-title" style="left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;">
+                <h2 class="insp-stage-title">${escapeHtml(tText)}</h2>
+              </div>
+            `;
+          } else {
+            const items = el.paragraphs.map(pt => {
+              const text = (pt.text || '').replace(/<[^>]+>/g, '').trim();
+              if (!text) return '';
+              const lvl = pt.lvl || 0;
+              const indentClass = lvl > 0 ? ` lvl-${Math.min(lvl, 3)}` : ' lvl-0';
+              return `<li class="insp-slide-point-item${indentClass}">${escapeHtml(text)}</li>`;
+            }).filter(Boolean).join('');
+            return `
+              <div class="insp-slide-pos-box is-text" style="left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;">
+                <ul class="insp-stage-list">${items}</ul>
+              </div>
+            `;
+          }
+        } else if (el.type === 'picture' && el.imgUrl) {
+          return `
+            <div class="insp-slide-pos-box is-pic" style="left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;">
+              <img class="insp-stage-img" src="${el.imgUrl}" alt="Slide figure ${elIdx + 1}" title="Click to view full image" />
+            </div>
+          `;
+        }
+        return '';
+      }).join('');
+
+      bodyHtml = `
+        <div class="insp-slide-stage-wrap">
+          <div class="insp-slide-stage" style="aspect-ratio: ${aspectRatio};">
+            ${elementsHtml}
+          </div>
         </div>
       `;
-    }
+    } else {
+      // Outline / Reader view (Clean vertical document list)
+      let coverThumbHtml = '';
+      if (slideNum === 1 && currentSlide.thumbnailUrl) {
+        coverThumbHtml = `
+          <div class="insp-slide-cover-wrap">
+            <img class="insp-slide-cover-img" src="${currentSlide.thumbnailUrl}" alt="${escapeHtml(currentSlide.title)}" />
+          </div>
+        `;
+      }
 
-    // Slide Title
-    const rawCleanTitle = (currentSlide.title || `Slide ${slideNum}`).replace(/<[^>]+>/g, '').trim();
-    const titleHtml = `<h3 class="insp-slide-card-title">${escapeHtml(rawCleanTitle || `Slide ${slideNum}`)}</h3>`;
+      const rawCleanTitle = (currentSlide.title || `Slide ${slideNum}`).replace(/<[^>]+>/g, '').trim();
+      const titleHtml = `<h3 class="insp-slide-card-title">${escapeHtml(rawCleanTitle || `Slide ${slideNum}`)}</h3>`;
 
-    // Slide Bullet Points
-    let pointsHtml = '';
-    if (Array.isArray(currentSlide.points) && currentSlide.points.length > 0) {
-      const itemsHtml = currentSlide.points.map(pt => {
-        const rawText = typeof pt === 'object' ? pt.text : pt;
-        const text = (typeof rawText === 'string' ? rawText : '').replace(/<[^>]+>/g, '').trim();
-        if (!text) return '';
-        const lvl = typeof pt === 'object' ? (pt.lvl || 0) : 0;
-        const indentClass = lvl > 0 ? ` lvl-${Math.min(lvl, 3)}` : '';
-        return `<li class="insp-slide-point-item${indentClass}">${escapeHtml(text)}</li>`;
-      }).filter(Boolean).join('');
-      pointsHtml = `<ul class="insp-slide-card-list">${itemsHtml}</ul>`;
-    } else if (!coverThumbHtml && (!currentSlide.images || currentSlide.images.length === 0)) {
-      pointsHtml = `<div class="insp-slide-empty-desc">No bullet text on this slide. Click Full Reader to download or open original presentation.</div>`;
-    }
+      let pointsHtml = '';
+      if (Array.isArray(currentSlide.points) && currentSlide.points.length > 0) {
+        const itemsHtml = currentSlide.points.map(pt => {
+          const rawText = typeof pt === 'object' ? pt.text : pt;
+          const text = (typeof rawText === 'string' ? rawText : '').replace(/<[^>]+>/g, '').trim();
+          if (!text) return '';
+          const lvl = typeof pt === 'object' ? (pt.lvl || 0) : 0;
+          const indentClass = lvl > 0 ? ` lvl-${Math.min(lvl, 3)}` : '';
+          return `<li class="insp-slide-point-item${indentClass}">${escapeHtml(text)}</li>`;
+        }).filter(Boolean).join('');
+        pointsHtml = `<ul class="insp-slide-card-list">${itemsHtml}</ul>`;
+      } else if (!coverThumbHtml && (!currentSlide.images || currentSlide.images.length === 0)) {
+        pointsHtml = `<div class="insp-slide-empty-desc">No bullet text on this slide. Click Full Reader to download or open original presentation.</div>`;
+      }
 
-    // Slide Embedded Images / Diagrams
-    let imagesHtml = '';
-    if (Array.isArray(currentSlide.images) && currentSlide.images.length > 0) {
-      const imgTags = currentSlide.images.map((imgSrc, idx) => `
-        <div class="insp-slide-img-item" title="Click to view full image">
-          <img src="${imgSrc}" alt="Slide ${slideNum} figure ${idx + 1}" loading="lazy" />
-        </div>
-      `).join('');
-      imagesHtml = `<div class="insp-slide-img-gallery">${imgTags}</div>`;
+      let imagesHtml = '';
+      if (Array.isArray(currentSlide.images) && currentSlide.images.length > 0) {
+        const imgTags = currentSlide.images.map((imgSrc, idx) => `
+          <div class="insp-slide-img-item" title="Click to view full image">
+            <img src="${imgSrc}" alt="Slide ${slideNum} figure ${idx + 1}" loading="lazy" />
+          </div>
+        `).join('');
+        imagesHtml = `<div class="insp-slide-img-gallery">${imgTags}</div>`;
+      }
+
+      bodyHtml = `
+        ${coverThumbHtml}
+        ${titleHtml}
+        ${pointsHtml}
+        ${imagesHtml}
+      `;
     }
 
     slideCard.innerHTML = `
       ${headerHtml}
-      ${coverThumbHtml}
-      ${titleHtml}
-      ${pointsHtml}
-      ${imagesHtml}
+      ${bodyHtml}
       <div class="insp-slide-card-footer">
         <span>SPeCTRUM PRO Slide Reader</span>
         <span>${escapeHtml(activeDocPreview.file?.title || '')}</span>
       </div>
     `;
 
+    // View Mode Toggle Button Listeners
+    slideCard.querySelectorAll('.insp-slide-mode-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const mode = btn.dataset.view;
+        if (mode && activeDocPreview.pptxViewMode !== mode) {
+          activeDocPreview.pptxViewMode = mode;
+          renderPptxSlidePage(slideNum);
+        }
+      };
+    });
+
     slideCard.onclick = (e) => {
-      if (e.target.closest('.insp-page-nav-bar') || e.target.closest('.insp-side-nav-btn')) return;
+      if (e.target.closest('.insp-page-nav-bar') || e.target.closest('.insp-side-nav-btn') || e.target.closest('.insp-slide-mode-toggle')) return;
       if (e.target.tagName === 'IMG' && e.target.src) {
         window.open(e.target.src, '_blank');
         return;
