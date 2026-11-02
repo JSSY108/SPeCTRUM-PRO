@@ -3,18 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SPeCTRUM PRO — ChristopherVR OOXML PowerPoint Viewer (Test Lab)</title>
+  <title>SPeCTRUM PRO — ChristopherVR OOXML PowerPoint Viewer (View Mode)</title>
 
-  <!-- ChristopherVR OOXML Stylesheet (with fallback for popup directory) -->
-  <link rel="stylesheet" href="spectrum_extension/libs/pptx-vanilla-viewer.styles.css" onerror="this.onerror=null;this.href='../libs/pptx-vanilla-viewer.styles.css';">
+  <!-- ChristopherVR OOXML Stylesheet -->
+  <link rel="stylesheet" href="../libs/pptx-vanilla-viewer.styles.css">
   
   <!-- ChristopherVR OOXML Vanilla Viewer Bundle -->
-  <script src="spectrum_extension/libs/pptx-vanilla-viewer.bundle.js"></script>
-  <script>
-    if (typeof pptxVanillaBundle === 'undefined' && typeof createPptxViewer === 'undefined') {
-      document.write('<script src="../libs/pptx-vanilla-viewer.bundle.js"><\/script>');
-    }
-  </script>
+  <script src="../libs/pptx-vanilla-viewer.bundle.js"></script>
 
   <style>
     :root {
@@ -139,14 +134,14 @@
     }
 
     .doc-name {
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 500;
       color: var(--text-secondary);
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       padding: 3px 8px;
       border-radius: 5px;
-      max-width: 260px;
+      max-width: 220px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -156,6 +151,13 @@
       display: flex;
       align-items: center;
       gap: 8px;
+    }
+
+    .toolbar-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border-medium);
+      margin: 0 2px;
     }
 
     .btn {
@@ -198,15 +200,79 @@
     }
 
     .btn-sm {
-      height: 26px;
+      height: 28px;
       padding: 0 8px;
-      font-size: 11px;
+      font-size: 11.5px;
     }
 
     .btn-toggle-active {
       background: rgba(56, 189, 248, 0.15);
       border-color: var(--accent-blue);
       color: var(--accent-blue);
+    }
+
+    /* Slide Navigation Cluster */
+    .nav-cluster {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-medium);
+      border-radius: 6px;
+      padding: 2px 4px;
+    }
+
+    .nav-cluster .btn {
+      height: 26px;
+      padding: 0 7px;
+      border: none;
+      background: transparent;
+      border-radius: 4px;
+    }
+
+    .nav-cluster .btn:hover:not(:disabled) {
+      background: var(--bg-card-hover);
+    }
+
+    .slide-counter {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      padding: 0 4px;
+      user-select: none;
+    }
+
+    .slide-input {
+      width: 36px;
+      height: 22px;
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .slide-input:focus {
+      border-color: var(--accent-orange);
+    }
+
+    .slide-input:disabled {
+      opacity: 0.5;
+    }
+
+    .slide-input::-webkit-inner-spin-button, 
+    .slide-input::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
     }
 
     /* Main Viewer Container */
@@ -332,6 +398,48 @@
     .log-warn { color: #fbbf24; }
     .log-error { color: #f87171; }
     .log-success { color: #34d399; }
+
+    /* =====================================================================
+       PURE VIEW MODE ENFORCEMENT: Suppress all edit panels, inspector,
+       ribbons, formatting bars, read-only nag banners, and gizmos
+       ===================================================================== */
+    .pptxv-inspector,
+    .pptxv-format-toolbar,
+    .pptxv-ribbon,
+    .pptxv-qat-row,
+    .pptxv-titlebar,
+    .pptxv-read-only-banner,
+    .pptxv-enable-editing-banner,
+    .pptxv-selection-pane,
+    .pptxv-find-replace,
+    .pptxv-accessibility-pane,
+    .pptxv-compare-pane,
+    .pptxv-handle,
+    .pptxv-resizer,
+    .pptxv-rotator,
+    .pptxv-selection-box,
+    .pptxv-selection-overlay {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
+    /* Thumbnail rail collapse state */
+    .pptxv-thumbs.is-hidden {
+      display: none !important;
+    }
+
+    /* Slide canvas fills available reading space */
+    .pptxv-viewport {
+      flex: 1;
+      min-width: 0;
+      height: 100%;
+      position: relative;
+      overflow: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 <body>
@@ -340,7 +448,7 @@
   <header class="app-header">
     <div class="header-left">
       <div class="badge-brand">ChristopherVR OOXML</div>
-      <div class="app-title">PowerPoint Test Lab</div>
+      <div class="app-title">PowerPoint Viewer</div>
       <div id="lib-status" class="badge-status">Detecting Engine...</div>
       <div id="doc-title" class="doc-name" style="display: none;">No File Loaded</div>
     </div>
@@ -356,26 +464,60 @@
         <span>🌐</span> Open URL
       </button>
 
-      <button class="btn" id="btn-toggle-edit" title="Toggle Editable Mode">
-        <span>✏️</span> <span id="label-edit">Edit Mode: OFF</span>
+      <div class="toolbar-divider"></div>
+
+      <!-- Slide Navigation Cluster -->
+      <div class="nav-cluster">
+        <button class="btn" id="btn-prev" title="Previous Slide (← / PageUp)" disabled>
+          <span>◀</span>
+        </button>
+
+        <div class="slide-counter">
+          <input type="number" id="input-slide" class="slide-input" min="1" value="1" disabled title="Jump to Slide">
+          <span id="total-slides" style="color: var(--text-muted); font-weight: 500;">/ --</span>
+        </div>
+
+        <button class="btn" id="btn-next" title="Next Slide (→ / PageDown / Space)" disabled>
+          <span>▶</span>
+        </button>
+      </div>
+
+      <!-- Thumbnails Toggle -->
+      <button class="btn btn-sm btn-toggle-active" id="btn-thumbnails" title="Toggle Slide Thumbnails Sidebar" disabled>
+        <span>🖼️</span> Thumbnails
       </button>
 
-      <button class="btn" id="btn-present" title="Start Fullscreen Presentation Mode (F5)">
+      <div class="toolbar-divider"></div>
+
+      <!-- Zoom & Stage Controls -->
+      <div class="nav-cluster">
+        <button class="btn" id="btn-zoom-fit" title="Zoom to Fit Screen" disabled>
+          Fit
+        </button>
+        <button class="btn" id="btn-zoom-in" title="Zoom In (+)" disabled>
+          ＋
+        </button>
+        <button class="btn" id="btn-zoom-out" title="Zoom Out (-)" disabled>
+          －
+        </button>
+      </div>
+
+      <!-- Fullscreen Presentation Mode -->
+      <button class="btn" id="btn-present" title="Start Fullscreen Slideshow (F5)" disabled>
         <span>🖥️</span> Present
       </button>
 
-      <button class="btn btn-sm" id="btn-zoom-fit" title="Zoom to Fit">
-        Fit
-      </button>
-
-      <button class="btn btn-sm" id="btn-download" title="Save / Download .pptx file">
+      <!-- Download File -->
+      <button class="btn btn-sm" id="btn-download" title="Save / Download .pptx file" disabled>
         <span>💾</span> Save
       </button>
 
+      <!-- Theme Switcher -->
       <button class="btn btn-sm" id="btn-theme" title="Toggle Light / Dark Theme">
         <span>🌓</span>
       </button>
 
+      <!-- Toggle Logs -->
       <button class="btn btn-sm" id="btn-toggle-logs" title="Toggle Diagnostic Logs">
         <span>📜</span> Logs
       </button>
@@ -392,8 +534,8 @@
         <div class="dropzone-icon">📑</div>
         <div class="dropzone-title">Drop your PowerPoint presentation (.pptx) here</div>
         <div class="dropzone-desc">
-          Testing <strong>ChristopherVR/ooxml</strong> (<code>viewers/pptx</code> v3.61.0).<br>
-          Supports full slide layouts, master inheritance, animations, shapes, tables, charts & rich text.
+          Powered by <strong>ChristopherVR/ooxml</strong> (<code>viewers/pptx</code> v3.61.0).<br>
+          Pure read-only viewing mode: High-fidelity layout, animations, master inheritance, vector shapes & fonts.
         </div>
         <button class="btn btn-primary" id="btn-overlay-browse">
           <span>📁</span> Choose PowerPoint File
@@ -405,17 +547,17 @@
     </div>
 
     <!-- Diagnostic Terminal Console Drawer -->
-    <div class="terminal-console" id="terminal-console">
+    <div class="terminal-console collapsed" id="terminal-console">
       <div class="terminal-header">
         <span>OOXML Engine Diagnostics & Events</span>
         <div style="display: flex; gap: 8px;">
           <button class="btn btn-sm" id="btn-copy-logs">Copy Logs</button>
-          <button class="btn btn-sm" id="btn-clear-logs">Clear</button>
+          <button class="btn btn-clear-logs" id="btn-clear-logs" style="display:none"></button>
           <button class="btn btn-sm" id="btn-close-logs">✕</button>
         </div>
       </div>
       <div class="terminal-logs" id="terminal-logs">
-        <div class="log-entry log-info">[System] ChristopherVR OOXML PowerPoint Test Lab Initialized.</div>
+        <div class="log-entry log-info">[System] ChristopherVR OOXML PowerPoint Viewer Initialized in Pure View Mode.</div>
       </div>
     </div>
   </div>
@@ -460,16 +602,17 @@
         libStatusEl.className = 'badge-status error';
         log('Error: Failed to find createPptxViewer in bundle. Verify bundle path.', 'error');
       } else {
-        libStatusEl.textContent = '● ChristopherVR OOXML v3.61.0 Ready';
-        log('ChristopherVR OOXML PowerPoint Viewer factory successfully loaded.', 'success');
+        libStatusEl.textContent = '● ChristopherVR OOXML v3.61.0 (View Mode)';
+        log('ChristopherVR OOXML PowerPoint Viewer factory successfully loaded in Pure View Mode.', 'success');
       }
 
       // 3. State Management
       let viewer = null;
-      let isEditable = false;
       let isDarkTheme = true;
       let currentSource = null;
       let currentFilename = 'Presentation.pptx';
+      let totalSlides = 0;
+      let currentSlideIndex = 0;
 
       const hostEl = document.getElementById('ooxml-viewer-host');
       const dropzoneOverlay = document.getElementById('dropzone-overlay');
@@ -479,17 +622,52 @@
       const btnBrowse = document.getElementById('btn-browse');
       const btnOverlayBrowse = document.getElementById('btn-overlay-browse');
       const btnUrl = document.getElementById('btn-url');
-      const btnToggleEdit = document.getElementById('btn-toggle-edit');
-      const labelEdit = document.getElementById('label-edit');
+      const btnPrev = document.getElementById('btn-prev');
+      const btnNext = document.getElementById('btn-next');
+      const inputSlide = document.getElementById('input-slide');
+      const totalSlidesEl = document.getElementById('total-slides');
+      const btnThumbnails = document.getElementById('btn-thumbnails');
       const btnPresent = document.getElementById('btn-present');
       const btnZoomFit = document.getElementById('btn-zoom-fit');
+      const btnZoomIn = document.getElementById('btn-zoom-in');
+      const btnZoomOut = document.getElementById('btn-zoom-out');
       const btnDownload = document.getElementById('btn-download');
       const btnTheme = document.getElementById('btn-theme');
       const btnToggleLogs = document.getElementById('btn-toggle-logs');
       const btnCloseLogs = document.getElementById('btn-close-logs');
       const terminalConsole = document.getElementById('terminal-console');
 
-      // 4. Load Presentation into Viewer
+      // 4. Update Navigation Controls UI
+      function updateNavigationUI() {
+        if (totalSlides > 0) {
+          inputSlide.value = currentSlideIndex + 1;
+          inputSlide.max = totalSlides;
+          inputSlide.disabled = false;
+          totalSlidesEl.textContent = `/ ${totalSlides}`;
+          btnPrev.disabled = currentSlideIndex <= 0;
+          btnNext.disabled = currentSlideIndex >= totalSlides - 1;
+          btnPresent.disabled = false;
+          btnZoomFit.disabled = false;
+          btnZoomIn.disabled = false;
+          btnZoomOut.disabled = false;
+          btnThumbnails.disabled = false;
+          btnDownload.disabled = false;
+        } else {
+          inputSlide.value = '';
+          inputSlide.disabled = true;
+          totalSlidesEl.textContent = '/ --';
+          btnPrev.disabled = true;
+          btnNext.disabled = true;
+          btnPresent.disabled = true;
+          btnZoomFit.disabled = true;
+          btnZoomIn.disabled = true;
+          btnZoomOut.disabled = true;
+          btnThumbnails.disabled = true;
+          btnDownload.disabled = true;
+        }
+      }
+
+      // 5. Load Presentation into Viewer (Strict View-Only Configuration)
       async function openPresentation(source, filename = 'Presentation.pptx') {
         if (!createViewerFn) {
           alert('Cannot load presentation: ChristopherVR OOXML engine is not loaded.');
@@ -512,22 +690,53 @@
           }
           hostEl.innerHTML = '';
 
-          // Initialize ChristopherVR OOXML viewer instance
+          // Initialize ChristopherVR OOXML viewer instance in pure view mode
           viewer = createViewerFn(hostEl, {
             source: source,
             locale: 'en',
-            editable: isEditable,
-            showToolbar: true,
-            showThumbnails: true,
+            editable: false,                // Disables element selection, movement, resize, rotation
+            readOnly: true,                 // Enforces read-only mode across engine
+            showToolbar: false,             // Suppresses all edit ribbon tabs (Home, Insert, Draw, Design, etc.)
+            showThumbnails: true,           // Slide thumbnails rail on the left
+            showInspector: false,           // Completely removes property inspector panel
+            showFormatToolbar: false,       // Suppresses formatting toolbar
+            showCompatibilityToasts: false, // Suppresses toast warning popups
+            customization: {
+              hiddenPanels: [
+                'inspector',
+                'selectionPane',
+                'findReplace',
+                'accessibilityPane',
+                'comparePane',
+                'notes',
+                'quickAccessToolbar',
+                'titleBar'
+              ],
+              disabledFeatures: ['ai', 'collaboration', 'comments', 'editPoints'],
+              capabilities: {
+                edit: false,
+                comment: false
+              }
+            },
             fitPadding: 16,
             theme: isDarkTheme ? (window.pptxVanillaBundle?.vermilionDarkTheme || { colors: { primary: '#fb923c' } }) 
                                : (window.pptxVanillaBundle?.vermilionLightTheme || { colors: { primary: '#0284c7' } }),
             onLoad: ({ slideCount }) => {
               const elapsed = (performance.now() - t0).toFixed(0);
               log(`Presentation successfully loaded in ${elapsed}ms! Total slides: ${slideCount}`, 'success');
+              totalSlides = slideCount;
+              currentSlideIndex = 0;
+              updateNavigationUI();
+
+              // Auto-fit presentation to screen width on load
+              setTimeout(() => {
+                try { viewer.zoomToFit?.(); } catch (e) {}
+              }, 120);
             },
             onSlideChange: (idx) => {
+              currentSlideIndex = idx;
               log(`Navigated to Slide #${idx + 1}`, 'info');
+              updateNavigationUI();
             },
             onError: (err) => {
               log(`Viewer reported error: ${err}`, 'error');
@@ -541,7 +750,7 @@
         }
       }
 
-      // 5. User Interaction & Event Listeners
+      // 6. User Interaction & Event Listeners
       btnBrowse.addEventListener('click', () => filePicker.click());
       btnOverlayBrowse.addEventListener('click', () => filePicker.click());
 
@@ -576,7 +785,70 @@
         }
       });
 
-      // Presentation Mode
+      // Slide Navigation
+      btnPrev.addEventListener('click', () => {
+        if (viewer) viewer.prev();
+      });
+
+      btnNext.addEventListener('click', () => {
+        if (viewer) viewer.next();
+      });
+
+      inputSlide.addEventListener('change', () => {
+        if (!viewer || totalSlides <= 0) return;
+        let target = parseInt(inputSlide.value, 10);
+        if (isNaN(target)) target = 1;
+        target = Math.max(1, Math.min(totalSlides, target));
+        viewer.goToSlide(target - 1);
+      });
+
+      inputSlide.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          inputSlide.blur();
+        }
+      });
+
+      // Toggle Thumbnails Sidebar
+      btnThumbnails.addEventListener('click', () => {
+        const thumbsEl = hostEl.querySelector('.pptxv-thumbs');
+        if (thumbsEl) {
+          thumbsEl.classList.toggle('is-hidden');
+          const isHidden = thumbsEl.classList.contains('is-hidden');
+          btnThumbnails.classList.toggle('btn-toggle-active', !isHidden);
+          log(`Slide Thumbnails: ${isHidden ? 'Hidden (Full Width)' : 'Visible'}`, 'info');
+          setTimeout(() => {
+            try { viewer.zoomToFit?.(); } catch (e) {}
+          }, 80);
+        }
+      });
+
+      // Zoom Controls
+      btnZoomFit.addEventListener('click', () => {
+        if (viewer) {
+          try {
+            if (viewer.zoomToFit) viewer.zoomToFit();
+            else if (viewer.setZoom) viewer.setZoom('fit');
+          } catch (e) {}
+        }
+      });
+
+      btnZoomIn.addEventListener('click', () => {
+        if (viewer) {
+          try {
+            if (viewer.zoomIn) viewer.zoomIn();
+          } catch (e) {}
+        }
+      });
+
+      btnZoomOut.addEventListener('click', () => {
+        if (viewer) {
+          try {
+            if (viewer.zoomOut) viewer.zoomOut();
+          } catch (e) {}
+        }
+      });
+
+      // Fullscreen Presentation Mode (F5)
       btnPresent.addEventListener('click', async () => {
         if (!viewer) return;
         try {
@@ -589,23 +861,32 @@
         }
       });
 
-      // Zoom to Fit
-      btnZoomFit.addEventListener('click', () => {
-        if (!viewer) return;
-        try {
-          if (viewer.zoomToFit) viewer.zoomToFit();
-          else if (viewer.setZoom) viewer.setZoom('fit');
-        } catch (e) {}
+      // Keyboard Navigation Shortcuts
+      window.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+          e.preventDefault();
+          if (viewer) viewer.prev();
+        } else if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+          e.preventDefault();
+          if (viewer) viewer.next();
+        } else if (e.key === 'Home') {
+          e.preventDefault();
+          if (viewer) viewer.goToSlide(0);
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          if (viewer && totalSlides > 0) viewer.goToSlide(totalSlides - 1);
+        } else if (e.key === 'F5') {
+          e.preventDefault();
+          if (viewer) viewer.enterPresentation?.();
+        }
       });
 
-      // Toggle Edit Mode
-      btnToggleEdit.addEventListener('click', () => {
-        isEditable = !isEditable;
-        labelEdit.textContent = isEditable ? 'Edit Mode: ON' : 'Edit Mode: OFF';
-        btnToggleEdit.classList.toggle('btn-toggle-active', isEditable);
-        log(`Toggled edit mode: ${isEditable ? 'ON (WYSIWYG Editable)' : 'OFF (Reading View)'}`, 'info');
-        if (currentSource) {
-          openPresentation(currentSource, currentFilename);
+      // Window resize auto-fits slide
+      window.addEventListener('resize', () => {
+        if (viewer && totalSlides > 0) {
+          try { viewer.zoomToFit?.(); } catch (e) {}
         }
       });
 
@@ -614,7 +895,7 @@
         if (!viewer) return;
         try {
           if (viewer.downloadPptx) {
-            await viewer.downloadPptx(currentFilename.replace('.pptx', '_exported.pptx'));
+            await viewer.downloadPptx(currentFilename);
             log('Downloaded presentation file.', 'success');
           } else if (viewer.save) {
             const bytes = await viewer.save();
@@ -622,7 +903,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = currentFilename.replace('.pptx', '_exported.pptx');
+            a.download = currentFilename;
             a.click();
             URL.revokeObjectURL(url);
             log('Downloaded presentation file.', 'success');
@@ -664,10 +945,6 @@
         navigator.clipboard.writeText(text).then(() => {
           alert('Diagnostic logs copied to clipboard!');
         });
-      });
-      document.getElementById('btn-clear-logs').addEventListener('click', () => {
-        logsEl.innerHTML = '';
-        log('Diagnostic log cleared.', 'info');
       });
 
     })();
