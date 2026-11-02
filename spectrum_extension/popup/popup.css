@@ -3258,30 +3258,30 @@ body.mode-preferences #fulltab-week-pill {
   stroke: #ffffff !important;
 }
 
-/* Language Switcher Pill (En, BM, 中) */
+/* Language Switcher Pill (En, BM, 中) - 1.25x Enlarge Scale */
 .rail-lang-switcher {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   background: var(--bg-surface);
   border: 1px solid var(--border-hairline);
   border-radius: 9999px;
-  padding: 4px 3px;
+  padding: 5px 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   margin: 6px 0;
-  width: 34px;
+  width: 42px;
 }
 
 .rail-lang-btn {
-  width: 28px;
-  height: 22px;
+  width: 35px;
+  height: 28px;
   border-radius: 9999px;
   border: none;
   background: transparent;
   color: var(--text-muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12.5px;
   font-weight: 700;
   letter-spacing: 0.3px;
   cursor: pointer;
@@ -3304,26 +3304,26 @@ body.mode-preferences #fulltab-week-pill {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Popup Header Language Switcher */
+/* Popup Header Language Switcher - 1.25x Enlarge Scale */
 .popup-lang-switcher {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   background: var(--bg-surface);
   border: 1px solid var(--border-hairline);
   border-radius: 9999px;
-  padding: 2px 3px;
+  padding: 3px 4px;
 }
 
 .popup-lang-btn {
-  height: 20px;
-  padding: 0 6px;
+  height: 25px;
+  padding: 0 8px;
   border-radius: 9999px;
   border: none;
   background: transparent;
   color: var(--text-muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
   display: flex;
