@@ -1395,8 +1395,34 @@
 
         // Helper: Extract all paragraph lines with nesting level from slide XML
         function extractSlideParagraphs(xmlText) {
-          const pRegex = /<[a-zA-Z0-9:]*p(?:\s+[^>]*)?>([\s\S]*?)<\/[a-zA-Z0-9:]*p>/gi;
-          const tRegex = /<[a-zA-Z0-9:]*t(?:\s+[^>]*)?>([\s\S]*?)<\/[a-zA-Z0-9:]*t>/gi;
+          // 1. Primary: Use DOMParser with getElementsByTagNameNS to extract pure text nodes
+          if (typeof DOMParser !== 'undefined') {
+            try {
+              const parser = new DOMParser();
+              const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
+              const pElements = Array.from(xmlDoc.getElementsByTagNameNS('*', 'p'));
+              if (pElements.length > 0) {
+                const paragraphs = [];
+                for (const p of pElements) {
+                  const tElements = Array.from(p.getElementsByTagNameNS('*', 't'));
+                  const pText = tElements.map(t => t.textContent || '').join('').trim();
+                  if (pText) {
+                    let lvl = 0;
+                    const pPr = p.getElementsByTagNameNS('*', 'pPr')[0];
+                    if (pPr && pPr.hasAttribute('lvl')) {
+                      lvl = parseInt(pPr.getAttribute('lvl') || '0', 10);
+                    }
+                    paragraphs.push({ text: pText, lvl });
+                  }
+                }
+                if (paragraphs.length > 0) return paragraphs;
+              }
+            } catch (domErr) {}
+          }
+
+          // 2. Fallback: Strict Regex (strictly matches <a:p> and <a:t>, never matching <p:sp> or <a:ext>)
+          const pRegex = /<(?:\w+:)?p(?:\s+[^>]*?)?(?<!\/)>([\s\S]*?)<\/(?:\w+:)?p>/gi;
+          const tRegex = /<(?:\w+:)?t(?:\s+[^>]*?)?(?<!\/)>([\s\S]*?)<\/(?:\w+:)?t>/gi;
           const lvlRegex = /lvl="(\d+)"/i;
           const paragraphs = [];
           let pMatch;
@@ -1409,6 +1435,7 @@
               pText += tMatch[1];
             }
             const cleanText = pText
+              .replace(/<[^>]+>/g, '') // Strip any residual tags
               .replace(/&amp;/g, '&')
               .replace(/&lt;/g, '<')
               .replace(/&gt;/g, '>')
@@ -1467,8 +1494,13 @@
               const paragraphs = extractSlideParagraphs(xmlText);
               const images = await extractSlideImages(slideNum);
 
-              const slideTitle = paragraphs[0]?.text || `Slide ${slideNum}`;
-              const slidePoints = paragraphs.slice(1);
+              let slideTitle = paragraphs[0]?.text || `Slide ${slideNum}`;
+              let slidePoints = paragraphs.slice(1);
+              // If slide 1 begins with course code on line 1 and topic on line 2, join them for title
+              if (paragraphs.length >= 2 && /^[A-Z]{2,4}\s*\d{4}/i.test(paragraphs[0].text) && paragraphs[0].text.length <= 15) {
+                slideTitle = paragraphs[0].text + ' · ' + paragraphs[1].text;
+                slidePoints = paragraphs.slice(2);
+              }
 
               slidesData.push({
                 slideIndex: slideNum,
@@ -2129,17 +2161,20 @@
     }
 
     // Slide Title
-    const titleHtml = `<h3 class="insp-slide-card-title">${escapeHtml(currentSlide.title || `Slide ${slideNum}`)}</h3>`;
+    const rawCleanTitle = (currentSlide.title || `Slide ${slideNum}`).replace(/<[^>]+>/g, '').trim();
+    const titleHtml = `<h3 class="insp-slide-card-title">${escapeHtml(rawCleanTitle || `Slide ${slideNum}`)}</h3>`;
 
     // Slide Bullet Points
     let pointsHtml = '';
     if (Array.isArray(currentSlide.points) && currentSlide.points.length > 0) {
       const itemsHtml = currentSlide.points.map(pt => {
-        const text = typeof pt === 'object' ? pt.text : pt;
+        const rawText = typeof pt === 'object' ? pt.text : pt;
+        const text = (typeof rawText === 'string' ? rawText : '').replace(/<[^>]+>/g, '').trim();
+        if (!text) return '';
         const lvl = typeof pt === 'object' ? (pt.lvl || 0) : 0;
         const indentClass = lvl > 0 ? ` lvl-${Math.min(lvl, 3)}` : '';
         return `<li class="insp-slide-point-item${indentClass}">${escapeHtml(text)}</li>`;
-      }).join('');
+      }).filter(Boolean).join('');
       pointsHtml = `<ul class="insp-slide-card-list">${itemsHtml}</ul>`;
     } else if (!coverThumbHtml && (!currentSlide.images || currentSlide.images.length === 0)) {
       pointsHtml = `<div class="insp-slide-empty-desc">No bullet text on this slide. Click Full Reader to download or open original presentation.</div>`;
