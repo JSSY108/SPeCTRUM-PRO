@@ -9402,6 +9402,23 @@ body:not(.is-full-tab) .sync-cinematic-current {
   letter-spacing: 0.2px;
 }
 
+.tt-code-dot {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--tt-font-code, 11.5px);
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+  user-select: none;
+}
+
+.tt-code-acronym {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--tt-font-code, 11.5px);
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 0.2px;
+}
+
 .tt-type-tag {
   font-size: var(--tt-font-type, 10px);
   font-weight: 700;

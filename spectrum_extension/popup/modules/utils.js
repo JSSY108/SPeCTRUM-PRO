@@ -209,7 +209,7 @@
     let clean = (name || '').replace(/^[A-Z]{2,4}\d{4}(?:\/[A-Z]{2,4}\d{4})?\s*[-–:]*\s*/i, '').trim();
     if (!clean) clean = code || '';
     const cleanLower = clean.toLowerCase();
-    if (cleanLower.includes('database')) return 'DS';
+    if (cleanLower.includes('database')) return 'DB';
     if (cleanLower.includes('systems analysis') || cleanLower.includes('sad')) return 'SAD';
     if (cleanLower.includes('mobile')) return 'MAD';
     if (cleanLower.includes('machine learning')) return 'ML';

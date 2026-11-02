@@ -94,6 +94,20 @@
     }
   }
 
+  function getSessionAcronym(courseName, courseCode) {
+    if (typeof generateCourseAcronym === 'function') {
+      return generateCourseAcronym(courseName, courseCode);
+    }
+    if (typeof window !== 'undefined' && typeof window.generateCourseAcronym === 'function') {
+      return window.generateCourseAcronym(courseName, courseCode);
+    }
+    const clean = (courseName || '').replace(/^[A-Z]{2,4}\d{4}(?:\/[A-Z]{2,4}\d{4})?\s*[-–:]*\s*/i, '').trim() || (courseCode || '');
+    const stopWords = new Set(['and', 'or', 'the', 'of', 'to', 'in', 'for', 'with', 'dan', 'pada', 'untuk', '&', '-']);
+    const words = clean.split(/[\s\-_/]+/).filter(w => w.length > 0 && !stopWords.has(w.toLowerCase()));
+    if (words.length >= 2) return words.slice(0, 3).map(w => w[0].toUpperCase()).join('');
+    return (words[0] || courseCode || 'CO').slice(0, 3).toUpperCase();
+  }
+
   function cleanSingleCourseCode(code) {
     if (!code || typeof code !== 'string') return '';
     const trimmed = code.trim();
@@ -641,6 +655,8 @@
 
           const hasVenue = Boolean(s.venue && s.venue.trim().length > 0);
           const venuePlaceholder = getTimetableText('timetable', 'venuePlaceholder', '+ Add Location');
+          const acronym = getSessionAcronym(s.courseName, s.courseCode);
+          const acronymHtml = acronym ? `<span class="tt-code-dot">·</span><span class="tt-code-acronym">${esc(acronym)}</span>` : '';
           const venueHtml = hasVenue
             ? `<span class="tt-venue" title="${esc(s.venue)}">${s.venueIcon || '📍'} ${esc(s.venue)}</span>`
             : `<span class="tt-venue tt-venue-empty" title="${esc(venuePlaceholder)}"><span class="tt-venue-add-icon">📍</span> <span class="tt-venue-placeholder">${esc(venuePlaceholder)}</span></span>`;
@@ -672,6 +688,7 @@
               <div class="tt-card-header">
                 <div class="tt-card-code-badge">
                   <span class="tt-code">${esc(cleanSingleCourseCode(s.courseCode))}</span>
+                  ${acronymHtml}
                   <span class="tt-type-tag">${esc(s.typeLabel)}</span>
                 </div>
                 <span class="tt-time-range">${esc(s.timeStr)}</span>
@@ -878,6 +895,8 @@
           }
 
           const hasVenue = Boolean(s.venue && s.venue.trim().length > 0);
+          const acronym = getSessionAcronym(s.courseName, s.courseCode);
+          const acronymHtml = acronym ? `<span class="tt-code-dot">·</span><span class="tt-code-acronym">${esc(acronym)}</span>` : '';
           const subtitleText = esc(s.occ);
           const venuePlaceholder = getTimetableText('timetable', 'venuePlaceholder', '+ Add Location');
           const venueHtml = hasVenue
@@ -909,7 +928,10 @@
                  title="Click to edit session time or location"
                  style="top: ${topPx}px; height: ${heightPx}px; ${posStyle}">
               <div class="tt-card-header">
-                <span class="tt-code">${esc(cleanSingleCourseCode(s.courseCode))}</span>
+                <div class="tt-card-code-badge">
+                  <span class="tt-code">${esc(cleanSingleCourseCode(s.courseCode))}</span>
+                  ${acronymHtml}
+                </div>
                 <span class="tt-type-tag">${esc(s.typeLabel)}</span>
               </div>
               <div class="tt-card-title" title="${esc(s.courseName)}">${esc(s.courseName)}</div>
@@ -1524,10 +1546,12 @@
           // Card Header: Code + Tag Badge + Time Range
           ctx.fillStyle = '#18181B';
           ctx.font = '800 18px "JetBrains Mono", monospace';
-          ctx.fillText(s.courseCode, cardX + 16, cardY + 26);
+          const sessAcronym = getSessionAcronym(s.courseName, s.courseCode);
+          const displayCodeText = sessAcronym ? `${cleanSingleCourseCode(s.courseCode)} · ${sessAcronym}` : cleanSingleCourseCode(s.courseCode);
+          ctx.fillText(displayCodeText, cardX + 16, cardY + 26);
 
           const tagW = Math.max(44, ctx.measureText(s.typeLabel).width + 16);
-          const codeW = ctx.measureText(s.courseCode).width;
+          const codeW = ctx.measureText(displayCodeText).width;
           const tagX = cardX + 16 + codeW + 10;
           
           ctx.fillStyle = '#F4F4F5';
@@ -1932,9 +1956,11 @@
           // Header: Code + Tag Badge
           ctx.fillStyle = '#18181B';
           ctx.font = '800 19px "JetBrains Mono", monospace';
-          ctx.fillText(s.courseCode, cardX + 16, cardY + 26);
+          const sessAcronym = getSessionAcronym(s.courseName, s.courseCode);
+          const displayCodeText = sessAcronym ? `${cleanSingleCourseCode(s.courseCode)} · ${sessAcronym}` : cleanSingleCourseCode(s.courseCode);
+          ctx.fillText(displayCodeText, cardX + 16, cardY + 26);
 
-          const codeW = ctx.measureText(s.courseCode).width;
+          const codeW = ctx.measureText(displayCodeText).width;
           const tagW = Math.max(46, ctx.measureText(s.typeLabel).width + 16);
           ctx.fillStyle = '#F4F4F5';
           ctx.fillRect(cardX + cardW - tagW - 14, cardY + 11, tagW, 20);
