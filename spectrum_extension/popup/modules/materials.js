@@ -1772,6 +1772,117 @@
 
 
   // --- Multi-Page Document Preview Rendering & Controls ---
+  
+  // Global PDF Panning State
+  let pdfPanX = 0;
+  let pdfPanY = 0;
+
+  function attachPdfPanFeature(wrap, canvas) {
+    if (!wrap || !canvas) return;
+
+    let isPointerDown = false;
+    let startX = 0;
+    let startY = 0;
+    let initialPanX = pdfPanX;
+    let initialPanY = pdfPanY;
+    let hasMoved = false;
+
+    const updateTransform = (x, y) => {
+      canvas.style.transform = `translate(${x}px, ${y}px)`;
+    };
+    updateTransform(pdfPanX, pdfPanY);
+
+    const onPointerDown = (e) => {
+      if (e.button !== 0 && e.pointerType === 'mouse') return;
+      if (e.target.closest('.insp-page-nav-bar') || e.target.closest('.insp-side-nav-btn')) return;
+
+      isPointerDown = true;
+      hasMoved = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      initialPanX = pdfPanX;
+      initialPanY = pdfPanY;
+
+      wrap.classList.add('is-panning');
+      canvas.classList.add('is-panning');
+
+      try {
+        wrap.setPointerCapture(e.pointerId);
+      } catch (err) {}
+    };
+
+    const onPointerMove = (e) => {
+      if (!isPointerDown) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      if (!hasMoved && (Math.abs(dx) > 2 || Math.abs(dy) > 2)) {
+        hasMoved = true;
+      }
+
+      if (hasMoved) {
+        pdfPanX = initialPanX + dx;
+        pdfPanY = initialPanY + dy;
+        updateTransform(pdfPanX, pdfPanY);
+      }
+    };
+
+    const onPointerUp = (e) => {
+      if (!isPointerDown) return;
+      isPointerDown = false;
+
+      wrap.classList.remove('is-panning');
+      canvas.classList.remove('is-panning');
+
+      try {
+        wrap.releasePointerCapture(e.pointerId);
+      } catch (err) {}
+    };
+
+    wrap.addEventListener('pointerdown', onPointerDown);
+    wrap.addEventListener('pointermove', onPointerMove);
+    wrap.addEventListener('pointerup', onPointerUp);
+    wrap.addEventListener('pointercancel', onPointerUp);
+
+    // Prevent native image drag
+    canvas.addEventListener('dragstart', (e) => e.preventDefault());
+
+    // Mouse wheel pan (trackpad scroll & wheel)
+    wrap.addEventListener('wheel', (e) => {
+      if (e.ctrlKey || e.metaKey) return;
+      e.preventDefault();
+      pdfPanX -= e.deltaX;
+      pdfPanY -= e.deltaY;
+      updateTransform(pdfPanX, pdfPanY);
+    }, { passive: false });
+
+    // Double-click to reset pan
+    wrap.addEventListener('dblclick', (e) => {
+      if (e.target.closest('.insp-page-nav-bar') || e.target.closest('.insp-side-nav-btn')) return;
+      e.preventDefault();
+      pdfPanX = 0;
+      pdfPanY = 0;
+      canvas.style.transition = 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)';
+      updateTransform(0, 0);
+      setTimeout(() => {
+        if (canvas) canvas.style.transition = '';
+      }, 220);
+    });
+
+    // Click handler: only open if user did NOT drag
+    wrap.onclick = (e) => {
+      if (hasMoved) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      if (e.target.closest('.insp-page-nav-bar') || e.target.closest('.insp-side-nav-btn')) return;
+      if (activeDocPreview && activeDocPreview.file) {
+        window.open(activeDocPreview.file.realDownloadUrl || activeDocPreview.file.url, '_blank');
+      }
+    };
+  }
+
   async function renderPdfDocPage(pageNum) {
     if (!activeDocPreview || !activeDocPreview.pdfDoc) return;
     const numPages = activeDocPreview.numPages || 1;
@@ -1830,10 +1941,10 @@
         return;
       }
 
-      contentArea.innerHTML = '';
+            contentArea.innerHTML = '';
       const wrap = document.createElement('div');
       wrap.className = 'insp-canvas-wrap';
-      wrap.title = 'Click to open document in new tab';
+      wrap.title = 'Drag to pan · Double-click to center';
       wrap.appendChild(canvas);
 
       if (numPages > 1) {
@@ -1843,11 +1954,7 @@
         wrap.appendChild(pill);
       }
 
-      wrap.onclick = (e) => {
-        if (e.target.closest('.insp-page-nav-bar') || e.target.closest('.insp-side-nav-btn')) return;
-        window.open(activeDocPreview.file.realDownloadUrl || activeDocPreview.file.url, '_blank');
-      };
-
+      attachPdfPanFeature(wrap, canvas);
       contentArea.appendChild(wrap);
     } catch (err) {
       console.warn('[SPeCTRUM Pro] renderPdfDocPage error:', err);
@@ -1995,6 +2102,7 @@
 
 
   function goToDocPage(pageNum) {
+    pdfPanX = 0; pdfPanY = 0; // reset on page change
     if (!activeDocPreview) return;
     const numPages = activeDocPreview.numPages || 1;
     if (pageNum < 1 || pageNum > numPages) return;
@@ -2152,6 +2260,7 @@
   }
 
   function resetPreviewZoom() {
+    pdfPanX = 0; pdfPanY = 0; // reset on zoom reset
     applyPreviewZoom(1.0);
   }
 
@@ -2558,6 +2667,7 @@
   }
 
   function openFileInspector(file, course) {
+    pdfPanX = 0; pdfPanY = 0; // reset on open file
     if (!fileInspectorPane) return;
     currentInspectedFile = { file, course };
 

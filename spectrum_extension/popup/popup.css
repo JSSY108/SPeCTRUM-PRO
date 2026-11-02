@@ -6430,11 +6430,17 @@ body.is-inspector-dragging * {
   align-items: center;
   justify-content: center;
   position: relative;
-  cursor: pointer;
+  cursor: grab;
   padding: 8px;
   background: rgba(0, 0, 0, 0.04);
   box-sizing: border-box;
-  overflow: auto;
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+}
+
+.insp-canvas-wrap.is-panning {
+  cursor: grabbing !important;
 }
 
 [data-theme="dark"] .insp-canvas-wrap {
@@ -6449,8 +6455,12 @@ body.is-inspector-dragging * {
   width: auto;
   height: auto;
   object-fit: contain;
-  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
   background: #FFFFFF;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-drag: none;
+  touch-action: none;
+  will-change: transform;
 }
 
 .insp-preview-canvas.is-zoomed {
@@ -6459,9 +6469,13 @@ body.is-inspector-dragging * {
   flex-shrink: 0 !important;
 }
 
-.insp-canvas-wrap:hover .insp-preview-canvas {
-  transform: scale(1.012);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.24);
+.insp-preview-canvas.is-panning {
+  cursor: grabbing !important;
+  transition: none !important;
+}
+
+.insp-canvas-wrap:hover .insp-preview-canvas:not(.is-panning) {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 
 .insp-preview-page-pill {
