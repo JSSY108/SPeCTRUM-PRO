@@ -1670,8 +1670,7 @@
         img.className = 'insp-preview-img';
         img.src = blobUrl;
         img.alt = file.title;
-        img.title = 'Click to open full image';
-        img.onclick = () => window.open(file.realDownloadUrl || file.url, '_blank');
+        img.title = file.title || 'Image Preview';
         contentArea.appendChild(img);
         previewCache.set(cacheKey, { type: 'image', src: blobUrl, realDownloadUrl: file.realDownloadUrl || file.url });
         return;
@@ -1699,19 +1698,7 @@
             contentArea.innerHTML = '';
             const wrap = document.createElement('div');
             wrap.className = 'insp-canvas-wrap';
-            wrap.title = 'Click to open document in new tab';
-            const img = document.createElement('img');
-            img.className = 'insp-preview-img';
-            img.src = officeData.src;
-            img.alt = file.title;
-            wrap.appendChild(img);
-
-            const pill = document.createElement('div');
-            pill.className = 'insp-preview-page-pill';
-            pill.textContent = `📊 ${officeData.badge || 'Doc'}`;
-            wrap.appendChild(pill);
-
-            wrap.onclick = () => window.open(file.realDownloadUrl || file.url, '_blank');
+            wrap.title = file.title || 'Document Preview';
             contentArea.appendChild(wrap);
             previewCache.set(cacheKey, cachedOfficeData);
             return;
@@ -1739,8 +1726,7 @@
         const textDiv = document.createElement('div');
         textDiv.className = 'insp-preview-text';
         textDiv.textContent = previewSlice;
-        textDiv.title = 'Click to open file in new tab';
-        textDiv.onclick = () => window.open(file.realDownloadUrl || file.url, '_blank');
+        textDiv.title = file.title || 'Text Preview';
         contentArea.appendChild(textDiv);
         previewCache.set(cacheKey, { type: 'text', text: previewSlice, realDownloadUrl: file.realDownloadUrl || file.url });
         return;
@@ -1869,16 +1855,11 @@
       }, 220);
     });
 
-    // Click handler: only open if user did NOT drag
+    // Prevent click propagation when dragging, do not download on preview click
     wrap.onclick = (e) => {
       if (hasMoved) {
         e.preventDefault();
         e.stopPropagation();
-        return;
-      }
-      if (e.target.closest('.insp-page-nav-bar') || e.target.closest('.insp-side-nav-btn')) return;
-      if (activeDocPreview && activeDocPreview.file) {
-        window.open(activeDocPreview.file.realDownloadUrl || activeDocPreview.file.url, '_blank');
       }
     };
   }
@@ -2535,7 +2516,7 @@
       </div>
       ${paragraphsHtml || `<div style="font-size:11px;color:var(--text-muted);font-style:italic;">Click Full Reader to view document.</div>`}
     `;
-    box.onclick = () => window.open(file.realDownloadUrl || file.url, '_blank');
+    // No download on preview box click
     contentArea.appendChild(box);
   }
 
@@ -2606,7 +2587,7 @@
         pill.textContent = `1 / ${cached.numPages} pgs`;
         wrap.appendChild(pill);
       }
-      wrap.onclick = () => window.open(openUrl, '_blank');
+      // No download on preview click
       contentArea.appendChild(wrap);
     } else if (cached.type === 'pptx_loaded' && cached.arrayBuffer) {
       const contentArea = document.getElementById('insp-preview-content-area') || frame;
@@ -2623,7 +2604,7 @@
       const img = document.createElement('img');
       img.className = 'insp-preview-img';
       img.src = cached.src;
-      img.onclick = () => window.open(openUrl, '_blank');
+      // No download on preview click
       contentArea.appendChild(img);
     } else if (cached.type === 'docx_doc') {
       hidePageNavControls();
@@ -2638,7 +2619,7 @@
       const textDiv = document.createElement('div');
       textDiv.className = 'insp-preview-text';
       textDiv.textContent = cached.text;
-      textDiv.onclick = () => window.open(openUrl, '_blank');
+      // No download on preview click
       contentArea.appendChild(textDiv);
     } else {
       hidePageNavControls();
@@ -2653,17 +2634,14 @@
     const extMatch = (file.title || '').match(/\.([a-zA-Z0-9]+)$/);
     const ext = extMatch ? extMatch[1].toUpperCase() : 'FILE';
     contentArea.innerHTML = `
-      <div class="insp-preview-placeholder" style="cursor: pointer;" title="Click to open file in new tab">
+      <div class="insp-preview-placeholder" title="Document Preview">
         <span class="insp-placeholder-badge">${ext}</span>
         <div style="font-size: 26px; margin-bottom: 6px;">📄</div>
         <div style="font-size: 11.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px;">Document Preview</div>
         <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">${note || 'Click Full Reader to view entire document'}</div>
       </div>
     `;
-    const placeholder = contentArea.querySelector('.insp-preview-placeholder');
-    if (placeholder && file.url && file.url !== '#') {
-      placeholder.onclick = () => window.open(file.realDownloadUrl || file.url, '_blank');
-    }
+    // No download on placeholder click
   }
 
   function openFileInspector(file, course) {

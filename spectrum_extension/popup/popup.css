@@ -6567,6 +6567,7 @@ body.is-inspector-dragging * {
 }
 
 .insp-preview-img {
+  cursor: default;
   max-width: 98%;
   max-height: 98%;
   object-fit: contain;
@@ -7112,6 +7113,7 @@ body.is-inspector-dragging * {
 }
 
 .insp-preview-placeholder {
+  cursor: default;
   display: flex;
   flex-direction: column;
   align-items: center;
