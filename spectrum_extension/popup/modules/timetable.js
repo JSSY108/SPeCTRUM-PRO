@@ -423,6 +423,7 @@
       grid.style.transform = '';
       grid.style.transformOrigin = '';
       grid.style.width = '';
+      grid.style.height = '';
       if (scaler) {
         scaler.style.width = '';
         scaler.style.height = '';
@@ -434,23 +435,64 @@
     frame.classList.add('is-one-page-frame');
     grid.classList.add('is-one-page-grid');
 
-    if (frame.clientWidth <= 0 || frame.clientHeight <= 0) return;
+    // Attach dynamic ResizeObserver to frame to handle window, dock, or layout shifts
+    if (typeof ResizeObserver !== 'undefined' && !frame._hasOnePageObserver) {
+      frame._hasOnePageObserver = true;
+      const ro = new ResizeObserver(() => {
+        if (isOnePageMode) {
+          applyOnePageScaling();
+        }
+      });
+      ro.observe(frame);
+    }
 
+    // Reset previous modifications before measuring natural dimensions
     grid.style.transform = 'none';
+    grid.style.width = '';
+    grid.style.height = '';
+    if (scaler) {
+      scaler.style.width = '100%';
+      scaler.style.height = 'auto';
+      scaler.style.margin = '0 auto';
+    }
 
-    const availW = Math.max(280, frame.clientWidth - 32);
-    const availH = Math.max(200, frame.clientHeight - 24);
+    const clientW = frame.clientWidth;
+    const clientH = frame.clientHeight;
+    if (clientW <= 0 || clientH <= 0) return;
 
+    // Available viewport area (accounting for frame padding)
+    const availW = Math.max(280, clientW - 24);
+    const availH = Math.max(200, clientH - 16);
+
+    const isVertical = grid.classList.contains('timetable-vertical-grid');
     const naturalW = Math.max(grid.scrollWidth, grid.offsetWidth, 700);
     const naturalH = Math.max(grid.scrollHeight, grid.offsetHeight, 380);
 
-    grid.style.width = `${naturalW}px`;
+    let scale;
+    let targetBaseW;
 
-    const scaleX = availW / naturalW;
-    const scaleY = availH / naturalH;
-    const scale = Math.min(scaleX, scaleY, 1.0);
+    if (isVertical) {
+      // In vertical layout, all hours (rows) must fit within availH.
+      // Minimum base width is determined by day columns + time header.
+      const minBaseW = parseInt(grid.style.minWidth, 10) || 1000;
+      const scaleY = availH / naturalH;
+      const scaleX = availW / minBaseW;
+      scale = Math.min(scaleX, scaleY, 1.0);
 
-    const scaledW = Math.round(naturalW * scale);
+      // Expand base width so that after scaling down, the grid spans the full available width
+      // preventing the 'narrow centered column' artifact while ensuring true proportional scaling.
+      targetBaseW = Math.max(minBaseW, Math.round(availW / Math.max(scale, 0.05)));
+    } else {
+      // In horizontal layout, width (time hours) is the main constraint
+      const scaleX = availW / naturalW;
+      const scaleY = availH / naturalH;
+      scale = Math.min(scaleX, scaleY, 1.0);
+      targetBaseW = naturalW;
+    }
+
+    grid.style.width = `${targetBaseW}px`;
+
+    const scaledW = Math.min(availW, Math.round(targetBaseW * scale));
     const scaledH = Math.round(naturalH * scale);
 
     if (scaler) {
@@ -690,16 +732,14 @@
       if (s.endMin > 0 && typeof s.endHour === 'number' && !isNaN(s.endHour) && s.endHour >= maxHour) maxHour = s.endHour + 1;
     });
 
-    let hourHeight = isOnePageMode ? 72 : 115;
+    let hourHeight = 115;
     try {
       if (typeof document !== 'undefined') {
-        if (!isOnePageMode) {
-          const rootVal = getComputedStyle(document.documentElement).getPropertyValue('--tt-hour-row-height') ||
-                         getComputedStyle(gridEl).getPropertyValue('--tt-hour-row-height');
-          const parsed = parseInt(rootVal, 10);
-          if (!isNaN(parsed) && parsed >= 60 && parsed <= 300) {
-            hourHeight = parsed;
-          }
+        const rootVal = getComputedStyle(document.documentElement).getPropertyValue('--tt-hour-row-height') ||
+                       getComputedStyle(gridEl).getPropertyValue('--tt-hour-row-height');
+        const parsed = parseInt(rootVal, 10);
+        if (!isNaN(parsed) && parsed >= 60 && parsed <= 300) {
+          hourHeight = parsed;
         }
       }
     } catch (e) {}
