@@ -559,10 +559,6 @@
           <!-- Right File Inspector Drawer -->
           <aside class="file-inspector-pane" id="file-inspector-pane" style="display:none;">
             <div class="inspector-header">
-              <div class="inspector-title-group">
-                <span class="inspector-title">DOCUMENT DETAILS</span>
-                <span class="inspector-filetype-badge" id="insp-type-badge">PDF</span>
-              </div>
               <div class="inspector-header-actions">
                 <button type="button" id="btn-toggle-expand-inspector" class="btn-inspector-action" title="Toggle 50% split view (拉到中间)">
                   <svg class="icon-svg" viewBox="0 0 24 24" style="width:13px;height:13px;"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -575,7 +571,10 @@
               <!-- Blue Card: ONLY Course Name & File Name -->
               <div class="insp-preview-card" id="insp-preview-card">
                 <div class="insp-slide-subject" id="insp-slide-subject">Database Systems & Modeling</div>
-                <div class="insp-slide-heading" id="insp-slide-heading">Boyce-Codd Normal Form (BCNF)</div>
+                <div class="insp-slide-heading-row">
+                  <span class="inspector-filetype-badge" id="insp-type-badge">PDF</span>
+                  <div class="insp-slide-heading" id="insp-slide-heading">Boyce-Codd Normal Form (BCNF)</div>
+                </div>
               </div>
 
               <!-- Small Preview Tab with Full Reader Button -->
