@@ -54,7 +54,8 @@
     {
       "resources": [
         "icons/*",
-        "libs/*"
+        "libs/*",
+        "popup/*"
       ],
       "matches": [
         "*://spectrum.um.edu.my/*"

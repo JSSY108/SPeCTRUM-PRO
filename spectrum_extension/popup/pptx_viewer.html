@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPeCTRUM PRO — PPTX Presentation Reader</title>
+  <link rel="stylesheet" href="popup.css">
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: var(--bg-canvas, #0d0f12);
+      color: var(--text-primary, #f1f5f9);
+      font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Navigation Toolbar */
+    .viewer-header {
+      height: 52px;
+      min-height: 52px;
+      background: var(--bg-panel, #13161b);
+      border-bottom: 1px solid var(--border-medium, rgba(255, 255, 255, 0.12));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      gap: 12px;
+      user-select: none;
+      z-index: 10;
+    }
+
+    .viewer-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .viewer-logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+      font-family: var(--font-mono, monospace);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--signal-assignment, #fb923c);
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .viewer-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary, #f1f5f9);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 420px;
+    }
+
+    .viewer-toolbar-center {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+      border-radius: 8px;
+      padding: 3px 6px;
+    }
+
+    .viewer-tool-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 28px;
+      padding: 0 10px;
+      background: transparent;
+      border: none;
+      border-radius: 5px;
+      color: var(--text-secondary, #94a3b8);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .viewer-tool-btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary, #f1f5f9);
+    }
+
+    .viewer-tool-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .viewer-slide-indicator {
+      font-family: var(--font-mono, monospace);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-primary, #f1f5f9);
+      padding: 0 6px;
+      min-width: 70px;
+      text-align: center;
+    }
+
+    .viewer-header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .viewer-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 30px;
+      padding: 0 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+      color: var(--text-primary, #f1f5f9);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .viewer-action-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.24);
+    }
+
+    .viewer-action-btn.is-primary {
+      background: #f8fafc;
+      color: #0f172a;
+      border-color: #f8fafc;
+      font-weight: 700;
+    }
+
+    .viewer-action-btn.is-primary:hover {
+      background: #ffffff;
+      color: #000000;
+      box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
+    }
+
+    /* Main Presentation Canvas Container */
+    .viewer-main-stage {
+      flex: 1;
+      width: 100%;
+      height: calc(100vh - 52px);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-canvas, #0d0f12);
+    }
+
+    #pptx-viewer {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Empty / Drag & Drop Dropzone Overlay */
+    .viewer-empty-dropzone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px;
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      max-width: 480px;
+      gap: 16px;
+      transition: all 0.2s ease;
+    }
+
+    .viewer-empty-dropzone.dragover {
+      border-color: var(--signal-assignment, #fb923c);
+      background: rgba(251, 146, 60, 0.05);
+      transform: scale(1.02);
+    }
+
+    .viewer-dropzone-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(251, 146, 60, 0.12);
+      border: 1px solid rgba(251, 146, 60, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--signal-assignment, #fb923c);
+    }
+
+    .viewer-dropzone-text h3 {
+      margin: 0 0 6px 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary, #f1f5f9);
+    }
+
+    .viewer-dropzone-text p {
+      margin: 0;
+      font-size: 12.5px;
+      color: var(--text-secondary, #94a3b8);
+      line-height: 1.5;
+    }
+
+    /* Loading Spinner */
+    .viewer-loader-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(13, 15, 18, 0.85);
+      backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      z-index: 50;
+      transition: opacity 0.2s ease;
+    }
+
+    .viewer-spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(255, 255, 255, 0.15);
+      border-top-color: var(--signal-assignment, #fb923c);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Library PPTX Viewer Custom Theme Overrides */
+    .pptx-viewer {
+      background-color: transparent !important;
+    }
+    .pptx-slide-container {
+      padding: 16px !important;
+    }
+    .pptx-controls {
+      background: rgba(19, 22, 27, 0.85) !important;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      border-radius: 9999px !important;
+      padding: 6px 16px !important;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      margin-bottom: 16px !important;
+    }
+    .pptx-controls button {
+      background: rgba(255, 255, 255, 0.08) !important;
+      color: #f1f5f9 !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      border-radius: 6px !important;
+      font-family: inherit !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      padding: 5px 12px !important;
+      transition: all 0.15s ease;
+    }
+    .pptx-controls button:hover {
+      background: rgba(255, 255, 255, 0.18) !important;
+      color: #ffffff !important;
+    }
+    .pptx-controls .pptx-counter {
+      font-family: var(--font-mono, monospace) !important;
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      color: #94a3b8 !important;
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+  <!-- Header & Navigation Bar -->
+  <header class="viewer-header">
+    <div class="viewer-header-left">
+      <div class="viewer-logo-badge">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+          <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        <span>PPTX READER</span>
+      </div>
+      <div class="viewer-title" id="doc-title" title="SPeCTRUM PRO Presentation Viewer">
+        Presentation Viewer
+      </div>
+    </div>
+
+    <!-- Center Navigation Controls -->
+    <div class="viewer-toolbar-center">
+      <button type="button" class="viewer-tool-btn" id="btn-prev" title="Previous Slide (← / Up)">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        <span>Prev</span>
+      </button>
+
+      <span class="viewer-slide-indicator" id="slide-counter">-- / --</span>
+
+      <button type="button" class="viewer-tool-btn" id="btn-next" title="Next Slide (→ / Space / Down)">
+        <span>Next</span>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </div>
+
+    <!-- Right Actions -->
+    <div class="viewer-header-right">
+      <button type="button" class="viewer-action-btn" id="btn-open-file" title="Open Local PowerPoint Presentation">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+        <span>Open File</span>
+      </button>
+      <input type="file" id="file-input" accept=".pptx" style="display: none;" />
+
+      <button type="button" class="viewer-action-btn" id="btn-open-url" title="Open Presentation from Remote URL">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>Open URL</span>
+      </button>
+
+      <button type="button" class="viewer-action-btn is-primary" id="btn-fullscreen" title="Toggle Fullscreen Presentation Mode (F)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+        <span>Fullscreen</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Presentation Canvas Stage -->
+  <main class="viewer-main-stage" id="viewer-stage">
+    <!-- pptx-viewer Target Container -->
+    <div id="pptx-viewer">
+      <div class="viewer-empty-dropzone" id="dropzone">
+        <div class="viewer-dropzone-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+        </div>
+        <div class="viewer-dropzone-text">
+          <h3>Load a PowerPoint Presentation</h3>
+          <p>Drag and drop a <code>.pptx</code> file here, or click <strong>Open File</strong> above to inspect slides with authentic fidelity.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="viewer-loader-overlay" id="loading-overlay" style="display: none;">
+      <div class="viewer-spinner"></div>
+      <div style="font-size: 13px; font-weight: 600; color: #f1f5f9;" id="loading-text">Rendering presentation...</div>
+    </div>
+  </main>
+
+  <!-- Load PPTX Viewer Library (UMD) & Page Logic -->
+  <script src="../libs/pptx-viewer.umd.js"></script>
+  <script src="pptx_viewer.js"></script>
+</body>
+</html>
