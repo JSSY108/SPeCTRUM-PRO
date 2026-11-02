@@ -9340,6 +9340,16 @@ body:not(.is-full-tab) .sync-cinematic-current {
      Recommended: 100px - 140px (Default: 115px, previous: 88px)
      ======================================================================== */
   --tt-horiz-row-height: 140px;
+
+  /* ========================================================================
+     4. TIMETABLE CARD FONT SIZES (USER TUNED DEFAULTS):
+     ======================================================================== */
+  --tt-font-code: 13px;        /* 1. Course Code (e.g. WIX2001) */
+  --tt-font-type: 12px;        /* 2. Type Tag Pill (e.g. LEC, TUT, LAB) */
+  --tt-font-title: 13.5px;     /* 3. Course Full Name (e.g. Thinking And Comm...) */
+  --tt-font-occ: 12px;         /* 4. Subtitle OCC (e.g. OCC 3) */
+  --tt-font-venue: 12px;       /* 5. Venue / Location (e.g. 📍 Auditorium CS) */
+  --tt-font-time: 12px;        /* 6. Time Range (e.g. 08:00 - 10:00) */
 }
 
 /* Explicit vertical card isolation */
@@ -9350,12 +9360,12 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 .tt-session-card {
   --tt-hour-row-height: var(--tt-hour-row-height, 115px);
-  --tt-font-code: 11.5px;      /* 1. Course Code (e.g. WIX2001) */
-  --tt-font-type: 10px;        /* 2. Type Tag Pill (e.g. LEC, TUT, LAB) */
-  --tt-font-title: 13px;       /* 3. Course Full Name (e.g. Thinking And Comm...) */
-  --tt-font-occ: 10.5px;       /* 4. Subtitle OCC (e.g. OCC 3) */
+  --tt-font-code: 13px;        /* 1. Course Code (e.g. WIX2001) */
+  --tt-font-type: 12px;        /* 2. Type Tag Pill (e.g. LEC, TUT, LAB) */
+  --tt-font-title: 13.5px;     /* 3. Course Full Name (e.g. Thinking And Comm...) */
+  --tt-font-occ: 12px;         /* 4. Subtitle OCC (e.g. OCC 3) */
   --tt-font-venue: 12px;       /* 5. Venue / Location (e.g. 📍 Auditorium CS) */
-  --tt-font-time: 10.5px;      /* 6. Time Range (e.g. 08:00 - 10:00) */
+  --tt-font-time: 12px;        /* 6. Time Range (e.g. 08:00 - 10:00) */
 
   cursor: pointer;
   user-select: none;
@@ -9396,7 +9406,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
 }
 
 .tt-code {
-  font-size: var(--tt-font-code, 11.5px);
+  font-size: var(--tt-font-code, 13px);
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: 0.2px;
@@ -9404,7 +9414,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 .tt-code-dot {
   font-family: 'JetBrains Mono', monospace;
-  font-size: var(--tt-font-code, 11.5px);
+  font-size: var(--tt-font-code, 13px);
   font-weight: 800;
   color: var(--text-primary);
   line-height: 1;
@@ -9413,14 +9423,14 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 .tt-code-acronym {
   font-family: 'JetBrains Mono', monospace;
-  font-size: var(--tt-font-code, 11.5px);
+  font-size: var(--tt-font-code, 13px);
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: 0.2px;
 }
 
 .tt-type-tag {
-  font-size: var(--tt-font-type, 10px);
+  font-size: var(--tt-font-type, 12px);
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 3px;
@@ -9438,7 +9448,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 .tt-card-title {
   font-family: 'Hanken Grotesk', -apple-system, sans-serif;
-  font-size: var(--tt-font-title, 13px);
+  font-size: var(--tt-font-title, 13.5px);
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.25;
@@ -9451,7 +9461,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 .tt-card-subtitle {
   font-family: 'JetBrains Mono', monospace;
-  font-size: var(--tt-font-occ, 10.5px);
+  font-size: var(--tt-font-occ, 12px);
   font-weight: 600;
   color: var(--text-muted);
   overflow: hidden;
@@ -9534,7 +9544,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 .tt-time-range {
   font-family: 'JetBrains Mono', monospace;
-  font-size: var(--tt-font-time, 10.5px);
+  font-size: var(--tt-font-time, 12px);
   font-weight: 600;
   color: var(--text-muted);
   white-space: nowrap;
@@ -9858,7 +9868,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 .timetable-horizontal-grid .tt-time-range {
   font-family: 'JetBrains Mono', monospace;
-  font-size: var(--tt-font-time, 10.5px);
+  font-size: var(--tt-font-time, 12px);
   font-weight: 600;
   color: var(--text-muted);
   white-space: nowrap;
