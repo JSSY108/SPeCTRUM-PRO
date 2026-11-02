@@ -1869,7 +1869,7 @@
     for (let i = 0; i < totalHours; i++) {
       const h = minHour + i;
       const rH = hourRowWeights[i] * unitHourH;
-      hourRows.push({ h, y: curRowY, h: rH, isHalf: hourRowWeights[i] === 0.45 });
+      hourRows.push({ hour: h, y: curRowY, rowH: rH, isHalf: hourRowWeights[i] === 0.45 });
       curRowY += rH;
     }
 
@@ -1877,12 +1877,12 @@
       let y = gridY + headerH;
       for (let hr = minHour; hr < h && hr < maxHour; hr++) {
         const idx = hr - minHour;
-        y += hourRows[idx].h;
+        y += hourRows[idx].rowH;
       }
       if (h < maxHour) {
         const idx = h - minHour;
         const fraction = Math.min(60, Math.max(0, m || 0)) / 60;
-        y += fraction * hourRows[idx].h;
+        y += fraction * hourRows[idx].rowH;
       }
       return y;
     }
@@ -1949,7 +1949,7 @@
     // Time Column Labels & Horizontal Grid Lines
     for (let i = 0; i < totalHours; i++) {
       const rowInfo = hourRows[i];
-      const h = rowInfo.h;
+      const h = rowInfo.hour;
       const rowY = rowInfo.y;
       const isHalf = rowInfo.isHalf;
 
