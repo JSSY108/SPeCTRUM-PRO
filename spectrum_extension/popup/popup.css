@@ -6,39 +6,59 @@
    ========================================================================== */
 
 :root {
-  /* 90% Monochrome Architecture */
-  --bg-canvas: #FAFAFA;
-  --bg-surface: #FFFFFF;
-  --bg-card-hover: #F8F9FA;
-  --bg-subtle: #F4F4F5;
-  --bg-primary-cta: #111111;
-  --bg-cta-hover: #27272A;
+  /* ==========================================================================
+     SPeCTRUM PRO — Surfaces & Elevation Tokens (Light Mode)
+     ========================================================================== */
+  --bg-canvas: #f9f9f9;              /* 全局窗口底层底板 (纯净微暖浅灰) */
+  --bg-panel: #ffffff;               /* 侧边栏、顶部导航、月历大网格底座 */
+  --bg-surface: #ffffff;             /* 任务卡片、详情抽屉默认背景 */
+  --bg-card: #ffffff;                /* 任务卡片背景 */
+  --bg-card-hover: #f8fafc;          /* 卡片悬浮状态 (Hover 浅霜白) */
+  --bg-selected: #ffffff;            /* 日历选中日期格子 / 激活菜单 (配黑框) */
+  --bg-interactive: #f1f5f9;         /* 次级按钮、输入框、折叠胶囊柔和底色 */
+  --bg-subtle: #f1f5f9;              /* 辅助弱背景 */
+  --bg-primary-cta: #0f172a;         /* 核心主按钮背景 (纯黑) */
+  --bg-cta-hover: #1e293b;
 
-  --text-primary: #111111;
-  --text-secondary: #52525B;
-  --text-muted: #A1A1AA;
-  --text-on-dark: #FFFFFF;
+  /* Typography & Contrast Tokens (Light Mode) */
+  --text-primary: #0f172a;           /* 核心标题、课程名、关键时间点 */
+  --text-secondary: #475569;         /* 课程代码、老师名称、普通正文 */
+  --text-muted: #94a3b8;             /* 倒计时标签副文本、已归档状态 */
+  --text-disabled: #cbd5e1;          /* 过去过期未参加、不可点控件 */
+  --text-on-dark: #ffffff;           /* 主按钮纯黑底上的白字 */
 
-  --border-hairline: #E4E4E7;
-  --border-subtle: #ECECEF;
-  --border-strong: #111111;
+  /* Border & Stroke Tokens (Light Mode) */
+  --border-subtle: #e2e8f0;          /* 月历日表格线、卡片通用外边框 (实色灰) */
+  --border-medium: #cbd5e1;          /* 容器外围分割线、弹窗边框 */
+  --border-hairline: #e2e8f0;        /* 兼容既有细边框 */
+  --border-active: #0f172a;          /* 选中状态、获得焦点的输入框 (粗黑框) */
+  --border-strong: #0f172a;          /* 强边框 */
+  --divider: #f1f5f9;                /* 卡片内横向细分割线 */
 
-  /* 10% Semantic Signal Ink */
-  --signal-attendance: #10B981;    /* Emerald */
-  --signal-attendance-bg: #ECFDF5;
+  /* Academic Activity Tokens (Light Mode) */
+  --signal-attendance: #10b981;      /* 翡翠绿锚点 */
+  --signal-attendance-bg: #ecfdf5;   /* 已签到 / 进行中背景 (浅薄荷绿) */
+  --signal-attendance-text: #047857; /* 签到状态标签文本 (墨绿) */
+  --signal-attendance-bar: #10b981;  /* 3px 纯净绿锚点指示条 */
   --signal-attendance-border: rgba(16, 185, 129, 0.35);
 
-  --signal-assignment: #F97316;    /* International Orange */
-  --signal-assignment-bg: #FFF7ED;
-  --signal-assignment-border: rgba(249, 115, 22, 0.35);
+  --signal-assignment: #ea580c;      /* 橙色锚点指示条 */
+  --signal-assignment-bg: #fff7ed;   /* 正常进行中背景 (极浅橙) */
+  --signal-assignment-text: #c2410c; /* 正常进行中文本 (深橙) */
+  --signal-assignment-bar: #ea580c;  /* 3px 橙色重点指示条 */
+  --signal-assignment-border: rgba(234, 88, 12, 0.35);
 
-  --signal-notice: #2563EB;        /* Cobalt Blue */
-  --signal-notice-bg: #EFF6FF;
-  --signal-notice-border: rgba(37, 99, 235, 0.35);
+  --signal-notice: #0284c7;          /* 钴蓝指示条 */
+  --signal-notice-bg: #f0f9ff;       /* 通知胶囊背景 (浅天蓝) */
+  --signal-notice-text: #0369a1;     /* 通知标题/图标文本 (深蓝) */
+  --signal-notice-bar: #0284c7;      /* 3px 纯净蓝色锚条 */
+  --signal-notice-border: rgba(2, 132, 199, 0.35);
 
-  --signal-urgent: #E11D48;        /* Crimson */
-  --signal-urgent-bg: #FFF1F2;
-  --signal-urgent-border: rgba(225, 29, 72, 0.35);
+  --signal-urgent: #b91c1c;          /* 逾期警示文本 (深红) */
+  --signal-urgent-bg: #fef2f2;       /* 逾期警示背景 (极淡红) */
+  --signal-urgent-text: #b91c1c;
+  --signal-urgent-bar: #ea580c;
+  --signal-urgent-border: rgba(185, 28, 28, 0.35);
 
   --signal-verified: #059669;
 
@@ -73,7 +93,7 @@
   /* Timeline Mode Day Column Tuning Tokens */
   --kanban-col-width: 560px;          /* Day column width in Full Tab Timeline mode (expanded so due timestamps are never cut) */
   --kanban-col-min-width: 520px;      /* Minimum day column width to prevent text truncating */
-  --kanban-col-max-width: 680px;      /* Maximum day column width */         /* Month prev/next arrow button size */
+  --kanban-col-max-width: 680px;      /* Maximum day column width */
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
@@ -86,54 +106,90 @@
 }
 
 /* ==========================================================================
-   SPeCTRUM PRO v3.0 — Dark Mode Master Semantic Tokens
+   SPeCTRUM PRO — 深色模式色彩规范对照表 (Design Tokens Spec)
+   基于顶级暗色 UI「光层海拔理论 (Elevation & Luma Hierarchy)」与学术速达性制定
    ========================================================================== */
 :root[data-theme="dark"],
 body[data-theme="dark"],
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* 90% Monochrome Architecture (Inverted Dark) */
-  --bg-canvas: #09090B;
-  --bg-surface: #141417;
-  --bg-card-hover: #1C1C21;
-  --bg-subtle: #202025;
-  --bg-primary-cta: #FAFAFA;
-  --bg-cta-hover: #E4E4E7;
+  /* --------------------------------------------------------------------------
+     1. 表面与空间层级 (Surfaces & Elevation Tokens)
+     杜绝纯黑死黑，通过微妙灰阶海拔阶梯（近亮远暗）建立清晰三维空间感
+     -------------------------------------------------------------------------- */
+  --bg-canvas: #0d0f12;                                /* 0阶底层：沉稳黑曜石灰蓝 (全局窗口底层底板) */
+  --bg-panel: #13161b;                                 /* 1阶底座：侧边栏、顶部导航、月历大网格基底 */
+  --bg-surface: #181c22;                               /* 2阶浮层：任务卡片、详情抽屉默认背景 */
+  --bg-card: #181c22;                                  /* 2阶浮层：任务卡片背景 */
+  --bg-card-hover: #1f242c;                            /* 卡片悬浮状态 (Hover 微妙提亮交互反馈) */
+  --bg-selected: #232832;                              /* 3阶高海拔高亮：日历选中日期格子 / 激活菜单 */
+  --bg-interactive: rgba(255, 255, 255, 0.06);         /* 次级按钮、输入框、折叠胶囊 (半透明自动融入海拔) */
+  --bg-subtle: rgba(255, 255, 255, 0.06);              /* 辅助弱背景 */
+  --bg-primary-cta: #f8fafc;                           /* 核心主按钮高亮白 (暗色视野中的绝对视觉重心) */
+  --bg-cta-hover: #ffffff;                             /* 核心主按钮悬浮纯白 */
 
-  --text-primary: #F4F4F5;
-  --text-secondary: #A1A1AA;
-  --text-muted: #71717A;
-  --text-on-dark: #09090B;
+  /* --------------------------------------------------------------------------
+     2. 边框与微光分隔线 (Border & Stroke Tokens)
+     带 Alpha 透明度白色微光边框 (Subtle Rim Lighting)，模拟暗室边缘折射
+     -------------------------------------------------------------------------- */
+  --border-subtle: rgba(255, 255, 255, 0.07);          /* 极细透光边框 (月历日表格线、卡片通用外边框) */
+  --border-medium: rgba(255, 255, 255, 0.12);          /* 主容器外围分割线、弹窗边框 */
+  --border-hairline: rgba(255, 255, 255, 0.07);        /* 兼容通用 hairline */
+  --border-active: rgba(255, 255, 255, 0.28);          /* 28% 晶莹白清晰聚焦边框 (选中状态/获得焦点) */
+  --border-strong: rgba(255, 255, 255, 0.28);          /* 强聚焦边框 */
+  --divider: rgba(255, 255, 255, 0.05);                /* 极弱卡片呼吸分隔线 (不抢主体内容视线) */
 
-  --border-hairline: #27272A;
-  --border-subtle: #1E1E22;
-  --border-strong: #E4E4E7;
+  /* --------------------------------------------------------------------------
+     3. 文字与排版对比度 (Typography & Contrast Tokens)
+     杜绝纯白晕光 (Halation Effect)，保障 WCAG AAA 舒适学术阅读
+     -------------------------------------------------------------------------- */
+  --text-primary: #f1f5f9;                             /* 95% 暖冷白：核心标题、课程名、关键时间点 */
+  --text-secondary: #94a3b8;                           /* 冷浅灰：课程代码、老师名称、普通正文 */
+  --text-muted: #64748b;                               /* 暗灰：倒计时标签副文本、已归档状态 */
+  --text-disabled: #475569;                            /* 过去过期未参加、不可点禁用控件 */
+  --text-on-dark: #0f172a;                             /* 主按钮高亮白底上的纯黑字 */
 
-  /* 10% Semantic Signals tuned for dark backgrounds */
-  --signal-attendance: #34D399;
-  --signal-attendance-bg: rgba(16, 185, 129, 0.16);
-  --signal-attendance-border: rgba(16, 185, 129, 0.4);
+  /* --------------------------------------------------------------------------
+     4. 学术业务语义色 (Academic Activity Tokens)
+     降低饱和度，半透明暗色背胶 + 柔光高亮文字，彻底消除夜间荧光刺眼
+     -------------------------------------------------------------------------- */
+  /* 4.1 作业与截止时间 (Assignment / Deadlines · 暖橙与警示红) */
+  --signal-assignment: #fb923c;                        /* 正常进行中文本：暖金橙 400 (高辨识度) */
+  --signal-assignment-bg: rgba(251, 146, 60, 0.10);    /* 正常进行中背景：10% 橙色微光底色 */
+  --signal-assignment-text: #fb923c;
+  --signal-assignment-bar: #f97316;                    /* 卡片左侧重点指示条：3px 纯净橙色锚点 */
+  --signal-assignment-border: rgba(251, 146, 60, 0.20);
 
-  --signal-assignment: #FB923C;
-  --signal-assignment-bg: rgba(249, 115, 22, 0.16);
-  --signal-assignment-border: rgba(249, 115, 22, 0.4);
+  --signal-urgent: #f87171;                            /* 逾期警示文本：珊瑚浅红 (醒目而不刺眼) */
+  --signal-urgent-bg: rgba(248, 113, 113, 0.12);       /* 逾期警示背景：12% 柔和警报底色 */
+  --signal-urgent-text: #f87171;
+  --signal-urgent-bar: #f97316;                        /* 保持清晰色彩锚点 */
+  --signal-urgent-border: rgba(248, 113, 113, 0.20);
 
-  --signal-notice: #60A5FA;
-  --signal-notice-bg: rgba(37, 99, 235, 0.16);
-  --signal-notice-border: rgba(37, 99, 235, 0.4);
+  /* 4.2 考勤与签到 (Attendance / Sessions · 翡翠绿) */
+  --signal-attendance: #34d399;                        /* 签到状态标签文本：翡翠绿 400 (通过与安心隐喻) */
+  --signal-attendance-bg: rgba(52, 211, 153, 0.10);    /* 已签到 / 进行中背景：10% 翡翠微绿背胶 */
+  --signal-attendance-text: #34d399;
+  --signal-attendance-bar: #10b981;                    /* 签到卡片时间指示条：3px 纯净绿锚点 */
+  --signal-attendance-border: rgba(52, 211, 153, 0.20);
+  --signal-verified: #34d399;
 
-  --signal-urgent: #F43F5E;
-  --signal-urgent-bg: rgba(225, 29, 72, 0.16);
-  --signal-urgent-border: rgba(225, 29, 72, 0.4);
+  /* 4.3 官方通知与公告 (Notice / Circulars · 钴蓝/冰蓝) */
+  --signal-notice: #38bdf8;                            /* 通知标题/图标文本：冰蓝 400 (精准冷静无眩光) */
+  --signal-notice-bg: rgba(56, 189, 248, 0.10);        /* 通知胶囊背景：10% 克制冰蓝背胶 */
+  --signal-notice-text: #38bdf8;
+  --signal-notice-bar: #38bdf8;                        /* 左侧重点指示条：3px 纯净蓝色锚条 */
+  --signal-notice-border: rgba(56, 189, 248, 0.20);
 
-  --signal-verified: #34D399;
-
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
-  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.7);
+  /* --------------------------------------------------------------------------
+     5. 交互控件与行为权重 (Action & Button Tokens)
+     -------------------------------------------------------------------------- */
+  /* 阴影：深色细腻海拔投影 */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.7);
 }
-
 
 
 /* Base Reset */
@@ -1774,8 +1830,10 @@ body:not(.is-full-tab) .is-collapsed .dock-badge,
 }
 
 [data-theme="dark"] .mini-cal-day-cell.selected-day {
-  background: #FAFAFA !important;
-  color: #111111 !important;
+  background: #232832 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4) !important;
 }
 
 .cell-dots-wrap {
@@ -2613,6 +2671,14 @@ body:not(.is-full-tab) .is-collapsed .dock-badge,
 
 .spectrum-card:hover {
   box-shadow: var(--shadow-md);
+  background: var(--bg-card-hover);
+}
+
+[data-theme="dark"] .spectrum-card:hover,
+[data-theme="dark"] .scoped-card:hover {
+  background: #1f242c !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55) !important;
 }
 
 /* Left Semantic Signal Borders */
@@ -3013,8 +3079,8 @@ body.is-full-tab .popup-only {
 /* Minimalist Top Bar (Image 1) */
 .fulltab-top-header {
   height: 52px;
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border-hairline);
+  background: var(--bg-panel, #ffffff);
+  border-bottom: 1px solid var(--border-medium, #cbd5e1);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3824,6 +3890,12 @@ body.mode-preferences #fulltab-week-pill {
   outline: 2px solid var(--border-strong);
   outline-offset: -2px;
   z-index: 2;
+}
+
+[data-theme="dark"] .cal-grid-cell.is-selected {
+  background: #232832 !important;
+  outline: 1px solid rgba(255, 255, 255, 0.28) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
 .cal-grid-cell.other-month {
@@ -8603,32 +8675,38 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 [data-theme="dark"] .spectrum-card.card-attendance,
 [data-theme="dark"] .scoped-card.scoped-card-attendance {
-  border-left-color: #10B981 !important;
+  background: var(--bg-card, #181c22) !important;
+  border-color: var(--border-subtle, rgba(255, 255, 255, 0.07)) !important;
+  border-left-color: var(--signal-attendance-bar, #10b981) !important;
 }
 
 [data-theme="dark"] .att-status-pill.pill-recorded,
 [data-theme="dark"] .att-status-pill.pill-active,
 [data-theme="dark"] .att-state-badge.state-open,
 [data-theme="dark"] .btn-att-present {
-  background: rgba(16, 185, 129, 0.16) !important;
-  color: #34D399 !important;
-  border-color: rgba(52, 211, 153, 0.35) !important;
+  background: rgba(52, 211, 153, 0.10) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(52, 211, 153, 0.20) !important;
 }
 
 [data-theme="dark"] .att-header-left,
-[data-theme="dark"] .att-course-title,
+[data-theme="dark"] .att-course-title {
+  color: #94a3b8 !important;
+}
+
 [data-theme="dark"] .att-course-name {
-  color: #A1A1AA !important;
+  color: #f1f5f9 !important;
 }
 
 [data-theme="dark"] .att-time-hero {
-  color: #FAFAFA !important;
+  color: #34d399 !important;
 }
 
 [data-theme="dark"] .att-code-pill,
 [data-theme="dark"] .att-occ-tag {
-  background: #27272A !important;
-  color: #A1A1AA !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #94a3b8 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 
@@ -8857,40 +8935,76 @@ body:not(.is-full-tab) .sync-cinematic-current {
   transform: translateY(-1px);
 }
 
-/* Dark Theme Adaptations */
+/* Dark Theme Adaptations (Design Tokens Spec) */
 [data-theme="dark"] .spectrum-card.card-assignment,
 [data-theme="dark"] .scoped-card.scoped-card-assignment {
-  background: var(--bg-surface, #18181B);
-  border-color: var(--border-hairline, #27272A);
+  background: var(--bg-card, #181c22) !important;
+  border-color: var(--border-subtle, rgba(255, 255, 255, 0.07)) !important;
+  border-left-color: var(--signal-assignment-bar, #f97316) !important;
+}
+
+[data-theme="dark"] .spectrum-card.card-assignment.is-overdue,
+[data-theme="dark"] .scoped-card.scoped-card-assignment.is-overdue {
+  border-left-color: #f87171 !important;
 }
 
 [data-theme="dark"] .assign-header-left {
-  color: #A1A1AA;
+  color: #94a3b8;
 }
 
 [data-theme="dark"] .assign-occ-pill {
-  background: #27272A;
-  color: #D4D4D8;
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 [data-theme="dark"] .assign-title-text {
-  color: #FAFAFA;
+  color: #f1f5f9;
 }
 
 [data-theme="dark"] .assign-timestamp {
-  color: #A1A1AA;
+  color: #fb923c;
 }
 
+[data-theme="dark"] .spectrum-card.card-assignment.is-overdue .assign-timestamp,
+[data-theme="dark"] .scoped-card.scoped-card-assignment.is-overdue .assign-timestamp {
+  color: #f87171;
+}
+
+/* Action Button: Secondary (Check Portal / Normal) */
 [data-theme="dark"] .btn-assign-action.btn-assign-normal {
-  background: #27272A !important;
-  color: #F4F4F5 !important;
-  border-color: #3F3F46 !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #cbd5e1 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="dark"] .btn-assign-action.btn-assign-normal:hover {
+  background: rgba(255, 255, 255, 0.10) !important;
+  color: #f1f5f9 !important;
+  border-color: rgba(255, 255, 255, 0.20) !important;
+}
+
+/* Action Button: Primary (Submit / Take Action) */
+[data-theme="dark"] .btn-assign-action.btn-assign-overdue,
+[data-theme="dark"] .btn-primary {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border: 1px solid #f8fafc !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="dark"] .btn-assign-action.btn-assign-overdue:hover,
+[data-theme="dark"] .btn-primary:hover {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.2) !important;
 }
 
 [data-theme="dark"] .btn-assign-action.btn-assign-submitted {
-  background: rgba(16, 185, 129, 0.16) !important;
-  color: #34D399 !important;
-  border-color: rgba(52, 211, 153, 0.35) !important;
+  background: rgba(52, 211, 153, 0.10) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(52, 211, 153, 0.20) !important;
 }
 
 
@@ -9160,45 +9274,59 @@ body:not(.is-full-tab) .sync-cinematic-current {
   transform: translateX(2px);
 }
 
-/* Dark Theme Adaptations for Notice & Bounded Icons */
+/* Dark Theme Adaptations for Notice & Bounded Icons (Design Tokens Spec) */
 [data-theme="dark"] .spectrum-card.card-notice,
 [data-theme="dark"] .scoped-card.scoped-card-notice {
-  background: var(--bg-surface, #18181B);
-  border-color: var(--border-hairline, #27272A);
+  background: var(--bg-card, #181c22) !important;
+  border-color: var(--border-subtle, rgba(255, 255, 255, 0.07)) !important;
+  border-left-color: var(--signal-notice-bar, #38bdf8) !important;
 }
 
 [data-theme="dark"] .notice-header-left {
-  color: #A1A1AA;
+  color: #94a3b8;
 }
 
 [data-theme="dark"] .notice-date-text {
-  color: #FAFAFA;
+  color: #94a3b8;
 }
 
 [data-theme="dark"] .notice-title-text {
-  color: #FAFAFA;
+  color: #f1f5f9;
 }
 
 [data-theme="dark"] .notice-author {
-  color: #A1A1AA;
+  color: #94a3b8;
 }
 
+[data-theme="dark"] .btn-notice-open {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .btn-notice-open:hover {
+  background: rgba(255, 255, 255, 0.10) !important;
+  color: #f1f5f9 !important;
+  border-color: rgba(255, 255, 255, 0.20) !important;
+}
+
+/* 4. Academic Activity Tokens: Bounded Semantic Icons */
 [data-theme="dark"] .icon-box-notice {
-  background: rgba(37, 99, 235, 0.16);
-  border-color: rgba(96, 165, 250, 0.35);
-  color: #60A5FA;
+  background: rgba(56, 189, 248, 0.10);
+  border: 1px solid rgba(56, 189, 248, 0.20);
+  color: #38bdf8;
 }
 
 [data-theme="dark"] .icon-box-assignment {
-  background: rgba(249, 115, 22, 0.16);
-  border-color: rgba(251, 146, 60, 0.35);
-  color: #FB923C;
+  background: rgba(251, 146, 60, 0.10);
+  border: 1px solid rgba(251, 146, 60, 0.20);
+  color: #fb923c;
 }
 
 [data-theme="dark"] .icon-box-attendance {
-  background: rgba(16, 185, 129, 0.16);
-  border-color: rgba(52, 211, 153, 0.35);
-  color: #34D399;
+  background: rgba(52, 211, 153, 0.10);
+  border: 1px solid rgba(52, 211, 153, 0.20);
+  color: #34d399;
 }
 
 /* ==========================================================================
@@ -10062,47 +10190,60 @@ body:not(.is-full-tab) .sync-cinematic-current {
   line-height: 1.25;
 }
 
-/* Dark Mode Support for Timetable */
+/* Dark Mode Support for Timetable (Design Tokens Spec) */
 [data-theme="dark"] .timetable-grid,
 [data-theme="dark"] .timetable-vertical-grid {
-  background: var(--bg-surface);
-  border-color: var(--border-hairline);
+  background: var(--bg-panel, #13161b);
+  border-color: var(--border-medium, rgba(255, 255, 255, 0.12));
   box-shadow: none;
 }
 
 [data-theme="dark"] .tt-day-header-cell.is-today {
-  background: #27272A !important;
-  color: #FAFAFA !important;
+  background: var(--bg-selected, #232832) !important;
+  color: var(--text-primary, #f1f5f9) !important;
 }
 
 [data-theme="dark"] .tt-day-header-cell.is-today .tt-today-indicator {
-  color: #FAFAFA !important;
+  color: var(--text-primary, #f1f5f9) !important;
 }
 
 [data-theme="dark"] .tt-day-header-cell.is-today .tt-today-tag {
-  color: #A1A1AA !important;
+  color: var(--text-secondary, #94a3b8) !important;
 }
 
 [data-theme="dark"] .tt-vertical-watermark {
-  color: #52525B;
+  color: var(--text-muted, #64748b);
 }
 
 [data-theme="dark"] .tt-session-card {
-  background: #18181B;
-  border-color: #27272A;
-  border-left-color: #FAFAFA !important;
+  background: var(--bg-card, #181c22);
+  border-color: var(--border-subtle, rgba(255, 255, 255, 0.07));
+  border-left-color: var(--bg-primary-cta, #f8fafc) !important;
+}
+
+[data-theme="dark"] .tt-session-card:hover {
+  background: var(--bg-card-hover, #1f242c);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 [data-theme="dark"] .tt-session-card .tt-type-tag {
-  background: #27272A;
-  border-color: #3F3F46;
-  color: #D4D4D8;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary, #94a3b8);
 }
 
 [data-theme="dark"] .btn-timetable-export.btn-export-primary {
-  background: #FAFAFA;
-  color: #18181B;
-  border-color: #FAFAFA;
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #f8fafc;
+  font-weight: 700;
+}
+
+[data-theme="dark"] .btn-timetable-export.btn-export-primary:hover {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.2);
 }
 
 /* ==========================================================================
@@ -10611,6 +10752,17 @@ body:not(.is-full-tab) .sync-cinematic-current {
 [data-theme="dark"] select,
 [data-theme="dark"] textarea {
   color-scheme: dark;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+  background: #181c22 !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.28) !important;
 }
 
 [data-theme="dark"] .file-tree-item {
@@ -10681,8 +10833,9 @@ body:not(.is-full-tab) .sync-cinematic-current {
 }
 
 [data-theme="dark"] .seg-btn.active {
-  background: #27272A !important;
-  color: #FAFAFA !important;
+  background: #232832 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(255, 255, 255, 0.20) !important;
 }
 
 [data-theme="dark"] .insp-preview-canvas {
@@ -10701,8 +10854,8 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 [data-theme="dark"] .popup-lang-btn.active,
 [data-theme="dark"] .rail-lang-btn.active {
-  background: #FAFAFA !important;
-  color: #111111 !important;
+  background: #f8fafc !important;
+  color: #0f172a !important;
 }
 
 [data-theme="dark"] .tipjar-qr {
