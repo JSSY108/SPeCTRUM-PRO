@@ -216,6 +216,8 @@ const I18N = {
       docDetails: 'DOCUMENT DETAILS',
       preview: 'Preview',
       fullReader: 'Full Reader',
+      expand: 'Expand',
+      collapse: 'Collapse',
       downloadFile: 'Download Local Copy (.pdf)',
       loadingPreview: 'Loading preview...',
       noCoursesSynced: 'No Enrolled Courses Synced',
@@ -409,6 +411,8 @@ const I18N = {
       docDetails: 'BUTIRAN DOKUMEN',
       preview: 'Pratonton',
       fullReader: 'Bacaan Penuh',
+      expand: 'Kembangkan',
+      collapse: 'Runtuhkan',
       downloadFile: 'Muat Turun Salinan (.pdf)',
       loadingPreview: 'Memuatkan pratonton...',
       noCoursesSynced: 'Tiada Kursus Disegerakkan',
@@ -602,6 +606,8 @@ const I18N = {
       docDetails: '文档详情',
       preview: '预览',
       fullReader: '全屏阅读',
+      expand: '全屏',
+      collapse: '退出全屏',
       downloadFile: '下载本地副本 (.pdf)',
       loadingPreview: '正在加载预览...',
       noCoursesSynced: '暂未同步课程',
@@ -903,6 +909,13 @@ function updateMaterialsTranslations() {
   if (fullReaderBtn) {
     const span = fullReaderBtn.querySelector('span');
     if (span) span.textContent = t('materials', 'fullReader');
+  }
+
+  const expandTextEl = document.getElementById('insp-expand-btn-text');
+  if (expandTextEl) {
+    const layout = document.querySelector('.materials-workspace-layout');
+    const isFull = layout ? layout.classList.contains('is-inspector-full') : false;
+    expandTextEl.textContent = isFull ? t('materials', 'collapse') : t('materials', 'expand');
   }
 
   const inspDownloadText = document.getElementById('insp-download-text');

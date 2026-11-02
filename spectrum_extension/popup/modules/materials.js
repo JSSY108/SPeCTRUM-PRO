@@ -2351,29 +2351,64 @@
       });
     }
 
-    function toggleInspectorExpand() {
-      const containerWidth = layout.clientWidth;
-      const currentWidth = pane.offsetWidth;
-      const halfWidth = Math.round(containerWidth * 0.50);
-      const isCurrentlyExpanded = Math.abs(currentWidth - halfWidth) < 35 || currentWidth >= halfWidth - 20;
+    function updateInspectorExpandUI(isFull) {
+      if (btnExpand) {
+        btnExpand.classList.toggle('is-expanded', isFull);
+        btnExpand.title = isFull ? 'Collapse to split view' : 'Expand to full panel';
+      }
+      const btnTabExpand = document.getElementById('insp-btn-toggle-expand');
+      if (btnTabExpand) {
+        btnTabExpand.classList.toggle('is-expanded', isFull);
+        btnTabExpand.title = isFull ? 'Collapse to split view' : 'Expand to full panel';
+      }
+      const expandTextEl = document.getElementById('insp-expand-btn-text');
+      if (expandTextEl) {
+        const word = isFull
+          ? (typeof t === 'function' ? t('materials', 'collapse') : 'Collapse')
+          : (typeof t === 'function' ? t('materials', 'expand') : 'Expand');
+        expandTextEl.textContent = word;
+      }
+    }
 
-      let targetWidth = 480;
-      if (!isCurrentlyExpanded) {
-        targetWidth = halfWidth;
-        if (btnExpand) btnExpand.classList.add('is-expanded');
+    function toggleInspectorExpand(forceState) {
+      const isFull = typeof forceState === 'boolean'
+        ? forceState
+        : !layout.classList.contains('is-inspector-full');
+
+      if (isFull) {
+        layout.classList.add('is-inspector-full');
       } else {
-        targetWidth = 480;
-        if (btnExpand) btnExpand.classList.remove('is-expanded');
+        layout.classList.remove('is-inspector-full');
       }
 
-      layout.style.setProperty('--inspector-width', `${targetWidth}px`);
-      localStorage.setItem('spectrum_inspector_width', String(targetWidth));
+      updateInspectorExpandUI(isFull);
+
+      // Trigger redraw/refit for PDF and PPTX viewers to fill full panel
+      setTimeout(() => {
+        if (activeDocPreview && activeDocPreview.type === 'pdf') {
+          renderPdfDocPage(activeDocPreview.currentPage || 1);
+        } else if (activeDocPreview && activeDocPreview.type === 'pptx' && activeDocPreview.pptxViewer) {
+          try { activeDocPreview.pptxViewer.zoomToFit?.(); } catch (e) {}
+        }
+      }, 100);
 
       setTimeout(() => {
         if (activeDocPreview && activeDocPreview.type === 'pdf') {
-          renderPdfDocPage(activeDocPreview.currentPage);
+          renderPdfDocPage(activeDocPreview.currentPage || 1);
+        } else if (activeDocPreview && activeDocPreview.type === 'pptx' && activeDocPreview.pptxViewer) {
+          try { activeDocPreview.pptxViewer.zoomToFit?.(); } catch (e) {}
         }
-      }, 200);
+      }, 250);
+    }
+
+    window.toggleInspectorExpand = toggleInspectorExpand;
+    window.updateInspectorExpandUI = updateInspectorExpandUI;
+
+    const btnTabExpand = document.getElementById('insp-btn-toggle-expand');
+    if (btnTabExpand) {
+      btnTabExpand.addEventListener('click', () => {
+        toggleInspectorExpand();
+      });
     }
   }
 
@@ -2581,9 +2616,14 @@
     }
 
     fileInspectorPane.style.display = 'flex';
+    const layout = document.querySelector('.materials-workspace-layout');
+    const isFull = layout ? layout.classList.contains('is-inspector-full') : false;
     const inspectorResizer = document.getElementById('inspector-resizer');
-    if (inspectorResizer) {
+    if (inspectorResizer && !isFull) {
       inspectorResizer.style.display = 'flex';
+    }
+    if (typeof updateInspectorExpandUI === 'function') {
+      updateInspectorExpandUI(isFull);
     }
 
     // Load rich mini preview via PDF.js or Image/Text (after pane is visible so clientHeight is measured accurately)
@@ -2596,6 +2636,9 @@
       if (fileInspectorPane) fileInspectorPane.style.display = 'none';
       const inspectorResizer = document.getElementById('inspector-resizer');
       if (inspectorResizer) inspectorResizer.style.display = 'none';
+      const layout = document.querySelector('.materials-workspace-layout');
+      if (layout) layout.classList.remove('is-inspector-full');
+      if (typeof updateInspectorExpandUI === 'function') updateInspectorExpandUI(false);
       document.querySelectorAll('.file-tree-item.inspect-active').forEach(el => el.classList.remove('inspect-active'));
       activeDocPreview = null;
       hidePageNavControls();

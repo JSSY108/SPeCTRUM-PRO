@@ -560,8 +560,19 @@
           <aside class="file-inspector-pane" id="file-inspector-pane" style="display:none;">
             <div class="inspector-header">
               <div class="inspector-header-actions">
-                <button type="button" id="btn-toggle-expand-inspector" class="btn-inspector-action" title="Toggle 50% split view (拉到中间)">
-                  <svg class="icon-svg" viewBox="0 0 24 24" style="width:13px;height:13px;"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <button type="button" id="btn-toggle-expand-inspector" class="btn-inspector-action" title="Expand to full panel">
+                  <svg class="icon-svg icon-expand-header" viewBox="0 0 24 24" style="width:13px;height:13px;" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <polyline points="9 21 3 21 3 15"></polyline>
+                    <line x1="21" y1="3" x2="14" y2="10"></line>
+                    <line x1="3" y1="21" x2="10" y2="14"></line>
+                  </svg>
+                  <svg class="icon-svg icon-collapse-header" viewBox="0 0 24 24" style="width:13px;height:13px;display:none;" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="4 14 10 14 10 20"></polyline>
+                    <polyline points="20 10 14 10 14 4"></polyline>
+                    <line x1="14" y1="10" x2="21" y2="3"></line>
+                    <line x1="3" y1="21" x2="10" y2="14"></line>
+                  </svg>
                 </button>
                 <button type="button" id="btn-close-inspector" class="modal-close-btn" title="Close Inspector">✕</button>
               </div>
@@ -603,10 +614,22 @@
                     </button>
                   </div>
 
-                  <a href="#" target="_blank" id="insp-open-reader-btn" class="insp-reader-cta-btn" title="Open full reader in new tab">
-                    <span>Full Reader</span>
-                    <svg class="icon-svg" viewBox="0 0 24 24" style="width:11px;height:11px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                  </a>
+                  <button type="button" id="insp-btn-toggle-expand" class="insp-expand-collapse-btn" title="Expand to full panel">
+                    <svg class="icon-svg icon-expand-state" viewBox="0 0 24 24" style="width:12px;height:12px;" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <polyline points="9 21 3 21 3 15"></polyline>
+                      <line x1="21" y1="3" x2="14" y2="10"></line>
+                      <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                    <svg class="icon-svg icon-collapse-state" viewBox="0 0 24 24" style="width:12px;height:12px;display:none;" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="4 14 10 14 10 20"></polyline>
+                      <polyline points="20 10 14 10 14 4"></polyline>
+                      <line x1="14" y1="10" x2="21" y2="3"></line>
+                      <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                    <span id="insp-expand-btn-text">Expand</span>
+                  </button>
+                  <a href="#" target="_blank" id="insp-open-reader-btn" style="display:none;" aria-hidden="true"></a>
                 </div>
                 <div class="insp-mini-preview-frame" id="insp-mini-preview-frame">
                   <!-- Dynamic Content Area (PDF canvas, image, or placeholder) -->

@@ -10940,3 +10940,109 @@ body:not(.is-full-tab) .sync-cinematic-current {
   visibility: hidden !important;
   pointer-events: none !important;
 }
+
+
+/* ========================================================
+   FULL PANEL INSPECTOR MODE: Takes entire panel till left sidebar
+   ======================================================== */
+.materials-workspace-layout.is-inspector-full .materials-explorer-pane,
+.materials-workspace-layout.is-inspector-full .inspector-resizer {
+  display: none !important;
+}
+
+.materials-workspace-layout.is-inspector-full .file-inspector-pane {
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  border-left: none !important;
+  box-shadow: none !important;
+}
+
+/* Tab Bar Expand & Collapse Button (Replaces Full Reader) */
+.insp-expand-collapse-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: #2563EB;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: var(--radius-xs);
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+.insp-expand-collapse-btn:hover {
+  background: #DBEAFE;
+  border-color: #93C5FD;
+  color: #1D4ED8;
+}
+
+.insp-expand-collapse-btn.is-expanded {
+  background: #1E293B;
+  color: #FFFFFF;
+  border-color: #334155;
+}
+
+.insp-expand-collapse-btn.is-expanded:hover {
+  background: #0F172A;
+  border-color: #475569;
+}
+
+[data-theme="dark"] .insp-expand-collapse-btn {
+  background: rgba(37, 99, 235, 0.18);
+  border-color: rgba(96, 165, 250, 0.35);
+  color: #93C5FD;
+}
+
+[data-theme="dark"] .insp-expand-collapse-btn:hover {
+  background: rgba(37, 99, 235, 0.32);
+  border-color: rgba(96, 165, 250, 0.55);
+  color: #BFDBFE;
+}
+
+[data-theme="dark"] .insp-expand-collapse-btn.is-expanded {
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+[data-theme="dark"] .insp-expand-collapse-btn.is-expanded:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+/* Icon Switching for Expand/Collapse Button */
+.insp-expand-collapse-btn .icon-collapse-state {
+  display: none !important;
+}
+.insp-expand-collapse-btn .icon-expand-state {
+  display: inline-block !important;
+}
+
+.insp-expand-collapse-btn.is-expanded .icon-collapse-state {
+  display: inline-block !important;
+}
+.insp-expand-collapse-btn.is-expanded .icon-expand-state {
+  display: none !important;
+}
+
+/* Icon Switching for Header Expand Button */
+#btn-toggle-expand-inspector .icon-collapse-header {
+  display: none !important;
+}
+#btn-toggle-expand-inspector .icon-expand-header {
+  display: inline-block !important;
+}
+
+#btn-toggle-expand-inspector.is-expanded .icon-collapse-header {
+  display: inline-block !important;
+}
+#btn-toggle-expand-inspector.is-expanded .icon-expand-header {
+  display: none !important;
+}
