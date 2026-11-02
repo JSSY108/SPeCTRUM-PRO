@@ -1882,46 +1882,115 @@
     hidePageNavControls();
     contentArea.innerHTML = '';
 
-    const pptxWrap = document.createElement('div');
-    pptxWrap.className = 'insp-pptx-embed-wrap';
-    pptxWrap.style.cssText = 'width:100%;height:100%;min-height:260px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg-card,#181c22);border:1px solid var(--border-medium,rgba(255,255,255,0.12));border-radius:10px;padding:24px;text-align:center;gap:14px;cursor:pointer;';
-    pptxWrap.title = 'Click to open in PowerPoint Viewer';
+    if (activeDocPreview && activeDocPreview.pptxViewer) {
+      try { activeDocPreview.pptxViewer.destroy?.(); } catch (e) {}
+      activeDocPreview = null;
+    }
 
-    const iconBox = document.createElement('div');
-    iconBox.style.cssText = 'width:56px;height:56px;border-radius:12px;background:rgba(251,146,60,0.12);border:1px solid rgba(251,146,60,0.25);display:flex;align-items:center;justify-content:center;color:var(--signal-assignment,#fb923c);';
-    iconBox.innerHTML = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>';
+    // Resolve ChristopherVR createPptxViewer factory
+    const createViewerFn = (window.pptxVanillaBundle && window.pptxVanillaBundle.createPptxViewer) ||
+                           window.createPptxViewer;
 
-    const infoBox = document.createElement('div');
-    const titleEl = document.createElement('div');
-    titleEl.style.cssText = 'font-size:14px;font-weight:700;color:var(--text-primary,#f1f5f9);margin-bottom:4px;word-break:break-word;max-width:280px;';
-    titleEl.textContent = file.title || 'PowerPoint Presentation';
+    if (!createViewerFn) {
+      console.warn('[SPeCTRUM Pro] ChristopherVR viewer engine not ready yet.');
+      renderPlaceholder(contentArea, file, 'Engine loading...');
+      return;
+    }
 
-    const descEl = document.createElement('div');
-    descEl.style.cssText = 'font-size:12px;color:var(--text-secondary,#94a3b8);';
-    descEl.textContent = 'High-fidelity slide viewer ready';
+    // Update Full Reader button target
+    const inspOpenReaderBtn = document.getElementById('insp-open-reader-btn');
+    if (inspOpenReaderBtn) {
+      const openTarget = file.realDownloadUrl || file.url || '';
+      if (openTarget) {
+        const fullReaderUrl = chrome.runtime?.getURL
+          ? chrome.runtime.getURL(`popup/pptx_viewer.html?url=${encodeURIComponent(openTarget)}&title=${encodeURIComponent(file.title || 'Presentation')}`)
+          : `pptx_viewer.html?url=${encodeURIComponent(openTarget)}&title=${encodeURIComponent(file.title || 'Presentation')}`;
+        inspOpenReaderBtn.href = fullReaderUrl;
+        inspOpenReaderBtn.target = '_blank';
+        inspOpenReaderBtn.title = 'Open in Fullscreen Reader tab';
+      }
+    }
 
-    infoBox.appendChild(titleEl);
-    infoBox.appendChild(descEl);
+    // Create container inside contentArea
+    const hostEl = document.createElement('div');
+    hostEl.className = 'insp-pptx-viewer-container';
+    hostEl.style.cssText = 'width:100%;height:100%;min-height:280px;position:relative;overflow:hidden;display:flex;background:transparent;';
+    contentArea.appendChild(hostEl);
 
-    const openBtn = document.createElement('button');
-    openBtn.type = 'button';
-    openBtn.className = 'btn is-primary';
-    openBtn.style.cssText = 'display:inline-flex;align-items:center;gap:8px;padding:8px 18px;background:#f8fafc;color:#0f172a;border:none;border-radius:6px;font-size:12.5px;font-weight:700;cursor:pointer;transition:transform 0.15s ease;';
-    openBtn.innerHTML = '<span>🖥️</span> Open Full Presentation';
-    openBtn.onclick = (e) => {
-      e.stopPropagation();
-      openPptxFullReader(file);
-    };
+    const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
 
-    pptxWrap.appendChild(iconBox);
-    pptxWrap.appendChild(infoBox);
-    pptxWrap.appendChild(openBtn);
+    try {
+      const viewer = createViewerFn(hostEl, {
+        source: arrayBuffer,
+        locale: 'en',
+        editable: false,                // View mode: no editing handles or gestures
+        readOnly: true,                 // Engine read-only state
+        showToolbar: false,             // Suppress ribbon toolbar completely
+        showThumbnails: false,          // Slide expands to 100% of the preview panel
+        showInspector: false,           // Completely removes property inspector panel
+        showFormatToolbar: false,       // Suppress format bar
+        showCompatibilityToasts: false, // Suppress warning toasts
+        customization: {
+          hiddenPanels: [
+            'inspector',
+            'selectionPane',
+            'findReplace',
+            'accessibilityPane',
+            'comparePane',
+            'notes',
+            'quickAccessToolbar',
+            'titleBar'
+          ],
+          disabledFeatures: ['ai', 'collaboration', 'comments', 'editPoints'],
+          capabilities: {
+            edit: false,
+            comment: false
+          }
+        },
+        fitPadding: 8,
+        theme: isDarkTheme ? (window.pptxVanillaBundle?.vermilionDarkTheme || { colors: { primary: '#fb923c' } })
+                           : (window.pptxVanillaBundle?.vermilionLightTheme || { colors: { primary: '#0284c7' } }),
+        onLoad: ({ slideCount }) => {
+          const total = slideCount || 1;
+          activeDocPreview = {
+            type: 'pptx',
+            fileId: file.url || file.id,
+            pptxViewer: viewer,
+            numPages: total,
+            currentPage: 1,
+            file: file
+          };
+          initPageNavControls();
+          initPreviewZoomControls();
+          updatePageNavControls(1, total);
 
-    pptxWrap.onclick = () => {
-      openPptxFullReader(file);
-    };
+          previewCache.set(file.url || file.id, {
+            type: 'pptx_loaded',
+            arrayBuffer: arrayBuffer,
+            totalSlides: total,
+            realDownloadUrl: file.realDownloadUrl || file.url
+          });
 
-    contentArea.appendChild(pptxWrap);
+          setTimeout(() => {
+            try { viewer.zoomToFit?.(); } catch (e) {}
+          }, 60);
+        },
+        onSlideChange: (idx) => {
+          if (activeDocPreview && activeDocPreview.pptxViewer === viewer) {
+            activeDocPreview.currentPage = idx + 1;
+            updatePageNavControls(idx + 1, activeDocPreview.numPages);
+          }
+        },
+        onError: (err) => {
+          console.warn('[SPeCTRUM Pro] PPTX Viewer Error:', err);
+          renderPlaceholder(contentArea, file, 'Unable to render presentation slide.');
+        }
+      });
+
+    } catch (err) {
+      console.warn('[SPeCTRUM Pro] renderPptxWithLibrary error:', err);
+      renderPlaceholder(contentArea, file, 'Unable to display presentation.');
+    }
   }
 
 

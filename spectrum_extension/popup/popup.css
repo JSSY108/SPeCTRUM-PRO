@@ -10864,3 +10864,70 @@ body:not(.is-full-tab) .sync-cinematic-current {
   padding: 8px;
   box-sizing: content-box;
 }
+
+
+/* =========================================================================
+   SPeCTRUM PRO: In-Panel PPTX Presentation Viewer (Pure View Mode)
+   ========================================================================= */
+.insp-pptx-viewer-container {
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex: 1;
+  background: transparent;
+}
+
+.insp-pptx-viewer-container .pptxv {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: transparent;
+}
+
+.insp-pptx-viewer-container .pptxv-body {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex: 1;
+}
+
+.insp-pptx-viewer-container .pptxv-viewport {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  position: relative;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Suppress all editing panels, ribbon tabs, inspectors, and handles */
+.insp-pptx-viewer-container .pptxv-inspector,
+.insp-pptx-viewer-container .pptxv-format-toolbar,
+.insp-pptx-viewer-container .pptxv-ribbon,
+.insp-pptx-viewer-container .pptxv-qat-row,
+.insp-pptx-viewer-container .pptxv-titlebar,
+.insp-pptx-viewer-container .pptxv-read-only-banner,
+.insp-pptx-viewer-container .pptxv-enable-editing-banner,
+.insp-pptx-viewer-container .pptxv-selection-pane,
+.insp-pptx-viewer-container .pptxv-find-replace,
+.insp-pptx-viewer-container .pptxv-accessibility-pane,
+.insp-pptx-viewer-container .pptxv-compare-pane,
+.insp-pptx-viewer-container .pptxv-handle,
+.insp-pptx-viewer-container .pptxv-resizer,
+.insp-pptx-viewer-container .pptxv-rotator,
+.insp-pptx-viewer-container .pptxv-selection-box,
+.insp-pptx-viewer-container .pptxv-selection-overlay {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
