@@ -108,6 +108,56 @@
     return (words[0] || courseCode || 'CO').slice(0, 3).toUpperCase();
   }
 
+  function wrapCanvasTitle(measureFn, text, maxWidth, maxLines = 2) {
+    if (!text) return [];
+    const words = String(text).trim().split(/\s+/);
+    if (words.length === 0) return [];
+
+    const lines = [];
+    let currentLine = '';
+
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      if (measureFn(testLine) <= maxWidth) {
+        currentLine = testLine;
+      } else {
+        if (lines.length === maxLines - 1) {
+          // Last allowed line: append remaining words and truncate with ellipsis if needed
+          const remaining = words.slice(i).join(' ');
+          let lastLine = currentLine ? `${currentLine} ${remaining}` : remaining;
+          if (measureFn(lastLine) > maxWidth) {
+            while (lastLine.length > 3 && measureFn(lastLine + '…') > maxWidth) {
+              lastLine = lastLine.slice(0, -1).trim();
+            }
+            lastLine += '…';
+          }
+          lines.push(lastLine);
+          return lines;
+        }
+        if (currentLine) {
+          lines.push(currentLine);
+          currentLine = word;
+        } else {
+          lines.push(word);
+          currentLine = '';
+        }
+      }
+    }
+
+    if (currentLine) {
+      if (measureFn(currentLine) > maxWidth) {
+        while (currentLine.length > 3 && measureFn(currentLine + '…') > maxWidth) {
+          currentLine = currentLine.slice(0, -1).trim();
+        }
+        currentLine += '…';
+      }
+      lines.push(currentLine);
+    }
+
+    return lines.slice(0, maxLines);
+  }
+
   function cleanSingleCourseCode(code) {
     if (!code || typeof code !== 'string') return '';
     const trimmed = code.trim();
@@ -1579,19 +1629,18 @@
             ctx.fillText(s.occ, cardX + 16, cardY + 52);
           }
 
-          // Course Title
+          // Course Title (Multi-line wrap, up to 2 lines)
           ctx.fillStyle = '#18181B';
-          ctx.font = '800 19px "Hanken Grotesk", sans-serif';
-          let title = s.courseName;
+          ctx.font = '800 18px "Hanken Grotesk", sans-serif';
           const maxTitleW = cardW - 32;
-          if (ctx.measureText(title).width > maxTitleW) {
-            while (title.length > 4 && ctx.measureText(title + '…').width > maxTitleW) {
-              title = title.slice(0, -1);
-            }
-            title += '…';
-          }
-          const titleY = (cardH >= 95) ? (cardY + 78) : (cardY + 54);
-          ctx.fillText(title, cardX + 16, titleY);
+          const titleLines = wrapCanvasTitle(str => ctx.measureText(str).width, s.courseName, maxTitleW, 2);
+          const titleLineH = 21;
+          const startTitleY = (cardH >= 95)
+            ? (titleLines.length > 1 ? cardY + 68 : cardY + 74)
+            : (titleLines.length > 1 ? cardY + 48 : cardY + 54);
+          titleLines.forEach((tLine, tIdx) => {
+            ctx.fillText(tLine, cardX + 16, startTitleY + tIdx * titleLineH);
+          });
 
           // Footer: Venue left with pin, Duration right
           if (cardH >= 65) {
@@ -1972,17 +2021,16 @@
           ctx.fillText(s.typeLabel, cardX + cardW - 14 - tagW / 2, cardY + 25);
           ctx.textAlign = 'left';
 
-          // Course Title
+          // Course Title (Multi-line wrap, up to 2 lines)
           ctx.fillStyle = '#18181B';
-          ctx.font = '800 20px "Hanken Grotesk", sans-serif';
-          let title = s.courseName;
-          if (ctx.measureText(title).width > cardW - 28) {
-            while (title.length > 4 && ctx.measureText(title + '…').width > cardW - 28) {
-              title = title.slice(0, -1);
-            }
-            title += '…';
-          }
-          ctx.fillText(title, cardX + 16, cardY + 56);
+          ctx.font = '800 18px "Hanken Grotesk", sans-serif';
+          const maxTitleW = cardW - 28;
+          const titleLines = wrapCanvasTitle(str => ctx.measureText(str).width, s.courseName, maxTitleW, 2);
+          const titleLineH = 21;
+          const startTitleY = (titleLines.length > 1) ? (cardY + 48) : (cardY + 54);
+          titleLines.forEach((tLine, tIdx) => {
+            ctx.fillText(tLine, cardX + 16, startTitleY + tIdx * titleLineH);
+          });
 
           // Subtitle (show OCC for all cards, including 1-hour sessions with cardH >= 80)
           if (cardH >= 80) {
@@ -1995,7 +2043,9 @@
               }
               sub += '…';
             }
-            const subY = (cardH >= 115) ? (cardY + 84) : (cardY + 75);
+            const subY = (titleLines.length > 1)
+              ? ((cardH >= 115) ? (cardY + 95) : (cardY + 88))
+              : ((cardH >= 115) ? (cardY + 84) : (cardY + 75));
             ctx.fillText(sub, cardX + 16, subY);
           }
 
