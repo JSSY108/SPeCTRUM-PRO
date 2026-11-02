@@ -574,10 +574,13 @@ function q(e) {
       return n.get(i);
     },
     getByType(i) {
+      const norm = hn(i);
+      if (r.has(norm))
+        return r.get(norm) || [];
       if (r.has(i))
         return r.get(i) || [];
       for (const [l, c] of r)
-        if (l.includes(i) || i.includes(l))
+        if (l === norm || l === i)
           return c;
       return [];
     },
