@@ -455,6 +455,12 @@
                 </select>
               </div>
 
+              <!-- Select All / Deselect All Button -->
+              <button id="btn-select-all" class="btn-wireframe mat-select-all-btn" type="button" title="Select or deselect all files">
+                <svg class="icon-svg icon-select-all" viewBox="0 0 24 24" style="width:12px;height:12px;" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9 12 11 14 15 10"/></svg>
+                <span id="btn-select-all-label">Select All</span>
+              </button>
+
               <!-- Collapse / Expand All Button -->
               <button id="btn-toggle-expand-all" class="btn-wireframe mat-expand-btn" type="button" title="Expand or collapse all courses and sections">
                 <svg class="icon-svg icon-expand-all" viewBox="0 0 24 24" style="width:12px;height:12px;"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>
@@ -497,11 +503,8 @@
             <div class="mat-bottom-action-bar">
               <div class="mat-bottom-left">
                 <span class="mat-selection-label">Selected: <b id="selected-count">0 files</b></span>
-                <span class="mat-divider">|</span>
-                <button type="button" id="btn-clear-selection" class="mat-link-action">Clear Selection</button>
               </div>
               <div class="mat-bottom-right">
-                <button type="button" id="btn-mark-all-synced" class="btn-wireframe" style="padding:5px 12px;font-size:11px;font-weight:600;">Mark All as Synced</button>
                 <button id="btn-download-zip" class="btn-cta-solid" style="padding:6px 14px;font-size:11px;font-weight:700;">
                   <svg class="icon-svg" viewBox="0 0 24 24" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                   <span id="btn-download-text">Download Selected (.zip)</span>

@@ -4817,6 +4817,7 @@ body.is-full-tab .materials-pane {
   gap: 5px;
 }
 
+.mat-select-all-btn,
 .mat-expand-btn {
   height: 32px;
   padding: 0 12px;
@@ -4832,8 +4833,10 @@ body.is-full-tab .materials-pane {
   cursor: pointer;
   transition: all 0.2s ease;
   user-select: none;
+  white-space: nowrap;
 }
 
+.mat-select-all-btn:hover,
 .mat-expand-btn:hover {
   border-color: var(--primary-accent);
   color: var(--primary-accent);
@@ -6529,6 +6532,14 @@ body:not(.is-full-tab) .mat-ext-pills {
 
 body:not(.is-full-tab) .mat-order-dropdown-wrap {
   display: none;
+}
+
+body:not(.is-full-tab) .mat-select-all-btn,
+body:not(.is-full-tab) .mat-expand-btn,
+body:not(.is-full-tab) .mat-rescan-btn {
+  height: 28px;
+  padding: 0 8px;
+  font-size: 10.5px;
 }
 
 body:not(.is-full-tab) .fetch-progress-card {

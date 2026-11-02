@@ -203,6 +203,8 @@ const I18N = {
       collapseAll: 'Collapse All',
       rescan: 'Rescan',
       selectedFiles: 'Selected: {n} files',
+      selectAll: 'Select All',
+      deselectAll: 'Deselect All',
       clearSelection: 'Clear Selection',
       markSynced: 'Mark All as Synced',
       downloadZip: 'Download Selected (.zip)',
@@ -376,6 +378,8 @@ const I18N = {
       collapseAll: 'Runtuhkan Semua',
       rescan: 'Imbas Semula',
       selectedFiles: 'Dipilih: {n} fail',
+      selectAll: 'Pilih Semua',
+      deselectAll: 'Nyahpilih Semua',
       clearSelection: 'Kosongkan',
       markSynced: 'Tanda Selesai Disegerak',
       downloadZip: 'Muat Turun Pilihan (.zip)',
@@ -549,6 +553,8 @@ const I18N = {
       collapseAll: '折叠全部',
       rescan: '重新扫描',
       selectedFiles: '已选：{n} 个文件',
+      selectAll: '全选',
+      deselectAll: '全不选',
       clearSelection: '清空选择',
       markSynced: '全部标为已同步',
       downloadZip: '下载所选 (.zip)',
@@ -820,11 +826,15 @@ function updateMaterialsTranslations() {
   const rescanLabel = document.getElementById('btn-rescan-label');
   if (rescanLabel) rescanLabel.textContent = t('materials', 'rescan');
 
-  const btnClearSelection = document.getElementById('btn-clear-selection');
-  if (btnClearSelection) btnClearSelection.textContent = t('materials', 'clearSelection');
-
-  const btnMarkSynced = document.getElementById('btn-mark-all-synced');
-  if (btnMarkSynced) btnMarkSynced.textContent = t('materials', 'markSynced');
+  if (typeof window !== 'undefined' && typeof window.updateSelectAllButtonState === 'function') {
+    window.updateSelectAllButtonState();
+  } else {
+    const selectAllLabel = document.getElementById('btn-select-all-label');
+    if (selectAllLabel) {
+      const isAllSelected = document.getElementById('btn-select-all')?.classList.contains('all-selected');
+      selectAllLabel.textContent = isAllSelected ? t('materials', 'deselectAll') : t('materials', 'selectAll');
+    }
+  }
 
   const downloadText = document.getElementById('btn-download-text');
   if (downloadText) downloadText.textContent = t('materials', 'downloadZip');
@@ -6478,6 +6488,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   function renderFromCache(cachedCourses, timestamp) {
+    coursesData.forEach(course => {
+      course.expanded = false;
+      if (Array.isArray(course.sections)) {
+        course.sections.forEach(s => { s.expanded = false; });
+      }
+    });
     renderCourseTreeShells();
     coursesData.forEach(course => {
       if (course.loaded) {

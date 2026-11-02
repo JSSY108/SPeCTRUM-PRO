@@ -66,6 +66,7 @@
   let selectAllChk = null;
   let selectedCountEl = null;
   let btnToggleExpandAll = null;
+  let btnSelectAll = null;
   let expandAllLabel = null;
   let btnRescan = null;
   let btnRescanLabel = null;
@@ -91,6 +92,7 @@
     notOnSpectrumEl = document.getElementById('not-on-spectrum');
     selectAllChk = document.getElementById('select-all');
     selectedCountEl = document.getElementById('selected-count');
+    btnSelectAll = document.getElementById('btn-select-all');
     btnToggleExpandAll = document.getElementById('btn-toggle-expand-all');
     expandAllLabel = document.getElementById('btn-toggle-expand-label');
     btnRescan = document.getElementById('btn-rescan');
@@ -321,7 +323,7 @@
           sections: (isRescan || !prev?.loaded) ? [] : (prev.sections || []),
           announcements: [],
           checked: true,
-          expanded: prev ? Boolean(prev.expanded) : false,
+          expanded: false,
           loaded: (isRescan || !prev?.loaded) ? false : Boolean(prev.loaded)
         };
       });
@@ -749,6 +751,17 @@
     coursesData = list.filter(isRealCourse);
     if (typeof window !== 'undefined') window.coursesData = coursesData;
 
+    // Default state: Collapse All courses & sections on initial render
+    if (typeof window !== 'undefined' && !window._hasRenderedInitialMaterials) {
+      window._hasRenderedInitialMaterials = true;
+      coursesData.forEach(c => {
+        c.expanded = false;
+        if (Array.isArray(c.sections)) {
+          c.sections.forEach(s => { s.expanded = false; });
+        }
+      });
+    }
+
     if (coursesData.length === 0) {
       courseTreeEl.innerHTML = `
         <div class="empty-state" style="text-align:center;padding:32px 16px;color:var(--text-muted);">
@@ -1045,6 +1058,48 @@
 
       childrenContainer.appendChild(secItem);
     });
+  }
+
+  // Helper: Sync Select All / Deselect All button text and icon based on selection state
+  function updateSelectAllButtonState() {
+    const btn = document.getElementById('btn-select-all');
+    if (!btn) return;
+    const labelEl = document.getElementById('btn-select-all-label') || btn.querySelector('span');
+    const iconEl = btn.querySelector('.icon-select-all');
+
+    const list = (typeof window !== 'undefined' && Array.isArray(window.coursesData)) ? window.coursesData : coursesData;
+    let totalAvailable = 0;
+    let totalSelected = 0;
+
+    list.forEach(c => {
+      (c.sections || []).forEach(s => {
+        (s.files || []).forEach(f => {
+          totalAvailable++;
+          if (f.checked !== false) totalSelected++;
+        });
+      });
+    });
+
+    const isAllSelected = (totalAvailable > 0 && totalSelected === totalAvailable);
+    const t = (typeof window !== 'undefined' && typeof window.t === 'function')
+      ? window.t
+      : (sec, key) => (key === 'deselectAll' ? 'Deselect All' : 'Select All');
+
+    if (isAllSelected) {
+      btn.classList.add('all-selected');
+      if (labelEl) labelEl.textContent = t('materials', 'deselectAll');
+      btn.setAttribute('title', t('materials', 'deselectAll'));
+      if (iconEl) {
+        iconEl.innerHTML = '<rect x="3" y="3" width="18" height="18" rx="3"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/>';
+      }
+    } else {
+      btn.classList.remove('all-selected');
+      if (labelEl) labelEl.textContent = t('materials', 'selectAll');
+      btn.setAttribute('title', t('materials', 'selectAll'));
+      if (iconEl) {
+        iconEl.innerHTML = '<rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9 12 11 14 15 10"/>';
+      }
+    }
   }
 
   // Helper: Determine if hierarchy has any expanded nodes and sync button UI
@@ -2769,6 +2824,7 @@
     if (btnDownloadZip) {
       btnDownloadZip.disabled = totalSelected === 0;
     }
+    updateSelectAllButtonState();
   }
 
   // 6. Filtering & Search
@@ -2900,47 +2956,40 @@
       };
     }
 
-    // Clear Selection
-    const btnClearSelection = document.getElementById('btn-clear-selection');
-    if (btnClearSelection) {
-      btnClearSelection.onclick = () => {
+    // Select All / Deselect All
+    const btnSelectAllEl = document.getElementById('btn-select-all');
+    if (btnSelectAllEl) {
+      btnSelectAllEl.onclick = () => {
         const list = (typeof window !== 'undefined' && Array.isArray(window.coursesData)) ? window.coursesData : coursesData;
-        list.forEach(c => {
-          c.checked = false;
-          (c.sections || []).forEach(s => {
-            s.checked = false;
-            (s.files || []).forEach(f => { f.checked = false; });
-          });
-        });
-        document.querySelectorAll('.chk-course, .chk-section, .chk-file').forEach(chk => { chk.checked = false; });
-        document.querySelectorAll('.file-tree-item.selected, .course-tree-item.selected').forEach(el => el.classList.remove('selected'));
-        updateAllCounts();
-        debounceSaveCache();
-      };
-    }
-
-    // Mark All Synced
-    const btnMarkAllSynced = document.getElementById('btn-mark-all-synced');
-    if (btnMarkAllSynced) {
-      btnMarkAllSynced.onclick = () => {
-        const list = (typeof window !== 'undefined' && Array.isArray(window.coursesData)) ? window.coursesData : coursesData;
+        let totalAvailable = 0;
+        let totalSelected = 0;
         list.forEach(c => {
           (c.sections || []).forEach(s => {
             (s.files || []).forEach(f => {
-              f.isSynced = true;
-              f.isNew = false;
+              totalAvailable++;
+              if (f.checked !== false) totalSelected++;
             });
           });
         });
-        document.querySelectorAll('.btn-sync-now').forEach(btn => {
-          const span = document.createElement('span');
-          span.className = 'status-synced-pill';
-          span.innerHTML = `<svg class="icon-svg" viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#16A34A;fill:none;stroke-width:2.5;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Synced`;
-          btn.parentNode.replaceChild(span, btn);
+
+        const targetChecked = !(totalAvailable > 0 && totalSelected === totalAvailable);
+
+        list.forEach(c => {
+          c.checked = targetChecked;
+          (c.sections || []).forEach(s => {
+            s.checked = targetChecked;
+            (s.files || []).forEach(f => { f.checked = targetChecked; });
+          });
         });
-        document.querySelectorAll('.file-new-badge').forEach(badge => badge.remove());
-        btnMarkAllSynced.textContent = '✔ All Synced';
-        setTimeout(() => { btnMarkAllSynced.textContent = 'Mark All as Synced'; }, 2000);
+
+        document.querySelectorAll('.chk-course, .chk-section, .chk-file').forEach(chk => {
+          chk.checked = targetChecked;
+        });
+        document.querySelectorAll('.file-tree-item, .course-tree-item').forEach(el => {
+          el.classList.toggle('selected', targetChecked);
+        });
+
+        updateAllCounts();
         debounceSaveCache();
       };
     }
@@ -3251,6 +3300,7 @@
   window.getFileTopicDetails = getFileTopicDetails;
   window.renderCourseTreeShells = renderCourseTreeShells;
   window.populateCourseChildren = populateCourseChildren;
+  window.updateSelectAllButtonState = updateSelectAllButtonState;
   window.updateExpandAllButtonState = updateExpandAllButtonState;
   window.toggleExpandAllMaterials = toggleExpandAllMaterials;
   window.submitOidcFormIfPresent = submitOidcFormIfPresent;
