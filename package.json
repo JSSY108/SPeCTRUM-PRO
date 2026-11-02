@@ -6,8 +6,8 @@
     "test": "node -e \"console.log('Testing pptx-viewer...'); const { PPTXViewer } = require('./spectrum_extension/libs/pptx-viewer.cjs'); console.log('PPTXViewer loaded:', Boolean(PPTXViewer));\""
   },
   "dependencies": {
+    "pptx-vanilla-viewer": "^3.61.0",
     "pptx-viewer": "^0.2.2"
   },
   "license": "MIT"
 }
-
