@@ -5547,8 +5547,8 @@ body.is-full-tab .materials-pane {
 
 .section-tree-children {
   display: none;
-  background: #FFFFFF;
-  border-left: 3px solid #3B82F6;
+  background: transparent;
+  border-left: none;
   padding-bottom: 4px;
   max-height: 320px;
   overflow-y: auto;
@@ -5587,7 +5587,7 @@ body.is-full-tab .materials-pane {
 
 /* Table Column Subheaders */
 .files-table-header {
-  display: flex;
+  display: none !important;
   align-items: center;
   padding: 6px 12px;
   background: #F8FAFC;
@@ -7156,7 +7156,8 @@ body.is-full-tab .section-tree-children {
 }
 
 [data-theme="dark"] .section-tree-children {
-  background: #18181B;
+  background: transparent !important;
+  border-left: none !important;
   scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
 }
 

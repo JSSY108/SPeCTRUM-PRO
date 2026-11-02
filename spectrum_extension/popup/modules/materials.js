@@ -929,18 +929,14 @@
           <div class="tree-chevron-wrap">
             <svg class="tree-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </div>
+          <label class="mat-chk-wrap" style="margin-right:2px;" title="Select section">
+            <input type="checkbox" class="chk-section" data-course-id="${course.id}" data-sec-name="${encodeURIComponent(sec.name)}" ${isSecChecked ? 'checked' : ''}>
+          </label>
           <span class="section-icon">📁</span>
           <span class="section-title" title="${escapeHtml(sec.name)}">${escapeHtml(displayName.toUpperCase())}</span>
           <span class="section-count-badge">${countLabel}</span>
         </div>
         <div class="section-tree-children">
-          <div class="files-table-header">
-            <label class="mat-chk-wrap">
-              <input type="checkbox" class="chk-section" data-course-id="${course.id}" data-sec-name="${encodeURIComponent(sec.name)}" ${isSecChecked ? 'checked' : ''}>
-            </label>
-            <span class="col-head-name">${t('materials', 'colNameAsset')}</span>
-            <span class="col-head-status">${t('materials', 'colStatusActions')}</span>
-          </div>
           <div class="files-rows-wrap"></div>
         </div>
       `;
@@ -954,7 +950,10 @@
       });
 
       const secChk = secItem.querySelector('.chk-section');
-      secChk.addEventListener('change', () => {
+      if (secChk) {
+        secChk.addEventListener('click', (e) => e.stopPropagation());
+        secChk.addEventListener('change', (e) => {
+          e.stopPropagation();
         const isChecked = secChk.checked;
         sec.checked = isChecked;
         (sec.files || []).forEach(f => { f.checked = isChecked; });
@@ -967,7 +966,8 @@
         updateParentCourseCheckbox(course, courseEl);
         updateAllCounts();
         debounceSaveCache();
-      });
+        });
+      }
 
       const filesRowsWrap = secItem.querySelector('.files-rows-wrap');
 
