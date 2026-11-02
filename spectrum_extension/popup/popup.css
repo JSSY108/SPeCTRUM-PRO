@@ -8947,12 +8947,14 @@ body:not(.is-full-tab) .sync-cinematic-current {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 24px;
+  padding: 10px 20px;
   background: var(--bg-surface);
-  border-bottom: 1px solid var(--border-hairline);
+  border-top: 1px solid var(--border-hairline);
+  border-bottom: none;
   flex-shrink: 0;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
+  z-index: 20;
 }
 
 .timetable-toolbar-left {
@@ -8962,9 +8964,9 @@ body:not(.is-full-tab) .sync-cinematic-current {
 }
 
 .timetable-brand-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
   overflow: hidden;
   flex-shrink: 0;
   display: flex;
@@ -9020,7 +9022,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
 .timetable-main-title {
   margin: 0;
   font-family: 'Hanken Grotesk', -apple-system, sans-serif;
-  font-size: 17.5px;
+  font-size: 15px;
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.3px;
@@ -9133,7 +9135,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 20px 24px 40px 24px;
+  padding: 16px 20px 20px 20px;
   background: var(--bg-canvas);
   box-sizing: border-box;
 }

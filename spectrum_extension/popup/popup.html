@@ -349,8 +349,17 @@
       <!-- TAB: Academic Weekly Timetable (Constructed from Attendance Sessions) -->
       <section id="tab-timetable" class="tab-content timetable-pane" style="display:none;width:100%;height:100%;flex-direction:column;overflow:hidden;">
         <div class="timetable-workspace-layout">
-          <!-- Timetable Top Action Bar (Header with Export Buttons) -->
-          <div class="timetable-export-toolbar">
+          <!-- Timetable Scroll Track & Grid Container (Positioned at Top to Maximize Viewing Area) -->
+          <div class="timetable-scroll-frame" id="timetable-scroll-frame">
+            <div class="timetable-scaler" id="timetable-scaler">
+              <div class="timetable-grid" id="timetable-grid">
+                <!-- Dynamically populated by renderTimetableMode() -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Timetable Bottom Action Bar (Footer with Settings, Orientation & Export Controls) -->
+          <div class="timetable-export-toolbar timetable-footer-toolbar">
             <div class="timetable-toolbar-left">
               <div class="timetable-brand-icon">
                 <svg class="tt-prism-svg" viewBox="0 0 200 200">
@@ -410,15 +419,6 @@
                 <svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                 <span>Export PDF</span>
               </button>
-            </div>
-          </div>
-
-          <!-- Timetable Scroll Track & Grid Container -->
-          <div class="timetable-scroll-frame" id="timetable-scroll-frame">
-            <div class="timetable-scaler" id="timetable-scaler">
-              <div class="timetable-grid" id="timetable-grid">
-                <!-- Dynamically populated by renderTimetableMode() -->
-              </div>
             </div>
           </div>
         </div>
