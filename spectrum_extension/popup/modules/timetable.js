@@ -1577,10 +1577,14 @@
 
           const startX = getCanvasHorizontalX(s.startHour, s.startMin);
           const endX = getCanvasHorizontalX(s.endHour, s.endMin);
-          const cardX = startX + 8;
-          const cardY = y + 8;
-          const cardW = Math.max(80, endX - startX - 16);
-          const cardH = rowH - 16;
+          // Generous card margin (28px gap between consecutive sessions, 20px vertical gap)
+          const cardMarginX = 14;
+          const cardMarginY = 10;
+          const cardX = startX + cardMarginX;
+          const cardY = y + cardMarginY;
+          const cardW = Math.max(80, endX - startX - cardMarginX * 2);
+          const cardH = rowH - cardMarginY * 2;
+          const isTall = cardH >= 140;
 
           // Card Background & Border
           ctx.fillStyle = '#FFFFFF';
@@ -1589,87 +1593,131 @@
           ctx.lineWidth = 1.5;
           ctx.strokeRect(cardX, cardY, cardW, cardH);
 
-          // Left Black Accent Stripe (Visual Anchor from reference design)
+          // Left Black Accent Stripe (Visual Anchor)
           ctx.fillStyle = '#18181B';
           ctx.fillRect(cardX, cardY, 6, cardH);
 
           // Card Header: Code + Tag Badge + Time Range
-          ctx.fillStyle = '#18181B';
-          ctx.font = '800 18px "JetBrains Mono", monospace';
-          const sessAcronym = getSessionAcronym(s.courseName, s.courseCode);
-          const displayCodeText = sessAcronym ? `${cleanSingleCourseCode(s.courseCode)} · ${sessAcronym}` : cleanSingleCourseCode(s.courseCode);
-          ctx.fillText(displayCodeText, cardX + 16, cardY + 26);
+          const isCompactCol = cardW < 240;
+          ctx.font = isCompactCol
+            ? '800 16px "JetBrains Mono", monospace'
+            : '800 18px "JetBrains Mono", monospace';
 
-          const tagW = Math.max(44, ctx.measureText(s.typeLabel).width + 16);
+          const sessAcronym = getSessionAcronym(s.courseName, s.courseCode);
+          const rawDisplayCode = sessAcronym
+            ? `${cleanSingleCourseCode(s.courseCode)} · ${sessAcronym}`
+            : cleanSingleCourseCode(s.courseCode);
+
+          // Tag dimensions
+          ctx.font = '700 12.5px "JetBrains Mono", monospace';
+          const tagW = Math.max(40, ctx.measureText(s.typeLabel).width + 14);
+
+          // Tag positioning: right aligned with safe padding to never overflow
+          let tagX = cardX + cardW - tagW - 14;
+
+          // Code text with collision avoidance against tag badge
+          ctx.font = isCompactCol
+            ? '800 16px "JetBrains Mono", monospace'
+            : '800 18px "JetBrains Mono", monospace';
+          let displayCodeText = rawDisplayCode;
+          const maxCodeW = tagX - cardX - 22;
+          if (ctx.measureText(displayCodeText).width > maxCodeW) {
+            const bareCode = cleanSingleCourseCode(s.courseCode);
+            if (ctx.measureText(bareCode).width <= maxCodeW) {
+              displayCodeText = bareCode;
+            } else {
+              while (displayCodeText.length > 4 && ctx.measureText(displayCodeText + '…').width > maxCodeW) {
+                displayCodeText = displayCodeText.slice(0, -1);
+              }
+              displayCodeText += '…';
+            }
+          }
+
           const codeW = ctx.measureText(displayCodeText).width;
-          const tagX = cardX + 16 + codeW + 10;
-          
+          // If wide card (e.g. 2h+), place tag badge inline next to code
+          if (!isCompactCol && (cardX + 16 + codeW + 12 + tagW + 140 < cardX + cardW)) {
+            tagX = cardX + 16 + codeW + 12;
+          }
+
+          const headerY = isTall ? (cardY + 30) : (cardY + 25);
+          ctx.fillStyle = '#18181B';
+          ctx.fillText(displayCodeText, cardX + 16, headerY);
+
+          // Type Tag Pill
+          const tagY = isTall ? (cardY + 14) : (cardY + 10);
           ctx.fillStyle = '#F4F4F5';
-          ctx.fillRect(tagX, cardY + 11, tagW, 20);
+          ctx.fillRect(tagX, tagY, tagW, 22);
           ctx.strokeStyle = '#E4E4E7';
-          ctx.strokeRect(tagX, cardY + 11, tagW, 20);
+          ctx.lineWidth = 1;
+          ctx.strokeRect(tagX, tagY, tagW, 22);
           ctx.fillStyle = '#71717A';
-          ctx.font = '700 13px "JetBrains Mono", monospace';
+          ctx.font = '700 12.5px "JetBrains Mono", monospace';
           ctx.textAlign = 'center';
-          ctx.fillText(s.typeLabel, tagX + tagW / 2, cardY + 25);
+          ctx.fillText(s.typeLabel, tagX + tagW / 2, tagY + 15.5);
           ctx.textAlign = 'left';
 
+          // Time Range in header for wide multi-hour cards
           ctx.fillStyle = '#71717A';
           ctx.font = '600 15px "JetBrains Mono", monospace';
           const timeText = s.timeStr;
           const timeWidth = ctx.measureText(timeText).width;
-          if (cardW > timeWidth + codeW + tagW + 48) {
-            ctx.fillText(timeText, cardX + cardW - timeWidth - 14, cardY + 26);
+          if (tagX < cardX + cardW - timeWidth - 30 && cardW > 320) {
+            ctx.fillText(timeText, cardX + cardW - timeWidth - 16, headerY);
           }
 
-          // Subtitle: OCC only (No redundant venue!)
-          if (cardH >= 95) {
+          // Subtitle: OCC only with balanced vertical spacing
+          if (cardH >= 80) {
             ctx.fillStyle = '#71717A';
-            ctx.font = '700 14px "JetBrains Mono", monospace';
-            ctx.fillText(s.occ, cardX + 16, cardY + 52);
+            ctx.font = '700 14.5px "JetBrains Mono", monospace';
+            const occY = isTall ? (cardY + 64) : (cardY + 48);
+            ctx.fillText(s.occ, cardX + 16, occY);
           }
 
-          // Course Title (Multi-line wrap, up to 2 lines)
+          // Course Title (Multi-line wrap, up to 2 lines, comfortable leading)
           ctx.fillStyle = '#18181B';
           ctx.font = '800 18px "Hanken Grotesk", sans-serif';
           const maxTitleW = cardW - 32;
           const titleLines = wrapCanvasTitle(str => ctx.measureText(str).width, s.courseName, maxTitleW, 2);
-          const titleLineH = 21;
-          const startTitleY = (cardH >= 95)
-            ? (titleLines.length > 1 ? cardY + 68 : cardY + 74)
-            : (titleLines.length > 1 ? cardY + 48 : cardY + 54);
+          const titleLineH = isTall ? 27 : 22;
+          const startTitleY = isTall
+            ? (titleLines.length > 1 ? cardY + 98 : cardY + 104)
+            : (titleLines.length > 1 ? cardY + 68 : cardY + 72);
+
           titleLines.forEach((tLine, tIdx) => {
             ctx.fillText(tLine, cardX + 16, startTitleY + tIdx * titleLineH);
           });
 
           // Footer: Venue left with pin, Duration right
           if (cardH >= 65) {
+            const footerY = isTall ? (cardY + cardH - 16) : (cardY + cardH - 12);
             if (s.venue) {
               ctx.fillStyle = '#71717A';
-              ctx.font = '600 14px "JetBrains Mono", monospace';
+              ctx.font = '600 14.5px "JetBrains Mono", monospace';
               let vText = `${s.venueIcon || '📍'} ${s.venue}`;
-              const maxVenueW = cardW - 80;
+              const durW = s.durText ? Math.max(38, ctx.measureText(s.durText).width + 14) : 0;
+              const maxVenueW = cardW - durW - 40;
               if (ctx.measureText(vText).width > maxVenueW) {
                 while (vText.length > 4 && ctx.measureText(vText + '…').width > maxVenueW) {
                   vText = vText.slice(0, -1);
                 }
                 vText += '…';
               }
-              ctx.fillText(vText, cardX + 16, cardY + cardH - 14);
+              ctx.fillText(vText, cardX + 16, footerY);
             }
 
             // Duration tag on right
             if (s.durText) {
-              const durW = Math.max(36, ctx.measureText(s.durText).width + 12);
+              ctx.font = '700 12.5px "JetBrains Mono", monospace';
+              const durW = Math.max(38, ctx.measureText(s.durText).width + 14);
               const durX = cardX + cardW - durW - 14;
+              const durY = footerY - 14;
               ctx.fillStyle = '#F4F4F5';
-              ctx.fillRect(durX, cardY + cardH - 26, durW, 18);
+              ctx.fillRect(durX, durY, durW, 20);
               ctx.strokeStyle = '#E4E4E7';
-              ctx.strokeRect(durX, cardY + cardH - 26, durW, 18);
+              ctx.strokeRect(durX, durY, durW, 20);
               ctx.fillStyle = '#71717A';
-              ctx.font = '700 12px "JetBrains Mono", monospace';
               ctx.textAlign = 'center';
-              ctx.fillText(s.durText, durX + durW / 2, cardY + cardH - 13);
+              ctx.fillText(s.durText, durX + durW / 2, durY + 14.5);
               ctx.textAlign = 'left';
             }
           }
@@ -1980,15 +2028,17 @@
         packed.forEach(s => {
           const startY = getCanvasVerticalY(s.startHour, s.startMin);
           const endY = getCanvasVerticalY(s.endHour, s.endMin);
-          const cardY = startY + 6;
-          const cardH = Math.max(40, endY - startY - 12);
+          // Generous card margin (16px vertical gap between consecutive sessions, 20px horizontal gap)
+          const cardY = startY + 8;
+          const cardH = Math.max(40, endY - startY - 16);
+          const isTall = cardH >= 140;
 
-          let cardX = colX + 8;
-          let cardW = dayColW - 16;
+          let cardX = colX + 10;
+          let cardW = dayColW - 20;
           if (s._totalCols > 1) {
-            const singleW = (dayColW - 16) / s._totalCols;
-            cardX = colX + 8 + s._colIndex * singleW;
-            cardW = singleW - 6;
+            const singleW = (dayColW - 20) / s._totalCols;
+            cardX = colX + 10 + s._colIndex * singleW;
+            cardW = singleW - 8;
           }
 
           // Card white background and border
@@ -2003,36 +2053,69 @@
           ctx.fillRect(cardX, cardY, 6, cardH);
 
           // Header: Code + Tag Badge
-          ctx.fillStyle = '#18181B';
-          ctx.font = '800 19px "JetBrains Mono", monospace';
-          const sessAcronym = getSessionAcronym(s.courseName, s.courseCode);
-          const displayCodeText = sessAcronym ? `${cleanSingleCourseCode(s.courseCode)} · ${sessAcronym}` : cleanSingleCourseCode(s.courseCode);
-          ctx.fillText(displayCodeText, cardX + 16, cardY + 26);
+          const isCompactCol = cardW < 240;
+          ctx.font = isCompactCol
+            ? '800 16px "JetBrains Mono", monospace'
+            : '800 18px "JetBrains Mono", monospace';
 
-          const codeW = ctx.measureText(displayCodeText).width;
-          const tagW = Math.max(46, ctx.measureText(s.typeLabel).width + 16);
+          const sessAcronym = getSessionAcronym(s.courseName, s.courseCode);
+          const rawDisplayCode = sessAcronym
+            ? `${cleanSingleCourseCode(s.courseCode)} · ${sessAcronym}`
+            : cleanSingleCourseCode(s.courseCode);
+
+          ctx.font = '700 12.5px "JetBrains Mono", monospace';
+          const tagW = Math.max(40, ctx.measureText(s.typeLabel).width + 14);
+          let tagX = cardX + cardW - tagW - 14;
+
+          ctx.font = isCompactCol
+            ? '800 16px "JetBrains Mono", monospace'
+            : '800 18px "JetBrains Mono", monospace';
+          let displayCodeText = rawDisplayCode;
+          const maxCodeW = tagX - cardX - 22;
+          if (ctx.measureText(displayCodeText).width > maxCodeW) {
+            const bareCode = cleanSingleCourseCode(s.courseCode);
+            if (ctx.measureText(bareCode).width <= maxCodeW) {
+              displayCodeText = bareCode;
+            } else {
+              while (displayCodeText.length > 4 && ctx.measureText(displayCodeText + '…').width > maxCodeW) {
+                displayCodeText = displayCodeText.slice(0, -1);
+              }
+              displayCodeText += '…';
+            }
+          }
+
+          const headerY = isTall ? (cardY + 30) : (cardY + 26);
+          ctx.fillStyle = '#18181B';
+          ctx.fillText(displayCodeText, cardX + 16, headerY);
+
+          // Type Tag Pill
+          const tagY = isTall ? (cardY + 14) : (cardY + 11);
           ctx.fillStyle = '#F4F4F5';
-          ctx.fillRect(cardX + cardW - tagW - 14, cardY + 11, tagW, 20);
+          ctx.fillRect(tagX, tagY, tagW, 22);
           ctx.strokeStyle = '#E4E4E7';
-          ctx.strokeRect(cardX + cardW - tagW - 14, cardY + 11, tagW, 20);
+          ctx.lineWidth = 1;
+          ctx.strokeRect(tagX, tagY, tagW, 22);
           ctx.fillStyle = '#71717A';
-          ctx.font = '700 13px "JetBrains Mono", monospace';
+          ctx.font = '700 12.5px "JetBrains Mono", monospace';
           ctx.textAlign = 'center';
-          ctx.fillText(s.typeLabel, cardX + cardW - 14 - tagW / 2, cardY + 25);
+          ctx.fillText(s.typeLabel, tagX + tagW / 2, tagY + 15.5);
           ctx.textAlign = 'left';
 
-          // Course Title (Multi-line wrap, up to 2 lines)
+          // Course Title (Multi-line wrap, up to 2 lines with comfortable line spacing)
           ctx.fillStyle = '#18181B';
           ctx.font = '800 18px "Hanken Grotesk", sans-serif';
           const maxTitleW = cardW - 28;
           const titleLines = wrapCanvasTitle(str => ctx.measureText(str).width, s.courseName, maxTitleW, 2);
-          const titleLineH = 21;
-          const startTitleY = (titleLines.length > 1) ? (cardY + 48) : (cardY + 54);
+          const titleLineH = isTall ? 26 : 22;
+          const startTitleY = isTall
+            ? (titleLines.length > 1 ? cardY + 62 : cardY + 68)
+            : (titleLines.length > 1 ? cardY + 50 : cardY + 54);
+
           titleLines.forEach((tLine, tIdx) => {
             ctx.fillText(tLine, cardX + 16, startTitleY + tIdx * titleLineH);
           });
 
-          // Subtitle (show OCC for all cards, including 1-hour sessions with cardH >= 80)
+          // Subtitle: OCC with proportional spacing
           if (cardH >= 80) {
             ctx.fillStyle = '#71717A';
             ctx.font = '600 15px "JetBrains Mono", monospace';
@@ -2043,14 +2126,15 @@
               }
               sub += '…';
             }
-            const subY = (titleLines.length > 1)
-              ? ((cardH >= 115) ? (cardY + 95) : (cardY + 88))
-              : ((cardH >= 115) ? (cardY + 84) : (cardY + 75));
+            const subY = isTall
+              ? (titleLines.length > 1 ? startTitleY + titleLineH + 28 : startTitleY + 34)
+              : (titleLines.length > 1 ? (cardY + 92) : (cardY + 80));
             ctx.fillText(sub, cardX + 16, subY);
           }
 
           // Footer (Venue left with pin, Time right)
           if (cardH >= 65) {
+            const footerY = isTall ? (cardY + cardH - 16) : (cardY + cardH - 14);
             if (s.venue) {
               ctx.fillStyle = '#71717A';
               ctx.font = '600 15px "JetBrains Mono", monospace';
@@ -2064,13 +2148,13 @@
                 }
                 displayVenue += '…';
               }
-              ctx.fillText(displayVenue, cardX + 16, cardY + cardH - 14);
+              ctx.fillText(displayVenue, cardX + 16, footerY);
             }
 
             ctx.fillStyle = '#71717A';
             ctx.font = '600 15px "JetBrains Mono", monospace';
             ctx.textAlign = 'right';
-            ctx.fillText(s.timeStr, cardX + cardW - 14, cardY + cardH - 14);
+            ctx.fillText(s.timeStr, cardX + cardW - 14, footerY);
             ctx.textAlign = 'left';
           }
         });
