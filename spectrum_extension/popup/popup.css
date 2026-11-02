@@ -9525,12 +9525,12 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 /* Compact 1-hour session styles */
 .tt-session-card.is-compact {
-  padding: 8px 10px;
-  gap: 3px;
+  padding: 6px 10px;
+  gap: 2.5px;
 }
 
 .tt-session-card.is-compact .tt-card-subtitle {
-  display: none;
+  display: block;
 }
 
 .tt-session-card.is-compact .tt-card-title {

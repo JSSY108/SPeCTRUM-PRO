@@ -873,7 +873,7 @@
                 <span class="tt-type-tag">${esc(s.typeLabel)}</span>
               </div>
               <div class="tt-card-title" title="${esc(s.courseName)}">${esc(s.courseName)}</div>
-              ${!isCompact ? `<div class="tt-card-subtitle">${subtitleText}</div>` : ''}
+              <div class="tt-card-subtitle">${subtitleText}</div>
               <div class="tt-card-footer">
                 ${venueHtml}
                 <span class="tt-time-range">${esc(s.timeStr)}</span>
@@ -1918,8 +1918,8 @@
           }
           ctx.fillText(title, cardX + 16, cardY + 56);
 
-          // Subtitle (if 2+ hours or cardH >= 120): ONLY show OCC, NO duplicate venue beside OCC!
-          if (cardH >= 120) {
+          // Subtitle (show OCC for all cards, including 1-hour sessions with cardH >= 80)
+          if (cardH >= 80) {
             ctx.fillStyle = '#71717A';
             ctx.font = '600 15px "JetBrains Mono", monospace';
             let sub = s.occ || '';
@@ -1929,7 +1929,8 @@
               }
               sub += '…';
             }
-            ctx.fillText(sub, cardX + 16, cardY + 84);
+            const subY = (cardH >= 115) ? (cardY + 84) : (cardY + 75);
+            ctx.fillText(sub, cardX + 16, subY);
           }
 
           // Footer (Venue left with pin, Time right)
