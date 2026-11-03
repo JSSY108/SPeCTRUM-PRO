@@ -10,17 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,400..800;1,400..800&family=JetBrains+Mono:ital,wght@0,400..800;1,400..800&family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="popup.css">
   <link rel="stylesheet" href="../libs/pptx-vanilla-viewer.styles.css">
-  <script>
-    // Immediate early theme application to eliminate light-flash (FOUC)
-    try {
-      var savedTheme = localStorage.getItem('spectrum_theme');
-      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-      } else {
-        document.documentElement.setAttribute('data-theme', 'light');
-      }
-    } catch (e) {}
-  </script>
+  <script src="theme-init.js"></script>
 </head>
 <body>
 
