@@ -2373,26 +2373,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (typeof updateAttendanceDaemonStatus === 'function') updateAttendanceDaemonStatus();
   }
 
-  // Surface Detection: Full-Tab Workspace vs Extension Popup vs Detached Companion
+  // Surface Detection: Full-Tab Workspace vs Compact Popup Layout
+  // Layout is STRICTLY LOCKED to the compact popup layout unless explicitly opening Full Workstation via mode=full
   function checkIsFullTab() {
-    // 1. Explicit query param (set whenever opening full tab from extension)
-    if (window.location.search.includes('mode=full')) return true;
-
-    // Detached / Pinned Window Mode:
-    // When opened as a detached companion window, keep the compact view unless
-    // user manually widens the window significantly (> 860px) to access the full workstation.
-    if (window.location.search.includes('mode=detached')) {
-      return window.innerWidth > 860;
-    }
-
-    // 2. Standalone desktop tab detection:
-    // Chromium extension popups are hard-capped by the browser to <= 800px width and <= 600px height.
-    // A regular desktop browser tab is significantly larger (e.g. >= 900px wide or > 620px tall).
-    if (window.innerWidth > 800 || window.innerHeight > 620) {
-      return true;
-    }
-
-    return false;
+    return window.location.search.includes('mode=full');
   }
 
   const isFullTab = checkIsFullTab();
@@ -2400,16 +2384,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.documentElement.classList.toggle('is-full-tab', isFullTab);
   if (isFullTab) window.scrollTo(0, 0);
 
-  // Detached Companion Window / Pin Mode detection & state handling
+  // Pinned Mode detection (Side Panel, In-Page Drawer, or Detached Window)
+  const isSidePanel = window.location.search.includes('mode=sidepanel');
+  const isDrawer = window.location.search.includes('mode=drawer');
   const isDetached = window.location.search.includes('mode=detached');
-  if (isDetached) {
-    document.body.classList.add('is-detached-window');
-    document.documentElement.classList.add('is-detached-window');
+  const isPinned = isSidePanel || isDrawer || isDetached;
+
+  if (isPinned) {
+    document.body.classList.add('is-pinned-mode');
+    document.documentElement.classList.add('is-pinned-mode');
+    if (isSidePanel) document.body.classList.add('is-sidepanel');
+    if (isDrawer) document.body.classList.add('is-drawer');
+    if (isDetached) document.body.classList.add('is-detached-window');
+
     const pinLabel = document.getElementById('btn-detach-popup-label');
     if (pinLabel) pinLabel.textContent = 'Pinned';
     const pinBtn = document.getElementById('btn-detach-popup');
     if (pinBtn) {
-      pinBtn.title = 'Pinned Floating Window · Stays open alongside your browser';
+      pinBtn.title = '📌 Pinned Mode Active (Will not disappear when clicking outside)';
       pinBtn.classList.add('active');
     }
     const fulltabPinBtn = document.getElementById('btn-fulltab-detach');
@@ -2419,23 +2411,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (lbl) lbl.textContent = 'Pinned';
     }
 
-    // Persist window size and position changes
-    let resizeTimer = null;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        if (window.outerWidth && window.outerHeight) {
-          chrome.storage.local.set({
-            detachedWindowBounds: {
-              width: window.outerWidth,
-              height: window.outerHeight,
-              left: window.screenX,
-              top: window.screenY
-            }
-          }).catch(() => {});
-        }
-      }, 300);
-    });
+    // Persist window size and position changes if detached
+    if (isDetached) {
+      let resizeTimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          if (window.outerWidth && window.outerHeight) {
+            chrome.storage.local.set({
+              detachedWindowBounds: {
+                width: window.outerWidth,
+                height: window.outerHeight,
+                left: window.screenX,
+                top: window.screenY
+              }
+            }).catch(() => {});
+          }
+        }, 300);
+      });
+    }
   }
 
   function ensureTabsInCorrectSurface() {
@@ -2611,19 +2605,55 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const btnDetachPopup = document.getElementById('btn-detach-popup');
   if (btnDetachPopup) {
-    btnDetachPopup.addEventListener('click', (e) => {
+    btnDetachPopup.addEventListener('click', async (e) => {
       e.preventDefault();
-      if (window.location.search.includes('mode=detached')) {
-        // Already pinned: toggle to full tab
-        if (chrome.tabs && chrome.tabs.create) {
-          chrome.tabs.create({ url: chrome.runtime.getURL('popup/popup.html?mode=full') });
-        } else {
-          window.open(location.pathname + '?mode=full', '_blank');
+
+      // If already pinned in sidepanel or drawer, unpin/close
+      if (window.location.search.includes('mode=sidepanel')) {
+        if (chrome.sidePanel && chrome.sidePanel.setPanelBehavior) {
+          chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch(() => {});
         }
         window.close();
-      } else {
-        openDetachedWindow();
+        return;
       }
+      if (window.location.search.includes('mode=drawer')) {
+        window.parent.postMessage({ type: 'CLOSE_SPECTRUM_DRAWER' }, '*');
+        return;
+      }
+
+      // 1. Primary: Chrome Side Panel API (Chrome 116+)
+      // Docks directly beside webpage. Stays open permanently when clicking on the page!
+      if (chrome.sidePanel && chrome.sidePanel.open) {
+        try {
+          if (chrome.sidePanel.setPanelBehavior) {
+            chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
+          }
+          const win = await chrome.windows.getCurrent();
+          await chrome.sidePanel.open({ windowId: win.id });
+          window.close();
+          return;
+        } catch (err) {
+          console.warn('[SPeCTRUM Pro] sidePanel.open failed:', err);
+        }
+      }
+
+      // 2. Secondary: If currently on SPeCTRUM tab, toggle the in-page pinned drawer
+      try {
+        const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (activeTab && activeTab.id && activeTab.url && activeTab.url.includes('spectrum.um.edu.my')) {
+          chrome.tabs.sendMessage(activeTab.id, { type: 'OPEN_INPAGE_DRAWER' }, (res) => {
+            if (res && res.success) {
+              window.close();
+            } else {
+              openDetachedWindow();
+            }
+          });
+          return;
+        }
+      } catch (e) {}
+
+      // 3. Fallback: Standalone popup window
+      openDetachedWindow();
     });
   }
 

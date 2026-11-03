@@ -26,8 +26,12 @@
     "scripting",
     "alarms",
     "notifications",
-    "cookies"
+    "cookies",
+    "sidePanel"
   ],
+  "side_panel": {
+    "default_path": "popup/popup.html?mode=sidepanel"
+  },
   "host_permissions": [
     "*://spectrum.um.edu.my/*",
     "https://login.microsoftonline.com/*"

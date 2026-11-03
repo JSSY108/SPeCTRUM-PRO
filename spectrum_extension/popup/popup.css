@@ -12102,21 +12102,31 @@ body:not(.is-full-tab) .sync-cinematic-current {
    SURFACE C: DETACHED / PINNED WINDOW (Floating Companion)
    Opened via chrome.windows.create({ type: 'popup' })
    ========================================================================== */
+html.is-pinned-mode,
+body.is-pinned-mode,
 html.is-detached-window,
 body.is-detached-window {
   width: 100% !important;
   height: 100% !important;
   max-width: none !important;
   max-height: none !important;
-  overflow: hidden;
+  overflow: hidden !important;
 }
 
+body.is-pinned-mode:not(.is-full-tab),
 body.is-detached-window:not(.is-full-tab) {
-  width: 100vw !important;
-  height: 100vh !important;
+  width: 100% !important;
+  height: 100% !important;
   max-width: none !important;
   max-height: none !important;
   user-select: auto;
+}
+
+/* In pinned / sidepanel mode, hide Full Workstation button so user cannot accidentally switch layout */
+body.is-pinned-mode #btn-open-tab,
+body.is-sidepanel #btn-open-tab,
+body.is-drawer #btn-open-tab {
+  display: none !important;
 }
 
 /* Active Pin Button highlight in Detached Window */

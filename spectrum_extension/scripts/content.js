@@ -2,6 +2,48 @@
 (function () {
   'use strict';
 
+  // Toggle in-page pinned drawer (never disappears when clicking blank space on the page)
+  function toggleInPageDrawer(forceOpen = false) {
+    let drawer = document.getElementById('spectrum-pro-inpage-drawer');
+    if (!drawer) {
+      drawer = document.createElement('div');
+      drawer.id = 'spectrum-pro-inpage-drawer';
+      const frameUrl = chrome.runtime.getURL('popup/popup.html?mode=drawer');
+      drawer.innerHTML = `
+        <div id="spectrum-pro-drawer-header">
+          <div id="spectrum-pro-drawer-header-title">
+            <span style="font-weight:800;font-size:12px;letter-spacing:0.5px;">SPeCTRUM PRO</span>
+            <span class="spectrum-drawer-pin-pill">📌 PINNED</span>
+          </div>
+          <button type="button" id="spectrum-pro-drawer-close" title="Close Panel" aria-label="Close">✕</button>
+        </div>
+        <iframe src="${frameUrl}" id="spectrum-pro-drawer-frame" allow="clipboard-read; clipboard-write"></iframe>
+      `;
+      document.body.appendChild(drawer);
+
+      const closeBtn = drawer.querySelector('#spectrum-pro-drawer-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          drawer.classList.add('drawer-hidden');
+        });
+      }
+
+      window.addEventListener('message', (ev) => {
+        if (ev.data && ev.data.type === 'CLOSE_SPECTRUM_DRAWER') {
+          drawer.classList.add('drawer-hidden');
+        }
+      });
+      return;
+    }
+
+    if (forceOpen) {
+      drawer.classList.remove('drawer-hidden');
+    } else {
+      drawer.classList.toggle('drawer-hidden');
+    }
+  }
+
   // Inject floating button if on SPeCTRUM
   function injectFloatingButton() {
     if (document.getElementById('spectrum-pro-floating-btn')) return;
@@ -14,16 +56,29 @@
       <span>SPeCTRUM Pro</span>
     `;
 
-    btn.title = "Click SPeCTRUM Pro extension icon in your browser toolbar to download materials!";
+    btn.title = "Click to open pinned SPeCTRUM Pro panel (stays open on page)";
     btn.addEventListener('click', () => {
-      // Prompt user to click the toolbar icon
       btn.style.transform = 'scale(0.95)';
       setTimeout(() => { btn.style.transform = ''; }, 150);
-      alert("🎓 SPeCTRUM Pro is active!\n\nClick the SPeCTRUM Pro icon in your Edge/Chrome toolbar (top-right extension puzzle piece) to select courses and download materials as an organized ZIP.");
+      toggleInPageDrawer();
     });
 
     document.body.appendChild(btn);
   }
+
+  // Listen for messages from popup or background to open in-page drawer
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (msg.type === 'OPEN_INPAGE_DRAWER') {
+      toggleInPageDrawer(true);
+      sendResponse({ success: true });
+      return true;
+    }
+    if (msg.type === 'TOGGLE_INPAGE_DRAWER') {
+      toggleInPageDrawer();
+      sendResponse({ success: true });
+      return true;
+    }
+  });
 
   // On-page Auto-Attendance Assistant for attendance.php
   function handleAttendancePage() {
