@@ -715,7 +715,7 @@
           const acronymHtml = acronym ? `<span class="tt-code-dot">·</span><span class="tt-code-acronym">${esc(acronym)}</span>` : '';
           const venueHtml = hasVenue
             ? `<span class="tt-venue" title="${esc(s.venue)}">${s.venueIcon || '📍'} ${esc(s.venue)}</span>`
-            : `<span class="tt-venue tt-venue-empty" title="${esc(venuePlaceholder)}"><span class="tt-venue-add-icon">📍</span> <span class="tt-venue-placeholder">${esc(venuePlaceholder)}</span></span>`;
+            : `<span class="tt-venue tt-venue-empty"></span>`;
 
           const startTimeVal = `${pad(s.startHour)}:${pad(s.startMin)}`;
           const endTimeVal = `${pad(s.endHour)}:${pad(s.endMin)}`;
@@ -977,7 +977,7 @@
           const venuePlaceholder = getTimetableText('timetable', 'venuePlaceholder', '+ Add Location');
           const venueHtml = hasVenue
             ? `<span class="tt-venue" title="${esc(s.venue)}">${s.venueIcon || '📍'} ${esc(s.venue)}</span>`
-            : `<span class="tt-venue tt-venue-empty" title="${esc(venuePlaceholder)}"><span class="tt-venue-add-icon">📍</span> <span class="tt-venue-placeholder">${esc(venuePlaceholder)}</span></span>`;
+            : `<span class="tt-venue tt-venue-empty"></span>`;
 
           const startTimeVal = `${pad(s.startHour)}:${pad(s.startMin)}`;
           const endTimeVal = `${pad(s.endHour)}:${pad(s.endMin)}`;
@@ -1869,7 +1869,7 @@
           // Venue (Left) & Duration (Right)
           ctx.fillStyle = '#71717A';
           ctx.font = `600 ${exportConfig.venueFontSize}px "JetBrains Mono", monospace`;
-          if (s.venue) {
+          if (s.venue && s.venue.trim().length > 0) {
             let vText = `${s.venueIcon || '📍'} ${s.venue}`;
             const durW = s.durText ? ctx.measureText(s.durText).width + 16 : 0;
             const maxVenueW = cardW - durW - 32;
@@ -1880,8 +1880,6 @@
               vText += '…';
             }
             ctx.fillText(vText, cardX + 14, footerY);
-          } else {
-            ctx.fillText('📍 + Add Location', cardX + 14, footerY);
           }
 
           if (s.durText) {

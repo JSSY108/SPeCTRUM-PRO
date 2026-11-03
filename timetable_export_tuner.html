@@ -979,7 +979,9 @@
           const footerY = cardY + cardH - params.footerBottomInset;
           ctx.fillStyle = '#71717A';
           ctx.font = `600 ${params.venueFontSize}px "JetBrains Mono", monospace`;
-          ctx.fillText(s.venue ? `📍 ${s.venue}` : '+ Add Location', cardX + 14, footerY);
+          if (s.venue && s.venue.trim().length > 0) {
+            ctx.fillText(`📍 ${s.venue}`, cardX + 14, footerY);
+          }
           ctx.textAlign = 'right';
           ctx.fillText(s.durText, cardX + cardW - 14, footerY);
           ctx.textAlign = 'left';
@@ -1271,7 +1273,9 @@
         if (cardH >= 55) {
           ctx.fillStyle = '#71717A';
           ctx.font = `600 ${params.venueFontSize}px "JetBrains Mono", monospace`;
-          ctx.fillText(s.venue ? `📍 ${s.venue}` : '+ Add Location', cardX + 16, footerY);
+          if (s.venue && s.venue.trim().length > 0) {
+            ctx.fillText(`📍 ${s.venue}`, cardX + 16, footerY);
+          }
           ctx.textAlign = 'right';
           ctx.fillText(s.durText, cardX + cardW - 14, footerY);
           ctx.textAlign = 'left';
