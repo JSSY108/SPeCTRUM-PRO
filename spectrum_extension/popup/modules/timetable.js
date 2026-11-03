@@ -1355,9 +1355,49 @@
     const totalCols = maxHour - minHour;
     const totalDays = activeDayIndices.length;
 
-    // High resolution canvas (A4 landscape ratio compatible: 2200 x 1450 - exact same as vertical)
+    // ── 1. Calculate Proportional Layout Matching the 1-Page Sweet Spot ──
     const width = 2200;
-    const height = 1450;
+    const gridX = 60;
+    const gridY = 145;
+    const gridW = width - 120; // 2080px
+    const cornerW = 160;
+    const headerH = 48;
+
+    // Empty days take half row height (weight 0.42)
+    const hasDaySession = dIdx => sessions.some(s => s.dayIndex === dIdx);
+    const isDayHalf = dIdx => !hasDaySession(dIdx);
+
+    // Empty hours take half column width (weight 0.45)
+    const isHourHalf = h => !sessions.some(s => {
+      if (!s) return false;
+      const sStart = (typeof s.startHour === 'number') ? s.startHour + (s.startMin || 0) / 60 : 0;
+      const sEnd = (typeof s.endHour === 'number') ? s.endHour + (s.endMin || 0) / 60 : 0;
+      return sStart < (h + 1) && sEnd > h;
+    });
+
+    const hourColWeights = [];
+    for (let h = minHour; h < maxHour; h++) {
+      hourColWeights.push(isHourHalf(h) ? 0.45 : 1.0);
+    }
+    const totalHourColWeight = hourColWeights.reduce((a, b) => a + b, 0);
+    const availableHourW = gridW - cornerW; // 1920px
+    const unitHourW = availableHourW / totalHourColWeight;
+
+    // Proportional row height: exactly matches the 1-page DOM aspect ratio (~0.48x of column width)
+    const unitRowH = Math.round(unitHourW * 0.48);
+
+    const dayRows = [];
+    let curRowY = gridY + headerH;
+    activeDayIndices.forEach(dIdx => {
+      const isHalf = isDayHalf(dIdx);
+      const rH = isHalf ? Math.round(unitRowH * 0.42) : unitRowH;
+      dayRows.push({ dIdx, y: curRowY, h: rH, isHalf });
+      curRowY += rH;
+    });
+
+    const gridH = curRowY - gridY;
+    const height = curRowY + 55; // Fitted canvas height (no giant white bottom dead space!)
+
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
@@ -1420,45 +1460,7 @@
     ctx.fillText(academicYear, badgeX + 96, badgeY + 35);
     ctx.fillText(semType, badgeX + 96, badgeY + 61);
 
-    // ── 4. Grid Dimensions (Identical Outer Frame to Vertical) ──
-    const gridX = 60;
-    const gridY = 145;
-    const gridW = width - 120; // 2080px
-    const gridH = height - gridY - 55; // 1250px
-    const headerH = 65;
-    const cornerW = 180;
-
-    // Any day without a single course scheduled (e.g. Friday, Saturday) takes half row height (weight 0.5)!
-    const hasDaySession = dIdx => sessions.some(s => s.dayIndex === dIdx);
-    const isDayHalf = dIdx => !hasDaySession(dIdx);
-    const dayRowWeights = activeDayIndices.map(dIdx => isDayHalf(dIdx) ? 0.5 : 1.0);
-    const totalRowWeight = dayRowWeights.reduce((a, b) => a + b, 0);
-    const availableGridH = gridH - headerH;
-    const unitRowH = availableGridH / totalRowWeight;
-
-    const dayRows = [];
-    let curRowY = gridY + headerH;
-    activeDayIndices.forEach((dIdx, i) => {
-      const rH = dayRowWeights[i] * unitRowH;
-      dayRows.push({ dIdx, y: curRowY, h: rH, isHalf: dayRowWeights[i] === 0.5 });
-      curRowY += rH;
-    });
-
-    // Any hour without a single course across the week takes half column width (weight 0.45)!
-    const isHourHalf = h => !sessions.some(s => {
-      if (!s) return false;
-      const sStart = (typeof s.startHour === 'number') ? s.startHour + (s.startMin || 0) / 60 : 0;
-      const sEnd = (typeof s.endHour === 'number') ? s.endHour + (s.endMin || 0) / 60 : 0;
-      return sStart < (h + 1) && sEnd > h;
-    });
-    const hourColWeights = [];
-    for (let h = minHour; h < maxHour; h++) {
-      hourColWeights.push(isHourHalf(h) ? 0.45 : 1.0);
-    }
-    const totalHourColWeight = hourColWeights.reduce((a, b) => a + b, 0);
-    const availableHourW = gridW - cornerW;
-    const unitHourW = availableHourW / totalHourColWeight;
-
+    // ── 4. Calculate Hour Columns ──
     const hourCols = [];
     let curColX = gridX + cornerW;
     for (let c = 0; c < totalCols; c++) {
@@ -1496,23 +1498,24 @@
     ctx.moveTo(gridX, gridY + headerH);
     ctx.lineTo(gridX + gridW, gridY + headerH);
     ctx.strokeStyle = '#D4D4D8';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Corner Header Cell
-    ctx.fillStyle = '#71717A';
-    ctx.font = '800 17px "JetBrains Mono", monospace';
+    // Corner Header Cell (matches Image 1: ACADEMIC WK / TIME (MYT))
+    ctx.fillStyle = '#18181B';
+    ctx.font = '800 13px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('UTC+8', gridX + cornerW / 2, gridY + 36);
-    ctx.fillStyle = '#A1A1AA';
-    ctx.font = '600 13px "JetBrains Mono", monospace';
-    ctx.fillText('TIME (MYT)', gridX + cornerW / 2, gridY + 54);
+    const acadWkText = (mainTitleH === 'JADUAL WAKTU AKADEMIK') ? 'MINGGU AKADEMIK' : 'ACADEMIC WK';
+    ctx.fillText(acadWkText, gridX + cornerW / 2, gridY + 22);
+    ctx.fillStyle = '#71717A';
+    ctx.font = '600 11px "JetBrains Mono", monospace';
+    ctx.fillText('TIME (MYT)', gridX + cornerW / 2, gridY + 38);
 
     ctx.beginPath();
     ctx.moveTo(gridX + cornerW, gridY);
     ctx.lineTo(gridX + cornerW, gridY + gridH);
     ctx.strokeStyle = '#D4D4D8';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
     const pad = n => String(n).padStart(2, '0');
@@ -1533,13 +1536,13 @@
       ctx.stroke();
 
       ctx.fillStyle = '#18181B';
-      ctx.font = `800 ${isHalf ? 15 : 19}px "JetBrains Mono", monospace`;
+      ctx.font = `800 ${isHalf ? 12 : 15}px "JetBrains Mono", monospace`;
       ctx.textAlign = 'center';
-      ctx.fillText(`${pad(h)}:00`, colX + colW / 2, gridY + 32);
+      ctx.fillText(`${pad(h)}:00`, colX + colW / 2, gridY + 22);
 
       ctx.fillStyle = '#71717A';
-      ctx.font = `600 ${isHalf ? 11 : 14}px "JetBrains Mono", monospace`;
-      ctx.fillText(`${pad(h + 1)}:00`, colX + colW / 2, gridY + 52);
+      ctx.font = `600 ${isHalf ? 9.5 : 11}px "JetBrains Mono", monospace`;
+      ctx.fillText(`${pad(h + 1)}:00`, colX + colW / 2, gridY + 38);
     }
     ctx.textAlign = 'left';
 
@@ -1547,7 +1550,6 @@
     dayRows.forEach(rowInfo => {
       const { dIdx, y, h: rowH, isHalf } = rowInfo;
       const dayName = DAY_NAMES[dIdx];
-      const isToday = (dIdx === todayDayIndex);
       const daySess = sessions.filter(s => s.dayIndex === dIdx);
 
       // Horizontal Row Divider
@@ -1558,11 +1560,11 @@
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Day Label Cell (Col 1) - Export renders clean timeless day names without today indicator
+      // Day Label Cell (Col 1)
       ctx.fillStyle = '#18181B';
-      const dFontSz = isHalf ? 15 : 20;
+      const dFontSz = isHalf ? 12.5 : 15;
       ctx.font = `800 ${dFontSz}px "Hanken Grotesk", sans-serif`;
-      ctx.fillText(dayName, gridX + 20, y + rowH / 2 + 7);
+      ctx.fillText(dayName, gridX + 18, y + rowH / 2 + 5);
 
       if (daySess.length === 0) {
         // Empty Day Banner
@@ -1578,50 +1580,51 @@
 
           const startX = getCanvasHorizontalX(s.startHour, s.startMin);
           const endX = getCanvasHorizontalX(s.endHour, s.endMin);
-          // Generous card margin (28px gap between consecutive sessions, 20px vertical gap)
-          const cardMarginX = 14;
-          const cardMarginY = 10;
+
+          // Card Geometry matching the 1-page sweet spot
+          const cardMarginX = 10;
+          const cardMarginY = 7;
           const cardX = startX + cardMarginX;
           const cardY = y + cardMarginY;
-          const cardW = Math.max(80, endX - startX - cardMarginX * 2);
+          const cardW = Math.max(60, endX - startX - cardMarginX * 2);
           const cardH = rowH - cardMarginY * 2;
-          const isTall = cardH >= 140;
 
           // Card Background & Border
           ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(cardX, cardY, cardW, cardH);
+          ctx.beginPath();
+          if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(cardX, cardY, cardW, cardH, 6);
+          } else {
+            ctx.rect(cardX, cardY, cardW, cardH);
+          }
+          ctx.fill();
           ctx.strokeStyle = '#E4E4E7';
           ctx.lineWidth = 1.5;
-          ctx.strokeRect(cardX, cardY, cardW, cardH);
+          ctx.stroke();
 
           // Left Black Accent Stripe (Visual Anchor)
           ctx.fillStyle = '#18181B';
-          ctx.fillRect(cardX, cardY, 6, cardH);
+          ctx.fillRect(cardX, cardY, 5, cardH);
 
-          // Card Header: Code + Tag Badge + Time Range
+          // 1. Header Line: Code + Acronym + Type Tag + Time (if space permits)
           const isCompactCol = cardW < 240;
-          ctx.font = isCompactCol
-            ? '800 16px "JetBrains Mono", monospace'
-            : '800 18px "JetBrains Mono", monospace';
-
           const sessAcronym = getSessionAcronym(s.courseName, s.courseCode);
           const rawDisplayCode = sessAcronym
             ? `${cleanSingleCourseCode(s.courseCode)} · ${sessAcronym}`
             : cleanSingleCourseCode(s.courseCode);
 
           // Tag dimensions
-          ctx.font = '700 12.5px "JetBrains Mono", monospace';
-          const tagW = Math.max(40, ctx.measureText(s.typeLabel).width + 14);
-
-          // Tag positioning: right aligned with safe padding to never overflow
-          let tagX = cardX + cardW - tagW - 14;
+          ctx.font = '700 11px "JetBrains Mono", monospace';
+          const tagW = Math.max(34, ctx.measureText(s.typeLabel).width + 12);
+          const tagH = 18;
+          let tagX = cardX + cardW - tagW - 12;
 
           // Code text with collision avoidance against tag badge
           ctx.font = isCompactCol
-            ? '800 16px "JetBrains Mono", monospace'
-            : '800 18px "JetBrains Mono", monospace';
+            ? '800 14px "JetBrains Mono", monospace'
+            : '800 15px "JetBrains Mono", monospace';
           let displayCodeText = rawDisplayCode;
-          const maxCodeW = tagX - cardX - 22;
+          const maxCodeW = tagX - cardX - 20;
           if (ctx.measureText(displayCodeText).width > maxCodeW) {
             const bareCode = cleanSingleCourseCode(s.courseCode);
             if (ctx.measureText(bareCode).width <= maxCodeW) {
@@ -1635,92 +1638,104 @@
           }
 
           const codeW = ctx.measureText(displayCodeText).width;
-          // If wide card (e.g. 2h+), place tag badge inline next to code
-          if (!isCompactCol && (cardX + 16 + codeW + 12 + tagW + 140 < cardX + cardW)) {
-            tagX = cardX + 16 + codeW + 12;
+          if (!isCompactCol && (cardX + 14 + codeW + 10 + tagW + 110 < cardX + cardW)) {
+            tagX = cardX + 14 + codeW + 10;
           }
 
-          const headerY = isTall ? (cardY + 30) : (cardY + 25);
+          const headerY = cardY + 22;
           ctx.fillStyle = '#18181B';
-          ctx.fillText(displayCodeText, cardX + 16, headerY);
+          ctx.fillText(displayCodeText, cardX + 14, headerY);
 
           // Type Tag Pill
-          const tagY = isTall ? (cardY + 14) : (cardY + 10);
+          const tagY = cardY + 8;
           ctx.fillStyle = '#F4F4F5';
-          ctx.fillRect(tagX, tagY, tagW, 22);
+          ctx.beginPath();
+          if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(tagX, tagY, tagW, tagH, 3);
+          } else {
+            ctx.rect(tagX, tagY, tagW, tagH);
+          }
+          ctx.fill();
           ctx.strokeStyle = '#E4E4E7';
           ctx.lineWidth = 1;
-          ctx.strokeRect(tagX, tagY, tagW, 22);
+          ctx.stroke();
+
           ctx.fillStyle = '#71717A';
-          ctx.font = '700 12.5px "JetBrains Mono", monospace';
+          ctx.font = '700 11px "JetBrains Mono", monospace';
           ctx.textAlign = 'center';
-          ctx.fillText(s.typeLabel, tagX + tagW / 2, tagY + 15.5);
+          ctx.fillText(s.typeLabel, tagX + tagW / 2, tagY + 13);
           ctx.textAlign = 'left';
 
           // Time Range in header for wide multi-hour cards
           ctx.fillStyle = '#71717A';
-          ctx.font = '600 15px "JetBrains Mono", monospace';
+          ctx.font = '600 12.5px "JetBrains Mono", monospace';
           const timeText = s.timeStr;
           const timeWidth = ctx.measureText(timeText).width;
-          if (tagX < cardX + cardW - timeWidth - 30 && cardW > 320) {
-            ctx.fillText(timeText, cardX + cardW - timeWidth - 16, headerY);
+          if (tagX < cardX + cardW - timeWidth - 24 && cardW > 280) {
+            ctx.fillText(timeText, cardX + cardW - timeWidth - 14, headerY);
           }
 
-          // Subtitle: OCC only with balanced vertical spacing
-          if (cardH >= 80) {
-            ctx.fillStyle = '#71717A';
-            ctx.font = '700 14.5px "JetBrains Mono", monospace';
-            const occY = isTall ? (cardY + 64) : (cardY + 48);
-            ctx.fillText(s.occ, cardX + 16, occY);
-          }
+          // 2. Subtitle: OCC
+          ctx.fillStyle = '#71717A';
+          ctx.font = '700 12px "JetBrains Mono", monospace';
+          const occY = cardY + 41;
+          ctx.fillText(s.occ, cardX + 14, occY);
 
-          // Course Title (Multi-line wrap, up to 2 lines, comfortable leading)
+          // 3. Course Title (Multi-line wrap, up to 2 lines, comfortable leading)
           ctx.fillStyle = '#18181B';
-          ctx.font = '800 18px "Hanken Grotesk", sans-serif';
-          const maxTitleW = cardW - 32;
+          ctx.font = '800 14px "Hanken Grotesk", sans-serif';
+          const maxTitleW = cardW - 28;
           const titleLines = wrapCanvasTitle(str => ctx.measureText(str).width, s.courseName, maxTitleW, 2);
-          const titleLineH = isTall ? 27 : 22;
-          const startTitleY = isTall
-            ? (titleLines.length > 1 ? cardY + 98 : cardY + 104)
-            : (titleLines.length > 1 ? cardY + 68 : cardY + 72);
+          const titleLineH = 16;
+          const startTitleY = (titleLines.length > 1) ? (cardY + 58) : (cardY + 61);
 
           titleLines.forEach((tLine, tIdx) => {
-            ctx.fillText(tLine, cardX + 16, startTitleY + tIdx * titleLineH);
+            ctx.fillText(tLine, cardX + 14, startTitleY + tIdx * titleLineH);
           });
 
-          // Footer: Venue left with pin, Duration right
-          if (cardH >= 65) {
-            const footerY = isTall ? (cardY + cardH - 16) : (cardY + cardH - 12);
-            if (s.venue) {
-              ctx.fillStyle = '#71717A';
-              ctx.font = '600 14.5px "JetBrains Mono", monospace';
-              let vText = `${s.venueIcon || '📍'} ${s.venue}`;
-              const durW = s.durText ? Math.max(38, ctx.measureText(s.durText).width + 14) : 0;
-              const maxVenueW = cardW - durW - 40;
-              if (ctx.measureText(vText).width > maxVenueW) {
-                while (vText.length > 4 && ctx.measureText(vText + '…').width > maxVenueW) {
-                  vText = vText.slice(0, -1);
-                }
-                vText += '…';
+          // 4. Footer: Venue left, Duration badge right
+          const footerY = cardY + cardH - 10;
+          if (s.venue) {
+            ctx.fillStyle = '#71717A';
+            ctx.font = '600 12px "JetBrains Mono", monospace';
+            let vText = `${s.venueIcon || '📍'} ${s.venue}`;
+            const durW = s.durText ? Math.max(32, ctx.measureText(s.durText).width + 12) : 0;
+            const maxVenueW = cardW - durW - 32;
+            if (ctx.measureText(vText).width > maxVenueW) {
+              while (vText.length > 4 && ctx.measureText(vText + '…').width > maxVenueW) {
+                vText = vText.slice(0, -1);
               }
-              ctx.fillText(vText, cardX + 16, footerY);
+              vText += '…';
             }
+            ctx.fillText(vText, cardX + 14, footerY);
+          } else {
+            // Venue placeholder if empty
+            ctx.fillStyle = '#A1A1AA';
+            ctx.font = '600 11.5px "JetBrains Mono", monospace';
+            ctx.fillText('📍 + Add Location', cardX + 14, footerY);
+          }
 
-            // Duration tag on right
-            if (s.durText) {
-              ctx.font = '700 12.5px "JetBrains Mono", monospace';
-              const durW = Math.max(38, ctx.measureText(s.durText).width + 14);
-              const durX = cardX + cardW - durW - 14;
-              const durY = footerY - 14;
-              ctx.fillStyle = '#F4F4F5';
-              ctx.fillRect(durX, durY, durW, 20);
-              ctx.strokeStyle = '#E4E4E7';
-              ctx.strokeRect(durX, durY, durW, 20);
-              ctx.fillStyle = '#71717A';
-              ctx.textAlign = 'center';
-              ctx.fillText(s.durText, durX + durW / 2, durY + 14.5);
-              ctx.textAlign = 'left';
+          // Duration tag on right
+          if (s.durText) {
+            ctx.font = '700 11px "JetBrains Mono", monospace';
+            const durW = Math.max(32, ctx.measureText(s.durText).width + 12);
+            const durH = 17;
+            const durX = cardX + cardW - durW - 12;
+            const durY = cardY + cardH - 21;
+            ctx.fillStyle = '#F4F4F5';
+            ctx.beginPath();
+            if (typeof ctx.roundRect === 'function') {
+              ctx.roundRect(durX, durY, durW, durH, 3);
+            } else {
+              ctx.rect(durX, durY, durW, durH);
             }
+            ctx.fill();
+            ctx.strokeStyle = '#E4E4E7';
+            ctx.stroke();
+            ctx.fillStyle = '#71717A';
+            ctx.textAlign = 'center';
+            ctx.fillText(s.durText, durX + durW / 2, durY + 12.5);
+            ctx.textAlign = 'left';
           }
         });
 
@@ -1731,10 +1746,10 @@
             if (gapStart === null) gapStart = i;
           } else {
             if (gapStart !== null) {
-              const gapX = getCanvasHorizontalX(gapStart + minHour, 0) + 4;
+              const gapX = getCanvasHorizontalX(gapStart + minHour, 0) + 3;
               const gapY = y + 4;
               const gapEndColX = getCanvasHorizontalX(i + minHour, 0);
-              const gapW = Math.max(20, (gapEndColX - gapX) - 8);
+              const gapW = Math.max(16, (gapEndColX - gapX) - 6);
               const gapH = rowH - 8;
 
               ctx.fillStyle = 'rgba(0, 0, 0, 0.012)';
@@ -1748,10 +1763,10 @@
               const label = getEditorialGapLabel(gStartH, gEndH);
 
               ctx.fillStyle = '#A1A1AA';
-              ctx.font = '600 13px "JetBrains Mono", monospace';
+              ctx.font = '600 11px "JetBrains Mono", monospace';
               ctx.textAlign = 'center';
-              if (gapW > 120) {
-                ctx.fillText(label, gapX + gapW / 2, gapY + gapH / 2 + 5);
+              if (gapW > 100) {
+                ctx.fillText(label, gapX + gapW / 2, gapY + gapH / 2 + 4);
               }
               ctx.textAlign = 'left';
 
@@ -1762,10 +1777,10 @@
       }
     });
 
-    // Bottom Watermark (Identical to Vertical Export)
+    // Bottom Watermark
     ctx.fillStyle = '#A1A1AA';
-    ctx.font = '600 14px "JetBrains Mono", monospace';
-    ctx.fillText('SPeCTRUM PRO · ACADEMIC SUITE · UNIVERSITI MALAYA', 60, height - 25);
+    ctx.font = '600 13px "JetBrains Mono", monospace';
+    ctx.fillText('SPeCTRUM PRO · ACADEMIC SUITE · UNIVERSITI MALAYA', 60, height - 20);
 
     return canvas;
   }
@@ -2185,7 +2200,7 @@
     }, 'image/png');
   }
 
-  function buildPdfFromJpegBytes(jpegBytes, imgW, imgH, widthPt = 842, heightPt = 595) {
+  function buildPdfFromJpegBytes(jpegBytes, imgW, imgH, widthPt = 842, heightPt = 595, marginPt = 24) {
     const binaryLen = jpegBytes.length;
     let pdf = '%PDF-1.4\n';
     const offsets = [];
@@ -2203,7 +2218,22 @@
     offsets.push(pdf.length);
     pdf += obj4Header;
 
-    const contentStream = `q\n${widthPt} 0 0 ${heightPt} 0 0 cm\n/Im1 Do\nQ\n`;
+    // Calculate proportional fit within page margins
+    const availW = widthPt - marginPt * 2;
+    const availH = heightPt - marginPt * 2;
+    const imgAspect = (imgW > 0 && imgH > 0) ? (imgW / imgH) : (widthPt / heightPt);
+
+    let drawW = availW;
+    let drawH = drawW / imgAspect;
+    if (drawH > availH) {
+      drawH = availH;
+      drawW = drawH * imgAspect;
+    }
+
+    const posX = (widthPt - drawW) / 2;
+    const posY = (heightPt - drawH) / 2;
+
+    const contentStream = `q\n${drawW.toFixed(2)} 0 0 ${drawH.toFixed(2)} ${posX.toFixed(2)} ${posY.toFixed(2)} cm\n/Im1 Do\nQ\n`;
     const obj5 = `5 0 obj\n<< /Length ${contentStream.length} >>\nstream\n${contentStream}endstream\nendobj\n`;
 
     const enc = new TextEncoder();
