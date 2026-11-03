@@ -1,19 +1,30 @@
-// SPeCTRUM Pro Content Script - Injected on spectrum.um.edu.my
+// SPeCTRUM Pro Content Script - Injected on web pages
 (function () {
   'use strict';
 
   // Saladict-Style Floating Pin Panel Engine (Flies over screen, draggable & pinnable)
   let isFloatingPanelPinned = true;
+  try {
+    const savedPinned = localStorage.getItem('spectrum_pro_float_pinned');
+    if (savedPinned !== null) {
+      isFloatingPanelPinned = savedPinned === '1';
+    }
+  } catch (e) {}
 
-  function toggleFloatingPanel(forceOpen = false, forcePinned = true) {
+  function toggleFloatingPanel(forceOpen = false, forcePinned = undefined, tab = '', sub = '') {
     let panel = document.getElementById('spectrum-pro-floating-panel');
+    let targetUrl = chrome.runtime.getURL('popup/popup.html?mode=floating');
+    if (tab) targetUrl += `&tab=${encodeURIComponent(tab)}`;
+    if (sub) targetUrl += `&sub=${encodeURIComponent(sub)}`;
+
     if (!panel) {
       panel = document.createElement('div');
       panel.id = 'spectrum-pro-floating-panel';
-      isFloatingPanelPinned = forcePinned;
+      if (forcePinned !== undefined) {
+        isFloatingPanelPinned = forcePinned;
+      }
 
       const iconUrl = chrome.runtime.getURL('icons/icon48.png');
-      const frameUrl = chrome.runtime.getURL('popup/popup.html?mode=floating');
 
       // Load saved position if available
       let savedLeft = null;
@@ -34,17 +45,17 @@
           <div class="spectrum-floating-left">
             <img src="${iconUrl}" class="spectrum-floating-logo-icon" alt="SPeCTRUM Pro">
             <span class="spectrum-floating-title-text">SPeCTRUM PRO</span>
-            <span class="spectrum-floating-drag-handle">⋮⋮</span>
+            <span class="spectrum-floating-drag-handle">⋮⋮ DRAG</span>
           </div>
           <div class="spectrum-floating-actions">
-            <button type="button" id="spectrum-floating-btn-pin" class="spectrum-floating-btn btn-pin ${isFloatingPanelPinned ? 'is-pinned' : ''}" title="${isFloatingPanelPinned ? 'Pinned: Will not disappear when clicking outside' : 'Unpinned: Click outside to close'}">
+            <button type="button" id="spectrum-floating-btn-pin" class="spectrum-floating-btn btn-pin ${isFloatingPanelPinned ? 'is-pinned' : ''}" title="${isFloatingPanelPinned ? 'Pinned: Stays open when clicking outside on the page' : 'Unpinned: Click outside to close'}">
               <svg class="icon-svg icon-pin" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a1 1 0 0 0 0-2H8a1 1 0 0 0 0 2h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
               <span id="spectrum-floating-pin-text">${isFloatingPanelPinned ? 'PINNED' : 'PIN'}</span>
             </button>
             <button type="button" id="spectrum-floating-btn-close" class="spectrum-floating-btn btn-close" title="Close Panel (Esc)">✕</button>
           </div>
         </div>
-        <iframe src="${frameUrl}" id="spectrum-pro-floating-frame" allow="clipboard-read; clipboard-write"></iframe>
+        <iframe src="${targetUrl}" id="spectrum-pro-floating-frame" allow="clipboard-read; clipboard-write"></iframe>
       `;
 
       if (savedLeft !== null && savedTop !== null) {
@@ -53,7 +64,7 @@
         panel.style.right = 'auto';
       }
 
-      document.body.appendChild(panel);
+      (document.body || document.documentElement).appendChild(panel);
 
       const header = panel.querySelector('#spectrum-pro-floating-header');
       const pinBtn = panel.querySelector('#spectrum-floating-btn-pin');
@@ -67,7 +78,10 @@
         isFloatingPanelPinned = !isFloatingPanelPinned;
         pinBtn.classList.toggle('is-pinned', isFloatingPanelPinned);
         pinText.textContent = isFloatingPanelPinned ? 'PINNED' : 'PIN';
-        pinBtn.title = isFloatingPanelPinned ? 'Pinned: Will not disappear when clicking outside' : 'Unpinned: Click outside to close';
+        pinBtn.title = isFloatingPanelPinned ? 'Pinned: Stays open when clicking outside on the page' : 'Unpinned: Click outside to close';
+        try {
+          localStorage.setItem('spectrum_pro_float_pinned', isFloatingPanelPinned ? '1' : '0');
+        } catch (e) {}
       });
 
       // Close button
@@ -76,7 +90,7 @@
         panel.classList.add('panel-hidden');
       });
 
-      // Drag-to-move physics (like Saladict)
+      // Drag-to-move physics (Saladict mechanics)
       let isDragging = false;
       let startMouseX = 0, startMouseY = 0;
       let startPanelX = 0, startPanelY = 0;
@@ -97,8 +111,8 @@
         e.preventDefault();
         const dx = e.clientX - startMouseX;
         const dy = e.clientY - startMouseY;
-        const maxLeft = Math.max(0, window.innerWidth - panel.offsetWidth);
-        const maxTop = Math.max(0, window.innerHeight - panel.offsetHeight);
+        const maxLeft = Math.max(0, window.innerWidth - 120);
+        const maxTop = Math.max(0, window.innerHeight - 40);
         const newLeft = Math.min(Math.max(0, startPanelX + dx), maxLeft);
         const newTop = Math.min(Math.max(0, startPanelY + dy), maxTop);
         panel.style.left = `${newLeft}px`;
@@ -106,7 +120,7 @@
         panel.style.right = 'auto';
       });
 
-      window.addEventListener('mouseup', () => {
+      const stopDrag = () => {
         if (!isDragging) return;
         isDragging = false;
         header.classList.remove('is-dragging');
@@ -114,7 +128,10 @@
         try {
           localStorage.setItem('spectrum_pro_float_pos', JSON.stringify({ left: panel.offsetLeft, top: panel.offsetTop }));
         } catch (e) {}
-      });
+      };
+
+      window.addEventListener('mouseup', stopDrag);
+      window.addEventListener('blur', stopDrag);
 
       // Click outside: only dismisses if UNPINNED (Saladict behavior)
       document.addEventListener('mousedown', (e) => {
@@ -126,7 +143,7 @@
         panel.classList.add('panel-hidden');
       });
 
-      // Esc key
+      // Esc key closes panel
       window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !panel.classList.contains('panel-hidden')) {
           panel.classList.add('panel-hidden');
@@ -136,6 +153,9 @@
       window.addEventListener('message', (ev) => {
         if (ev.data && ev.data.type === 'CLOSE_SPECTRUM_FLOATING') {
           panel.classList.add('panel-hidden');
+        }
+        if (ev.data && ev.data.type === 'TOGGLE_SPECTRUM_PIN') {
+          if (pinBtn) pinBtn.click();
         }
       });
       return;
@@ -150,6 +170,10 @@
         if (pinBtn) pinBtn.classList.toggle('is-pinned', isFloatingPanelPinned);
         if (pinText) pinText.textContent = isFloatingPanelPinned ? 'PINNED' : 'PIN';
       }
+      if (tab || sub) {
+        const frame = panel.querySelector('#spectrum-pro-floating-frame');
+        if (frame) frame.src = targetUrl;
+      }
     } else {
       panel.classList.toggle('panel-hidden');
     }
@@ -158,6 +182,7 @@
   // Inject floating button if on SPeCTRUM
   function injectFloatingButton() {
     if (document.getElementById('spectrum-pro-floating-btn')) return;
+    if (!window.location.hostname.includes('spectrum.um.edu.my')) return;
 
     const btn = document.createElement('div');
     btn.id = 'spectrum-pro-floating-btn';
@@ -174,13 +199,13 @@
       toggleFloatingPanel();
     });
 
-    document.body.appendChild(btn);
+    (document.body || document.documentElement).appendChild(btn);
   }
 
   // Listen for messages from popup or background to open in-page drawer
   chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.type === 'OPEN_FLOATING_PANEL') {
-      toggleFloatingPanel(true, true);
+      toggleFloatingPanel(true, msg.pinned !== undefined ? msg.pinned : true, msg.tab || '', msg.sub || '');
       sendResponse({ success: true });
       return true;
     }

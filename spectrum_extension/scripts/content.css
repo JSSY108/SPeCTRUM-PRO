@@ -59,45 +59,58 @@
 }
 
 /* SPeCTRUM Pro Saladict-Style Floating Pin Panel (Flies over screen, stays pinned) */
+#spectrum-pro-floating-panel,
+#spectrum-pro-floating-panel * {
+  box-sizing: border-box !important;
+}
+
 #spectrum-pro-floating-panel {
-  position: fixed;
-  top: 60px;
-  right: 40px;
-  width: 780px;
-  height: 638px;
-  max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 32px);
-  z-index: 2147483647;
-  background: #090d16;
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.12);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  transform: scale(1);
-  opacity: 1;
+  position: fixed !important;
+  top: 60px !important;
+  right: 40px !important;
+  width: 780px !important;
+  height: 638px !important;
+  min-width: 480px !important;
+  min-height: 400px !important;
+  max-width: calc(100vw - 32px) !important;
+  max-height: calc(100vh - 32px) !important;
+  z-index: 2147483647 !important;
+  background: #090d16 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.12) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transform: scale(1) !important;
+  opacity: 1 !important;
+  resize: both !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 #spectrum-pro-floating-panel.panel-hidden {
-  transform: scale(0.96);
-  opacity: 0;
-  pointer-events: none;
+  transform: scale(0.96) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
 }
 
 #spectrum-pro-floating-header {
-  height: 38px;
-  min-height: 38px;
-  padding: 0 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #090d16;
-  color: #f8fafc;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  user-select: none;
-  cursor: grab;
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: #090d16 !important;
+  color: #f8fafc !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  user-select: none !important;
+  cursor: grab !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
 }
 
 #spectrum-pro-floating-header.is-dragging {
@@ -105,88 +118,97 @@
 }
 
 .spectrum-floating-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
 }
 
 .spectrum-floating-logo-icon {
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
-  vertical-align: middle;
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 4px !important;
+  vertical-align: middle !important;
+  flex-shrink: 0 !important;
 }
 
 .spectrum-floating-title-text {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  color: #f1f5f9;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.6px !important;
+  color: #f1f5f9 !important;
 }
 
 .spectrum-floating-drag-handle {
-  font-size: 11px;
-  color: #64748b;
-  margin-left: 6px;
-  letter-spacing: 0.2px;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  margin-left: 6px !important;
+  letter-spacing: 0.5px !important;
 }
 
 .spectrum-floating-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
 }
 
 .spectrum-floating-btn {
-  background: transparent;
-  border: 1px solid transparent;
-  color: #94a3b8;
-  font-size: 11px;
-  cursor: pointer;
-  padding: 3px 8px;
-  border-radius: 6px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.18s ease;
-  outline: none;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #94a3b8 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  padding: 4px 9px !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  transition: all 0.18s ease !important;
+  outline: none !important;
+  line-height: normal !important;
 }
 
 .spectrum-floating-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
 }
 
 .spectrum-floating-btn.btn-pin.is-pinned {
-  background: rgba(56, 189, 248, 0.16);
-  border-color: rgba(56, 189, 248, 0.4);
-  color: #38bdf8;
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+  background: rgba(56, 189, 248, 0.18) !important;
+  border-color: rgba(56, 189, 248, 0.45) !important;
+  color: #38bdf8 !important;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25) !important;
 }
 
 .spectrum-floating-btn.btn-pin .icon-pin {
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease !important;
 }
 
 .spectrum-floating-btn.btn-pin.is-pinned .icon-pin {
-  transform: rotate(45deg);
+  transform: rotate(45deg) !important;
 }
 
 .spectrum-floating-btn.btn-close {
-  font-size: 15px;
-  padding: 2px 7px;
-  color: #94a3b8;
+  background: transparent !important;
+  border: none !important;
+  font-size: 16px !important;
+  padding: 2px 7px !important;
+  color: #94a3b8 !important;
 }
 
 .spectrum-floating-btn.btn-close:hover {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #ef4444 !important;
 }
 
 #spectrum-pro-floating-frame {
-  flex: 1;
-  width: 100%;
-  height: calc(100% - 38px);
-  border: none;
-  background: transparent;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  height: calc(100% - 40px) !important;
+  border: none !important;
+  background: transparent !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }

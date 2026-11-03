@@ -10137,10 +10137,16 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 .timetable-vertical-grid.is-one-page-grid .tt-venue {
   font-size: 18px !important;
+  min-width: 0 !important;
+  flex: 1 1 0% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 .timetable-vertical-grid.is-one-page-grid .tt-time-range {
   font-size: 18px !important;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
 }
 
 .timetable-vertical-grid.is-one-page-grid .tt-live-pill {
@@ -10547,6 +10553,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
   justify-content: space-between;
   gap: 6px;
   padding-top: 2px;
+  min-width: 0 !important;
 }
 
 .tt-venue {
@@ -10564,6 +10571,8 @@ body:not(.is-full-tab) .sync-cinematic-current {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  min-width: 0 !important;
+  flex: 1 1 0% !important;
 }
 
 .tt-venue-empty {

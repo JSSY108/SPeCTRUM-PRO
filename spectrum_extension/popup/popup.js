@@ -2611,35 +2611,77 @@ document.addEventListener('DOMContentLoaded', async () => {
       e.preventDefault();
 
       if (window.location.search.includes('mode=floating')) {
-        window.parent.postMessage({ type: 'CLOSE_SPECTRUM_FLOATING' }, '*');
+        window.parent.postMessage({ type: 'TOGGLE_SPECTRUM_PIN' }, '*');
         return;
       }
 
-      // 1. Primary: Launch Saladict-style Floating Pin Panel on the active tab
+      const activeMainTab = document.querySelector('.primary-tab-btn.active')?.dataset.tab || 'tab-activities';
+      const activeSubTab = document.querySelector('.sub-tab-btn.active')?.dataset.sub || '';
+
+      // Saladict-Style Floating Pin Panel Engine (Directly on active web tab)
       try {
         const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (activeTab && activeTab.id) {
-          chrome.tabs.sendMessage(activeTab.id, { type: 'OPEN_FLOATING_PANEL', pinned: true }, (res) => {
-            if (res && res.success) {
-              window.close(); // Close toolbar popup; panel is now floating pinned on screen!
-            } else {
-              openDetachedWindow();
-            }
-          });
+        if (!activeTab || !activeTab.id) return;
+
+        // Check for internal Chrome pages (chrome://, edge://, devtools://, about:)
+        const isRestrictedUrl = !activeTab.url || /^(chrome|edge|devtools|about|chrome-extension):/i.test(activeTab.url);
+        if (isRestrictedUrl) {
+          alert('Pin mode: Please open any regular webpage (e.g. SPeCTRUM, Google, etc.) to use the floating pinned panel.');
           return;
         }
-      } catch (e) {}
 
-      // 2. Fallback: Standalone companion window
-      openDetachedWindow();
+        chrome.tabs.sendMessage(activeTab.id, {
+          type: 'OPEN_FLOATING_PANEL',
+          pinned: true,
+          tab: activeMainTab,
+          sub: activeSubTab
+        }, async (res) => {
+          if (chrome.runtime.lastError || !res || !res.success) {
+            // Tab was opened prior to extension reload; inject dynamically
+            try {
+              if (chrome.scripting) {
+                await chrome.scripting.insertCSS({
+                  target: { tabId: activeTab.id },
+                  files: ['scripts/content.css']
+                });
+                await chrome.scripting.executeScript({
+                  target: { tabId: activeTab.id },
+                  files: ['scripts/content.js']
+                });
+                setTimeout(() => {
+                  chrome.tabs.sendMessage(activeTab.id, {
+                    type: 'OPEN_FLOATING_PANEL',
+                    pinned: true,
+                    tab: activeMainTab,
+                    sub: activeSubTab
+                  });
+                  window.close();
+                }, 80);
+                return;
+              }
+            } catch (injectErr) {
+              console.warn('[SPeCTRUM Pro] Dynamic content script injection error:', injectErr);
+            }
+          } else {
+            window.close();
+          }
+        });
+      } catch (err) {
+        console.error('[SPeCTRUM Pro] Pin launch error:', err);
+      }
     });
   }
 
   const btnFulltabDetach = document.getElementById('btn-fulltab-detach');
   if (btnFulltabDetach) {
-    btnFulltabDetach.addEventListener('click', (e) => {
+    btnFulltabDetach.addEventListener('click', async (e) => {
       e.preventDefault();
-      openDetachedWindow();
+      try {
+        const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (activeTab && activeTab.id) {
+          chrome.tabs.sendMessage(activeTab.id, { type: 'OPEN_FLOATING_PANEL', pinned: true });
+        }
+      } catch (e) {}
     });
   }
 

@@ -32,14 +32,24 @@
   "side_panel": {
     "default_path": "popup/popup.html?mode=sidepanel"
   },
+  "commands": {
+    "toggle-floating-panel": {
+      "suggested_key": {
+        "default": "Alt+S",
+        "mac": "Alt+S"
+      },
+      "description": "Toggle SPeCTRUM Pro floating pinned panel"
+    }
+  },
   "host_permissions": [
     "*://spectrum.um.edu.my/*",
-    "https://login.microsoftonline.com/*"
+    "https://login.microsoftonline.com/*",
+    "<all_urls>"
   ],
   "content_scripts": [
     {
       "matches": [
-        "*://spectrum.um.edu.my/*"
+        "<all_urls>"
       ],
       "js": [
         "libs/jszip.min.js",
@@ -59,10 +69,11 @@
       "resources": [
         "icons/*",
         "libs/*",
-        "popup/*"
+        "popup/*",
+        "scripts/*"
       ],
       "matches": [
-        "*://spectrum.um.edu.my/*"
+        "<all_urls>"
       ]
     }
   ]
