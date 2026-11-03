@@ -12131,12 +12131,14 @@ body.is-detached-window:not(.is-full-tab) {
   user-select: auto;
 }
 
-/* In pinned / sidepanel mode, hide Full Workstation button so user cannot accidentally switch layout */
-body.is-pinned-mode #btn-open-tab,
+/* In sidepanel / drawer mode, hide Full Workstation button if needed, but allow in floating mode */
 body.is-sidepanel #btn-open-tab,
-body.is-drawer #btn-open-tab,
-body.is-floating-mode #btn-open-tab {
+body.is-drawer #btn-open-tab {
   display: none !important;
+}
+
+body.is-floating-mode #btn-open-tab {
+  display: inline-flex !important;
 }
 
 /* Active Pin Button highlight in Detached Window */

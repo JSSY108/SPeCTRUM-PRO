@@ -2699,7 +2699,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnClosePopup = document.getElementById('btn-close-popup');
   if (btnClosePopup) {
     btnClosePopup.addEventListener('click', () => {
-      window.close();
+      if (window.location.search.includes('mode=floating')) {
+        window.parent.postMessage({ type: 'CLOSE_SPECTRUM_FLOATING' }, '*');
+      } else {
+        window.close();
+      }
     });
   }
 

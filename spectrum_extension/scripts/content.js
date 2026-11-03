@@ -48,6 +48,10 @@
             <span class="spectrum-floating-drag-handle">⋮⋮ DRAG</span>
           </div>
           <div class="spectrum-floating-actions">
+            <button type="button" id="spectrum-floating-btn-workstation" class="spectrum-floating-btn btn-workstation" title="Open Full Workstation in new tab">
+              <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              <span>Full Workstation</span>
+            </button>
             <button type="button" id="spectrum-floating-btn-pin" class="spectrum-floating-btn btn-pin ${isFloatingPanelPinned ? 'is-pinned' : ''}" title="${isFloatingPanelPinned ? 'Pinned: Stays open when clicking outside on the page' : 'Unpinned: Click outside to close'}">
               <svg class="icon-svg icon-pin" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a1 1 0 0 0 0-2H8a1 1 0 0 0 0 2h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
               <span id="spectrum-floating-pin-text">${isFloatingPanelPinned ? 'PINNED' : 'PIN'}</span>
@@ -67,10 +71,20 @@
       (document.body || document.documentElement).appendChild(panel);
 
       const header = panel.querySelector('#spectrum-pro-floating-header');
+      const workstationBtn = panel.querySelector('#spectrum-floating-btn-workstation');
       const pinBtn = panel.querySelector('#spectrum-floating-btn-pin');
       const pinText = panel.querySelector('#spectrum-floating-pin-text');
       const closeBtn = panel.querySelector('#spectrum-floating-btn-close');
       const frame = panel.querySelector('#spectrum-pro-floating-frame');
+
+      // Full Workstation button (opens full tab)
+      if (workstationBtn) {
+        workstationBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const fulltabUrl = chrome.runtime.getURL('popup/popup.html?mode=full');
+          window.open(fulltabUrl, '_blank');
+        });
+      }
 
       // Pin toggle button (Saladict pin behavior)
       pinBtn.addEventListener('click', (e) => {
