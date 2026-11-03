@@ -1544,7 +1544,7 @@
     const unitHourW = availableHourW / totalHourColWeight;
 
     // Proportional row height: exactly matches the 1-page DOM aspect ratio (~0.48x of column width)
-    const unitRowH = Math.round(unitHourW * 0.48);
+    const unitRowH = Math.max(122, Math.round(unitHourW * 0.68));
 
     const dayRows = [];
     let curRowY = gridY + headerH;
@@ -1743,7 +1743,7 @@
 
           // Card Geometry matching the 1-page sweet spot
           const cardMarginX = 10;
-          const cardMarginY = 7;
+          const cardMarginY = 8;
           const cardX = startX + cardMarginX;
           const cardY = y + cardMarginY;
           const cardW = Math.max(60, endX - startX - cardMarginX * 2);
@@ -1841,20 +1841,27 @@
           const occY = cardY + 41;
           ctx.fillText(s.occ, cardX + 14, occY);
 
-          // 3. Course Title (Multi-line wrap, up to 2 lines, comfortable leading)
+          // 4. Footer: Anchor Venue left, Duration badge right
+          const footerY = cardY + cardH - 14;
+
+          // 3. Course Title (Multi-line wrap, dynamically fitted so it never collides with footer)
           ctx.fillStyle = '#18181B';
           ctx.font = '800 14px "Hanken Grotesk", sans-serif';
           const maxTitleW = cardW - 28;
-          const titleLines = wrapCanvasTitle(str => ctx.measureText(str).width, s.courseName, maxTitleW, 2);
           const titleLineH = 16;
-          const startTitleY = (titleLines.length > 1) ? (cardY + 58) : (cardY + 61);
+          let maxAllowedLines = (cardH >= 95) ? 2 : 1;
+          let titleLines = wrapCanvasTitle(str => ctx.measureText(str).width, s.courseName, maxTitleW, maxAllowedLines);
+          let startTitleY = (titleLines.length > 1) ? (cardY + 58) : (cardY + 61);
+
+          // Guarantee zero collision against footer
+          if (startTitleY + (titleLines.length - 1) * titleLineH > footerY - 18) {
+            titleLines = [titleLines[0]];
+            startTitleY = Math.min(startTitleY, footerY - 20);
+          }
 
           titleLines.forEach((tLine, tIdx) => {
             ctx.fillText(tLine, cardX + 14, startTitleY + tIdx * titleLineH);
           });
-
-          // 4. Footer: Venue left, Duration badge right
-          const footerY = cardY + cardH - 10;
           if (s.venue) {
             ctx.fillStyle = '#71717A';
             ctx.font = '600 12px "JetBrains Mono", monospace';
@@ -2228,6 +2235,8 @@
           ctx.fillStyle = '#18181B';
           ctx.fillRect(cardX, cardY, 6, cardH);
 
+          const isCompactCard = (s.durHours && s.durHours < 1.5) || cardH < 95;
+
           // Header: Code + Tag Badge
           const isCompactCol = cardW < 240;
           ctx.font = isCompactCol
@@ -2235,9 +2244,14 @@
             : '800 18px "JetBrains Mono", monospace';
 
           const sessAcronym = getSessionAcronym(s.courseName, s.courseCode);
-          const rawDisplayCode = sessAcronym
+          let rawDisplayCode = sessAcronym
             ? `${cleanSingleCourseCode(s.courseCode)} · ${sessAcronym}`
             : cleanSingleCourseCode(s.courseCode);
+
+          // For 1-hour compact cards, display OCC inline on Line 1
+          if (isCompactCard && s.occ) {
+            rawDisplayCode += ` · ${s.occ}`;
+          }
 
           ctx.font = '700 12.5px "JetBrains Mono", monospace';
           const tagW = Math.max(40, ctx.measureText(s.typeLabel).width + 14);
@@ -2249,7 +2263,9 @@
           let displayCodeText = rawDisplayCode;
           const maxCodeW = tagX - cardX - 22;
           if (ctx.measureText(displayCodeText).width > maxCodeW) {
-            const bareCode = cleanSingleCourseCode(s.courseCode);
+            const bareCode = (isCompactCard && s.occ)
+              ? `${cleanSingleCourseCode(s.courseCode)} · ${s.occ}`
+              : cleanSingleCourseCode(s.courseCode);
             if (ctx.measureText(bareCode).width <= maxCodeW) {
               displayCodeText = bareCode;
             } else {
@@ -2277,40 +2293,52 @@
           ctx.fillText(s.typeLabel, tagX + tagW / 2, tagY + 15.5);
           ctx.textAlign = 'left';
 
-          // Course Title (Multi-line wrap, up to 2 lines with comfortable line spacing)
-          ctx.fillStyle = '#18181B';
-          ctx.font = '800 18px "Hanken Grotesk", sans-serif';
-          const maxTitleW = cardW - 28;
-          const titleLines = wrapCanvasTitle(str => ctx.measureText(str).width, s.courseName, maxTitleW, 2);
-          const titleLineH = isTall ? 26 : 22;
-          const startTitleY = isTall
-            ? (titleLines.length > 1 ? cardY + 62 : cardY + 68)
-            : (titleLines.length > 1 ? cardY + 50 : cardY + 54);
+          const footerY = isTall ? (cardY + cardH - 16) : (cardY + cardH - 14);
 
-          titleLines.forEach((tLine, tIdx) => {
-            ctx.fillText(tLine, cardX + 16, startTitleY + tIdx * titleLineH);
-          });
+          // If NOT compact card (>= 2 hours), draw Title and OCC
+          if (!isCompactCard) {
+            // Course Title (Multi-line wrap, up to 2 lines with comfortable line spacing)
+            ctx.fillStyle = '#18181B';
+            ctx.font = '800 18px "Hanken Grotesk", sans-serif';
+            const maxTitleW = cardW - 28;
+            let maxTitleLines = (cardH >= 120) ? 2 : 1;
+            const titleLines = wrapCanvasTitle(str => ctx.measureText(str).width, s.courseName, maxTitleW, maxTitleLines);
+            const titleLineH = isTall ? 26 : 22;
+            let startTitleY = isTall
+              ? (titleLines.length > 1 ? cardY + 62 : cardY + 68)
+              : (titleLines.length > 1 ? cardY + 50 : cardY + 54);
 
-          // Subtitle: OCC with proportional spacing
-          if (cardH >= 80) {
-            ctx.fillStyle = '#71717A';
-            ctx.font = '600 15px "JetBrains Mono", monospace';
-            let sub = s.occ || '';
-            if (ctx.measureText(sub).width > cardW - 28) {
-              while (sub.length > 4 && ctx.measureText(sub + '…').width > cardW - 28) {
-                sub = sub.slice(0, -1);
-              }
-              sub += '…';
+            // Safety clamp: ensure title bottom never overlaps with OCC or footer
+            if (startTitleY + (titleLines.length - 1) * titleLineH > footerY - 45) {
+              startTitleY = Math.min(startTitleY, footerY - 50);
             }
-            const subY = isTall
-              ? (titleLines.length > 1 ? startTitleY + titleLineH + 28 : startTitleY + 34)
-              : (titleLines.length > 1 ? (cardY + 92) : (cardY + 80));
-            ctx.fillText(sub, cardX + 16, subY);
+
+            titleLines.forEach((tLine, tIdx) => {
+              ctx.fillText(tLine, cardX + 16, startTitleY + tIdx * titleLineH);
+            });
+
+            // Subtitle: OCC with proportional spacing
+            if (cardH >= 95) {
+              ctx.fillStyle = '#71717A';
+              ctx.font = '600 15px "JetBrains Mono", monospace';
+              let sub = s.occ || '';
+              if (ctx.measureText(sub).width > cardW - 28) {
+                while (sub.length > 4 && ctx.measureText(sub + '…').width > cardW - 28) {
+                  sub = sub.slice(0, -1);
+                }
+                sub += '…';
+              }
+              const subY = isTall
+                ? (titleLines.length > 1 ? startTitleY + titleLineH + 28 : startTitleY + 34)
+                : (titleLines.length > 1 ? (cardY + 92) : (cardY + 80));
+              if (subY < footerY - 14) {
+                ctx.fillText(sub, cardX + 16, subY);
+              }
+            }
           }
 
           // Footer (Venue left with pin, Time right)
-          if (cardH >= 65) {
-            const footerY = isTall ? (cardY + cardH - 16) : (cardY + cardH - 14);
+          if (cardH >= 55) {
             if (s.venue) {
               ctx.fillStyle = '#71717A';
               ctx.font = '600 15px "JetBrains Mono", monospace';
