@@ -1007,12 +1007,15 @@
                 <div class="tt-card-code-badge">
                   <span class="tt-code">${esc(cleanSingleCourseCode(s.courseCode))}</span>
                   ${acronymHtml}
+                  ${isCompact ? `<span class="tt-card-occ-inline">${subtitleText}</span>` : ''}
                   ${liveBadgeHtml}
                 </div>
                 <span class="tt-type-tag">${esc(s.typeLabel)}</span>
               </div>
+              ${isCompact ? '' : `
               <div class="tt-card-title" title="${esc(s.courseName)}">${esc(s.courseName)}</div>
               <div class="tt-card-subtitle">${subtitleText}</div>
+              `}
               <div class="tt-card-footer">
                 ${venueHtml}
                 <span class="tt-time-range">${esc(s.timeStr)}</span>

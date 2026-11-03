@@ -10466,20 +10466,35 @@ body:not(.is-full-tab) .sync-cinematic-current {
   flex-shrink: 0;
 }
 
-/* Compact 1-hour session styles */
+/* Compact 1-hour session styles: No full course name, OCC on first line */
 .tt-session-card.is-compact {
-  padding: 6px 10px;
-  gap: 2.5px;
+  padding: 8px 12px;
+  justify-content: space-between;
 }
 
+.tt-session-card.is-compact .tt-card-title,
 .tt-session-card.is-compact .tt-card-subtitle {
-  display: block;
+  display: none !important;
 }
 
-.tt-session-card.is-compact .tt-card-title {
-  -webkit-line-clamp: 2;
-  white-space: normal;
-  line-height: 1.25;
+.tt-card-occ-inline {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--tt-font-occ, 12px);
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-card-occ-inline {
+  font-size: 18px !important;
+  margin-left: 8px;
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .tt-card-occ-inline {
+  color: var(--text-muted);
 }
 
 /* Dark Mode Support for Timetable (Design Tokens Spec) */
