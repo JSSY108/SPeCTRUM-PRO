@@ -9945,16 +9945,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   let activitiesProgressHideTimer = null;
+  let syncProgressCurrent = 0;
+  let syncProgressTarget = 0;
+  let syncProgressTicker = null;
+  let syncProgressLatestText = { current: '', count: '', title: '' };
 
-  function updateActivitiesFetchProgress(percent, currentText, countText, titleText) {
-    if (activitiesProgressHideTimer) {
-      clearTimeout(activitiesProgressHideTimer);
-      activitiesProgressHideTimer = null;
-    }
+  function renderSyncProgressElements(percentVal, currentText, countText, titleText) {
+    const clamped = Math.min(100, Math.max(0, Math.round(percentVal)));
+    const preciseWidth = Math.min(100, Math.max(0, percentVal)).toFixed(1);
 
-    const clamped = Math.min(100, Math.max(0, Math.round(percent)));
-
-    // Update Sync button perimeter progress bar & percentage label
+    // Update Sync button horizontal progress bar & percentage label
     updateSyncButtonProgress(clamped, true);
 
     // 1. Update Centered Cinematic Glassmorphism HUD Overlay (Option 3)
@@ -9976,7 +9976,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const hudSvg = document.getElementById('sync-hud-prism-svg');
 
       if (hudPercent) hudPercent.textContent = `${clamped}%`;
-      if (hudBarFill) hudBarFill.style.width = `${clamped}%`;
+      if (hudBarFill) hudBarFill.style.width = `${preciseWidth}%`;
       if (hudTitle && titleText) hudTitle.textContent = titleText;
       if (hudCurrent && currentText) hudCurrent.textContent = currentText;
       if (hudSub && countText) hudSub.textContent = countText;
@@ -10004,7 +10004,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const titleEl = document.getElementById(`${prefix}-loading-title`);
 
       if (percentEl) percentEl.textContent = `${clamped}%`;
-      if (fillEl) fillEl.style.width = `${clamped}%`;
+      if (fillEl) fillEl.style.width = `${preciseWidth}%`;
       if (currentEl && currentText) currentEl.textContent = currentText;
       if (countEl && countText) countEl.textContent = countText;
       if (titleEl && titleText) titleEl.textContent = titleText;
@@ -10018,7 +10018,81 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  function startSyncProgressTicker() {
+    if (syncProgressTicker) return;
+    syncProgressTicker = setInterval(() => {
+      if (syncProgressTarget >= 100) {
+        if (syncProgressCurrent < 100) {
+          syncProgressCurrent = Math.min(100, syncProgressCurrent + Math.max(0.6, (100 - syncProgressCurrent) * 0.3));
+          renderSyncProgressElements(
+            syncProgressCurrent,
+            syncProgressLatestText.current,
+            syncProgressLatestText.count,
+            syncProgressLatestText.title
+          );
+        }
+        if (syncProgressCurrent >= 100) {
+          stopSyncProgressTicker();
+        }
+        return;
+      }
+
+      if (syncProgressCurrent < syncProgressTarget) {
+        // Fast, smooth catch-up to target in continuous small steps
+        const diff = syncProgressTarget - syncProgressCurrent;
+        const step = Math.max(0.18, diff * 0.12);
+        syncProgressCurrent = Math.min(syncProgressTarget, syncProgressCurrent + step);
+      } else if (syncProgressCurrent < 94) {
+        // Active living micro-crawl so progress is NEVER static while waiting for network
+        const softCeiling = Math.min(syncProgressTarget + 3.5, 94);
+        if (syncProgressCurrent < softCeiling) {
+          syncProgressCurrent += 0.06;
+        }
+      }
+
+      renderSyncProgressElements(
+        syncProgressCurrent,
+        syncProgressLatestText.current,
+        syncProgressLatestText.count,
+        syncProgressLatestText.title
+      );
+    }, 50);
+  }
+
+  function stopSyncProgressTicker() {
+    if (syncProgressTicker) {
+      clearInterval(syncProgressTicker);
+      syncProgressTicker = null;
+    }
+  }
+
+  function updateActivitiesFetchProgress(percent, currentText, countText, titleText) {
+    if (activitiesProgressHideTimer) {
+      clearTimeout(activitiesProgressHideTimer);
+      activitiesProgressHideTimer = null;
+    }
+
+    syncProgressTarget = Math.min(100, Math.max(0, percent));
+    if (currentText) syncProgressLatestText.current = currentText;
+    if (countText) syncProgressLatestText.count = countText;
+    if (titleText) syncProgressLatestText.title = titleText;
+
+    if (!syncProgressTicker) {
+      startSyncProgressTicker();
+    }
+
+    renderSyncProgressElements(
+      syncProgressCurrent,
+      syncProgressLatestText.current,
+      syncProgressLatestText.count,
+      syncProgressLatestText.title
+    );
+  }
+
   function hideActivitiesFetchProgress(delay = 1200) {
+    stopSyncProgressTicker();
+    syncProgressCurrent = 100;
+    syncProgressTarget = 100;
     if (activitiesProgressHideTimer) clearTimeout(activitiesProgressHideTimer);
 
     // Deactivate brand logo fetch animation (switch back to exact final settled state)
@@ -10100,6 +10174,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     syncStartTime = Date.now();
     currentSyncAbortController = new AbortController();
     isSyncOverlayDismissed = false;
+    syncProgressCurrent = 0;
+    syncProgressTarget = 6;
 
     updateSyncButtonSpinState(true, 'Syncing...');
 
@@ -10234,7 +10310,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       setDiagBadge(diagBadgeCourses, 'ok', `Courses: ${totalCourses}`);
 
       updateActivitiesFetchProgress(
-        26,
+        25,
         `Courses queued (${totalCourses}). Scanning activities & attendance...`,
         `0 of ${totalCourses} courses`,
         'SYNCING ACTIVITIES & ATTENDANCE'
@@ -10245,32 +10321,65 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Fetch in small batches of 2 courses to prevent SPeCTRUM concurrency drops & 429 errors
       const batchSize = 2;
+      const totalSubSteps = Math.max(1, coursesToScan.length * 3);
+      let completedSubSteps = 0;
+
       for (let i = 0; i < coursesToScan.length; i += batchSize) {
         const batch = coursesToScan.slice(i, i + batchSize);
         const batchNames = batch.map(c => c.code || c.name).join(', ');
         const doneCount = Math.min(i + batch.length, coursesToScan.length);
         const batchProgressStr = `${doneCount}/${coursesToScan.length}`;
-        const batchPercent = 26 + Math.round((doneCount / coursesToScan.length) * 65);
 
-        logDiag('Sync:Batch', `Scanning batch [${batchProgressStr}]...`);
-        updateActivitiesFetchProgress(
-          batchPercent,
-          `Scanning notices, tasks & attendance: [${batchNames}]...`,
-          `Course ${batchProgressStr}`
-        );
+        logDiag('Sync:Batch', `Scanning batch [${batchProgressStr}]: ${batchNames}...`);
         if (announcementsLoadingEl) announcementsLoadingEl.textContent = `Syncing notices: [${batchNames}] (${batchProgressStr})...`;
         if (assignmentsLoadingEl) assignmentsLoadingEl.textContent = `Syncing tasks: [${batchNames}] (${batchProgressStr})...`;
         if (attendanceLoadingEl) attendanceLoadingEl.textContent = `Syncing attendance: [${batchNames}] (${batchProgressStr})...`;
-        await Promise.all(batch.map(async (course) => {
+
+        await Promise.all(batch.map(async (course, batchIdx) => {
           const courseId = String(course.id);
+          const courseLabel = course.code || course.name;
           const userOcc = courseOccs[courseId] || defaultOcc || '';
+          const globalCourseNum = i + batchIdx + 1;
+
+          // Track each individual sub-operation so progress makes continuous small steps!
+          const annPromise = fetchCourseAnnouncements(courseId, course.code, course.name, minCutoffTimestamp)
+            .then(res => {
+              completedSubSteps++;
+              const pct = 25 + Math.round((completedSubSteps / totalSubSteps) * 67);
+              updateActivitiesFetchProgress(
+                pct,
+                `Scanning notices: [${courseLabel}]`,
+                `Course ${globalCourseNum}/${coursesToScan.length} · Notices`
+              );
+              return res;
+            });
+
+          const assignPromise = fetchCourseAssignments(courseId, course.code, course.name, 0)
+            .then(res => {
+              completedSubSteps++;
+              const pct = 25 + Math.round((completedSubSteps / totalSubSteps) * 67);
+              updateActivitiesFetchProgress(
+                pct,
+                `Scanning tasks & deadlines: [${courseLabel}]`,
+                `Course ${globalCourseNum}/${coursesToScan.length} · Tasks`
+              );
+              return res;
+            });
+
+          const attPromise = fetchCourseAttendance(courseId, course.code, course.name, userOcc, 0)
+            .then(res => {
+              completedSubSteps++;
+              const pct = 25 + Math.round((completedSubSteps / totalSubSteps) * 67);
+              updateActivitiesFetchProgress(
+                pct,
+                `Scanning attendance records: [${courseLabel}]`,
+                `Course ${globalCourseNum}/${coursesToScan.length} · Attendance`
+              );
+              return res;
+            });
 
           // Use Promise.allSettled so an error in attendance or announcements NEVER drops assignments!
-          const results = await Promise.allSettled([
-            fetchCourseAnnouncements(courseId, course.code, course.name, minCutoffTimestamp),
-            fetchCourseAssignments(courseId, course.code, course.name, 0),
-            fetchCourseAttendance(courseId, course.code, course.name, userOcc, 0)
-          ]);
+          const results = await Promise.allSettled([annPromise, assignPromise, attPromise]);
 
           const [annRes, assignRes, attRes] = results;
 
@@ -10334,6 +10443,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       updateKpiCards();
       debounceSaveCache();
+
+      updateActivitiesFetchProgress(
+        98,
+        'Finalizing viewports & metrics...',
+        'Almost done'
+      );
 
       if (activitiesCacheBadge) {
         activitiesCacheBadge.textContent = '⚡ Updated Live';
