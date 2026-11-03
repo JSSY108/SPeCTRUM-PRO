@@ -5358,11 +5358,23 @@ body.is-full-tab .materials-pane {
   font-size: 10px;
   font-weight: 800;
   font-family: var(--font-mono);
-  padding: 2px 7px;
-  border-radius: 3px;
+  padding: 2px 6px;
+  min-width: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 4px;
   letter-spacing: 0.5px;
   flex-shrink: 0;
   text-transform: uppercase;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .course-dept-badge {
+  background: #111827;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .course-title-col {

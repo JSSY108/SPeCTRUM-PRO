@@ -214,7 +214,8 @@
     if (cleanLower.includes('mobile')) return 'MAD';
     if (cleanLower.includes('machine learning')) return 'ML';
     if (cleanLower.includes('project management') || cleanLower.includes('project mgmt')) return 'PM';
-    if (cleanLower.includes('thinking skills')) return 'TS';
+    if (cleanLower.includes('thinking skills') || cleanLower.includes('thinking and communication') || cleanLower.includes('thinking')) return 'TS';
+    if (cleanLower.includes('probability') && cleanLower.includes('statistic')) return 'PS';
     if (cleanLower.includes('software engineering')) return 'SE';
     if (cleanLower.includes('web application') || cleanLower.includes('web dev')) return 'WAD';
     if (cleanLower.includes('data structure')) return 'DS';

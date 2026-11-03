@@ -20,6 +20,40 @@
   const cleanSectionTitle = (typeof window !== 'undefined' && window.cleanSectionTitle) ? window.cleanSectionTitle : ((t) => t);
   const cleanDisplayCourseName = (typeof window !== 'undefined' && window.cleanDisplayCourseName) ? window.cleanDisplayCourseName : ((n) => n);
   const getCourseCategoryTag = (typeof window !== 'undefined' && window.getCourseCategoryTag) ? window.getCourseCategoryTag : ((code, title) => 'CORE');
+  const generateCourseAcronym = (typeof window !== 'undefined' && window.generateCourseAcronym) ? window.generateCourseAcronym : ((name, code) => {
+    if (!name && !code) return 'CO';
+    let clean = (name || '').replace(/^[A-Z]{2,4}\d{4}(?:\/[A-Z]{2,4}\d{4})?\s*[-–:]*\s*/i, '').trim();
+    if (!clean) clean = code || '';
+    const cleanLower = clean.toLowerCase();
+    if (cleanLower.includes('database')) return 'DB';
+    if (cleanLower.includes('systems analysis') || cleanLower.includes('sad')) return 'SAD';
+    if (cleanLower.includes('mobile')) return 'MAD';
+    if (cleanLower.includes('machine learning')) return 'ML';
+    if (cleanLower.includes('project management') || cleanLower.includes('project mgmt')) return 'PM';
+    if (cleanLower.includes('thinking skills') || cleanLower.includes('thinking and communication') || cleanLower.includes('thinking')) return 'TS';
+    if (cleanLower.includes('software engineering')) return 'SE';
+    if (cleanLower.includes('web application') || cleanLower.includes('web dev')) return 'WAD';
+    if (cleanLower.includes('data structure')) return 'DS';
+    if (cleanLower.includes('artificial intelligence') || cleanLower.includes('ai')) return 'AI';
+    if (cleanLower.includes('operating system')) return 'OS';
+    if (cleanLower.includes('computer network') || cleanLower.includes('networking')) return 'CN';
+    if (cleanLower.includes('computer architecture')) return 'CA';
+    if (cleanLower.includes('information security') || cleanLower.includes('cyber')) return 'IS';
+    if (cleanLower.includes('probability') && cleanLower.includes('statistic')) return 'PS';
+    if (cleanLower.includes('programming') || cleanLower.includes('problem solving')) return 'PS';
+
+    const stopWords = new Set(['and', 'or', 'the', 'of', 'to', 'in', 'for', 'with', 'dan', 'pada', 'untuk', '&', '-']);
+    const words = clean.split(/[\s\-_/]+/).filter(w => w.length > 0 && !stopWords.has(w.toLowerCase()));
+
+    if (words.length >= 2) {
+      return words.slice(0, 3).map(w => w[0].toUpperCase()).join('');
+    } else if (words.length === 1) {
+      const w = words[0];
+      if (w.length >= 2) return w.slice(0, 2).toUpperCase();
+      return w.toUpperCase();
+    }
+    return (code || 'CO').slice(0, 2).toUpperCase();
+  });
   const generateUniqueFileId = (typeof window !== 'undefined' && window.generateUniqueFileId) ? window.generateUniqueFileId : ((c, s, i, u, t) => `f_${c}_${i}`);
   const findSpectrumTab = (typeof window !== 'undefined' && window.findSpectrumTab) ? window.findSpectrumTab : (async () => null);
   const fetchCourseMaterialsDirectly = (typeof window !== 'undefined' && window.fetchCourseMaterialsDirectly) ? window.fetchCourseMaterialsDirectly : (async () => null);
@@ -480,7 +514,7 @@
         id: 'c_wia2001',
         code: 'WIA2001',
         title: 'DATABASE SYSTEMS & MODELING',
-        dept: 'COMP',
+        dept: 'DB',
         checked: true,
         expanded: false,
         loaded: true,
@@ -517,7 +551,7 @@
         id: 'c_wia2003',
         code: 'WIA2003',
         title: 'PROBABILITY AND STATISTICS',
-        dept: 'MATH',
+        dept: 'PS',
         checked: true,
         expanded: false,
         loaded: true,
@@ -551,7 +585,7 @@
         id: 'c_wia2006',
         code: 'WIA2006',
         title: 'SYSTEMS ANALYSIS AND DESIGN',
-        dept: 'SE',
+        dept: 'SAD',
         checked: true,
         expanded: false,
         loaded: true,
@@ -587,7 +621,7 @@
         id: 'c_wia2007',
         code: 'WIA2007',
         title: 'MOBILE APPLICATION DEVELOPMENT',
-        dept: 'APP',
+        dept: 'MAD',
         checked: true,
         expanded: false,
         loaded: true,
@@ -788,7 +822,19 @@
       item.id = `course-node-${course.id}`;
       item.dataset.courseId = course.id;
 
-      const dept = course.dept || getCourseCategoryTag(course.code, course.title);
+      let acronym = '';
+      if (typeof generateCourseAcronym === 'function') {
+        acronym = generateCourseAcronym(course.title || course.name, course.code);
+      } else if (typeof window !== 'undefined' && typeof window.generateCourseAcronym === 'function') {
+        acronym = window.generateCourseAcronym(course.title || course.name, course.code);
+      }
+      if (!acronym || acronym === 'CO') {
+        if (course.dept && course.dept.length <= 4 && course.dept !== 'COMP' && course.dept !== 'CORE' && course.dept !== 'MATH' && course.dept !== 'APP') {
+          acronym = course.dept;
+        } else {
+          acronym = (course.code || 'CO').slice(0, 3).toUpperCase();
+        }
+      }
       const totalFiles = (course.sections || []).reduce((acc, s) => acc + (s.files ? s.files.length : 0), 0);
       let totalSizeBytes = 0;
       (course.sections || []).forEach(s => {
@@ -806,7 +852,7 @@
           <div class="tree-chevron-wrap">
             <svg class="tree-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </div>
-          <span class="course-dept-badge">${escapeHtml(dept)}</span>
+          <span class="course-dept-badge">${escapeHtml(acronym)}</span>
           <div class="course-title-col">
             <div class="course-main-code-title">
               <span class="course-code-txt">${escapeHtml(course.code)}</span>
