@@ -10811,6 +10811,208 @@ body:not(.is-full-tab) .sync-cinematic-current {
 }
 
 /* ==========================================================================
+   REAL-TIME TIMETABLE TRACKER (Live Red Arrow & Horizon Indicator)
+   - Follows system clock dynamically in real-time
+   - Red arrow-shaped badge on time axis with HH:MM display
+   - Continuous red indicator line spanning across the day schedule
+   - Pulsing radar dot on active Today column
+   ========================================================================== */
+.tt-live-tracker-overlay {
+  pointer-events: none;
+  z-index: 45;
+}
+
+.tt-live-tracker-overlay.vertical {
+  position: relative;
+  width: 100%;
+}
+
+.tt-live-tracker-overlay.horizontal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.tt-live-tracker.vertical {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  pointer-events: none;
+  display: none;
+  transition: top 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.tt-tracker-badge.vertical {
+  position: absolute;
+  left: 4px;
+  width: 68px;
+  height: 22px;
+  top: -11px;
+  background: #EF4444;
+  color: #FFFFFF;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px 0 2px;
+  clip-path: polygon(0% 0%, calc(100% - 9px) 0%, 100% 50%, calc(100% - 9px) 100%, 0% 100%, 9px 50%);
+  filter: drop-shadow(0 2px 5px rgba(239, 68, 68, 0.45));
+  z-index: 4;
+  user-select: none;
+}
+
+.tt-tracker-line.vertical {
+  position: absolute;
+  left: 72px;
+  right: 0;
+  height: 2px;
+  top: -1px;
+  background: #EF4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.45);
+  z-index: 2;
+}
+
+.tt-tracker-pulse-dot.vertical {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #EF4444;
+  border: 1.5px solid #FFFFFF;
+  top: -4.5px;
+  transform: translateX(-50%);
+  box-shadow: 0 0 8px #EF4444;
+  z-index: 3;
+  display: none;
+  animation: ttPulse 2s infinite ease-in-out;
+}
+
+.tt-live-tracker.horizontal {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  pointer-events: none;
+  display: none;
+  transition: left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.tt-tracker-badge.horizontal {
+  position: absolute;
+  top: 4px;
+  left: -28px;
+  width: 56px;
+  height: 22px;
+  background: #EF4444;
+  color: #FFFFFF;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 2px 0;
+  clip-path: polygon(0% 0%, 50% 6px, 100% 0%, 100% calc(100% - 7px), 50% 100%, 0% calc(100% - 7px));
+  filter: drop-shadow(0 2px 5px rgba(239, 68, 68, 0.45));
+  z-index: 4;
+  user-select: none;
+}
+
+.tt-tracker-line.horizontal {
+  position: absolute;
+  top: 26px;
+  bottom: 0;
+  width: 2px;
+  left: -1px;
+  background: #EF4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.45);
+  z-index: 2;
+}
+
+.tt-tracker-pulse-dot.horizontal {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #EF4444;
+  border: 1.5px solid #FFFFFF;
+  left: -4.5px;
+  box-shadow: 0 0 8px #EF4444;
+  z-index: 3;
+  display: none;
+  animation: ttPulse 2s infinite ease-in-out;
+}
+
+.tt-live-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  background: #18181B;
+  color: #FFFFFF;
+  border-radius: 3px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.tt-session-card.is-live-session {
+  border: 1.5px solid #18181B !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Dark Mode Overrides for Live Tracker */
+[data-theme="dark"] .tt-tracker-badge.vertical,
+[data-theme="dark"] .tt-tracker-badge.horizontal {
+  background: #F43F5E;
+  filter: drop-shadow(0 2px 6px rgba(244, 63, 94, 0.6));
+}
+
+[data-theme="dark"] .tt-tracker-line.vertical,
+[data-theme="dark"] .tt-tracker-line.horizontal {
+  background: #F43F5E;
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
+}
+
+[data-theme="dark"] .tt-tracker-pulse-dot.vertical,
+[data-theme="dark"] .tt-tracker-pulse-dot.horizontal {
+  background: #F43F5E;
+  border-color: #18181B;
+  box-shadow: 0 0 10px #F43F5E;
+}
+
+[data-theme="dark"] .tt-live-pill {
+  background: #F43F5E;
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .tt-session-card.is-live-session {
+  border: 1.5px solid #F43F5E !important;
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.25) !important;
+}
+
+@keyframes ttPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+/* ==========================================================================
    FULL-TAB BY-COURSE MODE & NAVIGATOR (Spec 5.1)
    - Matches Popup By-Course Monograms & Chronological Spine View
    ========================================================================== */

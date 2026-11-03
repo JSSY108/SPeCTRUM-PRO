@@ -505,6 +505,7 @@
       const ro = new ResizeObserver(() => {
         if (isOnePageMode) {
           applyOnePageScaling();
+          updateLiveTimeTracker();
         }
       });
       ro.observe(frame);
@@ -665,7 +666,7 @@
       const colIdx = (h - minHour) + 2;
       const halfClass = isHourHalf(h) ? ' is-half-hour' : '';
       html += `
-        <div class="tt-header-cell tt-time-col-header${halfClass}" style="grid-column: ${colIdx}; grid-row: 1;">
+        <div class="tt-header-cell tt-time-col-header${halfClass}" data-hour="${h}" style="grid-column: ${colIdx}; grid-row: 1;">
           <span class="tt-time-top">${pad(h)}:00</span>
           <span class="tt-time-bot">${pad(h + 1)}:00</span>
         </div>
@@ -684,7 +685,7 @@
 
       // Day Label Cell (Col 1)
       html += `
-        <div class="tt-day-label-cell${todayClass}${halfClass}" style="grid-column: 1; grid-row: ${rowNum};">
+        <div class="tt-day-label-cell${todayClass}${halfClass}" data-day-index="${dIdx}" style="grid-column: 1; grid-row: ${rowNum};">
           <div class="tt-day-name">${isToday ? `<span class="tt-today-indicator">●</span> ${dayName}` : dayName}</div>
         </div>
       `;
@@ -697,6 +698,10 @@
         const occupied = new Array(totalCols).fill(false);
 
         daySess.forEach(s => {
+          const isLiveNow = isSessionLiveNow(dIdx, s.startHour, s.startMin, s.endHour, s.endMin);
+          const liveClass = isLiveNow ? ' is-live-session' : '';
+          const liveBadgeHtml = isLiveNow ? '<span class="tt-live-pill">● LIVE</span>' : '';
+
           const startCol = Math.max(2, (s.startHour - minHour) + 2);
           const endCol = Math.min(totalCols + 2, Math.max(startCol + 1, (s.endHour - minHour) + (s.endMin > 0 ? 1 : 0) + 2));
 
@@ -718,7 +723,7 @@
           const rawEndTimeVal = `${pad(s.rawEndHour)}:${pad(s.rawEndMin)}`;
 
           html += `
-            <div class="tt-session-card"
+            <div class="tt-session-card${liveClass}"
                  data-session-key="${esc(s.key)}"
                  data-fallback-key="${esc(s.fallbackKey)}"
                  data-course-code="${esc(s.courseCode)}"
@@ -741,6 +746,7 @@
                   <span class="tt-code">${esc(cleanSingleCourseCode(s.courseCode))}</span>
                   ${acronymHtml}
                   <span class="tt-type-tag">${esc(s.typeLabel)}</span>
+                  ${liveBadgeHtml}
                 </div>
                 <span class="tt-time-range">${esc(s.timeStr)}</span>
               </div>
@@ -778,6 +784,19 @@
         }
       }
     });
+
+        // Real-Time Timetable Tracker Overlay (Horizontal Layout)
+    html += `
+      <div class="tt-live-tracker-overlay horizontal" style="grid-column: 1 / -1; grid-row: 1 / -1;">
+        <div id="tt-horizontal-live-tracker" class="tt-live-tracker horizontal">
+          <div class="tt-tracker-badge horizontal">
+            <span class="tt-tracker-time">--:--</span>
+          </div>
+          <div class="tt-tracker-line horizontal"></div>
+          <div class="tt-tracker-pulse-dot horizontal"></div>
+        </div>
+      </div>
+    `;
 
     gridEl.innerHTML = html;
   }
@@ -898,7 +917,7 @@
       const isHalf = isHourHalf(h);
       const halfClass = isHalf ? ' is-half-hour' : '';
       html += `
-        <div class="tt-time-cell${halfClass}" style="height: ${hourHeights[h]}px;">
+        <div class="tt-time-cell${halfClass}" data-hour="${h}" style="height: ${hourHeights[h]}px;">
           <span class="tt-time-text">${pad(h)}:00</span>
         </div>
       `;
@@ -910,10 +929,12 @@
       const col = colOffset + 2;
       const isHalf = isDayHalf(dIdx);
       const halfClass = isHalf ? ' is-half-cell' : '';
+      const isToday = (dIdx === todayDayIndex);
+      const todayClass = isToday ? ' is-today' : '';
       const daySess = sessions.filter(s => s.dayIndex === dIdx);
 
       html += `
-        <div class="tt-day-column${halfClass}" style="grid-column: ${col}; grid-row: 2; height: ${totalHeight}px;">
+        <div class="tt-day-column${halfClass}${todayClass}" data-day-index="${dIdx}" style="grid-column: ${col}; grid-row: 2; height: ${totalHeight}px;">
       `;
 
       // Background hourly grid lines
@@ -929,6 +950,10 @@
         const packed = computeSessionColumns(daySess);
 
         packed.forEach(s => {
+          const isLiveNow = isSessionLiveNow(dIdx, s.startHour, s.startMin, s.endHour, s.endMin);
+          const liveClass = isLiveNow ? ' is-live-session' : '';
+          const liveBadgeHtml = isLiveNow ? '<span class="tt-live-pill">● LIVE</span>' : '';
+
           const startTop = getVerticalTop(s.startHour, s.startMin);
           const endTop = getVerticalTop(s.endHour, s.endMin);
           const topPx = startTop + 4;
@@ -960,7 +985,7 @@
           const rawEndTimeVal = `${pad(s.rawEndHour)}:${pad(s.rawEndMin)}`;
 
           html += `
-            <div class="tt-session-card${compactClass}"
+            <div class="tt-session-card${compactClass}${liveClass}"
                  data-session-key="${esc(s.key)}"
                  data-fallback-key="${esc(s.fallbackKey)}"
                  data-course-code="${esc(s.courseCode)}"
@@ -982,6 +1007,7 @@
                 <div class="tt-card-code-badge">
                   <span class="tt-code">${esc(cleanSingleCourseCode(s.courseCode))}</span>
                   ${acronymHtml}
+                  ${liveBadgeHtml}
                 </div>
                 <span class="tt-type-tag">${esc(s.typeLabel)}</span>
               </div>
@@ -999,7 +1025,134 @@
       html += `</div>`;
     });
 
+        // Real-Time Timetable Tracker Overlay (Vertical Layout)
+    html += `
+      <div class="tt-live-tracker-overlay vertical" style="grid-column: 1 / -1; grid-row: 2; height: ${totalHeight}px;">
+        <div id="tt-vertical-live-tracker" class="tt-live-tracker vertical">
+          <div class="tt-tracker-badge vertical">
+            <span class="tt-tracker-time">--:--</span>
+          </div>
+          <div class="tt-tracker-line vertical"></div>
+          <div class="tt-tracker-pulse-dot vertical"></div>
+        </div>
+      </div>
+    `;
+
     gridEl.innerHTML = html;
+  }
+
+  let liveTrackerTimer = null;
+
+  function isSessionLiveNow(dayIndex, startH, startM, endH, endM) {
+    const now = new Date();
+    if (now.getDay() !== dayIndex) return false;
+    const nowMins = now.getHours() * 60 + now.getMinutes();
+    const startMins = startH * 60 + (startM || 0);
+    const endMins = endH * 60 + (endM || 0);
+    return nowMins >= startMins && nowMins < endMins;
+  }
+
+  function updateVerticalTracker(gridEl) {
+    const tracker = gridEl.querySelector('#tt-vertical-live-tracker');
+    if (!tracker) return;
+
+    const now = new Date();
+    const nowH = now.getHours();
+    const nowM = now.getMinutes();
+    const pad = n => String(n).padStart(2, '0');
+    const timeStr = `${pad(nowH)}:${pad(nowM)}`;
+
+    const timeSpan = tracker.querySelector('.tt-tracker-time');
+    if (timeSpan) timeSpan.textContent = timeStr;
+
+    const hourCell = gridEl.querySelector(`.tt-time-cell[data-hour="${nowH}"]`);
+    if (!hourCell) {
+      tracker.style.display = 'none';
+      return;
+    }
+
+    const topPx = Math.round(hourCell.offsetTop + (nowM / 60) * hourCell.offsetHeight);
+    tracker.style.top = `${topPx}px`;
+    tracker.style.display = 'block';
+
+    const dot = tracker.querySelector('.tt-tracker-pulse-dot');
+    if (dot) {
+      const todayCol = gridEl.querySelector('.tt-day-column.is-today');
+      if (todayCol && todayCol.offsetLeft > 0) {
+        dot.style.left = `${todayCol.offsetLeft}px`;
+        dot.style.display = 'block';
+      } else {
+        dot.style.display = 'none';
+      }
+    }
+  }
+
+  function updateHorizontalTracker(gridEl) {
+    const tracker = gridEl.querySelector('#tt-horizontal-live-tracker');
+    if (!tracker) return;
+
+    const now = new Date();
+    const nowH = now.getHours();
+    const nowM = now.getMinutes();
+    const pad = n => String(n).padStart(2, '0');
+    const timeStr = `${pad(nowH)}:${pad(nowM)}`;
+
+    const timeSpan = tracker.querySelector('.tt-tracker-time');
+    if (timeSpan) timeSpan.textContent = timeStr;
+
+    const colEl = gridEl.querySelector(`.tt-time-col-header[data-hour="${nowH}"]`);
+    if (!colEl) {
+      tracker.style.display = 'none';
+      return;
+    }
+
+    const leftPx = Math.round(colEl.offsetLeft + (nowM / 60) * colEl.offsetWidth);
+    tracker.style.left = `${leftPx}px`;
+    tracker.style.display = 'block';
+
+    const dot = tracker.querySelector('.tt-tracker-pulse-dot');
+    if (dot) {
+      const todayRow = gridEl.querySelector('.tt-day-label-cell.is-today');
+      if (todayRow && todayRow.offsetTop > 0) {
+        dot.style.top = `${todayRow.offsetTop}px`;
+        dot.style.display = 'block';
+      } else {
+        dot.style.display = 'none';
+      }
+    }
+  }
+
+  function updateLiveTimeTracker() {
+    const gridEl = document.getElementById('timetable-grid');
+    if (!gridEl) return;
+    if (currentTimetableLayout === 'horizontal') {
+      updateHorizontalTracker(gridEl);
+    } else {
+      updateVerticalTracker(gridEl);
+    }
+  }
+
+  function startLiveTimeTracker() {
+    if (liveTrackerTimer) {
+      clearInterval(liveTrackerTimer);
+      liveTrackerTimer = null;
+    }
+    updateLiveTimeTracker();
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => updateLiveTimeTracker());
+    }
+    // Update every 30s to stay synchronized with real-time clock
+    liveTrackerTimer = setInterval(updateLiveTimeTracker, 30000);
+  }
+
+  if (typeof window !== 'undefined' && !window._hasLiveTrackerVisibilityListener) {
+    window._hasLiveTrackerVisibilityListener = true;
+    window.addEventListener('focus', () => updateLiveTimeTracker());
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) updateLiveTimeTracker();
+      });
+    }
   }
 
   function renderTimetableMode() {
@@ -1070,8 +1223,12 @@
     }
 
     applyOnePageScaling();
+    startLiveTimeTracker();
     if (typeof requestAnimationFrame === 'function') {
-      requestAnimationFrame(() => applyOnePageScaling());
+      requestAnimationFrame(() => {
+        applyOnePageScaling();
+        updateLiveTimeTracker();
+      });
     }
   }
 
@@ -2489,6 +2646,7 @@
   window.exportTimetableCSV = exportTimetableCSV;
   window.exportTimetablePNG = exportTimetablePNG;
   window.exportTimetablePDF = exportTimetablePDF;
+  window.updateLiveTimeTracker = updateLiveTimeTracker;
   window.initTimetableControls = initTimetableControls;
 
   if (typeof document !== 'undefined') {
