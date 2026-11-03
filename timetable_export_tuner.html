@@ -488,6 +488,22 @@
 
         <div class="control-row">
           <div class="control-label-val">
+            <span class="control-label">LEC/TUT Label Font Size</span>
+            <span id="val-tagFontSize" class="control-val">11 px</span>
+          </div>
+          <input type="range" id="param-tagFontSize" min="8" max="18" value="11" oninput="updateParam('tagFontSize', this.value, 'px')">
+        </div>
+
+        <div class="control-row">
+          <div class="control-label-val">
+            <span class="control-label">LEC/TUT Y Offset</span>
+            <span id="val-tagYOffset" class="control-val">10 px</span>
+          </div>
+          <input type="range" id="param-tagYOffset" min="4" max="28" value="10" oninput="updateParam('tagYOffset', this.value, 'px')">
+        </div>
+
+        <div class="control-row">
+          <div class="control-label-val">
             <span class="control-label">OCC Subtitle Font Size</span>
             <span id="val-occFontSize" class="control-val">12 px</span>
           </div>
@@ -528,10 +544,18 @@
 
         <div class="control-row">
           <div class="control-label-val">
-            <span class="control-label">Footer Venue Bottom Inset</span>
+            <span class="control-label">Venue Font Size</span>
+            <span id="val-venueFontSize" class="control-val">12 px</span>
+          </div>
+          <input type="range" id="param-venueFontSize" min="9" max="20" value="12" oninput="updateParam('venueFontSize', this.value, 'px')">
+        </div>
+
+        <div class="control-row">
+          <div class="control-label-val">
+            <span class="control-label">Venue & Footer Y Bottom Inset</span>
             <span id="val-footerBottomInset" class="control-val">14 px</span>
           </div>
-          <input type="range" id="param-footerBottomInset" min="6" max="24" value="14" oninput="updateParam('footerBottomInset', this.value, 'px')">
+          <input type="range" id="param-footerBottomInset" min="4" max="32" value="14" oninput="updateParam('footerBottomInset', this.value, 'px')">
         </div>
       </div>
 
@@ -614,11 +638,14 @@
       cardRadius: 6,
       codeFontSize: 15,
       headerYOffset: 22,
+      tagFontSize: 11,
+      tagYOffset: 10,
       occFontSize: 12,
       occYOffset: 41,
       titleFontSize: 14,
       titleLineH: 16,
       titleYOffset: 58,
+      venueFontSize: 12,
       footerBottomInset: 14
     };
 
@@ -644,11 +671,14 @@
       params.cardRadius = 6;
       params.codeFontSize = 15;
       params.headerYOffset = 22;
+      params.tagFontSize = 11;
+      params.tagYOffset = 10;
       params.occFontSize = 12;
       params.occYOffset = 41;
       params.titleFontSize = 14;
       params.titleLineH = 16;
       params.titleYOffset = 58;
+      params.venueFontSize = 12;
       params.footerBottomInset = 14;
 
       Object.keys(params).forEach(k => {
@@ -921,19 +951,23 @@
           const codeText = `${s.courseCode} · ${s.courseCode.slice(3, 5)}`;
           ctx.fillText(codeText, cardX + 14, cardY + params.headerYOffset);
 
-          // Tag Pill
-          const tagW = 38, tagH = 18;
+          // Tag Pill (LEC / TUT)
+          ctx.font = `700 ${params.tagFontSize}px "JetBrains Mono", monospace`;
+          const tagW = Math.max(34, ctx.measureText(s.typeLabel).width + 14);
+          const tagH = Math.max(16, Math.round(params.tagFontSize * 1.55));
           const tagX = cardX + cardW - tagW - 12;
-          const tagY = cardY + params.headerYOffset - 14;
+          const tagY = cardY + params.tagYOffset;
           ctx.fillStyle = '#F4F4F5';
-          ctx.fillRect(tagX, tagY, tagW, tagH);
+          ctx.beginPath();
+          ctx.roundRect ? ctx.roundRect(tagX, tagY, tagW, tagH, 3) : ctx.rect(tagX, tagY, tagW, tagH);
+          ctx.fill();
           ctx.strokeStyle = '#E4E4E7';
           ctx.lineWidth = 1;
-          ctx.strokeRect(tagX, tagY, tagW, tagH);
+          ctx.stroke();
           ctx.fillStyle = '#71717A';
-          ctx.font = '700 11px "JetBrains Mono", monospace';
           ctx.textAlign = 'center';
-          ctx.fillText(s.typeLabel, tagX + tagW / 2, tagY + 13);
+          const tagTextY = tagY + Math.round(tagH * 0.72);
+          ctx.fillText(s.typeLabel, tagX + tagW / 2, tagTextY);
           ctx.textAlign = 'left';
 
           // Line 2: OCC
@@ -944,7 +978,7 @@
           // Footer Line (Venue & Time)
           const footerY = cardY + cardH - params.footerBottomInset;
           ctx.fillStyle = '#71717A';
-          ctx.font = '600 12px "JetBrains Mono", monospace';
+          ctx.font = `600 ${params.venueFontSize}px "JetBrains Mono", monospace`;
           ctx.fillText(s.venue ? `📍 ${s.venue}` : '+ Add Location', cardX + 14, footerY);
           ctx.textAlign = 'right';
           ctx.fillText(s.durText, cardX + cardW - 14, footerY);
@@ -1171,21 +1205,26 @@
         const headerY = isTall ? (cardY + 30) : (cardY + 26);
         ctx.fillText(displayCode, cardX + 16, headerY);
 
-        // Type Tag
-        const tagW = 38, tagH = 20;
+        // Type Tag (LEC / TUT)
+        ctx.font = `700 ${params.tagFontSize}px "JetBrains Mono", monospace`;
+        const tagW = Math.max(34, ctx.measureText(s.typeLabel).width + 14);
+        const tagH = Math.max(16, Math.round(params.tagFontSize * 1.55));
         const tagX = cardX + cardW - tagW - 14;
-        const tagY = isTall ? (cardY + 14) : (cardY + 11);
+        const tagY = cardY + params.tagYOffset;
         ctx.fillStyle = '#F4F4F5';
-        ctx.fillRect(tagX, tagY, tagW, tagH);
+        ctx.beginPath();
+        ctx.roundRect ? ctx.roundRect(tagX, tagY, tagW, tagH, 3) : ctx.rect(tagX, tagY, tagW, tagH);
+        ctx.fill();
         ctx.strokeStyle = '#E4E4E7';
-        ctx.strokeRect(tagX, tagY, tagW, tagH);
+        ctx.lineWidth = 1;
+        ctx.stroke();
         ctx.fillStyle = '#71717A';
-        ctx.font = '700 11px "JetBrains Mono", monospace';
         ctx.textAlign = 'center';
-        ctx.fillText(s.typeLabel, tagX + tagW / 2, tagY + 14);
+        const tagTextY = tagY + Math.round(tagH * 0.72);
+        ctx.fillText(s.typeLabel, tagX + tagW / 2, tagTextY);
         ctx.textAlign = 'left';
 
-        const footerY = isTall ? (cardY + cardH - 16) : (cardY + cardH - 14);
+        const footerY = cardY + cardH - params.footerBottomInset;
 
         if (!isCompactCard) {
           // 2-hour Card: Multi-line title
@@ -1220,10 +1259,10 @@
           if (clearance < minClearanceFound) minClearanceFound = clearance;
         }
 
-        // Footer
+        // Footer (Venue & Time)
         if (cardH >= 55) {
           ctx.fillStyle = '#71717A';
-          ctx.font = '600 15px "JetBrains Mono", monospace';
+          ctx.font = `600 ${params.venueFontSize}px "JetBrains Mono", monospace`;
           ctx.fillText(s.venue ? `📍 ${s.venue}` : '+ Add Location', cardX + 16, footerY);
           ctx.textAlign = 'right';
           ctx.fillText(s.durText, cardX + cardW - 14, footerY);
@@ -1273,7 +1312,26 @@
     }
 
     function showExportConfig() {
-      const code = `// Optimal Export Geometry Configured via Tuner Studio\nconst exportConfig = {\n  unitRowH: ${params.unitRowH},\n  emptyDayRatio: ${params.emptyDayRatio},\n  emptyHourRatio: ${params.emptyHourRatio},\n  cardMarginX: ${params.cardMarginX},\n  cardMarginY: ${params.cardMarginY},\n  cardRadius: ${params.cardRadius},\n  codeFontSize: ${params.codeFontSize},\n  headerYOffset: ${params.headerYOffset},\n  occFontSize: ${params.occFontSize},\n  occYOffset: ${params.occYOffset},\n  titleFontSize: ${params.titleFontSize},\n  titleLineH: ${params.titleLineH},\n  titleYOffset: ${params.titleYOffset},\n  footerBottomInset: ${params.footerBottomInset}\n};`;
+      const code = `// Optimal Export Geometry Configured via Tuner Studio
+const exportConfig = {
+  unitRowH: ${params.unitRowH},
+  emptyDayRatio: ${params.emptyDayRatio},
+  emptyHourRatio: ${params.emptyHourRatio},
+  cardMarginX: ${params.cardMarginX},
+  cardMarginY: ${params.cardMarginY},
+  cardRadius: ${params.cardRadius},
+  codeFontSize: ${params.codeFontSize},
+  headerYOffset: ${params.headerYOffset},
+  tagFontSize: ${params.tagFontSize},
+  tagYOffset: ${params.tagYOffset},
+  occFontSize: ${params.occFontSize},
+  occYOffset: ${params.occYOffset},
+  titleFontSize: ${params.titleFontSize},
+  titleLineH: ${params.titleLineH},
+  titleYOffset: ${params.titleYOffset},
+  venueFontSize: ${params.venueFontSize},
+  footerBottomInset: ${params.footerBottomInset}
+};`;
       document.getElementById('code-output').value = code;
       document.getElementById('code-modal').classList.add('active');
     }
