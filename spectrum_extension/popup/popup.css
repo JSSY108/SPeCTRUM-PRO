@@ -8449,7 +8449,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
   width: 0%;
   background: #FFFFFF;
   border-radius: 999px;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.12s linear;
   box-shadow: 0 0 12px #FFFFFF, 0 0 20px rgba(255, 255, 255, 0.7);
 }
 
@@ -11254,16 +11254,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
    SPeCTRUM Auth & Session Alert Banner & Modal
    ========================================================================== */
 .auth-session-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  background: rgba(239, 68, 68, 0.08);
-  border-bottom: 1px solid rgba(239, 68, 68, 0.25);
-  padding: 8px 14px;
-  animation: slideDownBanner 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 50;
-  flex-shrink: 0;
+  display: none !important;
 }
 
 [data-theme="dark"] .auth-session-banner {
@@ -11381,7 +11372,9 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 /* Auth Modal Card */
 .auth-modal-card {
-  max-width: 410px;
+  max-width: 440px;
+  word-spacing: 0.18em;
+  letter-spacing: 0.015em;
 }
 
 .auth-modal-header {
@@ -11391,7 +11384,12 @@ body:not(.is-full-tab) .sync-cinematic-current {
 .auth-modal-header-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+}
+
+.auth-modal-header-title h3 {
+  word-spacing: 0.18em;
+  letter-spacing: 0.02em;
 }
 
 .auth-modal-icon {
@@ -11404,46 +11402,70 @@ body:not(.is-full-tab) .sync-cinematic-current {
 }
 
 .auth-modal-desc {
-  font-size: 12px;
-  line-height: 1.55;
+  font-size: 12.5px;
+  line-height: 1.65;
   color: var(--text-secondary);
   margin-bottom: 14px;
+  word-spacing: 0.22em;
 }
 
 .auth-modal-info-box {
-  background: var(--bg-canvas);
-  border: 1px solid var(--border-hairline);
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.22);
   border-radius: 6px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   margin-bottom: 4px;
+}
+
+[data-theme="dark"] .auth-modal-info-box {
+  background: rgba(16, 185, 129, 0.09);
+  border-color: rgba(16, 185, 129, 0.28);
 }
 
 .auth-info-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   font-size: 11px;
   color: var(--text-muted);
+  word-spacing: 0.18em;
 }
 
 .auth-info-badge {
-  background: #0078D4; /* Microsoft Azure Blue */
+  background: #059669;
   color: #FFFFFF;
   font-family: var(--font-mono);
   font-size: 9.5px;
   font-weight: 800;
-  padding: 2px 5px;
-  border-radius: 3px;
-  letter-spacing: 0.5px;
+  padding: 2.5px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.6px;
+  word-spacing: 0.05em;
   flex-shrink: 0;
+}
+
+[data-theme="dark"] .auth-info-badge {
+  background: #10B981;
+  color: #064E3B;
+}
+
+.auth-info-text {
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  line-height: 1.45;
+  word-spacing: 0.2em;
 }
 
 .auth-modal-footer {
   padding: 12px 18px;
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 10px;
   border-top: 1px solid var(--border-hairline);
+}
+
+.auth-modal-footer button {
+  word-spacing: 0.18em;
 }
 
 .btn-auth-primary {
@@ -11547,7 +11569,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
   width: calc(100% * (var(--sync-pct, 0) / 100));
   background: #000000;
   pointer-events: none;
-  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.12s linear;
   z-index: 2;
 }
 

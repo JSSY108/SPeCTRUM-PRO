@@ -6527,11 +6527,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const hasAnyCached = cached.cachedCoursesData && cached.cachedCoursesData.length > 0;
   if (!activeSpectrumTab) {
-    if (!hasAnyCached) {
-      showLoginPrompt({ reason: 'not_open', showModal: true });
-    } else {
-      showLoginPrompt({ reason: 'not_open', showModal: false });
-    }
+    showLoginPrompt({ reason: 'not_open', showModal: true });
   } else if (activeSpectrumTab.url && activeSpectrumTab.url.includes('login.microsoftonline.com')) {
     showLoginPrompt({ reason: 'sso', detail: activeSpectrumTab.url, showModal: true });
   }
@@ -9860,31 +9856,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       desc = 'Please open and log in to spectrum.um.edu.my in your browser to access live courses and sync your activities.';
     }
 
-    // Popup Alert Banner
-    const authBanner = document.getElementById('spectrum-auth-banner');
-    const authBannerTitle = document.getElementById('auth-banner-title');
-    const authBannerDesc = document.getElementById('auth-banner-desc');
-    if (authBanner) {
-      if (authBannerTitle) authBannerTitle.textContent = title;
-      if (authBannerDesc) authBannerDesc.textContent = desc;
-      authBanner.style.display = 'flex';
-    }
-
-    // Fulltab Alert Banner
-    const fulltabAuthBanner = document.getElementById('fulltab-auth-banner');
-    const fulltabAuthBannerTitle = document.getElementById('fulltab-auth-banner-title');
-    const fulltabAuthBannerDesc = document.getElementById('fulltab-auth-banner-desc');
-    if (fulltabAuthBanner) {
-      if (fulltabAuthBannerTitle) fulltabAuthBannerTitle.textContent = title;
-      if (fulltabAuthBannerDesc) fulltabAuthBannerDesc.textContent = desc;
-      fulltabAuthBanner.style.display = 'flex';
-    }
-
-    // Auth Prompt Modal
+    // Direct Auth Prompt Modal (Banners removed for clean modern design)
     const authModal = document.getElementById('auth-prompt-modal');
     const authModalTitle = document.getElementById('auth-modal-title');
     const authModalDesc = document.getElementById('auth-modal-desc');
-    if (authModal && showModal) {
+    if (authModal && showModal !== false) {
       if (authModalTitle) authModalTitle.textContent = title;
       if (authModalDesc) authModalDesc.textContent = desc;
       authModal.style.display = 'flex';
@@ -9900,10 +9876,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.showLoginPrompt = showLoginPrompt;
 
   function hideLoginPrompt() {
-    const authBanner = document.getElementById('spectrum-auth-banner');
-    if (authBanner) authBanner.style.display = 'none';
-    const fulltabAuthBanner = document.getElementById('fulltab-auth-banner');
-    if (fulltabAuthBanner) fulltabAuthBanner.style.display = 'none';
     const authModal = document.getElementById('auth-prompt-modal');
     if (authModal) authModal.style.display = 'none';
   }

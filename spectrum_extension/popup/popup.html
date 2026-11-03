@@ -163,21 +163,6 @@
 
     <!-- Main Popup Content Body -->
     <main class="popup-body">
-      <!-- SPeCTRUM Auth & Session Alert Banner -->
-      <div id="spectrum-auth-banner" class="auth-session-banner" style="display:none;">
-        <div class="auth-banner-main">
-          <span class="auth-banner-badge">🔐</span>
-          <div class="auth-banner-copy">
-            <strong id="auth-banner-title">SPeCTRUM Session Expired</strong>
-            <span id="auth-banner-desc">Please log in to SPeCTRUM to sync live activities.</span>
-          </div>
-        </div>
-        <div class="auth-banner-btns">
-          <button type="button" id="btn-auth-banner-login" class="auth-banner-cta">Log In ↗</button>
-          <button type="button" id="btn-auth-banner-retry" class="auth-banner-sub">Sync ↻</button>
-          <button type="button" id="btn-auth-banner-close" class="auth-banner-close" title="Dismiss">✕</button>
-        </div>
-      </div>
       <!-- JS-driven Rail Tooltip Overlay (position:fixed, escapes overflow clipping) -->
       <div id="rail-tooltip-overlay"></div>
       <!-- Rich Floating Popover for Course Monograms -->
@@ -1014,21 +999,6 @@
 
       <!-- Viewports -->
       <main class="fulltab-main-viewport">
-        <!-- Full-Tab SPeCTRUM Auth Alert Banner -->
-        <div id="fulltab-auth-banner" class="auth-session-banner fulltab-auth-session-banner" style="display:none;">
-          <div class="auth-banner-main">
-            <span class="auth-banner-badge">🔐</span>
-            <div class="auth-banner-copy">
-              <strong id="fulltab-auth-banner-title">SPeCTRUM Session Expired</strong>
-              <span id="fulltab-auth-banner-desc">Please log in to SPeCTRUM to sync live activities.</span>
-            </div>
-          </div>
-          <div class="auth-banner-btns">
-            <button type="button" id="btn-fulltab-auth-banner-login" class="auth-banner-cta">Log In ↗</button>
-            <button type="button" id="btn-fulltab-auth-banner-retry" class="auth-banner-sub">Sync ↻</button>
-            <button type="button" id="btn-fulltab-auth-banner-close" class="auth-banner-close" title="Dismiss">✕</button>
-          </div>
-        </div>
         <!-- Full-Tab Activities Sync Progress Card (Removed to avoid left panel blocking workspace) -->
 
         <!-- VIEW 1: Calendar Grid & Master-Detail (Spec 4.1) -->
@@ -1164,8 +1134,8 @@
         </p>
         <div class="auth-modal-info-box" id="auth-modal-info-box">
           <div class="auth-info-row">
-            <span class="auth-info-badge">SSO</span>
-            <span class="auth-info-text">Supports Microsoft Entra ID / Azure AD student sign-in</span>
+            <span class="auth-info-badge auth-privacy-badge">100% LOCAL</span>
+            <span class="auth-info-text">No credentials are saved in the cloud. All session tokens and data stay 100% local on your device.</span>
           </div>
         </div>
       </div>
