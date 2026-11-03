@@ -11172,3 +11172,206 @@ body:not(.is-full-tab) .sync-cinematic-current {
   border-color: rgba(239, 68, 68, 0.6);
   color: #FFFFFF;
 }
+
+/* ==========================================================================
+   SPeCTRUM Auth & Session Alert Banner & Modal
+   ========================================================================== */
+.auth-session-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.25);
+  padding: 8px 14px;
+  animation: slideDownBanner 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 50;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .auth-session-banner {
+  background: rgba(220, 38, 38, 0.14);
+  border-bottom: 1px solid rgba(248, 113, 113, 0.22);
+}
+
+.fulltab-auth-session-banner {
+  margin: 12px 24px 0 24px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+}
+
+@keyframes slideDownBanner {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.auth-banner-main {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  flex: 1;
+}
+
+.auth-banner-badge {
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.auth-banner-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.auth-banner-copy strong {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--signal-urgent, #ef4444);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auth-banner-copy span {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auth-banner-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.auth-banner-cta {
+  background: var(--bg-primary-cta, #18181B);
+  color: #FFFFFF;
+  border: 1px solid var(--border-hairline);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.auth-banner-cta:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.auth-banner-sub {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-hairline);
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.auth-banner-sub:hover {
+  background: var(--bg-hover);
+}
+
+.auth-banner-close {
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  border-radius: 3px;
+}
+
+.auth-banner-close:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+/* Auth Modal Card */
+.auth-modal-card {
+  max-width: 410px;
+}
+
+.auth-modal-header {
+  align-items: center;
+}
+
+.auth-modal-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.auth-modal-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.auth-modal-body {
+  padding: 16px 18px;
+}
+
+.auth-modal-desc {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+}
+
+.auth-modal-info-box {
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-hairline);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 4px;
+}
+
+.auth-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.auth-info-badge {
+  background: #0078D4; /* Microsoft Azure Blue */
+  color: #FFFFFF;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.auth-modal-footer {
+  padding: 12px 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid var(--border-hairline);
+}
+
+.btn-auth-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}

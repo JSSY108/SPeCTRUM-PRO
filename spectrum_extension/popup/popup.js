@@ -6255,14 +6255,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function findSpectrumTab() {
-    const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (activeTab && activeTab.url && activeTab.url.includes('spectrum.um.edu.my')) {
-      return activeTab;
-    }
-    const spectrumTabs = await chrome.tabs.query({ url: "*://spectrum.um.edu.my/*" });
-    if (spectrumTabs && spectrumTabs.length > 0) {
-      return spectrumTabs[0];
-    }
+    if (typeof chrome === 'undefined' || !chrome.tabs || !chrome.tabs.query) return null;
+    try {
+      const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (activeTab && activeTab.url && (activeTab.url.includes('spectrum.um.edu.my') || activeTab.url.includes('login.microsoftonline.com'))) {
+        return activeTab;
+      }
+      const spectrumTabs = await chrome.tabs.query({ url: ["*://spectrum.um.edu.my/*", "*://login.microsoftonline.com/*"] });
+      if (spectrumTabs && spectrumTabs.length > 0) {
+        return spectrumTabs[0];
+      }
+    } catch (e) {}
     return null;
   }
 
@@ -6445,26 +6448,39 @@ document.addEventListener('DOMContentLoaded', async () => {
   const activeSpectrumTab = await findSpectrumTab();
   activeTabSession = activeSpectrumTab;
 
+  const hasAnyCached = cached.cachedCoursesData && cached.cachedCoursesData.length > 0;
+  if (!activeSpectrumTab) {
+    if (!hasAnyCached) {
+      showLoginPrompt({ reason: 'not_open', showModal: true });
+    } else {
+      showLoginPrompt({ reason: 'not_open', showModal: false });
+    }
+  } else if (activeSpectrumTab.url && activeSpectrumTab.url.includes('login.microsoftonline.com')) {
+    showLoginPrompt({ reason: 'sso', detail: activeSpectrumTab.url, showModal: true });
+  }
+
   if (statusIndicator) {
     const textEl = document.getElementById('status-indicator-text');
     if (textEl) {
-      if (activeSpectrumTab) {
+      if (activeSpectrumTab && !activeSpectrumTab.url.includes('login.microsoftonline.com')) {
         textEl.textContent = 'Connected to UM SPeCTRUM';
-      } else if (cached.cachedCoursesData && cached.cachedCoursesData.length > 0) {
-        textEl.textContent = 'Connected to UM SPeCTRUM (Cached)';
+      } else if (hasAnyCached) {
+        textEl.textContent = 'SPeCTRUM Offline (Cached)';
       } else {
         textEl.textContent = 'SPeCTRUM Offline';
       }
     } else {
-      if (activeSpectrumTab) {
+      if (activeSpectrumTab && !activeSpectrumTab.url.includes('login.microsoftonline.com')) {
         statusIndicator.className = 'status-indicator ready';
         statusIndicator.innerHTML = '<span class="dot"></span> <span id="status-text">Connected</span>';
-      } else if (cached.cachedCoursesData && cached.cachedCoursesData.length > 0) {
+      } else if (hasAnyCached) {
         statusIndicator.className = 'status-indicator';
-        statusIndicator.innerHTML = '<span class="dot" style="background:#10b981;box-shadow:none;"></span> Cached';
+        statusIndicator.innerHTML = '<span class="dot" style="background:#f59e0b;box-shadow:none;"></span> Cached (Offline)';
+        statusIndicator.title = 'SPeCTRUM not connected. Click to open SPeCTRUM login.';
       } else {
         statusIndicator.className = 'status-indicator';
-        statusIndicator.innerHTML = '<span class="dot" style="background:#f59e0b;box-shadow:none;"></span> Offline';
+        statusIndicator.innerHTML = '<span class="dot" style="background:#ef4444;box-shadow:none;"></span> Log In Required';
+        statusIndicator.title = 'Click to open SPeCTRUM login';
       }
     }
   }
@@ -9713,6 +9729,97 @@ document.addEventListener('DOMContentLoaded', async () => {
     return Array.from(map.values()).sort((a, b) => (a.code || '').localeCompare(b.code || ''));
   }
 
+  // ── SPeCTRUM Authentication & Login Management ──
+  async function openSpectrumLogin() {
+    try {
+      if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.query) {
+        const tabs = await chrome.tabs.query({});
+        const existingTab = tabs.find(t => t.url && (
+          t.url.includes('spectrum.um.edu.my') || 
+          t.url.includes('login.microsoftonline.com')
+        ));
+        if (existingTab && existingTab.id) {
+          await chrome.tabs.update(existingTab.id, { active: true });
+          if (existingTab.windowId && chrome.windows) {
+            try { await chrome.windows.update(existingTab.windowId, { focused: true }); } catch (wErr) {}
+          }
+          return existingTab;
+        }
+        if (chrome.tabs.create) {
+          return await chrome.tabs.create({ url: 'https://spectrum.um.edu.my/login/index.php' });
+        }
+      }
+      window.open('https://spectrum.um.edu.my/login/index.php', '_blank');
+    } catch (err) {
+      window.open('https://spectrum.um.edu.my/login/index.php', '_blank');
+    }
+  }
+  window.openSpectrumLogin = openSpectrumLogin;
+
+  function showLoginPrompt({ reason = 'expired', detail = '', showModal = true } = {}) {
+    const isNotOpen = reason === 'not_open';
+    const isSSO = reason === 'sso' || (detail && detail.includes('microsoftonline.com'));
+
+    let title = 'SPeCTRUM Login Required';
+    let desc = 'You are currently not logged in to Universiti Malaya SPeCTRUM. Please log in to your account, then click Sync.';
+
+    if (isSSO) {
+      title = 'SPeCTRUM Session Expired';
+      desc = 'Your SPeCTRUM session has expired and redirected to Microsoft SSO login. Please log in with your UM student/staff account to continue.';
+    } else if (isNotOpen) {
+      title = 'SPeCTRUM Not Open';
+      desc = 'Please open and log in to spectrum.um.edu.my in your browser to access live courses and sync your activities.';
+    }
+
+    // Popup Alert Banner
+    const authBanner = document.getElementById('spectrum-auth-banner');
+    const authBannerTitle = document.getElementById('auth-banner-title');
+    const authBannerDesc = document.getElementById('auth-banner-desc');
+    if (authBanner) {
+      if (authBannerTitle) authBannerTitle.textContent = title;
+      if (authBannerDesc) authBannerDesc.textContent = desc;
+      authBanner.style.display = 'flex';
+    }
+
+    // Fulltab Alert Banner
+    const fulltabAuthBanner = document.getElementById('fulltab-auth-banner');
+    const fulltabAuthBannerTitle = document.getElementById('fulltab-auth-banner-title');
+    const fulltabAuthBannerDesc = document.getElementById('fulltab-auth-banner-desc');
+    if (fulltabAuthBanner) {
+      if (fulltabAuthBannerTitle) fulltabAuthBannerTitle.textContent = title;
+      if (fulltabAuthBannerDesc) fulltabAuthBannerDesc.textContent = desc;
+      fulltabAuthBanner.style.display = 'flex';
+    }
+
+    // Auth Prompt Modal
+    const authModal = document.getElementById('auth-prompt-modal');
+    const authModalTitle = document.getElementById('auth-modal-title');
+    const authModalDesc = document.getElementById('auth-modal-desc');
+    if (authModal && showModal) {
+      if (authModalTitle) authModalTitle.textContent = title;
+      if (authModalDesc) authModalDesc.textContent = desc;
+      authModal.style.display = 'flex';
+    }
+
+    // Status Indicator
+    if (statusIndicator) {
+      statusIndicator.className = 'status-indicator';
+      statusIndicator.innerHTML = '<span class="dot" style="background:#ef4444;box-shadow:none;"></span> Log In Required';
+      statusIndicator.title = 'Click to open SPeCTRUM login';
+    }
+  }
+  window.showLoginPrompt = showLoginPrompt;
+
+  function hideLoginPrompt() {
+    const authBanner = document.getElementById('spectrum-auth-banner');
+    if (authBanner) authBanner.style.display = 'none';
+    const fulltabAuthBanner = document.getElementById('fulltab-auth-banner');
+    if (fulltabAuthBanner) fulltabAuthBanner.style.display = 'none';
+    const authModal = document.getElementById('auth-prompt-modal');
+    if (authModal) authModal.style.display = 'none';
+  }
+  window.hideLoginPrompt = hideLoginPrompt;
+
   function showNotLoggedInState() {
     if (statusIndicator) {
       statusIndicator.className = 'status-indicator';
@@ -9934,10 +10041,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           setDiagBadge(diagBadgeSession, 'err', 'Session: SSO/Expired');
           updateActivitiesFetchProgress(100, '🔒 SPeCTRUM login required. Please sign in.', 'Session Required', 'LOGIN REQUIRED');
           hideActivitiesFetchProgress(1200);
+          showLoginPrompt({ reason: 'sso', detail: pingRes ? pingRes.url : '', showModal: true });
           showNotLoggedInState();
           return;
         }
         setDiagBadge(diagBadgeSession, 'ok', 'Session: Connected');
+        hideLoginPrompt();
         updateActivitiesFetchProgress(
           16,
           'Active session verified. Checking enrolled courses...',
@@ -9948,6 +10057,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         setDiagBadge(diagBadgeSession, 'err', 'Session: Error');
         updateActivitiesFetchProgress(100, '⚠️ SPeCTRUM session check: please log in', 'Session Required', 'SPeCTRUM PRO');
         hideActivitiesFetchProgress(1200);
+        const specTab = await findSpectrumTab();
+        showLoginPrompt({ reason: specTab ? 'expired' : 'not_open', detail: pingErr?.message, showModal: true });
         showNotLoggedInState();
         return;
       }
@@ -9967,6 +10078,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!fetchRes.loggedIn) {
           logDiag('Courses', '❌ fetchEnrolledCoursesDirectly reported not logged in');
           hideActivitiesFetchProgress(0);
+          showLoginPrompt({ reason: 'login_required', showModal: true });
           showNotLoggedInState();
           return;
         }
@@ -11918,6 +12030,82 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (typeof syncRailCounts === 'function') syncRailCounts();
   }
   window.onLanguageChange = applyLanguageUiRefresh;
+
+  // Auth Prompt Modal & Banner Listeners
+  const btnCloseAuthModal = document.getElementById('btn-close-auth-modal');
+  const btnAuthModalLogin = document.getElementById('btn-auth-modal-login');
+  const btnAuthModalRetry = document.getElementById('btn-auth-modal-retry');
+  const authPromptModal = document.getElementById('auth-prompt-modal');
+
+  if (btnCloseAuthModal && authPromptModal) {
+    btnCloseAuthModal.addEventListener('click', () => {
+      authPromptModal.style.display = 'none';
+    });
+  }
+  if (authPromptModal) {
+    authPromptModal.addEventListener('click', (e) => {
+      if (e.target === authPromptModal) authPromptModal.style.display = 'none';
+    });
+  }
+  if (btnAuthModalLogin) {
+    btnAuthModalLogin.addEventListener('click', () => openSpectrumLogin());
+  }
+  if (btnAuthModalRetry) {
+    btnAuthModalRetry.addEventListener('click', () => {
+      if (authPromptModal) authPromptModal.style.display = 'none';
+      refreshActivities(true);
+    });
+  }
+
+  // Popup Auth Banner
+  const btnAuthBannerLogin = document.getElementById('btn-auth-banner-login');
+  const btnAuthBannerRetry = document.getElementById('btn-auth-banner-retry');
+  const btnAuthBannerClose = document.getElementById('btn-auth-banner-close');
+  const spectrumAuthBanner = document.getElementById('spectrum-auth-banner');
+
+  if (btnAuthBannerLogin) {
+    btnAuthBannerLogin.addEventListener('click', () => openSpectrumLogin());
+  }
+  if (btnAuthBannerRetry) {
+    btnAuthBannerRetry.addEventListener('click', () => refreshActivities(true));
+  }
+  if (btnAuthBannerClose && spectrumAuthBanner) {
+    btnAuthBannerClose.addEventListener('click', () => {
+      spectrumAuthBanner.style.display = 'none';
+    });
+  }
+
+  // Fulltab Auth Banner
+  const btnFulltabAuthBannerLogin = document.getElementById('btn-fulltab-auth-banner-login');
+  const btnFulltabAuthBannerRetry = document.getElementById('btn-fulltab-auth-banner-retry');
+  const btnFulltabAuthBannerClose = document.getElementById('btn-fulltab-auth-banner-close');
+  const fulltabAuthBanner = document.getElementById('fulltab-auth-banner');
+
+  if (btnFulltabAuthBannerLogin) {
+    btnFulltabAuthBannerLogin.addEventListener('click', () => openSpectrumLogin());
+  }
+  if (btnFulltabAuthBannerRetry) {
+    btnFulltabAuthBannerRetry.addEventListener('click', () => refreshActivities(true));
+  }
+  if (btnFulltabAuthBannerClose && fulltabAuthBanner) {
+    btnFulltabAuthBannerClose.addEventListener('click', () => {
+      fulltabAuthBanner.style.display = 'none';
+    });
+  }
+
+  // Clickable status indicator for quick login
+  if (statusIndicator) {
+    statusIndicator.style.cursor = 'pointer';
+    statusIndicator.addEventListener('click', () => {
+      const isProblem = statusIndicator.textContent.includes('Log In Required') || 
+                        statusIndicator.textContent.includes('Offline') ||
+                        statusIndicator.innerHTML.includes('#ef4444') ||
+                        statusIndicator.innerHTML.includes('#f59e0b');
+      if (isProblem) {
+        showLoginPrompt({ reason: 'login_required', showModal: true });
+      }
+    });
+  }
 
   initHeaderBrandLogo();
 });

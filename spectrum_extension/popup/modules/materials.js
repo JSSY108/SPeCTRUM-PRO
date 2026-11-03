@@ -324,15 +324,31 @@
               <div style="font-size:24px;margin-bottom:8px;">📚</div>
               <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">${t('materials', 'noCoursesFound')}</div>
               <p style="font-size:11px;line-height:1.5;max-width:320px;margin:0 auto 14px;">${t('materials', 'loginPrompt')}</p>
-              <button type="button" id="btn-empty-rescan" class="btn-wireframe" style="padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">${t('materials', 'rescanCoursesBtn')}</button>
+              <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                <button type="button" id="btn-empty-login" class="btn-cta-solid" style="padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">Log In to SPeCTRUM ↗</button>
+                <button type="button" id="btn-empty-rescan" class="btn-wireframe" style="padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">${t('materials', 'rescanCoursesBtn')}</button>
+              </div>
             </div>
           `;
+          const emptyLogin = document.getElementById('btn-empty-login');
+          if (emptyLogin) {
+            emptyLogin.onclick = () => {
+              if (typeof window !== 'undefined' && typeof window.openSpectrumLogin === 'function') {
+                window.openSpectrumLogin();
+              } else {
+                window.open('https://spectrum.um.edu.my/login/index.php', '_blank');
+              }
+            };
+          }
           const emptyRescan = document.getElementById('btn-empty-rescan');
           if (emptyRescan) {
             emptyRescan.onclick = () => scanCourses(null, true);
           }
         }
         hideCourseFetchProgress(600);
+        if (typeof window !== 'undefined' && typeof window.showLoginPrompt === 'function') {
+          window.showLoginPrompt({ reason: 'login_required', showModal: true });
+        }
         return;
       }
 

@@ -163,6 +163,21 @@
 
     <!-- Main Popup Content Body -->
     <main class="popup-body">
+      <!-- SPeCTRUM Auth & Session Alert Banner -->
+      <div id="spectrum-auth-banner" class="auth-session-banner" style="display:none;">
+        <div class="auth-banner-main">
+          <span class="auth-banner-badge">🔐</span>
+          <div class="auth-banner-copy">
+            <strong id="auth-banner-title">SPeCTRUM Session Expired</strong>
+            <span id="auth-banner-desc">Please log in to SPeCTRUM to sync live activities.</span>
+          </div>
+        </div>
+        <div class="auth-banner-btns">
+          <button type="button" id="btn-auth-banner-login" class="auth-banner-cta">Log In ↗</button>
+          <button type="button" id="btn-auth-banner-retry" class="auth-banner-sub">Sync ↻</button>
+          <button type="button" id="btn-auth-banner-close" class="auth-banner-close" title="Dismiss">✕</button>
+        </div>
+      </div>
       <!-- JS-driven Rail Tooltip Overlay (position:fixed, escapes overflow clipping) -->
       <div id="rail-tooltip-overlay"></div>
       <!-- Rich Floating Popover for Course Monograms -->
@@ -999,6 +1014,21 @@
 
       <!-- Viewports -->
       <main class="fulltab-main-viewport">
+        <!-- Full-Tab SPeCTRUM Auth Alert Banner -->
+        <div id="fulltab-auth-banner" class="auth-session-banner fulltab-auth-session-banner" style="display:none;">
+          <div class="auth-banner-main">
+            <span class="auth-banner-badge">🔐</span>
+            <div class="auth-banner-copy">
+              <strong id="fulltab-auth-banner-title">SPeCTRUM Session Expired</strong>
+              <span id="fulltab-auth-banner-desc">Please log in to SPeCTRUM to sync live activities.</span>
+            </div>
+          </div>
+          <div class="auth-banner-btns">
+            <button type="button" id="btn-fulltab-auth-banner-login" class="auth-banner-cta">Log In ↗</button>
+            <button type="button" id="btn-fulltab-auth-banner-retry" class="auth-banner-sub">Sync ↻</button>
+            <button type="button" id="btn-fulltab-auth-banner-close" class="auth-banner-close" title="Dismiss">✕</button>
+          </div>
+        </div>
         <!-- Full-Tab Activities Sync Progress Card -->
         <div id="fulltab-activities-progress-card" class="fetch-progress-card activities-progress-card fulltab-activities-progress-card" style="display:none;margin:16px 24px 0 24px;">
           <div class="fetch-progress-header">
@@ -1134,6 +1164,39 @@
   <!-- ========================================================================
        MODALS: Announcement Reader, PIN Entry, OCC Setup, Diagnostics
        ======================================================================== -->
+  <!-- SPeCTRUM Authentication & Login Required Modal -->
+  <div id="auth-prompt-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-card auth-modal-card">
+      <div class="modal-header auth-modal-header">
+        <div class="auth-modal-header-title">
+          <span class="auth-modal-icon">🔐</span>
+          <h3 id="auth-modal-title">SPeCTRUM Login Required</h3>
+        </div>
+        <button type="button" id="btn-close-auth-modal" class="modal-close-btn" title="Dismiss">✕</button>
+      </div>
+      <div class="modal-body auth-modal-body">
+        <p id="auth-modal-desc" class="auth-modal-desc">
+          Your Universiti Malaya SPeCTRUM session has expired or SPeCTRUM is not open. Please log in with your student/staff account to synchronize live activities and course materials.
+        </p>
+        <div class="auth-modal-info-box" id="auth-modal-info-box">
+          <div class="auth-info-row">
+            <span class="auth-info-badge">SSO</span>
+            <span class="auth-info-text">Supports Microsoft Entra ID / Azure AD student sign-in</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer auth-modal-footer">
+        <button type="button" id="btn-auth-modal-login" class="btn-cta-solid btn-auth-primary">
+          <span>Log In to SPeCTRUM</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </button>
+        <button type="button" id="btn-auth-modal-retry" class="btn-wireframe btn-auth-secondary">
+          <span>I've Logged In, Sync ↻</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Announcement Reader Modal -->
   <div id="announcement-modal" class="modal-overlay" style="display:none;">
     <div class="modal-card">
