@@ -590,19 +590,19 @@
     const pad = n => String(n).padStart(2, '0');
 
     // Dynamically read horizontal column width & row height from CSS tuning dashboard
-    let horizColWidth = isOnePageMode ? 195 : 280;
-    let horizRowHeight = isOnePageMode ? 112 : 140;
+    let horizColWidth = isOnePageMode ? 136 : 196;
+    let horizRowHeight = isOnePageMode ? 78 : 98;
     try {
       if (typeof document !== 'undefined') {
         const rootStyle = getComputedStyle(document.documentElement);
         const gridStyle = getComputedStyle(gridEl);
         if (!isOnePageMode) {
           const colVal = parseInt(rootStyle.getPropertyValue('--tt-horiz-col-width') || gridStyle.getPropertyValue('--tt-horiz-col-width'), 10);
-          if (!isNaN(colVal) && colVal >= 120 && colVal <= 400) {
+          if (!isNaN(colVal) && colVal >= 80 && colVal <= 400) {
             horizColWidth = colVal;
           }
           const rowVal = parseInt(rootStyle.getPropertyValue('--tt-horiz-row-height') || gridStyle.getPropertyValue('--tt-horiz-row-height'), 10);
-          if (!isNaN(rowVal) && rowVal >= 60 && rowVal <= 300) {
+          if (!isNaN(rowVal) && rowVal >= 40 && rowVal <= 300) {
             horizRowHeight = rowVal;
           }
         }
@@ -612,7 +612,7 @@
     // Any day without a single course scheduled (e.g. Friday, Saturday) takes half a row height (weight 0.5)!
     const hasDaySession = dIdx => sessions.some(s => s.dayIndex === dIdx);
     const isDayHalf = dIdx => !hasDaySession(dIdx);
-    const rowTracks = ['52px'];
+    const rowTracks = ['38px'];
     activeDayIndices.forEach(dIdx => {
       if (isDayHalf(dIdx)) {
         rowTracks.push(`minmax(${Math.round(horizRowHeight * 0.45)}px, 0.5fr)`);
@@ -643,9 +643,10 @@
     }
 
     gridEl.className = 'timetable-grid timetable-horizontal-grid' + (isOnePageMode ? ' is-one-page-grid' : '');
-    gridEl.style.gridTemplateColumns = `140px ${colTracks.join(' ')}`;
+    const dayColWidth = isOnePageMode ? 84 : 98;
+    gridEl.style.gridTemplateColumns = `${dayColWidth}px ${colTracks.join(' ')}`;
     gridEl.style.gridTemplateRows = rowTracks.join(' ');
-    gridEl.style.minWidth = `${140 + totalColWidth}px`;
+    gridEl.style.minWidth = `${dayColWidth + totalColWidth}px`;
 
     let html = '';
 
@@ -654,8 +655,8 @@
     const timeMytText = getTimetableText('timetable', 'timeMyt', 'TIME (MYT)');
     html += `
       <div class="tt-header-cell tt-corner-cell" style="grid-column: 1; grid-row: 1;">
-        <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.8px; color: var(--text-primary);">${esc(acadWkText)}</div>
-        <div style="font-size: 9.5px; font-weight: 600; color: var(--text-muted); margin-top: 2px;">${esc(timeMytText)}</div>
+        <div style="font-size: 8.5px; font-weight: 800; letter-spacing: 0.8px; color: var(--text-primary);">${esc(acadWkText)}</div>
+        <div style="font-size: 8px; font-weight: 600; color: var(--text-muted); margin-top: 1px;">${esc(timeMytText)}</div>
       </div>
     `;
 
