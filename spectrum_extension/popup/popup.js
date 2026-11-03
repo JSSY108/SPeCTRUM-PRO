@@ -5812,7 +5812,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (document.body.classList.contains('is-full-tab')) {
         if (currentFullTabMode === 'materials' || currentFullTabMode === 'preferences') return;
         if (currentFullTabMode === 'timeline') {
-          if (timelineScrollWrapper) timelineScrollWrapper.scrollBy({ left: -360, behavior: 'smooth' });
+          if (timelineScrollWrapper) timelineScrollWrapper.scrollBy({ left: -576, behavior: 'smooth' });
           return;
         }
       }
@@ -5830,7 +5830,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (document.body.classList.contains('is-full-tab')) {
         if (currentFullTabMode === 'materials' || currentFullTabMode === 'preferences') return;
         if (currentFullTabMode === 'timeline') {
-          if (timelineScrollWrapper) timelineScrollWrapper.scrollBy({ left: 360, behavior: 'smooth' });
+          if (timelineScrollWrapper) timelineScrollWrapper.scrollBy({ left: 576, behavior: 'smooth' });
           return;
         }
       }
@@ -7441,51 +7441,197 @@ document.addEventListener('DOMContentLoaded', async () => {
       const populatedDays = sortedDays.filter(day => day.events.length > 0);
 
       // ========================================================================
-      // TIMELINE HORIZONTAL SCROLL ENGINE (Tuning: TIMELINE_SCROLL_MULTIPLIER)
-      // ------------------------------------------------------------------------
-      // Lower resistance: 1.8 - 2.2 | Default: 1.0 | Fast scan: 2.5+
+      // HIGH-PERFORMANCE TIMELINE HORIZONTAL SLIDE & MOMENTUM PHYSICS ENGINE
       // ========================================================================
-      const TIMELINE_SCROLL_MULTIPLIER = 1.85;
-
       if (timelineScrollWrapper && !timelineScrollWrapper._wheelHijacked) {
         timelineScrollWrapper._wheelHijacked = true;
 
-        // Fluid horizontal scroll with tuned resistance
+        timelineScrollWrapper.addEventListener('scroll', updateTimelineFloatingNavButtons, { passive: true });
+
+        // Intelligent wheel handling: Card column vertical scroll vs Board horizontal slide
         timelineScrollWrapper.addEventListener('wheel', (evt) => {
-          const rawDelta = Math.abs(evt.deltaX) > Math.abs(evt.deltaY) ? evt.deltaX : evt.deltaY;
-          if (rawDelta !== 0) {
+          // 1. If mouse is over a day column's cards container and scrolling vertically:
+          const colCards = evt.target.closest('.kanban-col-cards');
+          if (colCards && Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {
+            const isScrollingDown = evt.deltaY > 0;
+            const canScrollDown = isScrollingDown && (colCards.scrollTop + colCards.clientHeight < colCards.scrollHeight - 2);
+            const canScrollUp = !isScrollingDown && (colCards.scrollTop > 2);
+            if (canScrollDown || canScrollUp) {
+              return; // Allow vertical scrolling of cards inside this day column
+            }
+          }
+
+          // 2. If trackpad or Shift+wheel is already producing horizontal delta, let browser handle natively
+          if (Math.abs(evt.deltaX) > Math.abs(evt.deltaY) || evt.shiftKey) {
+            cancelMomentum();
+            updateTimelineFloatingNavButtons();
+            return;
+          }
+
+          // 3. For standard vertical mouse wheel, smoothly slide the board horizontally
+          if (evt.deltaY !== 0) {
+            cancelMomentum();
             evt.preventDefault();
-            timelineScrollWrapper.scrollLeft += rawDelta * TIMELINE_SCROLL_MULTIPLIER;
+            timelineScrollWrapper.scrollLeft += evt.deltaY * 1.5;
+            updateTimelineFloatingNavButtons();
           }
         }, { passive: false });
 
-        // Frictionless mouse drag-to-scroll
+        // Frictionless mouse drag-to-scroll with tactile inertia
+        let isMouseDown = false;
         let isDragging = false;
         let startX = 0;
+        let startY = 0;
         let scrollStart = 0;
+        let lastX = 0;
+        let lastTime = 0;
+        let velocityX = 0;
+        let momentumRafId = null;
+        let draggedThresholdPassed = false;
+
+        function cancelMomentum() {
+          if (momentumRafId) {
+            cancelAnimationFrame(momentumRafId);
+            momentumRafId = null;
+          }
+        }
 
         timelineScrollWrapper.addEventListener('mousedown', (e) => {
-          if (e.target.closest('button, a, input, select, .timeline-activity-card')) return;
-          isDragging = true;
-          timelineScrollWrapper.classList.add('is-dragging');
-          startX = e.pageX - timelineScrollWrapper.offsetLeft;
-          scrollStart = timelineScrollWrapper.scrollLeft;
-        });
+          // Allow input / textarea / select to focus without interference
+          if (e.target.closest('input, textarea, select')) return;
+          if (e.button !== 0) return; // Primary left-click only
 
-        window.addEventListener('mouseup', () => {
-          if (isDragging) {
-            isDragging = false;
-            timelineScrollWrapper.classList.remove('is-dragging');
-          }
+          cancelMomentum();
+          isMouseDown = true;
+          isDragging = false;
+          draggedThresholdPassed = false;
+          startX = e.pageX;
+          startY = e.pageY;
+          scrollStart = timelineScrollWrapper.scrollLeft;
+          lastX = e.pageX;
+          lastTime = performance.now();
+          velocityX = 0;
         });
 
         window.addEventListener('mousemove', (e) => {
-          if (!isDragging) return;
-          e.preventDefault();
-          const x = e.pageX - timelineScrollWrapper.offsetLeft;
-          const walk = (x - startX) * 1.5;
-          timelineScrollWrapper.scrollLeft = scrollStart - walk;
+          if (!isMouseDown) return;
+
+          const deltaX = e.pageX - startX;
+          const deltaY = e.pageY - startY;
+
+          if (!isDragging) {
+            // Drag threshold of 5px allows clicking buttons/cards while making sliding effortless
+            if (Math.abs(deltaX) > 5) {
+              isDragging = true;
+              draggedThresholdPassed = true;
+              timelineScrollWrapper.classList.add('is-dragging');
+              document.body.classList.add('timeline-dragging-active');
+            }
+          }
+
+          if (isDragging) {
+            e.preventDefault();
+            // Tactile 1:1 direct tracking
+            timelineScrollWrapper.scrollLeft = scrollStart - deltaX;
+
+            const now = performance.now();
+            const dt = now - lastTime;
+            if (dt > 8) {
+              const currentV = (lastX - e.pageX) / dt; // positive if dragging left (scrolling right)
+              velocityX = velocityX * 0.35 + currentV * 0.65; // exponential smoothing
+              lastX = e.pageX;
+              lastTime = now;
+            }
+            updateTimelineFloatingNavButtons();
+          }
+        }, { passive: false });
+
+        window.addEventListener('mouseup', () => {
+          if (!isMouseDown) return;
+          isMouseDown = false;
+
+          if (isDragging) {
+            isDragging = false;
+            timelineScrollWrapper.classList.remove('is-dragging');
+            document.body.classList.remove('timeline-dragging-active');
+
+            // If mouse rested before release, cancel flick inertia
+            const timeSinceLastMove = performance.now() - lastTime;
+            if (timeSinceLastMove > 75) {
+              velocityX = 0;
+            }
+
+            // High-fidelity momentum glide
+            if (Math.abs(velocityX) > 0.08) {
+              cancelMomentum();
+              let currentV = velocityX * 16.6;
+              const MAX_SPEED = 55;
+              if (Math.abs(currentV) > MAX_SPEED) {
+                currentV = Math.sign(currentV) * MAX_SPEED;
+              }
+              const FRICTION = 0.94; // Silky deceleration
+
+              const stepGlide = () => {
+                if (Math.abs(currentV) < 0.25) {
+                  momentumRafId = null;
+                  updateTimelineFloatingNavButtons();
+                  return;
+                }
+                timelineScrollWrapper.scrollLeft += currentV;
+                currentV *= FRICTION;
+                updateTimelineFloatingNavButtons();
+                momentumRafId = requestAnimationFrame(stepGlide);
+              };
+              momentumRafId = requestAnimationFrame(stepGlide);
+            }
+          }
+
+          // If the user performed a drag, suppress the trailing click on card links/buttons
+          if (draggedThresholdPassed) {
+            const captureClick = (clickEvt) => {
+              clickEvt.stopPropagation();
+              clickEvt.preventDefault();
+              window.removeEventListener('click', captureClick, true);
+            };
+            window.addEventListener('click', captureClick, true);
+            setTimeout(() => {
+              window.removeEventListener('click', captureClick, true);
+            }, 80);
+            draggedThresholdPassed = false;
+          }
         });
+
+        // Global keyboard navigation for Timeline Mode
+        if (!window._timelineKeyNavBound) {
+          window._timelineKeyNavBound = true;
+          window.addEventListener('keydown', (e) => {
+            if (currentFullTabMode !== 'timeline' && currentActivitiesMode !== 'timeline') return;
+            if (e.target.closest('input, textarea, select')) return;
+
+            if (e.key === 'ArrowRight') {
+              e.preventDefault();
+              cancelMomentum();
+              timelineScrollWrapper.scrollBy({ left: 576, behavior: 'smooth' });
+            } else if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              cancelMomentum();
+              timelineScrollWrapper.scrollBy({ left: -576, behavior: 'smooth' });
+            } else if (e.key === 'Home') {
+              e.preventDefault();
+              cancelMomentum();
+              timelineScrollWrapper.scrollTo({ left: 0, behavior: 'smooth' });
+            } else if (e.key === 'End') {
+              e.preventDefault();
+              cancelMomentum();
+              timelineScrollWrapper.scrollTo({ left: timelineScrollWrapper.scrollWidth, behavior: 'smooth' });
+            } else if (e.key === 't' || e.key === 'T') {
+              if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+                e.preventDefault();
+                scrollToToday(false);
+              }
+            }
+          });
+        }
       }
 
       if (populatedDays.length === 0) {
@@ -7562,6 +7708,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       renderOccBanners();
       scrollToToday(true);
+      setTimeout(updateTimelineFloatingNavButtons, 120);
+      setTimeout(updateTimelineFloatingNavButtons, 350);
     } catch (err) {
       logDiag('Timeline:Crash', `Timeline visualizer crash: ${err?.message || err}`, err?.stack);
       console.error('[SPeCTRUM Pro] Timeline visualizer error:', err);
@@ -7570,6 +7718,20 @@ document.addEventListener('DOMContentLoaded', async () => {
           ⚠️ Error rendering timeline visualizer: ${escapeHtml(err?.message || String(err))}
         </div>
       `;
+    }
+  }
+
+  function updateTimelineFloatingNavButtons() {
+    if (!timelineScrollWrapper) return;
+    const scrollLeft = timelineScrollWrapper.scrollLeft;
+    const maxScroll = Math.max(0, timelineScrollWrapper.scrollWidth - timelineScrollWrapper.clientWidth);
+    if (btnTimelineScrollLeft) {
+      const atStart = scrollLeft <= 12;
+      btnTimelineScrollLeft.classList.toggle('is-disabled', atStart);
+    }
+    if (btnTimelineScrollRight) {
+      const atEnd = scrollLeft >= maxScroll - 12;
+      btnTimelineScrollRight.classList.toggle('is-disabled', atEnd);
     }
   }
 
@@ -7598,19 +7760,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     requestAnimationFrame(() => {
       doScroll();
       setTimeout(doScroll, 80);
-      setTimeout(doScroll, 250);
+      setTimeout(() => { doScroll(); updateTimelineFloatingNavButtons(); }, 250);
     });
   }
 
   if (btnTimelineScrollLeft && timelineScrollWrapper) {
     btnTimelineScrollLeft.addEventListener('click', () => {
-      timelineScrollWrapper.scrollBy({ left: -240, behavior: 'smooth' });
+      timelineScrollWrapper.scrollBy({ left: -576, behavior: 'smooth' });
     });
   }
 
   if (btnTimelineScrollRight && timelineScrollWrapper) {
     btnTimelineScrollRight.addEventListener('click', () => {
-      timelineScrollWrapper.scrollBy({ left: 240, behavior: 'smooth' });
+      timelineScrollWrapper.scrollBy({ left: 576, behavior: 'smooth' });
     });
   }
 
