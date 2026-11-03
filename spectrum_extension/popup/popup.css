@@ -9982,8 +9982,24 @@ body:not(.is-full-tab) .sync-cinematic-current {
 }
 
 .timetable-vertical-grid.is-one-page-grid .tt-session-card.is-compact {
-  padding: 8px 12px !important;
-  gap: 3px !important;
+  padding: 7px 12px 8px !important;
+  gap: 2px !important;
+  justify-content: space-between !important;
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-session-card.is-compact .tt-card-title {
+  font-size: 17px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical !important;
+  -webkit-line-clamp: 1 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  word-break: break-word !important;
+  margin: auto 0 !important;
+  flex-shrink: 1 !important;
+  min-height: 0 !important;
 }
 
 .timetable-vertical-grid.is-one-page-grid .tt-code {
@@ -10500,15 +10516,39 @@ body:not(.is-full-tab) .sync-cinematic-current {
   flex-shrink: 0;
 }
 
-/* Compact 1-hour session styles: No full course name, OCC on first line */
+/* Compact 1-hour session styles: OCC on first line, Course name neatly fitted with zero footer overlap */
 .tt-session-card.is-compact {
-  padding: 8px 12px;
+  padding: 7px 12px 8px;
   justify-content: space-between;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
-.tt-session-card.is-compact .tt-card-title,
+.tt-session-card.is-compact .tt-card-header {
+  flex-shrink: 0 !important;
+}
+
+.tt-session-card.is-compact .tt-card-title {
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical !important;
+  -webkit-line-clamp: 1 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  word-break: break-word !important;
+  margin: auto 0 !important;
+  flex-shrink: 1 !important;
+  min-height: 0 !important;
+  line-height: 1.25 !important;
+}
+
 .tt-session-card.is-compact .tt-card-subtitle {
   display: none !important;
+}
+
+.tt-session-card.is-compact .tt-card-footer {
+  margin-top: auto !important;
+  flex-shrink: 0 !important;
+  padding-top: 2px !important;
 }
 
 .tt-card-occ-inline {

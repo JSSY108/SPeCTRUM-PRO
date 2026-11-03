@@ -1254,8 +1254,16 @@
           const clearance = footerY - 14 - lastTitleBottom;
           if (clearance < minClearanceFound) minClearanceFound = clearance;
         } else {
-          // 1-hour Card: Zero title! Clearance is between header and footer
-          const clearance = footerY - headerY - 10;
+          // 1-hour Card: 1 line of title in the middle space
+          ctx.fillStyle = '#18181B';
+          ctx.font = `800 ${Math.min(15, params.titleFontSize)}px "Hanken Grotesk", sans-serif`;
+          const maxTitleW = cardW - 28;
+          const titleLines = wrapCanvasTitle(str => ctx.measureText(str).width, s.courseName, maxTitleW, 1);
+          const titleY = cardY + 48;
+          if (titleLines.length > 0 && titleY < footerY - 14) {
+            ctx.fillText(titleLines[0], cardX + 16, titleY);
+          }
+          const clearance = footerY - titleY - 12;
           if (clearance < minClearanceFound) minClearanceFound = clearance;
         }
 

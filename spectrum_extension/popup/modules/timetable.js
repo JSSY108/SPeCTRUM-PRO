@@ -1012,10 +1012,8 @@
                 </div>
                 <span class="tt-type-tag">${esc(s.typeLabel)}</span>
               </div>
-              ${isCompact ? '' : `
               <div class="tt-card-title" title="${esc(s.courseName)}">${esc(s.courseName)}</div>
-              <div class="tt-card-subtitle">${subtitleText}</div>
-              `}
+              ${isCompact ? '' : `<div class="tt-card-subtitle">${subtitleText}</div>`}
               <div class="tt-card-footer">
                 ${venueHtml}
                 <span class="tt-time-range">${esc(s.timeStr)}</span>
@@ -2334,6 +2332,16 @@
               if (subY < footerY - 14) {
                 ctx.fillText(sub, cardX + 16, subY);
               }
+            }
+          } else {
+            // Compact 1-hour Card: 1 line of title comfortably placed between header and footer
+            ctx.fillStyle = '#18181B';
+            ctx.font = '800 15px "Hanken Grotesk", sans-serif';
+            const maxTitleW = cardW - 28;
+            const titleLines = wrapCanvasTitle(str => ctx.measureText(str).width, s.courseName, maxTitleW, 1);
+            const titleY = cardY + 48;
+            if (titleLines.length > 0 && titleY < footerY - 14) {
+              ctx.fillText(titleLines[0], cardX + 16, titleY);
             }
           }
 
