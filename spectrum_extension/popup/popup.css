@@ -8825,7 +8825,21 @@ body:not(.is-full-tab) .sync-cinematic-current {
   background: var(--signal-attendance-bg, #ECFDF5) !important;
   color: #047857 !important;
   border: 1px solid rgba(16, 185, 129, 0.35) !important;
-  cursor: default;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  transition: all 0.15s ease;
+}
+
+.btn-att-present:hover {
+  background: rgba(16, 185, 129, 0.22) !important;
+  border-color: rgba(16, 185, 129, 0.65) !important;
+  color: #065F46 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+}
+
+.btn-att-present:active {
+  transform: translateY(0);
 }
 
 .btn-att-faint {
@@ -8848,11 +8862,31 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 [data-theme="dark"] .att-status-pill.pill-recorded,
 [data-theme="dark"] .att-status-pill.pill-active,
-[data-theme="dark"] .att-state-badge.state-open,
-[data-theme="dark"] .btn-att-present {
+[data-theme="dark"] .att-state-badge.state-open {
   background: rgba(52, 211, 153, 0.10) !important;
   color: #34d399 !important;
   border: 1px solid rgba(52, 211, 153, 0.20) !important;
+}
+
+[data-theme="dark"] .btn-att-present {
+  background: rgba(52, 211, 153, 0.12) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(52, 211, 153, 0.30) !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  transition: all 0.15s ease;
+}
+
+[data-theme="dark"] .btn-att-present:hover {
+  background: rgba(52, 211, 153, 0.24) !important;
+  border-color: rgba(52, 211, 153, 0.55) !important;
+  color: #6ee7b7 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .btn-att-present:active {
+  transform: translateY(0);
 }
 
 [data-theme="dark"] .att-header-left,

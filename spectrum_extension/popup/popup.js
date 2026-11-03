@@ -3565,6 +3565,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const rawAttId = att.id || sessionData.cardId || '';
     const cid = att.courseId || sessionData.cid || '';
     const takeUrl = sessionData.takeUrl || att.activeSession?.takeUrl || att.attUrl || 'https://spectrum.um.edu.my';
+    const attPageUrl = att.attUrl || takeUrl || (cid ? `https://spectrum.um.edu.my/course/view.php?id=${cid}` : 'https://spectrum.um.edu.my');
     const sesskey = sessionData.sesskey || att.activeSession?.sesskey || '';
     const statusId = sessionData.statusId || att.activeSession?.presentStatusId || '';
     const subType = sessionData.subType || att.subType || '';
@@ -3626,7 +3627,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusPillHtml = `<span class="att-status-pill pill-recorded">${t('cards', 'recorded')}</span>`;
       stateBadgeHtml = '';
       windowSubHtml = `<span class="att-window-sub">${t('cards', 'attended')}</span>`;
-      actionBtnHtml = `<span class="btn-att-action btn-att-present">${t('cards', 'present')}</span>`;
+      actionBtnHtml = `<a href="${escapeHtml(attPageUrl)}" target="_blank" class="btn-att-action btn-att-present" data-att-url="${escapeHtml(attPageUrl)}" title="Open attendance in SPeCTRUM for manual checking">${t('cards', 'present')}</a>`;
     } else if (isEnded) {
       stateClass = 'state-ended';
       statusPillHtml = `<span class="att-status-pill">${t('cards', 'ended')}</span>`;
@@ -8264,6 +8265,20 @@ document.addEventListener('DOMContentLoaded', async () => {
           e.stopPropagation();
           handleAttendancePin(pinBtn);
           return;
+        }
+        const presentBtn = e.target.closest('.btn-att-present');
+        if (presentBtn) {
+          const directUrl = presentBtn.getAttribute('href') || presentBtn.dataset.attUrl;
+          if (directUrl && directUrl !== '#' && !directUrl.startsWith('javascript:')) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
+              chrome.tabs.create({ url: directUrl });
+            } else {
+              window.open(directUrl, '_blank');
+            }
+            return;
+          }
         }
         const syncSingleBtn = e.target.closest('.btn-sync-single-course');
         if (syncSingleBtn) {
