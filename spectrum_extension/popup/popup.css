@@ -9922,6 +9922,128 @@ body:not(.is-full-tab) .sync-cinematic-current {
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22), 0 3px 8px rgba(0, 0, 0, 0.12) !important;
 }
 
+/* ==========================================================================
+   VERTICAL TIMETABLE 1-PAGE MODE (1.5x Typography Scale)
+   - Boosts font sizes by 1.5x across cards, headers, and time axis
+     so text remains crisp and highly legible when fitted to 1-page viewport
+   ========================================================================== */
+.timetable-vertical-grid.is-one-page-grid {
+  --tt-font-code: 19.5px;      /* 13px * 1.5 = 19.5px */
+  --tt-font-type: 18px;        /* 12px * 1.5 = 18px */
+  --tt-font-title: 20px;       /* 13.5px * 1.5 = 20.25px */
+  --tt-font-occ: 18px;         /* 12px * 1.5 = 18px */
+  --tt-font-venue: 18px;       /* 12px * 1.5 = 18px */
+  --tt-font-time: 18px;        /* 12px * 1.5 = 18px */
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-session-card {
+  --tt-font-code: 19.5px;
+  --tt-font-type: 18px;
+  --tt-font-title: 20px;
+  --tt-font-occ: 18px;
+  --tt-font-venue: 18px;
+  --tt-font-time: 18px;
+  padding: 10px 14px !important;
+  gap: 4px !important;
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-session-card.is-compact {
+  padding: 8px 12px !important;
+  gap: 3px !important;
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-code {
+  font-size: 19.5px !important;
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-code-dot {
+  font-size: 19.5px !important;
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-code-acronym {
+  font-size: 19.5px !important;
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-type-tag {
+  font-size: 18px !important;
+  padding: 2px 7px !important;
+  border-radius: 4px !important;
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-card-title {
+  font-size: 20px !important;
+  line-height: 1.25 !important;
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-card-subtitle {
+  font-size: 18px !important;
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-venue {
+  font-size: 18px !important;
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-time-range {
+  font-size: 18px !important;
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-live-pill {
+  font-size: 12.5px !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+}
+
+/* Day Header Cells (13.5px * 1.5 = ~20px) */
+.timetable-vertical-grid.is-one-page-grid .tt-day-header-cell {
+  font-size: 20px !important;
+  padding: 14px 16px !important;
+  letter-spacing: 0.8px !important;
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-today-indicator {
+  font-size: 15px !important;
+}
+
+/* Corner Cell UTC+8 & TIME (MYT) (1.5x) */
+.timetable-vertical-grid.is-one-page-grid .tt-corner-tz {
+  font-size: 16.5px !important;
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-corner-label {
+  font-size: 13px !important;
+}
+
+/* Time Track Column Text (11px * 1.5 = 16.5px) */
+.timetable-vertical-grid.is-one-page-grid .tt-time-text {
+  font-size: 16.5px !important;
+  font-weight: 700 !important;
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-time-cell.is-half-hour .tt-time-text {
+  font-size: 15px !important;
+}
+
+/* Real-Time Tracker Arrow Badge (1.5x Scale) */
+.timetable-vertical-grid.is-one-page-grid .tt-tracker-badge.vertical {
+  left: 3px;
+  width: 71px;
+  height: 28px;
+  top: -14px;
+  font-size: 15.5px !important;
+  padding: 0 5px 0 3px;
+  clip-path: polygon(0% 0%, calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 0% 100%, 10px 50%);
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-tracker-line.vertical {
+  left: 74px;
+}
+
+.timetable-vertical-grid.is-one-page-grid .tt-tracker-pulse-dot.vertical {
+  width: 12px;
+  height: 12px;
+  top: -6px;
+}
+
 .timetable-scroll-frame {
   flex: 1;
   min-height: 0;
