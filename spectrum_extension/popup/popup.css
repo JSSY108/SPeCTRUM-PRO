@@ -11484,12 +11484,13 @@ body:not(.is-full-tab) .sync-cinematic-current {
   transform: translateY(2px);
 }
 
-/* ── Progress Bar with Color Theme Around Sync Button ── */
+/* ── Horizontal Progress Bar on Sync Button ── */
 .btn-wireframe.sync-progress-active {
   position: relative !important;
-  border-color: transparent !important;
+  overflow: hidden !important;
   background: var(--bg-surface, #FFFFFF) !important;
   color: var(--text-primary, #18181B) !important;
+  border-color: var(--border-strong, #CBD5E1) !important;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   z-index: 2;
   transition: all 0.2s ease;
@@ -11498,52 +11499,36 @@ body:not(.is-full-tab) .sync-cinematic-current {
 [data-theme="dark"] .btn-wireframe.sync-progress-active {
   background: #111827 !important;
   color: #FFFFFF !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* 360° Perimeter Conic Gradient Progress Track Around Button (Theme Black / White) */
+/* Subtle background track along the bottom edge of the button */
 .btn-wireframe.sync-progress-active::before {
   content: '';
   position: absolute;
-  inset: -2.5px;
-  border-radius: calc(var(--radius-sm, 6px) + 2.5px);
-  padding: 2px;
-  background: conic-gradient(
-    from 0deg,
-    #000000 0deg,
-    #18181B calc(var(--sync-pct, 0) * 3.6deg),
-    rgba(0, 0, 0, 0.12) calc(var(--sync-pct, 0) * 3.6deg),
-    rgba(0, 0, 0, 0.12) 360deg
-  );
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2.5px;
+  background: rgba(0, 0, 0, 0.08);
   pointer-events: none;
-  transition: background 0.25s ease;
   z-index: 1;
 }
 
 [data-theme="dark"] .btn-wireframe.sync-progress-active::before {
-  background: conic-gradient(
-    from 0deg,
-    #FFFFFF 0deg,
-    #F4F4F5 calc(var(--sync-pct, 0) * 3.6deg),
-    rgba(255, 255, 255, 0.15) calc(var(--sync-pct, 0) * 3.6deg),
-    rgba(255, 255, 255, 0.15) 360deg
-  );
+  background: rgba(255, 255, 255, 0.12);
 }
 
-/* Minimalist Progress Indicator Underline on Button Base */
+/* Minimalist Horizontal Progress Indicator on Button Base */
 .btn-wireframe.sync-progress-active::after {
   content: '';
   position: absolute;
-  bottom: -1px;
-  left: 4px;
+  bottom: 0;
+  left: 0;
   height: 2.5px;
-  width: calc((100% - 8px) * (var(--sync-pct, 0) / 100));
+  width: calc(100% * (var(--sync-pct, 0) / 100));
   background: #000000;
-  border-radius: 999px;
-  box-shadow: 0 0 3px rgba(0, 0, 0, 0.35);
   pointer-events: none;
   transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 2;
@@ -11551,5 +11536,5 @@ body:not(.is-full-tab) .sync-cinematic-current {
 
 [data-theme="dark"] .btn-wireframe.sync-progress-active::after {
   background: #FFFFFF;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
 }
