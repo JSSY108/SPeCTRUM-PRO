@@ -5218,7 +5218,9 @@ body.is-full-tab .materials-pane {
   box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7) !important;
 }
 
-.fulltab-activities-progress-card {
+.fulltab-activities-progress-card,
+#fulltab-activities-progress-card {
+  display: none !important;
   max-width: calc(100% - 48px);
 }
 
@@ -11441,7 +11443,7 @@ body:not(.is-full-tab) .sync-cinematic-current {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* 360° Perimeter Conic Gradient Progress Track Around Button */
+/* 360° Perimeter Conic Gradient Progress Track Around Button (Theme Black / White) */
 .btn-wireframe.sync-progress-active::before {
   content: '';
   position: absolute;
@@ -11450,10 +11452,10 @@ body:not(.is-full-tab) .sync-cinematic-current {
   padding: 2px;
   background: conic-gradient(
     from 0deg,
-    #2563EB 0deg,
-    #0284C7 calc(var(--sync-pct, 0) * 3.6deg),
-    rgba(160, 160, 175, 0.22) calc(var(--sync-pct, 0) * 3.6deg),
-    rgba(160, 160, 175, 0.22) 360deg
+    #000000 0deg,
+    #18181B calc(var(--sync-pct, 0) * 3.6deg),
+    rgba(0, 0, 0, 0.12) calc(var(--sync-pct, 0) * 3.6deg),
+    rgba(0, 0, 0, 0.12) 360deg
   );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -11466,14 +11468,14 @@ body:not(.is-full-tab) .sync-cinematic-current {
 [data-theme="dark"] .btn-wireframe.sync-progress-active::before {
   background: conic-gradient(
     from 0deg,
-    #38BDF8 0deg,
-    #818CF8 calc(var(--sync-pct, 0) * 3.6deg),
+    #FFFFFF 0deg,
+    #F4F4F5 calc(var(--sync-pct, 0) * 3.6deg),
     rgba(255, 255, 255, 0.15) calc(var(--sync-pct, 0) * 3.6deg),
     rgba(255, 255, 255, 0.15) 360deg
   );
 }
 
-/* Vibrant Progress Indicator Underline on Button Base */
+/* Minimalist Progress Indicator Underline on Button Base */
 .btn-wireframe.sync-progress-active::after {
   content: '';
   position: absolute;
@@ -11481,15 +11483,15 @@ body:not(.is-full-tab) .sync-cinematic-current {
   left: 4px;
   height: 2.5px;
   width: calc((100% - 8px) * (var(--sync-pct, 0) / 100));
-  background: linear-gradient(90deg, #2563EB, #0284C7);
+  background: #000000;
   border-radius: 999px;
-  box-shadow: 0 0 8px rgba(37, 99, 235, 0.8);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.35);
   pointer-events: none;
   transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 2;
 }
 
 [data-theme="dark"] .btn-wireframe.sync-progress-active::after {
-  background: linear-gradient(90deg, #38BDF8, #818CF8);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.9);
+  background: #FFFFFF;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
 }

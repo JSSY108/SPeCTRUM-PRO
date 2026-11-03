@@ -1299,6 +1299,11 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
       let baseSessions = parseSessionsFromDoc(attDoc);
       logDiag('Attendance:Sessions', `[${courseId}] Base student view parsed ${baseSessions.length} session(s) for "${initialLabel}"`);
 
+      if (baseSessions.length === 0) {
+        logDiag('Attendance:Sessions', `[${courseId}] "${initialLabel}" has 0 student sessions. Skipping inactive/unassigned activity.`);
+        continue;
+      }
+
       // Check if page has an explicit "All Sessions" tab link provided by Moodle (e.g. view=5 or view=all)
       const allTabLink = Array.from(attDoc.querySelectorAll('a')).find(a => {
         const txt = (a.textContent || '').trim().toLowerCase();
@@ -1368,14 +1373,14 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
 
       // 2. Active Session Detection (Submit attendance link open right now)
       let activeSession = null;
-      const takeMatch = attHtml.match(/href=["']([^"']*(?:attendance\.php\?sessid=\d+|take\.php\?sessid=\d+)[^"']*)["'][^>]*>([^<]*)/i);
-      let takeEl = attDoc.querySelector('a[href*="attendance.php?sessid="], a[href*="take.php?sessid="], a[href*="sessid="], a.takeattendance');
-      if (!takeEl) {
-        takeEl = Array.from(attDoc.querySelectorAll('a')).find(a => /submit attendance|hantar kehadiran|rekod kehadiran|take attendance/i.test(a.textContent || ''));
-      }
+      let takeEl = Array.from(attDoc.querySelectorAll('a')).find(a =>
+        /submit attendance|hantar kehadiran|rekod kehadiran|take attendance/i.test(a.textContent || '') ||
+        a.classList.contains('takeattendance') ||
+        /take\.php\?.*sessid=\d+/i.test(a.getAttribute('href') || a.href || '')
+      );
 
-      let rawTakeUrl = takeMatch ? takeMatch[1].replace(/&amp;/g, '&') : (takeEl ? (takeEl.getAttribute('href') || takeEl.href || '').replace(/&amp;/g, '&') : '');
-      if (rawTakeUrl) {
+      if (takeEl) {
+        let rawTakeUrl = (takeEl.getAttribute('href') || takeEl.href || '').replace(/&amp;/g, '&');
         let fullTakeUrl = rawTakeUrl;
         if (fullTakeUrl.startsWith('attendance.php') || fullTakeUrl.startsWith('take.php')) {
           fullTakeUrl = `${origin}/mod/attendance/${fullTakeUrl}`;
@@ -1387,16 +1392,21 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
         const sessid = sessidMatch ? sessidMatch[1] : '';
 
         let sessionDesc = 'Regular Class';
-        const sessionRow = takeEl ? takeEl.closest('tr') : null;
+        let sessionTime = '';
+        const sessionRow = takeEl.closest('tr');
         if (sessionRow) {
           const descCol = sessionRow.querySelector('td.c2, td.description') || sessionRow.querySelector('td:nth-child(3)');
           const text = (descCol?.textContent || descCol?.innerText || '').trim();
           if (text) sessionDesc = text;
+
+          const rowText = (sessionRow.textContent || '').trim();
+          const extractedTime = extractOnlyTime(rowText);
+          if (extractedTime) sessionTime = extractedTime;
         }
 
         let shouldInclude = true;
         if (hasUserOcc) {
-          const sessionText = sessionRow ? (sessionRow.textContent || sessionRow.innerText || '') : attHtml;
+          const sessionText = sessionRow ? (sessionRow.textContent || sessionRow.innerText || '') : '';
           const occsInSess = extractOccs(sessionText);
           if (occsInSess.length > 0 && !occsInSess.includes(userOccNum)) {
             shouldInclude = false;
@@ -1455,7 +1465,7 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
             sesskey,
             takeUrl: fullTakeUrl,
             desc: sessionDesc,
-            time: 'Active now',
+            time: sessionTime || 'Active now',
             requiresPassword: hasPasswordInput,
             presentStatusId
           };
@@ -1650,8 +1660,8 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
 
         logDiag('Attendance:Sessions', `[${courseId}] "${attTitle || 'Attendance'}" -> Kept all ${allSessions.length} session(s). Overall stats: ${pastStats?.percentage || 'N/A'}%`);
 
-        if (hasUserOcc && allSessions.length === 0 && !activeSession) {
-          logDiag('Attendance:Sessions', `[${courseId}] "${attTitle || 'Attendance'}" has 0 matching sessions and no active session for OCC ${userOccNum}. Skipping.`);
+        if (allSessions.length === 0) {
+          logDiag('Attendance:Sessions', `[${courseId}] "${attTitle || 'Attendance'}" has 0 matching sessions. Skipping.`);
           continue;
         }
 

@@ -3438,7 +3438,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const effectiveDateKey = sessionData.dateKey || session?.dateKey || formatDateKey(targetDate);
     const targetDateKey = effectiveDateKey;
 
-    const isLive = Boolean(sessionData.isLive || (att.activeSession && (effectiveDateKey === todayKey)));
+    const isLive = Boolean(sessionData.isLive || (att.activeSession && att.activeSession.takeUrl && (effectiveDateKey === todayKey)));
     const isVerified = Boolean(
       sessionData.isVerified || 
       (session && (session.isPresent || session.statusType === 'present' || session.statusType === 'submitted')) ||
@@ -3488,12 +3488,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // Default time fallback (only if no times found across all sources)
-    const startHour = parsedTime ? parsedTime.startHour : 14;
+    // Check weekly timetable as secondary source if no direct session time found
+    if (!parsedTime && typeof extractWeeklyTimetableSessions === 'function') {
+      try {
+        const ttSessions = extractWeeklyTimetableSessions();
+        const dayIdx = targetDate.getDay();
+        const matchedTt = ttSessions.find(s => cleanSingleCourseCode(s.courseCode) === cleanSingleCourseCode(code) && s.dayIndex === dayIdx);
+        if (matchedTt) {
+          const tStr = matchedTt.time || matchedTt.timeStr || '';
+          if (tStr) parsedTime = parseTimeRangeRobust(tStr);
+        }
+      } catch (ttErr) {}
+    }
+
+    // Default time fallback (sensible morning slot, only if truly unscheduled)
+    const startHour = parsedTime ? parsedTime.startHour : 9;
     const startMin = parsedTime ? parsedTime.startMin : 0;
-    const endHour = parsedTime ? parsedTime.endHour : 16;
+    const endHour = parsedTime ? parsedTime.endHour : 11;
     const endMin = parsedTime ? parsedTime.endMin : 0;
-    const timeRangeStr = parsedTime ? parsedTime.formatted : '14:00 — 16:00';
+    const timeRangeStr = parsedTime ? parsedTime.formatted : 'Class Session';
 
     // 3. Date, Elapsed & Window Status Calculation
     const targetDayZero = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
@@ -3534,7 +3547,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       isFuture = false;
       if (progressPct === 0) progressPct = 30;
       if (progressPct >= 100) progressPct = 85;
-      if (minsLeft <= 0) minsLeft = 14;
+      if (minsLeft <= 0 && parsedTime) {
+        minsLeft = Math.max(1, Math.round((endMs - now.getTime()) / 60000));
+      } else if (minsLeft <= 0) {
+        minsLeft = 30;
+      }
     }
 
     // 4. Course & OCC
@@ -8100,7 +8117,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       const sorted = sortAttendanceItems(filteredAtt, 'oldest');
-      attendanceListEl.innerHTML = sorted.map(att => {
+      // Eliminate redundant phantom duplicates for the same course on the same target date
+      const renderedCourseKeys = new Set();
+      const deduplicated = sorted.filter(att => {
+        const cid = String(att.courseId || 'general');
+        const sess = att.activeSession || (Array.isArray(att.sessions) ? att.sessions.find(s => s.isToday || s.dateKey === formatDateKey(new Date())) : null) || att.nextSession;
+        const dKey = sess?.dateKey || (sess?.date ? formatDateKey(sess.date) : formatDateKey(new Date()));
+        const uniqueKey = `${cid}_${dKey}_${att.subType || ''}`;
+        if (renderedCourseKeys.has(uniqueKey)) return false;
+        renderedCourseKeys.add(uniqueKey);
+        return true;
+      });
+
+      attendanceListEl.innerHTML = deduplicated.map(att => {
         const cid = String(att.courseId || 'general');
         const courseItems = itemsByCourse[cid] || [att];
         const canHideDuplicate = canHideAttendanceItem(att, courseItems);
@@ -9959,7 +9988,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 2. Keep inline card IDs updated synchronously
-    const cardIds = ['activities-progress-card', 'fulltab-activities-progress-card'];
+    const cardIds = ['activities-progress-card'];
     for (const cardId of cardIds) {
       const cardEl = document.getElementById(cardId);
       if (!cardEl) continue;
@@ -10019,7 +10048,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         overlay.style.opacity = '0';
         overlay.style.display = 'none';
       }
-      const cardIds = ['activities-progress-card', 'fulltab-activities-progress-card'];
+      const cardIds = ['activities-progress-card'];
       for (const cardId of cardIds) {
         const cardEl = document.getElementById(cardId);
         if (cardEl) {
@@ -10039,7 +10068,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (overlay.style.opacity === '0') overlay.style.display = 'none';
         }, 320);
       }
-      const cardIds = ['activities-progress-card', 'fulltab-activities-progress-card'];
+      const cardIds = ['activities-progress-card'];
       for (const cardId of cardIds) {
         const cardEl = document.getElementById(cardId);
         if (cardEl) {
