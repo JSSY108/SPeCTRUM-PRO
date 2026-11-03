@@ -2,45 +2,156 @@
 (function () {
   'use strict';
 
-  // Toggle in-page pinned drawer (never disappears when clicking blank space on the page)
-  function toggleInPageDrawer(forceOpen = false) {
-    let drawer = document.getElementById('spectrum-pro-inpage-drawer');
-    if (!drawer) {
-      drawer = document.createElement('div');
-      drawer.id = 'spectrum-pro-inpage-drawer';
-      const frameUrl = chrome.runtime.getURL('popup/popup.html?mode=drawer');
-      drawer.innerHTML = `
-        <div id="spectrum-pro-drawer-header">
-          <div id="spectrum-pro-drawer-header-title">
-            <span style="font-weight:800;font-size:12px;letter-spacing:0.5px;">SPeCTRUM PRO</span>
-            <span class="spectrum-drawer-pin-pill">📌 PINNED</span>
-          </div>
-          <button type="button" id="spectrum-pro-drawer-close" title="Close Panel" aria-label="Close">✕</button>
-        </div>
-        <iframe src="${frameUrl}" id="spectrum-pro-drawer-frame" allow="clipboard-read; clipboard-write"></iframe>
-      `;
-      document.body.appendChild(drawer);
+  // Saladict-Style Floating Pin Panel Engine (Flies over screen, draggable & pinnable)
+  let isFloatingPanelPinned = true;
 
-      const closeBtn = drawer.querySelector('#spectrum-pro-drawer-close');
-      if (closeBtn) {
-        closeBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          drawer.classList.add('drawer-hidden');
-        });
+  function toggleFloatingPanel(forceOpen = false, forcePinned = true) {
+    let panel = document.getElementById('spectrum-pro-floating-panel');
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id = 'spectrum-pro-floating-panel';
+      isFloatingPanelPinned = forcePinned;
+
+      const iconUrl = chrome.runtime.getURL('icons/icon48.png');
+      const frameUrl = chrome.runtime.getURL('popup/popup.html?mode=floating');
+
+      // Load saved position if available
+      let savedLeft = null;
+      let savedTop = null;
+      try {
+        const rawPos = localStorage.getItem('spectrum_pro_float_pos');
+        if (rawPos) {
+          const parsed = JSON.parse(rawPos);
+          if (typeof parsed.left === 'number' && typeof parsed.top === 'number') {
+            savedLeft = Math.min(Math.max(10, parsed.left), window.innerWidth - 300);
+            savedTop = Math.min(Math.max(10, parsed.top), window.innerHeight - 200);
+          }
+        }
+      } catch (e) {}
+
+      panel.innerHTML = `
+        <div id="spectrum-pro-floating-header">
+          <div class="spectrum-floating-left">
+            <img src="${iconUrl}" class="spectrum-floating-logo-icon" alt="SPeCTRUM Pro">
+            <span class="spectrum-floating-title-text">SPeCTRUM PRO</span>
+            <span class="spectrum-floating-drag-handle">⋮⋮</span>
+          </div>
+          <div class="spectrum-floating-actions">
+            <button type="button" id="spectrum-floating-btn-pin" class="spectrum-floating-btn btn-pin ${isFloatingPanelPinned ? 'is-pinned' : ''}" title="${isFloatingPanelPinned ? 'Pinned: Will not disappear when clicking outside' : 'Unpinned: Click outside to close'}">
+              <svg class="icon-svg icon-pin" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a1 1 0 0 0 0-2H8a1 1 0 0 0 0 2h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
+              <span id="spectrum-floating-pin-text">${isFloatingPanelPinned ? 'PINNED' : 'PIN'}</span>
+            </button>
+            <button type="button" id="spectrum-floating-btn-close" class="spectrum-floating-btn btn-close" title="Close Panel (Esc)">✕</button>
+          </div>
+        </div>
+        <iframe src="${frameUrl}" id="spectrum-pro-floating-frame" allow="clipboard-read; clipboard-write"></iframe>
+      `;
+
+      if (savedLeft !== null && savedTop !== null) {
+        panel.style.left = `${savedLeft}px`;
+        panel.style.top = `${savedTop}px`;
+        panel.style.right = 'auto';
       }
 
+      document.body.appendChild(panel);
+
+      const header = panel.querySelector('#spectrum-pro-floating-header');
+      const pinBtn = panel.querySelector('#spectrum-floating-btn-pin');
+      const pinText = panel.querySelector('#spectrum-floating-pin-text');
+      const closeBtn = panel.querySelector('#spectrum-floating-btn-close');
+      const frame = panel.querySelector('#spectrum-pro-floating-frame');
+
+      // Pin toggle button (Saladict pin behavior)
+      pinBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        isFloatingPanelPinned = !isFloatingPanelPinned;
+        pinBtn.classList.toggle('is-pinned', isFloatingPanelPinned);
+        pinText.textContent = isFloatingPanelPinned ? 'PINNED' : 'PIN';
+        pinBtn.title = isFloatingPanelPinned ? 'Pinned: Will not disappear when clicking outside' : 'Unpinned: Click outside to close';
+      });
+
+      // Close button
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        panel.classList.add('panel-hidden');
+      });
+
+      // Drag-to-move physics (like Saladict)
+      let isDragging = false;
+      let startMouseX = 0, startMouseY = 0;
+      let startPanelX = 0, startPanelY = 0;
+
+      header.addEventListener('mousedown', (e) => {
+        if (e.target.closest('button')) return;
+        isDragging = true;
+        header.classList.add('is-dragging');
+        startMouseX = e.clientX;
+        startMouseY = e.clientY;
+        startPanelX = panel.offsetLeft;
+        startPanelY = panel.offsetTop;
+        if (frame) frame.style.pointerEvents = 'none'; // prevent iframe stealing mouse during drag
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const dx = e.clientX - startMouseX;
+        const dy = e.clientY - startMouseY;
+        const maxLeft = Math.max(0, window.innerWidth - panel.offsetWidth);
+        const maxTop = Math.max(0, window.innerHeight - panel.offsetHeight);
+        const newLeft = Math.min(Math.max(0, startPanelX + dx), maxLeft);
+        const newTop = Math.min(Math.max(0, startPanelY + dy), maxTop);
+        panel.style.left = `${newLeft}px`;
+        panel.style.top = `${newTop}px`;
+        panel.style.right = 'auto';
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        header.classList.remove('is-dragging');
+        if (frame) frame.style.pointerEvents = 'auto';
+        try {
+          localStorage.setItem('spectrum_pro_float_pos', JSON.stringify({ left: panel.offsetLeft, top: panel.offsetTop }));
+        } catch (e) {}
+      });
+
+      // Click outside: only dismisses if UNPINNED (Saladict behavior)
+      document.addEventListener('mousedown', (e) => {
+        if (isFloatingPanelPinned) return; // Stays pinned! Never closes when clicking outside!
+        if (panel.classList.contains('panel-hidden')) return;
+        if (panel.contains(e.target)) return;
+        const floatBtn = document.getElementById('spectrum-pro-floating-btn');
+        if (floatBtn && floatBtn.contains(e.target)) return;
+        panel.classList.add('panel-hidden');
+      });
+
+      // Esc key
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !panel.classList.contains('panel-hidden')) {
+          panel.classList.add('panel-hidden');
+        }
+      });
+
       window.addEventListener('message', (ev) => {
-        if (ev.data && ev.data.type === 'CLOSE_SPECTRUM_DRAWER') {
-          drawer.classList.add('drawer-hidden');
+        if (ev.data && ev.data.type === 'CLOSE_SPECTRUM_FLOATING') {
+          panel.classList.add('panel-hidden');
         }
       });
       return;
     }
 
     if (forceOpen) {
-      drawer.classList.remove('drawer-hidden');
+      panel.classList.remove('panel-hidden');
+      if (forcePinned !== undefined) {
+        isFloatingPanelPinned = forcePinned;
+        const pinBtn = panel.querySelector('#spectrum-floating-btn-pin');
+        const pinText = panel.querySelector('#spectrum-floating-pin-text');
+        if (pinBtn) pinBtn.classList.toggle('is-pinned', isFloatingPanelPinned);
+        if (pinText) pinText.textContent = isFloatingPanelPinned ? 'PINNED' : 'PIN';
+      }
     } else {
-      drawer.classList.toggle('drawer-hidden');
+      panel.classList.toggle('panel-hidden');
     }
   }
 
@@ -60,7 +171,7 @@
     btn.addEventListener('click', () => {
       btn.style.transform = 'scale(0.95)';
       setTimeout(() => { btn.style.transform = ''; }, 150);
-      toggleInPageDrawer();
+      toggleFloatingPanel();
     });
 
     document.body.appendChild(btn);
@@ -68,13 +179,13 @@
 
   // Listen for messages from popup or background to open in-page drawer
   chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-    if (msg.type === 'OPEN_INPAGE_DRAWER') {
-      toggleInPageDrawer(true);
+    if (msg.type === 'OPEN_FLOATING_PANEL') {
+      toggleFloatingPanel(true, true);
       sendResponse({ success: true });
       return true;
     }
-    if (msg.type === 'TOGGLE_INPAGE_DRAWER') {
-      toggleInPageDrawer();
+    if (msg.type === 'TOGGLE_FLOATING_PANEL') {
+      toggleFloatingPanel();
       sendResponse({ success: true });
       return true;
     }

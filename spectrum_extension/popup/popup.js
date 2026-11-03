@@ -2388,7 +2388,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const isSidePanel = window.location.search.includes('mode=sidepanel');
   const isDrawer = window.location.search.includes('mode=drawer');
   const isDetached = window.location.search.includes('mode=detached');
-  const isPinned = isSidePanel || isDrawer || isDetached;
+  const isFloating = window.location.search.includes('mode=floating');
+  const isPinned = isSidePanel || isDrawer || isDetached || isFloating;
 
   if (isPinned) {
     document.body.classList.add('is-pinned-mode');
@@ -2396,6 +2397,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isSidePanel) document.body.classList.add('is-sidepanel');
     if (isDrawer) document.body.classList.add('is-drawer');
     if (isDetached) document.body.classList.add('is-detached-window');
+    if (isFloating) document.body.classList.add('is-floating-mode');
 
     const pinLabel = document.getElementById('btn-detach-popup-label');
     if (pinLabel) pinLabel.textContent = 'Pinned';
@@ -2608,42 +2610,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnDetachPopup.addEventListener('click', async (e) => {
       e.preventDefault();
 
-      // If already pinned in sidepanel or drawer, unpin/close
-      if (window.location.search.includes('mode=sidepanel')) {
-        if (chrome.sidePanel && chrome.sidePanel.setPanelBehavior) {
-          chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch(() => {});
-        }
-        window.close();
-        return;
-      }
-      if (window.location.search.includes('mode=drawer')) {
-        window.parent.postMessage({ type: 'CLOSE_SPECTRUM_DRAWER' }, '*');
+      if (window.location.search.includes('mode=floating')) {
+        window.parent.postMessage({ type: 'CLOSE_SPECTRUM_FLOATING' }, '*');
         return;
       }
 
-      // 1. Primary: Chrome Side Panel API (Chrome 116+)
-      // Docks directly beside webpage. Stays open permanently when clicking on the page!
-      if (chrome.sidePanel && chrome.sidePanel.open) {
-        try {
-          if (chrome.sidePanel.setPanelBehavior) {
-            chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
-          }
-          const win = await chrome.windows.getCurrent();
-          await chrome.sidePanel.open({ windowId: win.id });
-          window.close();
-          return;
-        } catch (err) {
-          console.warn('[SPeCTRUM Pro] sidePanel.open failed:', err);
-        }
-      }
-
-      // 2. Secondary: If currently on SPeCTRUM tab, toggle the in-page pinned drawer
+      // 1. Primary: Launch Saladict-style Floating Pin Panel on the active tab
       try {
         const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (activeTab && activeTab.id && activeTab.url && activeTab.url.includes('spectrum.um.edu.my')) {
-          chrome.tabs.sendMessage(activeTab.id, { type: 'OPEN_INPAGE_DRAWER' }, (res) => {
+        if (activeTab && activeTab.id) {
+          chrome.tabs.sendMessage(activeTab.id, { type: 'OPEN_FLOATING_PANEL', pinned: true }, (res) => {
             if (res && res.success) {
-              window.close();
+              window.close(); // Close toolbar popup; panel is now floating pinned on screen!
             } else {
               openDetachedWindow();
             }
@@ -2652,7 +2630,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       } catch (e) {}
 
-      // 3. Fallback: Standalone popup window
+      // 2. Fallback: Standalone companion window
       openDetachedWindow();
     });
   }

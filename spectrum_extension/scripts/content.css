@@ -58,32 +58,36 @@
   color: white !important;
 }
 
-/* SPeCTRUM Pro In-Page Pinned Drawer (Never disappears on blur/click) */
-#spectrum-pro-inpage-drawer {
+/* SPeCTRUM Pro Saladict-Style Floating Pin Panel (Flies over screen, stays pinned) */
+#spectrum-pro-floating-panel {
   position: fixed;
-  top: 0;
-  right: 0;
-  width: 460px;
-  max-width: 95vw;
-  height: 100vh;
+  top: 60px;
+  right: 40px;
+  width: 780px;
+  height: 638px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
   z-index: 2147483647;
-  background: #ffffff;
-  box-shadow: -8px 0 36px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  background: #090d16;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.12);
   display: flex;
   flex-direction: column;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
   overflow: hidden;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: scale(1);
+  opacity: 1;
 }
 
-#spectrum-pro-inpage-drawer.drawer-hidden {
-  transform: translateX(105%);
-  pointer-events: none;
+#spectrum-pro-floating-panel.panel-hidden {
+  transform: scale(0.96);
   opacity: 0;
+  pointer-events: none;
 }
 
-#spectrum-pro-drawer-header {
-  height: 40px;
-  min-height: 40px;
+#spectrum-pro-floating-header {
+  height: 38px;
+  min-height: 38px;
   padding: 0 14px;
   display: flex;
   align-items: center;
@@ -91,46 +95,98 @@
   background: #090d16;
   color: #f8fafc;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   user-select: none;
+  cursor: grab;
 }
 
-#spectrum-pro-drawer-header-title {
+#spectrum-pro-floating-header.is-dragging {
+  cursor: grabbing !important;
+}
+
+.spectrum-floating-left {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.spectrum-drawer-pin-pill {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: rgba(99, 102, 241, 0.2);
-  color: #818cf8;
-  border: 1px solid rgba(99, 102, 241, 0.35);
+.spectrum-floating-logo-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  vertical-align: middle;
 }
 
-#spectrum-pro-drawer-close {
+.spectrum-floating-title-text {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  color: #f1f5f9;
+}
+
+.spectrum-floating-drag-handle {
+  font-size: 11px;
+  color: #64748b;
+  margin-left: 6px;
+  letter-spacing: 0.2px;
+}
+
+.spectrum-floating-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spectrum-floating-btn {
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   color: #94a3b8;
-  font-size: 16px;
+  font-size: 11px;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  line-height: 1;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.18s ease;
+  outline: none;
 }
 
-#spectrum-pro-drawer-close:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+.spectrum-floating-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
 }
 
-#spectrum-pro-drawer-frame {
+.spectrum-floating-btn.btn-pin.is-pinned {
+  background: rgba(56, 189, 248, 0.16);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+}
+
+.spectrum-floating-btn.btn-pin .icon-pin {
+  transition: transform 0.2s ease;
+}
+
+.spectrum-floating-btn.btn-pin.is-pinned .icon-pin {
+  transform: rotate(45deg);
+}
+
+.spectrum-floating-btn.btn-close {
+  font-size: 15px;
+  padding: 2px 7px;
+  color: #94a3b8;
+}
+
+.spectrum-floating-btn.btn-close:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+#spectrum-pro-floating-frame {
   flex: 1;
   width: 100%;
-  height: calc(100% - 40px);
+  height: calc(100% - 38px);
   border: none;
   background: transparent;
 }
