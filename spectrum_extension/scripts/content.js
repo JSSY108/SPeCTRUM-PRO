@@ -59,9 +59,9 @@
       `;
 
       if (savedLeft !== null && savedTop !== null) {
-        panel.style.left = `${savedLeft}px`;
-        panel.style.top = `${savedTop}px`;
-        panel.style.right = 'auto';
+        panel.style.setProperty('left', `${savedLeft}px`, 'important');
+        panel.style.setProperty('top', `${savedTop}px`, 'important');
+        panel.style.setProperty('right', 'auto', 'important');
       }
 
       (document.body || document.documentElement).appendChild(panel);
@@ -90,7 +90,7 @@
         panel.classList.add('panel-hidden');
       });
 
-      // Drag-to-move physics (Saladict mechanics)
+      // Drag-to-move physics (Saladict mechanics - 2D horizontal & vertical drag)
       let isDragging = false;
       let startMouseX = 0, startMouseY = 0;
       let startPanelX = 0, startPanelY = 0;
@@ -101,8 +101,9 @@
         header.classList.add('is-dragging');
         startMouseX = e.clientX;
         startMouseY = e.clientY;
-        startPanelX = panel.offsetLeft;
-        startPanelY = panel.offsetTop;
+        const rect = panel.getBoundingClientRect();
+        startPanelX = rect.left;
+        startPanelY = rect.top;
         if (frame) frame.style.pointerEvents = 'none'; // prevent iframe stealing mouse during drag
       });
 
@@ -115,9 +116,10 @@
         const maxTop = Math.max(0, window.innerHeight - 40);
         const newLeft = Math.min(Math.max(0, startPanelX + dx), maxLeft);
         const newTop = Math.min(Math.max(0, startPanelY + dy), maxTop);
-        panel.style.left = `${newLeft}px`;
-        panel.style.top = `${newTop}px`;
-        panel.style.right = 'auto';
+        panel.style.setProperty('left', `${newLeft}px`, 'important');
+        panel.style.setProperty('top', `${newTop}px`, 'important');
+        panel.style.setProperty('right', 'auto', 'important');
+        panel.style.setProperty('bottom', 'auto', 'important');
       });
 
       const stopDrag = () => {
@@ -126,7 +128,8 @@
         header.classList.remove('is-dragging');
         if (frame) frame.style.pointerEvents = 'auto';
         try {
-          localStorage.setItem('spectrum_pro_float_pos', JSON.stringify({ left: panel.offsetLeft, top: panel.offsetTop }));
+          const rect = panel.getBoundingClientRect();
+          localStorage.setItem('spectrum_pro_float_pos', JSON.stringify({ left: rect.left, top: rect.top }));
         } catch (e) {}
       };
 

@@ -66,8 +66,8 @@
 
 #spectrum-pro-floating-panel {
   position: fixed !important;
-  top: 60px !important;
-  right: 40px !important;
+  top: 60px;
+  right: 40px;
   width: 780px !important;
   height: 638px !important;
   min-width: 480px !important;
