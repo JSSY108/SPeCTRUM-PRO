@@ -2373,10 +2373,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (typeof updateAttendanceDaemonStatus === 'function') updateAttendanceDaemonStatus();
   }
 
-  // Surface Detection: Full-Tab Workspace vs Extension Popup
+  // Surface Detection: Full-Tab Workspace vs Extension Popup vs Detached Companion
   function checkIsFullTab() {
     // 1. Explicit query param (set whenever opening full tab from extension)
     if (window.location.search.includes('mode=full')) return true;
+
+    // Detached / Pinned Window Mode:
+    // When opened as a detached companion window, keep the compact view unless
+    // user manually widens the window significantly (> 860px) to access the full workstation.
+    if (window.location.search.includes('mode=detached')) {
+      return window.innerWidth > 860;
+    }
 
     // 2. Standalone desktop tab detection:
     // Chromium extension popups are hard-capped by the browser to <= 800px width and <= 600px height.
@@ -2392,6 +2399,44 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.body.classList.toggle('is-full-tab', isFullTab);
   document.documentElement.classList.toggle('is-full-tab', isFullTab);
   if (isFullTab) window.scrollTo(0, 0);
+
+  // Detached Companion Window / Pin Mode detection & state handling
+  const isDetached = window.location.search.includes('mode=detached');
+  if (isDetached) {
+    document.body.classList.add('is-detached-window');
+    document.documentElement.classList.add('is-detached-window');
+    const pinLabel = document.getElementById('btn-detach-popup-label');
+    if (pinLabel) pinLabel.textContent = 'Pinned';
+    const pinBtn = document.getElementById('btn-detach-popup');
+    if (pinBtn) {
+      pinBtn.title = 'Pinned Floating Window · Stays open alongside your browser';
+      pinBtn.classList.add('active');
+    }
+    const fulltabPinBtn = document.getElementById('btn-fulltab-detach');
+    if (fulltabPinBtn) {
+      fulltabPinBtn.classList.add('active');
+      const lbl = fulltabPinBtn.querySelector('span');
+      if (lbl) lbl.textContent = 'Pinned';
+    }
+
+    // Persist window size and position changes
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (window.outerWidth && window.outerHeight) {
+          chrome.storage.local.set({
+            detachedWindowBounds: {
+              width: window.outerWidth,
+              height: window.outerHeight,
+              left: window.screenX,
+              top: window.screenY
+            }
+          }).catch(() => {});
+        }
+      }, 300);
+    });
+  }
 
   function ensureTabsInCorrectSurface() {
     const isFull = document.body.classList.contains('is-full-tab');
@@ -2508,7 +2553,88 @@ document.addEventListener('DOMContentLoaded', async () => {
   initThemeControls();
 
 
-  // 1. Full Tab & Close Button Handling
+  // 1. Full Tab, Detach Window & Close Button Handling
+  function openDetachedWindow() {
+    const activeTabBtn = document.querySelector('.primary-tab-btn.active');
+    const activeTabId = activeTabBtn?.dataset?.tab || 'tab-activities';
+    let targetUrl = `popup/popup.html?mode=detached&tab=${encodeURIComponent(activeTabId)}`;
+    if (typeof currentActivitiesSub === 'string' && currentActivitiesSub) {
+      targetUrl += `&sub=${encodeURIComponent(currentActivitiesSub)}`;
+    }
+
+    const fullUrl = chrome.runtime.getURL(targetUrl);
+
+    chrome.storage.local.get(['detachedWindowBounds']).then(res => {
+      const saved = res.detachedWindowBounds || {};
+      const screenW = window.screen.availWidth || window.screen.width || 1280;
+      const screenH = window.screen.availHeight || window.screen.height || 800;
+
+      const width = saved.width && saved.width >= 400 && saved.width <= 1600 ? saved.width : 780;
+      const height = saved.height && saved.height >= 500 && saved.height <= 1200 ? saved.height : 760;
+      const defaultLeft = Math.max(0, screenW - width - 24);
+      const defaultTop = Math.max(0, Math.round((screenH - height) / 2));
+      const left = (typeof saved.left === 'number' && saved.left >= 0 && saved.left < screenW - 100) ? saved.left : defaultLeft;
+      const top = (typeof saved.top === 'number' && saved.top >= 0 && saved.top < screenH - 100) ? saved.top : defaultTop;
+
+      if (chrome.windows && chrome.windows.create) {
+        chrome.windows.create({
+          url: fullUrl,
+          type: 'popup',
+          width: Math.round(width),
+          height: Math.round(height),
+          left: Math.round(left),
+          top: Math.round(top),
+          focused: true
+        }, () => {
+          if (!window.location.search.includes('mode=full') && !window.location.search.includes('mode=detached')) {
+            window.close();
+          }
+        });
+      } else {
+        window.open(fullUrl, '_blank', `width=${width},height=${height},left=${left},top=${top}`);
+        if (!window.location.search.includes('mode=full') && !window.location.search.includes('mode=detached')) {
+          window.close();
+        }
+      }
+    }).catch(() => {
+      if (chrome.windows && chrome.windows.create) {
+        chrome.windows.create({
+          url: fullUrl,
+          type: 'popup',
+          width: 780,
+          height: 760,
+          focused: true
+        }, () => window.close());
+      }
+    });
+  }
+
+  const btnDetachPopup = document.getElementById('btn-detach-popup');
+  if (btnDetachPopup) {
+    btnDetachPopup.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (window.location.search.includes('mode=detached')) {
+        // Already pinned: toggle to full tab
+        if (chrome.tabs && chrome.tabs.create) {
+          chrome.tabs.create({ url: chrome.runtime.getURL('popup/popup.html?mode=full') });
+        } else {
+          window.open(location.pathname + '?mode=full', '_blank');
+        }
+        window.close();
+      } else {
+        openDetachedWindow();
+      }
+    });
+  }
+
+  const btnFulltabDetach = document.getElementById('btn-fulltab-detach');
+  if (btnFulltabDetach) {
+    btnFulltabDetach.addEventListener('click', (e) => {
+      e.preventDefault();
+      openDetachedWindow();
+    });
+  }
+
   if (btnOpenTab) {
     btnOpenTab.addEventListener('click', (e) => {
       e.preventDefault();

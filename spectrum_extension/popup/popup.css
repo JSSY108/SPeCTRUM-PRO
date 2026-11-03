@@ -12096,3 +12096,56 @@ body:not(.is-full-tab) .sync-cinematic-current {
   background: #FFFFFF;
   box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
 }
+
+
+/* ========================================================================== 
+   SURFACE C: DETACHED / PINNED WINDOW (Floating Companion)
+   Opened via chrome.windows.create({ type: 'popup' })
+   ========================================================================== */
+html.is-detached-window,
+body.is-detached-window {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  overflow: hidden;
+}
+
+body.is-detached-window:not(.is-full-tab) {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+  user-select: auto;
+}
+
+/* Active Pin Button highlight in Detached Window */
+body.is-detached-window #btn-detach-popup,
+body.is-detached-window #btn-fulltab-detach {
+  background: var(--brand-accent-bg, rgba(99, 102, 241, 0.12)) !important;
+  color: var(--brand-accent, #6366f1) !important;
+  border-color: var(--brand-accent, #6366f1) !important;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.25) !important;
+}
+
+body.is-detached-window #btn-detach-popup .icon-pin,
+body.is-detached-window #btn-fulltab-detach .icon-pin {
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+#btn-detach-popup .icon-pin,
+#btn-fulltab-detach .icon-pin {
+  transition: transform 0.2s ease;
+}
+
+#btn-detach-popup:hover .icon-pin,
+#btn-fulltab-detach:hover .icon-pin {
+  transform: scale(1.15);
+}
+
+#btn-detach-popup.btn-detach-window {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
