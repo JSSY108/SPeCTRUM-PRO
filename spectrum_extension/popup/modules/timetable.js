@@ -1521,6 +1521,27 @@
     const cornerW = 160;
     const headerH = 48;
 
+    // Optimal Export Geometry Configured via Tuner Studio
+    const exportConfig = {
+      unitRowH: 160,
+      emptyDayRatio: 0.42,
+      emptyHourRatio: 0.45,
+      cardMarginX: 8,
+      cardMarginY: 6,
+      cardRadius: 10,
+      codeFontSize: 18,
+      headerYOffset: 22,
+      tagFontSize: 15,
+      tagYOffset: 10,
+      occFontSize: 16,
+      occYOffset: 47,
+      titleFontSize: 18,
+      titleLineH: 20,
+      titleYOffset: 73,
+      venueFontSize: 17,
+      footerBottomInset: 14
+    };
+
     // Empty days take half row height (weight 0.42)
     const hasDaySession = dIdx => sessions.some(s => s.dayIndex === dIdx);
     const isDayHalf = dIdx => !hasDaySession(dIdx);
@@ -1535,20 +1556,20 @@
 
     const hourColWeights = [];
     for (let h = minHour; h < maxHour; h++) {
-      hourColWeights.push(isHourHalf(h) ? 0.45 : 1.0);
+      hourColWeights.push(isHourHalf(h) ? exportConfig.emptyHourRatio : 1.0);
     }
     const totalHourColWeight = hourColWeights.reduce((a, b) => a + b, 0);
     const availableHourW = gridW - cornerW; // 1920px
     const unitHourW = availableHourW / totalHourColWeight;
 
-    // Proportional row height: exactly matches the 1-page DOM aspect ratio (~0.48x of column width)
-    const unitRowH = Math.max(122, Math.round(unitHourW * 0.68));
+    // Proportional row height configured via Tuner Studio
+    const unitRowH = exportConfig.unitRowH;
 
     const dayRows = [];
     let curRowY = gridY + headerH;
     activeDayIndices.forEach(dIdx => {
       const isHalf = isDayHalf(dIdx);
-      const rH = isHalf ? Math.round(unitRowH * 0.42) : unitRowH;
+      const rH = isHalf ? Math.round(unitRowH * exportConfig.emptyDayRatio) : unitRowH;
       dayRows.push({ dIdx, y: curRowY, h: rH, isHalf });
       curRowY += rH;
     });
@@ -1739,9 +1760,9 @@
           const startX = getCanvasHorizontalX(s.startHour, s.startMin);
           const endX = getCanvasHorizontalX(s.endHour, s.endMin);
 
-          // Card Geometry matching the 1-page sweet spot
-          const cardMarginX = 10;
-          const cardMarginY = 8;
+          // Card Geometry configured via Tuner Studio
+          const cardMarginX = exportConfig.cardMarginX;
+          const cardMarginY = exportConfig.cardMarginY;
           const cardX = startX + cardMarginX;
           const cardY = y + cardMarginY;
           const cardW = Math.max(60, endX - startX - cardMarginX * 2);
@@ -1751,7 +1772,7 @@
           ctx.fillStyle = '#FFFFFF';
           ctx.beginPath();
           if (typeof ctx.roundRect === 'function') {
-            ctx.roundRect(cardX, cardY, cardW, cardH, 6);
+            ctx.roundRect(cardX, cardY, cardW, cardH, exportConfig.cardRadius);
           } else {
             ctx.rect(cardX, cardY, cardW, cardH);
           }
@@ -1764,23 +1785,20 @@
           ctx.fillStyle = '#18181B';
           ctx.fillRect(cardX, cardY, 5, cardH);
 
-          // 1. Header Line: Code + Acronym + Type Tag + Time (if space permits)
-          const isCompactCol = cardW < 240;
+          // 1. Header Line: Code + Acronym + Type Tag
           const sessAcronym = getSessionAcronym(s.courseName, s.courseCode);
           const rawDisplayCode = sessAcronym
             ? `${cleanSingleCourseCode(s.courseCode)} · ${sessAcronym}`
             : cleanSingleCourseCode(s.courseCode);
 
           // Tag dimensions
-          ctx.font = '700 11px "JetBrains Mono", monospace';
-          const tagW = Math.max(34, ctx.measureText(s.typeLabel).width + 12);
-          const tagH = 18;
+          ctx.font = `700 ${exportConfig.tagFontSize}px "JetBrains Mono", monospace`;
+          const tagW = Math.max(34, ctx.measureText(s.typeLabel).width + 14);
+          const tagH = Math.max(16, Math.round(exportConfig.tagFontSize * 1.55));
           let tagX = cardX + cardW - tagW - 12;
 
           // Code text with collision avoidance against tag badge
-          ctx.font = isCompactCol
-            ? '800 14px "JetBrains Mono", monospace'
-            : '800 15px "JetBrains Mono", monospace';
+          ctx.font = `800 ${exportConfig.codeFontSize}px "JetBrains Mono", monospace`;
           let displayCodeText = rawDisplayCode;
           const maxCodeW = tagX - cardX - 20;
           if (ctx.measureText(displayCodeText).width > maxCodeW) {
@@ -1795,17 +1813,12 @@
             }
           }
 
-          const codeW = ctx.measureText(displayCodeText).width;
-          if (!isCompactCol && (cardX + 14 + codeW + 10 + tagW + 110 < cardX + cardW)) {
-            tagX = cardX + 14 + codeW + 10;
-          }
-
-          const headerY = cardY + 22;
+          const headerY = cardY + exportConfig.headerYOffset;
           ctx.fillStyle = '#18181B';
           ctx.fillText(displayCodeText, cardX + 14, headerY);
 
           // Type Tag Pill
-          const tagY = cardY + 8;
+          const tagY = cardY + exportConfig.tagYOffset;
           ctx.fillStyle = '#F4F4F5';
           ctx.beginPath();
           if (typeof ctx.roundRect === 'function') {
@@ -1819,37 +1832,29 @@
           ctx.stroke();
 
           ctx.fillStyle = '#71717A';
-          ctx.font = '700 11px "JetBrains Mono", monospace';
+          ctx.font = `700 ${exportConfig.tagFontSize}px "JetBrains Mono", monospace`;
           ctx.textAlign = 'center';
-          ctx.fillText(s.typeLabel, tagX + tagW / 2, tagY + 13);
+          const tagTextY = tagY + Math.round(tagH * 0.72);
+          ctx.fillText(s.typeLabel, tagX + tagW / 2, tagTextY);
           ctx.textAlign = 'left';
-
-          // Time Range in header for wide multi-hour cards
-          ctx.fillStyle = '#71717A';
-          ctx.font = '600 12.5px "JetBrains Mono", monospace';
-          const timeText = s.timeStr;
-          const timeWidth = ctx.measureText(timeText).width;
-          if (tagX < cardX + cardW - timeWidth - 24 && cardW > 280) {
-            ctx.fillText(timeText, cardX + cardW - timeWidth - 14, headerY);
-          }
 
           // 2. Subtitle: OCC
           ctx.fillStyle = '#71717A';
-          ctx.font = '700 12px "JetBrains Mono", monospace';
-          const occY = cardY + 41;
+          ctx.font = `700 ${exportConfig.occFontSize}px "JetBrains Mono", monospace`;
+          const occY = cardY + exportConfig.occYOffset;
           ctx.fillText(s.occ, cardX + 14, occY);
 
           // 4. Footer: Anchor Venue left, Duration badge right
-          const footerY = cardY + cardH - 14;
+          const footerY = cardY + cardH - exportConfig.footerBottomInset;
 
           // 3. Course Title (Multi-line wrap, dynamically fitted so it never collides with footer)
           ctx.fillStyle = '#18181B';
-          ctx.font = '800 14px "Hanken Grotesk", sans-serif';
+          ctx.font = `800 ${exportConfig.titleFontSize}px "Hanken Grotesk", sans-serif`;
           const maxTitleW = cardW - 28;
-          const titleLineH = 16;
+          const titleLineH = exportConfig.titleLineH;
           let maxAllowedLines = (cardH >= 95) ? 2 : 1;
           let titleLines = wrapCanvasTitle(str => ctx.measureText(str).width, s.courseName, maxTitleW, maxAllowedLines);
-          let startTitleY = (titleLines.length > 1) ? (cardY + 58) : (cardY + 61);
+          let startTitleY = cardY + exportConfig.titleYOffset;
 
           // Guarantee zero collision against footer
           if (startTitleY + (titleLines.length - 1) * titleLineH > footerY - 18) {
@@ -1860,11 +1865,13 @@
           titleLines.forEach((tLine, tIdx) => {
             ctx.fillText(tLine, cardX + 14, startTitleY + tIdx * titleLineH);
           });
+
+          // Venue (Left) & Duration (Right)
+          ctx.fillStyle = '#71717A';
+          ctx.font = `600 ${exportConfig.venueFontSize}px "JetBrains Mono", monospace`;
           if (s.venue) {
-            ctx.fillStyle = '#71717A';
-            ctx.font = '600 12px "JetBrains Mono", monospace';
             let vText = `${s.venueIcon || '📍'} ${s.venue}`;
-            const durW = s.durText ? Math.max(32, ctx.measureText(s.durText).width + 12) : 0;
+            const durW = s.durText ? ctx.measureText(s.durText).width + 16 : 0;
             const maxVenueW = cardW - durW - 32;
             if (ctx.measureText(vText).width > maxVenueW) {
               while (vText.length > 4 && ctx.measureText(vText + '…').width > maxVenueW) {
@@ -1874,32 +1881,12 @@
             }
             ctx.fillText(vText, cardX + 14, footerY);
           } else {
-            // Venue placeholder if empty
-            ctx.fillStyle = '#A1A1AA';
-            ctx.font = '600 11.5px "JetBrains Mono", monospace';
             ctx.fillText('📍 + Add Location', cardX + 14, footerY);
           }
 
-          // Duration tag on right
           if (s.durText) {
-            ctx.font = '700 11px "JetBrains Mono", monospace';
-            const durW = Math.max(32, ctx.measureText(s.durText).width + 12);
-            const durH = 17;
-            const durX = cardX + cardW - durW - 12;
-            const durY = cardY + cardH - 21;
-            ctx.fillStyle = '#F4F4F5';
-            ctx.beginPath();
-            if (typeof ctx.roundRect === 'function') {
-              ctx.roundRect(durX, durY, durW, durH, 3);
-            } else {
-              ctx.rect(durX, durY, durW, durH);
-            }
-            ctx.fill();
-            ctx.strokeStyle = '#E4E4E7';
-            ctx.stroke();
-            ctx.fillStyle = '#71717A';
-            ctx.textAlign = 'center';
-            ctx.fillText(s.durText, durX + durW / 2, durY + 12.5);
+            ctx.textAlign = 'right';
+            ctx.fillText(s.durText, cardX + cardW - 14, footerY);
             ctx.textAlign = 'left';
           }
         });
