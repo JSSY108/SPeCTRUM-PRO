@@ -4144,14 +4144,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Priority 1: Scrolled to top
     if (stream && stream.scrollTop <= 15) {
-      if (todayGroup) {
-        const tRect = todayGroup.getBoundingClientRect();
-        // If today is within upper viewport area, start with Today as default active
-        if (tRect.top >= streamRect.top - 20 && tRect.top <= streamRect.top + (streamRect.height * 0.65)) {
-          activeGroup = todayGroup;
+      if (todayGroup && stream._isScrollingToToday) {
+        // While programmatically scrolling/settling to Today, preserve Today as active
+        activeGroup = todayGroup;
+      } else {
+        if (todayGroup) {
+          const tRect = todayGroup.getBoundingClientRect();
+          // If today is within upper viewport area, start with Today as default active
+          if (tRect.top >= streamRect.top - 20 && tRect.top <= streamRect.top + (streamRect.height * 0.65)) {
+            activeGroup = todayGroup;
+          }
         }
+        if (!activeGroup) activeGroup = groups[0];
       }
-      if (!activeGroup) activeGroup = groups[0];
     }
     // Priority 2: Scrolled to bottom
     else if (stream && (stream.scrollTop + stream.clientHeight >= stream.scrollHeight - 25)) {
@@ -4206,50 +4211,110 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function scrollSpineToToday(container, immediate = true) {
     if (!container) return;
-    const todayGroup = container.querySelector('.spine-date-group.group-today');
-    if (!todayGroup) return;
+
+    // Helper to dynamically find the today group or closest date node
+    function findTodayNode() {
+      if (!container || !container.isConnected) return null;
+      let tg = container.querySelector('.spine-date-group.group-today');
+      if (tg && tg.isConnected) return tg;
+
+      const allGroups = Array.from(container.querySelectorAll('.spine-date-group'));
+      if (!allGroups.length) return null;
+
+      const todayMs = new Date().setHours(0, 0, 0, 0);
+      let closest = allGroups[0];
+      let minDiff = Infinity;
+      allGroups.forEach(g => {
+        const k = g.dataset.dateKey;
+        if (k) {
+          const dMs = new Date(k + 'T12:00:00').getTime();
+          if (!isNaN(dMs)) {
+            const diff = Math.abs(dMs - todayMs);
+            if (diff < minDiff) {
+              minDiff = diff;
+              closest = g;
+            }
+          }
+        }
+      });
+      return closest;
+    }
+
+    // Set scroll lock flag to prevent premature activeGroup stealing before layout settles
+    container._isScrollingToToday = true;
+    if (container._todayScrollTimer) clearTimeout(container._todayScrollTimer);
+    container._todayScrollTimer = setTimeout(() => {
+      container._isScrollingToToday = false;
+    }, 700);
+
+    // Bind manual user scroll listener to instantly cancel programmatic scroll flag
+    if (!container._hasUserManualScrollDetector) {
+      container._hasUserManualScrollDetector = true;
+      const cancelProgrammatic = () => { container._isScrollingToToday = false; };
+      container.addEventListener('wheel', cancelProgrammatic, { passive: true });
+      container.addEventListener('touchmove', cancelProgrammatic, { passive: true });
+    }
 
     // Immediately grant active focal dot to TODAY so it starts solid black without waiting
-    const allGroups = container.querySelectorAll('.spine-date-group');
-    allGroups.forEach(g => {
-      const isTarget = (g === todayGroup);
-      g.classList.toggle('is-active', isTarget);
-      const dot = g.querySelector('.spine-node-dot');
-      if (dot) dot.classList.toggle('is-active', isTarget);
-    });
+    const initialTarget = findTodayNode();
+    if (initialTarget) {
+      const allGroups = container.querySelectorAll('.spine-date-group');
+      allGroups.forEach(g => {
+        const isTarget = (g === initialTarget);
+        g.classList.toggle('is-active', isTarget);
+        const dot = g.querySelector('.spine-node-dot');
+        if (dot) dot.classList.toggle('is-active', isTarget);
+      });
+    }
 
     const doScroll = () => {
-      const cRect = container.getBoundingClientRect();
-      if (cRect.height <= 0) return;
-      const tRect = todayGroup.getBoundingClientRect();
-      const currentScrollTop = container.scrollTop;
-      // Position Today directly at focal line for optimal active focal dot alignment
-      const focalRatio = (typeof spineFocalRatio === 'number' && !isNaN(spineFocalRatio)) ? spineFocalRatio : 0.40;
-      const targetScroll = Math.max(0, (tRect.top - cRect.top) + currentScrollTop - (cRect.height * focalRatio));
+      const target = findTodayNode();
+      if (!target) return;
 
-      if (immediate) {
-        const prevBehavior = container.style.scrollBehavior;
-        container.style.scrollBehavior = 'auto';
-        container.scrollTop = targetScroll;
-        if (typeof container.scrollTo === 'function') {
-          container.scrollTo({ top: targetScroll, behavior: 'auto' });
-        }
-        requestAnimationFrame(() => {
-          container.style.scrollBehavior = prevBehavior || 'smooth';
-          updateActiveSpineNode();
-        });
-      } else {
-        if (typeof container.scrollTo === 'function') {
-          container.scrollTo({ top: targetScroll, behavior: 'smooth' });
-        } else {
-          container.scrollTop = targetScroll;
-        }
-        setTimeout(updateActiveSpineNode, 100);
+      const cRect = container.getBoundingClientRect();
+      const tRect = target.getBoundingClientRect();
+      const viewH = container.clientHeight || cRect.height || 400;
+
+      // 1. Static offset calculation (independent of transient paint or scroll states)
+      let staticOffset = 0;
+      let el = target;
+      while (el && el !== container && el !== document.body) {
+        staticOffset += el.offsetTop;
+        el = el.offsetParent;
       }
+
+      // 2. Dynamic offset from bounding client rects (when rendered and painted)
+      const dynamicOffset = (tRect.top - cRect.top) + container.scrollTop;
+      const useDynamic = (tRect.height > 0 && cRect.height > 0 && dynamicOffset > 0 && Math.abs(dynamicOffset - staticOffset) < 300);
+      const chosenOffset = useDynamic ? dynamicOffset : staticOffset;
+
+      const focalRatio = (typeof spineFocalRatio === 'number' && !isNaN(spineFocalRatio)) ? spineFocalRatio : 0.40;
+      const targetScroll = Math.max(0, Math.round(chosenOffset - (viewH * focalRatio)));
+
+      // 3. Scroll container directly
+      const prevBehavior = container.style.scrollBehavior;
+      container.style.scrollBehavior = immediate ? 'auto' : 'smooth';
+      container.scrollTop = targetScroll;
+      if (typeof container.scrollTo === 'function') {
+        container.scrollTo({ top: targetScroll, behavior: immediate ? 'auto' : 'smooth' });
+      }
+
+      // 4. Native fallback if direct scroll did not move but target is far from top
+      if (typeof target.scrollIntoView === 'function' && container.scrollTop === 0 && targetScroll > 40) {
+        try {
+          target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: immediate ? 'auto' : 'smooth' });
+        } catch (e) {}
+      }
+
+      // 5. Restore scroll behavior and update active dot
+      requestAnimationFrame(() => {
+        container.style.scrollBehavior = prevBehavior || 'smooth';
+        updateActiveSpineNode();
+      });
     };
 
-    // Staggered attempts to guarantee container layout has settled
-    [0, 50, 150, 300, 500].forEach(delay => {
+    // Staggered attempts to guarantee layout settling across font/image expansions
+    [0, 25, 75, 180, 350, 600].forEach(delay => {
       setTimeout(doScroll, delay);
     });
   }
@@ -4588,12 +4653,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       window.addEventListener('scroll', updateActiveSpineNode, { passive: true });
     }
 
-    // Immediately trigger so the initial in-sight date dot is filled solid black
     initSpineFocalControls();
-    requestAnimationFrame(updateActiveSpineNode);
-    setTimeout(updateActiveSpineNode, 50);
-
-    // Default scroll position: centered at TODAY
+    // Default scroll position: centered at TODAY (future dates above, past dates below)
     scrollSpineToToday(stream, true);
   }
 
@@ -5855,6 +5916,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       renderAllActivities();
       initStickyDateObserver();
       syncRailCounts();
+      if (popupSidebarMode === 'courses') {
+        syncPopupActivityStreams();
+        const stream = document.getElementById('popup-cards-stream');
+        if (stream) scrollSpineToToday(stream, true);
+      }
     } else if (tabId === 'tab-timetable') {
       if (typeof renderTimetableMode === 'function') renderTimetableMode();
     } else if (tabId === 'tab-materials') {
@@ -7318,6 +7384,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderAttendanceList();
     renderOccBanners();
     updateKpiCards();
+    if (popupSidebarMode === 'courses') {
+      syncPopupActivityStreams();
+    }
     const ttPane = document.getElementById('tab-timetable');
     if (ttPane && (ttPane.style.display !== 'none' || (typeof currentFullTabMode !== 'undefined' && currentFullTabMode === 'timetable'))) {
       if (typeof renderTimetableMode === 'function') renderTimetableMode();
@@ -9878,10 +9947,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       initSpineFocalControls();
-      requestAnimationFrame(updateActiveSpineNode);
-      setTimeout(updateActiveSpineNode, 50);
-
-      // Default scroll position: centered at TODAY
+      // Default scroll position: centered at TODAY (future dates above, past dates below)
       scrollSpineToToday(scrollTarget, true);
 
     } else {
