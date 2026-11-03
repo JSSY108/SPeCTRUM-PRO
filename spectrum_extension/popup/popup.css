@@ -11375,3 +11375,121 @@ body:not(.is-full-tab) .sync-cinematic-current {
   gap: 6px;
   font-weight: 700;
 }
+
+/* ==========================================================================
+   Continue My Work Action & Sync Button Perimeter Progress Bar
+   ========================================================================== */
+.sync-cinematic-actions {
+  margin-top: 16px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-sync-continue-work {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
+  border-radius: 999px;
+  padding: 7px 18px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  letter-spacing: 0.2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.btn-sync-continue-work:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.45);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+
+.btn-sync-continue-work:active {
+  transform: translateY(0);
+}
+
+.btn-sync-continue-work svg {
+  transition: transform 0.2s ease;
+}
+
+.btn-sync-continue-work:hover svg {
+  transform: translateY(2px);
+}
+
+/* ── Progress Bar with Color Theme Around Sync Button ── */
+.btn-wireframe.sync-progress-active {
+  position: relative !important;
+  border-color: transparent !important;
+  background: var(--bg-surface, #FFFFFF) !important;
+  color: var(--text-primary, #18181B) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  z-index: 2;
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .btn-wireframe.sync-progress-active {
+  background: #111827 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* 360° Perimeter Conic Gradient Progress Track Around Button */
+.btn-wireframe.sync-progress-active::before {
+  content: '';
+  position: absolute;
+  inset: -2.5px;
+  border-radius: calc(var(--radius-sm, 6px) + 2.5px);
+  padding: 2px;
+  background: conic-gradient(
+    from 0deg,
+    #2563EB 0deg,
+    #0284C7 calc(var(--sync-pct, 0) * 3.6deg),
+    rgba(160, 160, 175, 0.22) calc(var(--sync-pct, 0) * 3.6deg),
+    rgba(160, 160, 175, 0.22) 360deg
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  transition: background 0.25s ease;
+  z-index: 1;
+}
+
+[data-theme="dark"] .btn-wireframe.sync-progress-active::before {
+  background: conic-gradient(
+    from 0deg,
+    #38BDF8 0deg,
+    #818CF8 calc(var(--sync-pct, 0) * 3.6deg),
+    rgba(255, 255, 255, 0.15) calc(var(--sync-pct, 0) * 3.6deg),
+    rgba(255, 255, 255, 0.15) 360deg
+  );
+}
+
+/* Vibrant Progress Indicator Underline on Button Base */
+.btn-wireframe.sync-progress-active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 4px;
+  height: 2.5px;
+  width: calc((100% - 8px) * (var(--sync-pct, 0) / 100));
+  background: linear-gradient(90deg, #2563EB, #0284C7);
+  border-radius: 999px;
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.8);
+  pointer-events: none;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+}
+
+[data-theme="dark"] .btn-wireframe.sync-progress-active::after {
+  background: linear-gradient(90deg, #38BDF8, #818CF8);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.9);
+}

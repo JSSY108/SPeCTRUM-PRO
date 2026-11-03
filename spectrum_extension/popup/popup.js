@@ -53,6 +53,7 @@ let courseOccs = {}; // courseId -> occ string
 let defaultOcc = '';
 let forceShowOccBanner = false;
 let isSyncingActivities = false;
+let isSyncOverlayDismissed = false;
 let isScanningMaterials = false;
 let currentSyncAbortController = null;
 let syncStartTime = 0;
@@ -1431,11 +1432,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const text = labelText || (isSpinning ? 'Syncing...' : 'Sync');
     if (btnRefreshActivities) {
       btnRefreshActivities.classList.toggle('spinning', isSpinning);
+      if (!isSpinning) {
+        btnRefreshActivities.classList.remove('sync-progress-active');
+        btnRefreshActivities.style.removeProperty('--sync-pct');
+      }
       if (btnRefreshActivitiesLabel) btnRefreshActivitiesLabel.textContent = text;
     }
     const fulltabBtn = document.getElementById('btn-fulltab-sync');
     if (fulltabBtn) {
       fulltabBtn.classList.toggle('spinning', isSpinning);
+      if (!isSpinning) {
+        fulltabBtn.classList.remove('sync-progress-active');
+        fulltabBtn.style.removeProperty('--sync-pct');
+      }
       const fulltabLabel = fulltabBtn.querySelector('span');
       if (fulltabLabel) fulltabLabel.textContent = text;
     }
@@ -1455,6 +1464,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         svg.classList.add('stage-settled');
       }
     });
+  }
+
+  function dismissSyncOverlay() {
+    isSyncOverlayDismissed = true;
+    const overlay = document.getElementById('sync-cinematic-overlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        if (isSyncOverlayDismissed && overlay.style.opacity === '0') {
+          overlay.style.display = 'none';
+        }
+      }, 320);
+    }
+  }
+
+  function updateSyncButtonProgress(percent, isSpinning = true) {
+    const clamped = Math.min(100, Math.max(0, Math.round(percent)));
+    const syncButtons = [
+      document.getElementById('btn-refresh-activities'),
+      document.getElementById('btn-fulltab-sync')
+    ].filter(Boolean);
+
+    for (const btn of syncButtons) {
+      btn.style.setProperty('--sync-pct', clamped);
+      if (isSpinning) {
+        btn.classList.add('sync-progress-active', 'spinning');
+        const label = btn.querySelector('#btn-refresh-activities-label') || btn.querySelector('span');
+        if (label) {
+          label.textContent = clamped >= 100 ? 'Done!' : ('Sync ' + clamped + '%');
+        }
+      } else {
+        btn.classList.remove('sync-progress-active', 'spinning');
+        btn.style.removeProperty('--sync-pct');
+        const label = btn.querySelector('#btn-refresh-activities-label') || btn.querySelector('span');
+        if (label) {
+          label.textContent = 'Sync';
+        }
+      }
+    }
   }
 
   // KPI Metrics Elements
@@ -2448,6 +2497,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnCloseDiagPanel = document.getElementById('btn-close-diag-panel');
   if (btnFulltabSync) {
     btnFulltabSync.addEventListener('click', () => {
+      if (isSyncingActivities && isSyncOverlayDismissed) {
+        isSyncOverlayDismissed = false;
+        const overlay = document.getElementById('sync-cinematic-overlay');
+        if (overlay) {
+          overlay.style.display = 'flex';
+          void overlay.offsetWidth;
+          overlay.classList.add('active');
+          overlay.style.opacity = '1';
+        }
+        return;
+      }
       if (isScanningMaterials) {
         const label = btnFulltabSync.querySelector('span');
         if (label) {
@@ -9865,9 +9925,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const clamped = Math.min(100, Math.max(0, Math.round(percent)));
 
+    // Update Sync button perimeter progress bar & percentage label
+    updateSyncButtonProgress(clamped, true);
+
     // 1. Update Centered Cinematic Glassmorphism HUD Overlay (Option 3)
     const overlay = document.getElementById('sync-cinematic-overlay');
-    if (overlay) {
+    if (overlay && !isSyncOverlayDismissed) {
       if (overlay.style.display !== 'flex') {
         overlay.style.display = 'flex';
         // Trigger reflow for smooth CSS opacity transition
@@ -9945,6 +10008,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (hudCurrent) hudCurrent.textContent = '✔ Sync complete! All activities updated.';
     if (hudSub) hudSub.textContent = 'Ready';
 
+    // Finish sync progress on button at 100%
+    updateSyncButtonProgress(100, true);
+
     const overlay = document.getElementById('sync-cinematic-overlay');
 
     if (delay <= 0) {
@@ -9961,6 +10027,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           cardEl.style.opacity = '0';
         }
       }
+      updateSyncButtonProgress(0, false);
       return;
     }
 
@@ -9982,6 +10049,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           }, 300);
         }
       }
+      updateSyncButtonProgress(0, false);
     }, delay);
   }
 
@@ -10002,6 +10070,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     isSyncingActivities = true;
     syncStartTime = Date.now();
     currentSyncAbortController = new AbortController();
+    isSyncOverlayDismissed = false;
 
     updateSyncButtonSpinState(true, 'Syncing...');
 
@@ -10275,6 +10344,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (btnRefreshActivities) {
     btnRefreshActivities.addEventListener('click', (e) => {
+      if (isSyncingActivities && isSyncOverlayDismissed) {
+        // Restore overlay on sync button click
+        isSyncOverlayDismissed = false;
+        const overlay = document.getElementById('sync-cinematic-overlay');
+        if (overlay) {
+          overlay.style.display = 'flex';
+          void overlay.offsetWidth;
+          overlay.classList.add('active');
+          overlay.style.opacity = '1';
+        }
+        return;
+      }
       if (isScanningMaterials) {
         if (btnRefreshActivitiesLabel) {
           const orig = btnRefreshActivitiesLabel.textContent;
@@ -12030,6 +12111,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (typeof syncRailCounts === 'function') syncRailCounts();
   }
   window.onLanguageChange = applyLanguageUiRefresh;
+
+  // Continue My Work & Sync Overlay Controls
+  const btnSyncContinueWork = document.getElementById('btn-sync-continue-work');
+  if (btnSyncContinueWork) {
+    btnSyncContinueWork.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dismissSyncOverlay();
+    });
+  }
+
+  const syncCinematicOverlay = document.getElementById('sync-cinematic-overlay');
+  if (syncCinematicOverlay) {
+    syncCinematicOverlay.addEventListener('click', (e) => {
+      // Allow clicking backdrop to continue work without blocking
+      if (e.target === syncCinematicOverlay) {
+        dismissSyncOverlay();
+      }
+    });
+  }
 
   // Auth Prompt Modal & Banner Listeners
   const btnCloseAuthModal = document.getElementById('btn-close-auth-modal');
