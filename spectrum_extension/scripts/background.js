@@ -4,6 +4,33 @@
 const ALARM_NAME = 'spectrum_auto_attendance_check';
 const DEFAULT_INTERVAL_MINUTES = 15;
 
+// Persistent Background Logger (Saved to chrome.storage.local for visibility in SPeCTRUM Pro UI)
+async function appendBackgroundLog(category, message, details = null) {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const dateStr = now.toISOString().slice(0, 10);
+  const entry = {
+    ts: Date.now(),
+    timeStr,
+    dateStr,
+    category,
+    message,
+    details: details ? (typeof details === 'object' ? JSON.stringify(details) : String(details)) : ''
+  };
+
+  try {
+    const data = await chrome.storage.local.get({ autoAttendanceLogs: [] });
+    const logs = Array.isArray(data.autoAttendanceLogs) ? data.autoAttendanceLogs : [];
+    logs.push(entry);
+    if (logs.length > 120) logs.splice(0, logs.length - 120);
+    await chrome.storage.local.set({ autoAttendanceLogs: logs });
+  } catch (e) {
+    console.warn('[SPeCTRUM Pro Background] Log write warning:', e);
+  }
+  console.log(`[SPeCTRUM Pro Background] [${category}] ${message}`, details || '');
+}
+
+
 // Initialize alarms on install or startup
 chrome.runtime.onInstalled.addListener(async (details) => {
   console.log('[SPeCTRUM Pro] Extension installed/updated:', details.reason);
@@ -190,12 +217,14 @@ async function handleFormAttendanceSubmit(formAction, fields, takeUrl) {
     const finalUrl = res.url || '';
     console.log('[SPeCTRUM Pro Background] POST Response HTTP:', res.status, 'Final URL:', finalUrl);
 
-    const isSuccess = finalUrl.includes('/mod/attendance/view.php') ||
-                      /status:\s*(?:present|hadir)|attendance has been recorded|kehadiran anda telah direkodkan|sudah direkod/i.test(resText);
+    const isSuccess = (finalUrl.includes('/mod/attendance/view.php') ||
+                      /status:\s*(?:present|hadir)|attendance has been recorded|kehadiran anda telah direkodkan|sudah direkod|attendance has been taken/i.test(resText) ||
+                      resText.includes('Your attendance in this session has been recorded')) &&
+                      !finalUrl.includes('/login/');
 
     console.log('[SPeCTRUM Pro Background] isSuccess check:', isSuccess, 'res.ok:', res.ok);
 
-    if (isSuccess || res.ok) {
+    if (isSuccess) {
       const sessidMatch = (takeUrl || '').match(/sessid=(\d+)/);
       const sessid = sessidMatch ? sessidMatch[1] : '';
       const todayStr = new Date().toISOString().slice(0, 10);
@@ -204,13 +233,20 @@ async function handleFormAttendanceSubmit(formAction, fields, takeUrl) {
       if (sessid) rec[sessid] = todayStr;
       await chrome.storage.local.set({ lastAttendanceSubmissions: rec });
       console.log('[SPeCTRUM Pro Background] ✅ Attendance recorded in storage for session:', sessid);
+      await appendBackgroundLog('Attendance:ManualSubmit', `✅ Verified attendance recorded on SPeCTRUM for session ${sessid}`);
 
       return { success: true };
     }
 
-    return { success: false, error: 'Submission rejected by SPeCTRUM. Please check if password is correct.' };
+    const errorMatch = resText.match(/class=["'][^"']*alert-danger[^"']*["'][^>]*>([\s\S]*?)<\/div>/i) ||
+                       resText.match(/class=["'][^"']*error[^"']*["'][^>]*>([\s\S]*?)<\/span>/i);
+    const errorMsg = errorMatch ? errorMatch[1].replace(/<[^>]+>/g, '').trim() : 'Submission rejected by SPeCTRUM. Please check if password is correct.';
+    await appendBackgroundLog('Attendance:ManualSubmit', `⚠️ SPeCTRUM submission unconfirmed: ${errorMsg}`);
+
+    return { success: false, error: errorMsg };
   } catch (err) {
     console.error('[SPeCTRUM Pro Background] Submit error:', err);
+    await appendBackgroundLog('Attendance:ManualSubmit', `❌ Submit error: ${err?.message || err}`);
     return { success: false, error: err?.message || String(err) };
   }
 }
@@ -292,12 +328,16 @@ async function runBackgroundAttendanceCheck() {
     await chrome.storage.local.set({ lastAttendanceCheckTime: Date.now() });
 
     const courses = stored.cachedCoursesData || [];
-    if (courses.length === 0) return { skipped: true, reason: 'No cached courses' };
+    if (courses.length === 0) {
+      await appendBackgroundLog('Background:Daemon', 'Auto-attendance check skipped: No cached courses found.');
+      return { skipped: true, reason: 'No cached courses' };
+    }
 
     // Verify session by pinging SPeCTRUM
     const pingRes = await fetch('https://spectrum.um.edu.my/my/courses.php', { credentials: 'include' });
     if (!pingRes.ok || pingRes.url.includes('/login/')) {
       console.log('[SPeCTRUM Pro] User not currently logged in to SPeCTRUM. Skipping background check.');
+      await appendBackgroundLog('Background:Daemon', '⚠️ Skipped: SPeCTRUM session expired or user not logged in.');
       return { skipped: true, reason: 'Not logged in' };
     }
 
@@ -324,7 +364,7 @@ async function runBackgroundAttendanceCheck() {
             `Attendance is currently active for ${ca.courseName || 'your course'}. A password/PIN is required — click here to enter PIN!`
           );
         } else {
-          const success = await submitAttendance(cSess.takeUrl, cSess.presentStatusId, cSess.sesskey);
+          const success = await submitAttendance(cSess.takeUrl, cSess.presentStatusId, cSess.sesskey, '', ca.courseName || ca.courseCode);
           if (success) {
             newlySubmitted++;
             await recordAttendanceSuccess(cCourseId, cSess, todayStr, ca.courseName || ca.courseCode);
@@ -461,7 +501,7 @@ async function runBackgroundAttendanceCheck() {
           );
         } else {
           // Attempt automatic submission
-          const success = await submitAttendance(session.takeUrl, session.presentStatusId, session.sesskey);
+          const success = await submitAttendance(session.takeUrl, session.presentStatusId, session.sesskey, '', course.name || course.code);
           if (success) {
             newlySubmitted++;
             await recordAttendanceSuccess(courseId, session, todayStr, course.name || course.code);
@@ -472,6 +512,15 @@ async function runBackgroundAttendanceCheck() {
       }
     }
 
+    await chrome.storage.local.set({
+      lastAttendanceCheckSummary: {
+        time: Date.now(),
+        newlySubmitted,
+        requiredPins,
+        coursesScanned: prioritizedCourses.length
+      }
+    });
+    await appendBackgroundLog('Background:Daemon', `🏁 Check finished. ${newlySubmitted} auto-marked, ${requiredPins} PIN required.`);
     return { success: true, newlySubmitted, requiredPins };
 
   } catch (error) {
@@ -664,22 +713,125 @@ async function checkCourseAttendance(courseId, courseName, userOcc, hiddenAttend
   return await inspectLinks(attLinks);
 }
 
-// Submit attendance
-async function submitAttendance(takeUrl, statusId, sesskey, password = '') {
+// Robust Background Attendance Submitter:
+// Dynamically fetches the live attendance form, parses all hidden QuickForm tokens & fields,
+// submits via POST, and verifies real Moodle server confirmation before declaring success.
+async function submitAttendance(takeUrl, statusId, sesskey, password = '', courseName = '') {
   try {
-    const postUrl = takeUrl.split('?')[0];
-    const sessidMatch = takeUrl.match(/sessid=(\d+)/);
-    const sessid = sessidMatch ? sessidMatch[1] : '';
+    if (!takeUrl) return false;
+    let fullTakeUrl = takeUrl.startsWith('http') ? takeUrl : `https://spectrum.um.edu.my/mod/attendance/${takeUrl}`;
+    fullTakeUrl = fullTakeUrl.replace(/&amp;/g, '&');
 
-    const formData = new URLSearchParams();
-    formData.append('sessid', sessid);
-    formData.append('sesskey', sesskey);
-    formData.append('status', statusId);
-    formData.append('mform_isexpanded_id_general', '1');
-    formData.append('submitbutton', 'Save changes');
-    if (password) {
-      formData.append('password', password);
+    await appendBackgroundLog('Attendance:AutoSubmit', `[${courseName || 'Class'}] Fetching live form from: ${fullTakeUrl}`);
+
+    // 1. Fetch live form HTML from SPeCTRUM
+    const formRes = await fetch(fullTakeUrl, { credentials: 'include', redirect: 'follow' });
+    if (!formRes.ok || formRes.url.includes('/login/')) {
+      await appendBackgroundLog('Attendance:AutoSubmit', `❌ HTTP ${formRes.status} or login redirect on ${fullTakeUrl}`);
+      return false;
     }
+
+    const formHtml = await formRes.text();
+
+    // Check if attendance is already recorded on page
+    if (/attendance has been recorded|kehadiran anda telah direkodkan|sudah direkod/i.test(formHtml) ||
+        formHtml.includes('Your attendance in this session has been recorded')) {
+      await appendBackgroundLog('Attendance:AutoSubmit', `ℹ️ Attendance was already recorded on page for ${courseName || 'class'}.`);
+      return true;
+    }
+
+    // Extract form snippet
+    let formSnippet = '';
+    const formMatches = formHtml.match(/<form[\s\S]*?<\/form>/gi) || [];
+    for (const f of formMatches) {
+      if (f.includes('name="status"') || f.includes('attendance.php') || f.includes('take.php')) {
+        formSnippet = f;
+        break;
+      }
+    }
+    if (!formSnippet && formMatches.length > 0) {
+      formSnippet = formMatches[0];
+    }
+    if (!formSnippet) {
+      formSnippet = formHtml;
+    }
+
+    // Extract form action URL
+    const actionMatch = formSnippet.match(/action=["']([^"']+)["']/i);
+    let postUrl = actionMatch ? actionMatch[1].replace(/&amp;/g, '&') : fullTakeUrl.split('?')[0];
+    if (postUrl.startsWith('/')) postUrl = `https://spectrum.um.edu.my${postUrl}`;
+    else if (!postUrl.startsWith('http')) postUrl = `https://spectrum.um.edu.my/mod/attendance/${postUrl}`;
+
+    // Extract all hidden inputs (CRITICAL: Moodle QuickForm requires _qf__..., sesskey, sessid, etc.)
+    const fields = {};
+    const hiddenRegex = /<input[^>]+type=["']hidden["'][^>]*>/gi;
+    let hMatch;
+    while ((hMatch = hiddenRegex.exec(formSnippet)) !== null) {
+      const tag = hMatch[0];
+      const nameM = tag.match(/name=["']([^"']+)["']/i);
+      const valM = tag.match(/value=["']([^"']*)["']/i);
+      if (nameM) {
+        fields[nameM[1]] = valM ? valM[1] : '';
+      }
+    }
+
+    // Ensure QuickForm token exists if not matched
+    if (!Object.keys(fields).some(k => k.startsWith('_qf__'))) {
+      fields['_qf__mod_attendance_student_attendance_form'] = '1';
+    }
+
+    // Fallbacks for sesskey and sessid if missing from hidden inputs
+    if (!fields['sesskey']) {
+      const skMatch = formHtml.match(/name="sesskey"\s+value="([^"]+)"/) || formHtml.match(/sesskey=([a-zA-Z0-9]+)/);
+      if (skMatch) fields['sesskey'] = skMatch[1];
+      else if (sesskey) fields['sesskey'] = sesskey;
+    }
+    if (!fields['sessid']) {
+      const sidMatch = fullTakeUrl.match(/sessid=(\d+)/);
+      if (sidMatch) fields['sessid'] = sidMatch[1];
+    }
+
+    // Find "Present" / "Hadir" status ID from live form
+    let presentVal = statusId || '';
+    if (!presentVal) {
+      const radioRegex = /<input[^>]+type=["']radio["'][^>]+name=["']status["'][^>]+value=["'](\d+)["'][^>]*>([\s\S]*?)<\/label>/gi;
+      let rMatch;
+      while ((rMatch = radioRegex.exec(formSnippet)) !== null) {
+        const val = rMatch[1];
+        const label = rMatch[2];
+        if (/present|hadir|\b[PH]\b/i.test(label) || !presentVal) {
+          presentVal = val;
+          if (/present|hadir|\b[PH]\b/i.test(label)) break;
+        }
+      }
+    }
+    if (!presentVal) {
+      const firstRadio = formSnippet.match(/<input[^>]+type=["']radio["'][^>]+name=["']status["'][^>]+value=["'](\d+)["']/i);
+      if (firstRadio) presentVal = firstRadio[1];
+    }
+
+    if (!presentVal) {
+      await appendBackgroundLog('Attendance:AutoSubmit', `❌ Could not find "Present" status radio in form for ${courseName || fullTakeUrl}`);
+      return false;
+    }
+
+    fields['status'] = presentVal;
+    fields['mform_isexpanded_id_general'] = '1';
+    fields['submitbutton'] = 'Save changes';
+
+    if (password) {
+      const pwdNameM = formSnippet.match(/name=["'](studentpassword|password|qrpass)["']/i);
+      const pwdFieldName = pwdNameM ? pwdNameM[1] : 'studentpassword';
+      fields[pwdFieldName] = password;
+    }
+
+    // Construct form-data URLSearchParams
+    const formData = new URLSearchParams();
+    for (const k of Object.keys(fields)) {
+      formData.append(k, fields[k]);
+    }
+
+    await appendBackgroundLog('Attendance:AutoSubmit', `▶ Submitting POST to ${postUrl} (status: ${presentVal}, tokens: ${Object.keys(fields).filter(k => k.startsWith('_qf__') || k === 'sesskey').join(',')})`);
 
     const res = await fetch(postUrl, {
       method: 'POST',
@@ -687,12 +839,32 @@ async function submitAttendance(takeUrl, statusId, sesskey, password = '') {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       body: formData.toString(),
-      credentials: 'include'
+      credentials: 'include',
+      redirect: 'follow'
     });
 
-    return res.ok;
+    const resText = await res.text();
+    const finalUrl = res.url || '';
+
+    // Verify ACTUAL Moodle confirmation
+    const isSuccess = (finalUrl.includes('/mod/attendance/view.php') ||
+                       /status:\s*(?:present|hadir)|attendance has been recorded|kehadiran anda telah direkodkan|sudah direkod|attendance has been taken/i.test(resText) ||
+                       resText.includes('Your attendance in this session has been recorded')) &&
+                      !finalUrl.includes('/login/');
+
+    if (isSuccess) {
+      await appendBackgroundLog('Attendance:AutoSubmit', `✅ Verified attendance recorded on SPeCTRUM! (Redirected to: ${finalUrl})`);
+      return true;
+    } else {
+      const errorMatch = resText.match(/class=["'][^"']*alert-danger[^"']*["'][^>]*>([\s\S]*?)<\/div>/i) ||
+                         resText.match(/class=["'][^"']*error[^"']*["'][^>]*>([\s\S]*?)<\/span>/i);
+      const errorMsg = errorMatch ? errorMatch[1].replace(/<[^>]+>/g, '').trim() : 'Moodle returned unconfirmed response (missing QuickForm or validation failed)';
+      await appendBackgroundLog('Attendance:AutoSubmit', `⚠️ SPeCTRUM rejected auto-submission: ${errorMsg}`);
+      return false;
+    }
   } catch (err) {
-    console.log('[SPeCTRUM Pro] Submit attendance notice:', err?.message || err);
+    console.log('[SPeCTRUM Pro] Submit attendance error:', err?.message || err);
+    await appendBackgroundLog('Attendance:AutoSubmit', `❌ Exception during auto-submit: ${err?.message || err}`);
     return false;
   }
 }

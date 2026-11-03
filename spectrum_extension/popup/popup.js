@@ -1669,19 +1669,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     badgeEl.textContent = text;
   }
 
+  // Refresh diagnostic log view merging background auto-attendance logs and popup logs
+  async function refreshDiagLogsDisplay() {
+    try {
+      const store = await chrome.storage.local.get({ autoAttendanceLogs: [] });
+      const bgLogs = Array.isArray(store.autoAttendanceLogs) ? store.autoAttendanceLogs : [];
+
+      const lines = [];
+      if (bgLogs.length > 0) {
+        lines.push(`=== 🛰️ BACKGROUND AUTO-ATTENDANCE LOGS (Last ${bgLogs.length} events) ===`);
+        bgLogs.forEach(l => {
+          lines.push(`[${l.timeStr}] [${l.category}] ${l.message} ${l.details || ''}`.trim());
+        });
+        lines.push('');
+      }
+
+      lines.push('=== ⚡ POPUP ACTIVITY & DIAGNOSTIC LOGS ===');
+      if (diagLogs.length === 0) {
+        lines.push('Diagnostic log ready. Click "Sync" or "Auto-Take Now" to trace live requests.');
+      } else {
+        lines.push(...diagLogs);
+      }
+
+      if (diagLogView) {
+        diagLogView.textContent = lines.join('\n');
+        diagLogView.scrollTop = diagLogView.scrollHeight;
+      }
+    } catch (e) {
+      if (diagLogView) diagLogView.textContent = diagLogs.join('\n');
+    }
+  }
+  window.refreshDiagLogsDisplay = refreshDiagLogsDisplay;
+
   if (diagHeaderToggle && diagBody && diagPanel) {
-    diagHeaderToggle.addEventListener('click', (e) => {
+    diagHeaderToggle.addEventListener('click', async (e) => {
       if (e.target.closest('.diag-actions')) return;
       const isOpen = diagBody.style.display !== 'none';
       diagBody.style.display = isOpen ? 'none' : 'block';
       diagPanel.classList.toggle('open', !isOpen);
+      if (!isOpen) {
+        await refreshDiagLogsDisplay();
+      }
     });
   }
 
   if (btnCopyDiagLog) {
     btnCopyDiagLog.addEventListener('click', async (e) => {
       e.stopPropagation();
-      const textToCopy = diagLogs.join('\n');
+      const textToCopy = (diagLogView && diagLogView.textContent) ? diagLogView.textContent : diagLogs.join('\n');
       if (!textToCopy) return;
       try {
         await navigator.clipboard.writeText(textToCopy);
@@ -1695,10 +1730,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   if (btnClearDiagLog) {
-    btnClearDiagLog.addEventListener('click', (e) => {
+    btnClearDiagLog.addEventListener('click', async (e) => {
       e.stopPropagation();
       diagLogs.length = 0;
-      if (diagLogView) diagLogView.textContent = 'Log cleared. Click "Sync" to trace.';
+      await chrome.storage.local.set({ autoAttendanceLogs: [] });
+      if (diagLogView) diagLogView.textContent = 'Logs cleared. Click "Sync" or "Auto-Take Now" to trace.';
     });
   }
 
@@ -2521,10 +2557,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
   if (btnFulltabDiag && diagPanel) {
-    btnFulltabDiag.addEventListener('click', () => {
+    btnFulltabDiag.addEventListener('click', async () => {
       const isVisible = diagPanel.style.display !== 'none';
       diagPanel.style.display = isVisible ? 'none' : 'block';
-      if (!isVisible && diagBody) diagBody.style.display = 'block';
+      if (!isVisible) {
+        if (diagBody) diagBody.style.display = 'block';
+        await refreshDiagLogsDisplay();
+      }
     });
   }
   if (btnCloseDiagPanel && diagPanel) {
@@ -11141,9 +11180,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         dots.forEach(d => d.className = d.id.includes('fulltab') ? 'fulltab-daemon-dot' : 'att-daemon-dot');
         labels.forEach(l => l.textContent = `Auto-Attendance: ACTIVE (${interval}m)`);
+        const summary = stored.lastAttendanceCheckSummary;
         times.forEach(t => {
           if (lastCheck > 0) {
-            t.textContent = `· Checked ${formatTimeAgo(lastCheck)}`;
+            let note = '';
+            if (summary && summary.newlySubmitted > 0) {
+              note = ` (${summary.newlySubmitted} auto-marked)`;
+            }
+            t.textContent = `· Checked ${formatTimeAgo(lastCheck)}${note}`;
           } else {
             t.textContent = '· Scheduled';
           }
@@ -11233,6 +11277,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnQuickAutoTake = document.getElementById('btn-quick-auto-take');
   if (btnQuickAutoTake) {
     btnQuickAutoTake.addEventListener('click', () => executeQuickAutoTake(btnQuickAutoTake));
+  }
+  const btnAttLogs = document.getElementById('btn-att-logs');
+  if (btnAttLogs && diagPanel) {
+    btnAttLogs.addEventListener('click', async () => {
+      diagPanel.style.display = 'block';
+      if (diagBody) diagBody.style.display = 'block';
+      diagPanel.classList.add('open');
+      await refreshDiagLogsDisplay();
+      diagPanel.scrollIntoView({ behavior: 'smooth' });
+    });
   }
   const btnFulltabQuickAutoTake = document.getElementById('btn-fulltab-quick-auto-take');
   if (btnFulltabQuickAutoTake) {

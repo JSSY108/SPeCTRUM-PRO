@@ -1721,6 +1721,7 @@ async function submitAttendanceDirect(takeUrl, statusId, sesskey, password = '')
     if (sessid) formData.append('sessid', sessid);
     if (sesskey) formData.append('sesskey', sesskey);
     if (statusId) formData.append('status', statusId);
+    formData.append('_qf__mod_attendance_student_attendance_form', '1');
     formData.append('mform_isexpanded_id_general', '1');
     formData.append('submitbutton', 'Save changes');
     if (password) {
@@ -1731,10 +1732,18 @@ async function submitAttendanceDirect(takeUrl, statusId, sesskey, password = '')
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: formData.toString(),
-      credentials: 'include'
+      credentials: 'include',
+      redirect: 'follow'
     });
 
-    return res.ok;
+    const resText = await res.text();
+    const finalUrl = res.url || '';
+    const isSuccess = (finalUrl.includes('/mod/attendance/view.php') ||
+                      /status:\s*(?:present|hadir)|attendance has been recorded|kehadiran anda telah direkodkan|sudah direkod|attendance has been taken/i.test(resText) ||
+                      resText.includes('Your attendance in this session has been recorded')) &&
+                      !finalUrl.includes('/login/');
+
+    return isSuccess;
   } catch (e) {
     console.log('[SPeCTRUM Pro] Direct attendance submit error:', e);
     return false;
