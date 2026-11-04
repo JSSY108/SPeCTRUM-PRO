@@ -10029,6 +10029,56 @@ body:not(.is-full-tab) .sync-cinematic-current {
 }
 
 /* ==========================================================================
+   EXTENSION TIMETABLE COMPACT TOOLBAR (SPACE SAVING CONTROLS)
+   ========================================================================== */
+body:not(.is-full-tab) .timetable-footer-toolbar {
+  padding: 5px 12px !important;
+  min-height: 0 !important;
+  justify-content: center !important;
+  gap: 6px !important;
+}
+
+body:not(.is-full-tab) .timetable-footer-toolbar .timetable-toolbar-left {
+  display: none !important;
+}
+
+body:not(.is-full-tab) .timetable-footer-toolbar .timetable-toolbar-right {
+  width: 100% !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  flex-wrap: nowrap !important;
+}
+
+body:not(.is-full-tab) .timetable-footer-toolbar .btn-timetable-export,
+body:not(.is-full-tab) .timetable-footer-toolbar .btn-tt-switch {
+  font-size: 10px !important;
+  padding: 3px 7px !important;
+  gap: 4px !important;
+  border-radius: 4px !important;
+  line-height: 1.2 !important;
+}
+
+body:not(.is-full-tab) .timetable-footer-toolbar .btn-timetable-export svg,
+body:not(.is-full-tab) .timetable-footer-toolbar .btn-tt-switch .icon-svg {
+  width: 11px !important;
+  height: 11px !important;
+}
+
+body:not(.is-full-tab) .timetable-footer-toolbar .timetable-view-switch {
+  padding: 2px !important;
+  gap: 2px !important;
+}
+
+body:not(.is-full-tab) .timetable-footer-toolbar .timetable-toolbar-divider {
+  height: 14px !important;
+  margin: 0 2px !important;
+}
+
+body:not(.is-full-tab) .timetable-scroll-frame {
+  padding: 8px 10px 10px 10px !important;
+}
+
+/* ==========================================================================
    TIMETABLE 1-PAGE FIT MODE (PROPORTIONAL SCALING)
    ========================================================================== */
 .timetable-scaler {
