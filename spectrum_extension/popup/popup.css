@@ -251,7 +251,7 @@ html, body {
    SURFACE B: EXTENSION POPUP (Default: 520px × 600px)
    Strictly a fast list-feed. No left rail, no calendar grid, no kanban.
    ========================================================================== */
-body:not(.is-full-tab) {
+html:not(.is-full-tab) body:not(.is-full-tab) {
   width: 780px;
   height: 600px;
   max-width: 800px;
@@ -562,7 +562,7 @@ body:not(.is-full-tab) .dock-badge {
   padding: 0 4px !important;
 }
 
-body:not(.is-full-tab) .fulltab-only {
+html:not(.is-full-tab) body:not(.is-full-tab) .fulltab-only {
   display: none !important;
 }
 
@@ -3064,21 +3064,30 @@ body:not(.is-full-tab) .is-collapsed .dock-badge,
    Triggered when isFullTab === true (.is-full-tab on body)
    ========================================================================== */
 html.is-full-tab,
+html.is-full-tab body,
 body.is-full-tab {
-  width: 100vw;
-  height: 100vh;
-  max-width: none;
-  max-height: none;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
   overflow: hidden !important;
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: column !important;
   background-color: var(--bg-canvas);
   margin: 0;
   padding: 0;
 }
 
+html.is-full-tab .popup-only,
+html.is-full-tab body .popup-only,
 body.is-full-tab .popup-only {
   display: none !important;
+}
+
+html.is-full-tab .fulltab-only,
+html.is-full-tab body .fulltab-only,
+body.is-full-tab .fulltab-only {
+  display: flex !important;
 }
 
 /* Minimalist Top Bar (Image 1) */
