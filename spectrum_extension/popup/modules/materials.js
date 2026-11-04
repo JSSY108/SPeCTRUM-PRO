@@ -163,14 +163,20 @@
     const clamped = Math.min(100, Math.max(0, Math.round(percent)));
 
     // 1. Update Centered Cinematic Glassmorphic Sync HUD Overlay (Option 3)
+    const isDismissed = Boolean(
+      (typeof window !== 'undefined' && window.isSyncOverlayDismissed) ||
+      (typeof isSyncOverlayDismissed !== 'undefined' && isSyncOverlayDismissed)
+    );
     const overlay = document.getElementById('sync-cinematic-overlay');
     if (overlay) {
-      if (overlay.style.display !== 'flex') {
-        overlay.style.display = 'flex';
-        void overlay.offsetWidth;
+      if (!isDismissed) {
+        if (overlay.style.display !== 'flex') {
+          overlay.style.display = 'flex';
+          void overlay.offsetWidth;
+        }
+        overlay.classList.add('active');
+        overlay.style.opacity = '1';
       }
-      overlay.classList.add('active');
-      overlay.style.opacity = '1';
 
       const hudPercent = document.getElementById('sync-hud-percent');
       const hudBarFill = document.getElementById('sync-hud-bar-fill');
@@ -251,6 +257,8 @@
       return;
     }
 
+    isScanningMaterials = false;
+    if (typeof window !== 'undefined') window.isScanningMaterials = false;
     courseProgressHideTimer = setTimeout(() => {
       if (overlay) {
         overlay.classList.remove('active');
@@ -275,7 +283,10 @@
       return;
     }
     isScanningMaterials = true;
-    if (typeof window !== 'undefined') window.isScanningMaterials = true;
+    if (typeof window !== 'undefined') {
+      window.isScanningMaterials = true;
+      window.isSyncOverlayDismissed = false;
+    }
 
     if (notOnSpectrumEl) notOnSpectrumEl.style.display = 'none';
     if (btnDownloadZip) btnDownloadZip.disabled = true;

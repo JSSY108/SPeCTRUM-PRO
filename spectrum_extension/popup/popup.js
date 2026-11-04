@@ -1468,17 +1468,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function dismissSyncOverlay() {
     isSyncOverlayDismissed = true;
+    if (typeof window !== 'undefined') window.isSyncOverlayDismissed = true;
     const overlay = document.getElementById('sync-cinematic-overlay');
     if (overlay) {
       overlay.classList.remove('active');
       overlay.style.opacity = '0';
       setTimeout(() => {
-        if (isSyncOverlayDismissed && overlay.style.opacity === '0') {
+        if ((isSyncOverlayDismissed || (typeof window !== 'undefined' && window.isSyncOverlayDismissed)) && overlay.style.opacity === '0') {
           overlay.style.display = 'none';
         }
       }, 320);
     }
   }
+  if (typeof window !== 'undefined') window.dismissSyncOverlay = dismissSyncOverlay;
 
   function updateSyncButtonProgress(percent, isSpinning = true) {
     const clamped = Math.min(100, Math.max(0, Math.round(percent)));
@@ -2713,8 +2715,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnCloseDiagPanel = document.getElementById('btn-close-diag-panel');
   if (btnFulltabSync) {
     btnFulltabSync.addEventListener('click', () => {
-      if (isSyncingActivities && isSyncOverlayDismissed) {
+      const isSyncing = isSyncingActivities || (typeof isScanningMaterials !== 'undefined' && isScanningMaterials) || (typeof window !== 'undefined' && window.isScanningMaterials);
+      const isDismissed = isSyncOverlayDismissed || (typeof window !== 'undefined' && window.isSyncOverlayDismissed);
+      if (isSyncing && isDismissed) {
         isSyncOverlayDismissed = false;
+        if (typeof window !== 'undefined') window.isSyncOverlayDismissed = false;
         const overlay = document.getElementById('sync-cinematic-overlay');
         if (overlay) {
           overlay.style.display = 'flex';
@@ -10425,8 +10430,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateSyncButtonProgress(clamped, true);
 
     // 1. Update Centered Cinematic Glassmorphism HUD Overlay (Option 3)
+    const isDismissed = isSyncOverlayDismissed || (typeof window !== 'undefined' && window.isSyncOverlayDismissed);
     const overlay = document.getElementById('sync-cinematic-overlay');
-    if (overlay && !isSyncOverlayDismissed) {
+    if (overlay && !isDismissed) {
       if (overlay.style.display !== 'flex') {
         overlay.style.display = 'flex';
         // Trigger reflow for smooth CSS opacity transition
@@ -10641,6 +10647,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     syncStartTime = Date.now();
     currentSyncAbortController = new AbortController();
     isSyncOverlayDismissed = false;
+    if (typeof window !== 'undefined') window.isSyncOverlayDismissed = false;
     syncProgressCurrent = 0;
     syncProgressTarget = 6;
 
@@ -10955,9 +10962,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (btnRefreshActivities) {
     btnRefreshActivities.addEventListener('click', (e) => {
-      if (isSyncingActivities && isSyncOverlayDismissed) {
+      const isSyncing = isSyncingActivities || (typeof isScanningMaterials !== 'undefined' && isScanningMaterials) || (typeof window !== 'undefined' && window.isScanningMaterials);
+      const isDismissed = isSyncOverlayDismissed || (typeof window !== 'undefined' && window.isSyncOverlayDismissed);
+      if (isSyncing && isDismissed) {
         // Restore overlay on sync button click
         isSyncOverlayDismissed = false;
+        if (typeof window !== 'undefined') window.isSyncOverlayDismissed = false;
         const overlay = document.getElementById('sync-cinematic-overlay');
         if (overlay) {
           overlay.style.display = 'flex';
