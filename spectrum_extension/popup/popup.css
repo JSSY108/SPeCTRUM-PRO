@@ -896,6 +896,11 @@ body:not(.is-full-tab) .fulltab-only {
   z-index: 20;
 }
 
+#fulllist-grouping-toggle,
+#fulllist-grouping-toggle + span {
+  display: none !important;
+}
+
 .fulllist-top-toolbar .grouping-toggle,
 .fulllist-top-toolbar .sorting-toggle {
   font-size: 11.5px;
@@ -10029,6 +10034,13 @@ body:not(.is-full-tab) .sync-cinematic-current {
 .timetable-scaler {
   width: 100%;
   position: relative;
+}
+
+/* Extension Compact Popup Timetable Scaling (50% scale for reduced scrolling) */
+body:not(.is-full-tab) .timetable-scroll-frame:not(.is-one-page-frame) #timetable-scaler {
+  zoom: 0.5;
+  width: max-content;
+  min-width: 100%;
 }
 
 .timetable-scroll-frame.is-one-page-frame {
