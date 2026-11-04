@@ -4768,9 +4768,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         return !isNaN(d.getTime()) && formatDateKey(d) === targetDateKey;
       }) : [];
 
+      const todayKey = formatDateKey(new Date());
+      const isTargetToday = (targetDateKey === todayKey);
+
       let dAssigns = showTasks && (typeof assignmentsData !== 'undefined') ? assignmentsData.filter(a => {
-        const d = a.dueDate instanceof Date ? a.dueDate : new Date(a.dueDate || 0);
-        return !isNaN(d.getTime()) && formatDateKey(d) === targetDateKey;
+        const rawD = (typeof resolveAssignmentDate === 'function') ? resolveAssignmentDate(a, new Date()) : a.dueDate;
+        const d = (rawD instanceof Date) ? rawD : (rawD ? new Date(rawD) : null);
+        const isValidDate = d && !isNaN(d.getTime());
+        if (isValidDate) {
+          return formatDateKey(d) === targetDateKey;
+        }
+        const isPending = !a.isSubmitted && !a.isOverdue;
+        return isPending && isTargetToday;
       }) : [];
 
       let dAtt = showAtt && (typeof attendancesData !== 'undefined') ? attendancesData.filter(att => {
@@ -5278,10 +5287,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
+    const todayKey = formatDateKey(new Date());
     assignmentsData.forEach(assign => {
       if (activeCourse && !isActivityForCourse(assign, activeCourse)) return;
-      const d = assign.dueDate ? (assign.dueDate instanceof Date ? assign.dueDate : new Date(assign.dueDate)) : null;
-      if (d && !isNaN(d.getTime())) addEvent(formatDateKey(d), 'tutorial');
+      if (activeCourse && typeof isAssignmentMatchingOcc === 'function' && !isAssignmentMatchingOcc(assign, activeCourse.userOcc)) return;
+      const rawD = (typeof resolveAssignmentDate === 'function') ? resolveAssignmentDate(assign, new Date()) : assign.dueDate;
+      const d = (rawD instanceof Date) ? rawD : (rawD ? new Date(rawD) : null);
+      if (d && !isNaN(d.getTime())) {
+        addEvent(formatDateKey(d), 'tutorial');
+      } else if (!assign.isSubmitted && !assign.isOverdue) {
+        // Open tasks with no deadline appear on Today
+        addEvent(todayKey, 'tutorial');
+      }
     });
 
     attendancesData.forEach(att => {
@@ -5494,10 +5511,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         return !isNaN(d.getTime()) && formatDateKey(d) === dateKey;
       }) : [];
 
-      // 2. Assignments due on this date
+      // 2. Assignments due on this date (including open pending tasks with no deadline on Today)
+      const todayKey = formatDateKey(new Date());
+      const isTargetToday = (dateKey === todayKey);
       let allAssigns = showTasks ? assignmentsData.filter(a => {
-        const d = a.dueDate instanceof Date ? a.dueDate : new Date(a.dueDate || 0);
-        return !isNaN(d.getTime()) && formatDateKey(d) === dateKey;
+        const rawD = (typeof resolveAssignmentDate === 'function') ? resolveAssignmentDate(a, new Date()) : a.dueDate;
+        const d = (rawD instanceof Date) ? rawD : (rawD ? new Date(rawD) : null);
+        const isValidDate = d && !isNaN(d.getTime());
+        if (isValidDate) {
+          return formatDateKey(d) === dateKey;
+        }
+        const isPending = !a.isSubmitted && !a.isOverdue;
+        return isPending && isTargetToday;
       }) : [];
 
       // 3. Attendance sessions on this date
@@ -5695,9 +5720,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const d = a.timestamp instanceof Date ? a.timestamp : new Date(a.timestamp || 0);
         return !isNaN(d.getTime()) && formatDateKey(d) === targetDateKey;
       }) : [];
+      const todayKey = formatDateKey(new Date());
+      const isTargetToday = (targetDateKey === todayKey);
       let dAssigns = (typeof assignmentsData !== 'undefined') ? assignmentsData.filter(a => {
-        const d = a.dueDate instanceof Date ? a.dueDate : new Date(a.dueDate || 0);
-        return !isNaN(d.getTime()) && formatDateKey(d) === targetDateKey;
+        const rawD = (typeof resolveAssignmentDate === 'function') ? resolveAssignmentDate(a, new Date()) : a.dueDate;
+        const d = (rawD instanceof Date) ? rawD : (rawD ? new Date(rawD) : null);
+        const isValidDate = d && !isNaN(d.getTime());
+        if (isValidDate) {
+          return formatDateKey(d) === targetDateKey;
+        }
+        const isPending = !a.isSubmitted && !a.isOverdue;
+        return isPending && isTargetToday;
       }) : [];
       let dAtt = (typeof attendancesData !== 'undefined') ? attendancesData.filter(att => {
         if (typeof isAttendanceHidden === 'function' && isAttendanceHidden(att)) return false;
