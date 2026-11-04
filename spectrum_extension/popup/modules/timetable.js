@@ -481,35 +481,78 @@
     const scaler = document.getElementById('timetable-scaler');
     if (!frame || !grid) return;
 
+    // Attach dynamic ResizeObserver to frame to handle window, dock, or layout shifts
+    if (typeof ResizeObserver !== 'undefined' && !frame._hasOnePageObserver) {
+      frame._hasOnePageObserver = true;
+      const ro = new ResizeObserver(() => {
+        applyOnePageScaling();
+        updateLiveTimeTracker();
+      });
+      ro.observe(frame);
+    }
+
+    const isFullTab = (typeof window !== 'undefined' && window.location && window.location.search.includes('mode=full')) ||
+      (typeof document !== 'undefined' && document.body && document.body.classList.contains('is-full-tab'));
+
     if (!isOnePageMode) {
       frame.classList.remove('is-one-page-frame');
       grid.classList.remove('is-one-page-grid');
-      grid.style.transform = '';
-      grid.style.transformOrigin = '';
+
+      if (isFullTab) {
+        // Workstation Full-Tab Mode: 100% natural desktop scale
+        grid.style.transform = '';
+        grid.style.transformOrigin = '';
+        grid.style.width = '';
+        grid.style.height = '';
+        if (scaler) {
+          scaler.style.width = '';
+          scaler.style.height = '';
+          scaler.style.margin = '';
+        }
+        return;
+      }
+
+      // Extension Compact Mode (Non-One-Page):
+      // Proportional 50% scale of the entire timetable canvas.
+      // Keeps the EXACT layout, aspect ratios, and column proportions of the original
+      // without squeezing or compressing columns into the viewport width.
+      const scale = 0.5;
+
+      // Temporarily clear inline transforms to measure natural uncompressed layout dimensions
+      grid.style.transform = 'none';
       grid.style.width = '';
       grid.style.height = '';
       if (scaler) {
-        scaler.style.width = '';
-        scaler.style.height = '';
+        scaler.style.width = '100%';
+        scaler.style.height = 'auto';
         scaler.style.margin = '';
+      }
+
+      const clientW = frame.clientWidth;
+      const availW = Math.max(280, clientW - 40);
+
+      const minW = parseInt(grid.style.minWidth, 10) || 1000;
+      const naturalW = Math.max(minW, grid.scrollWidth, grid.offsetWidth);
+      const naturalH = Math.max(grid.scrollHeight, grid.offsetHeight, 380);
+
+      grid.style.width = `${naturalW}px`;
+      grid.style.height = `${naturalH}px`;
+      grid.style.transformOrigin = 'top left';
+      grid.style.transform = `scale(${scale})`;
+
+      const scaledW = Math.round(naturalW * scale);
+      const scaledH = Math.round(naturalH * scale);
+
+      if (scaler) {
+        scaler.style.width = `${scaledW}px`;
+        scaler.style.height = `${scaledH}px`;
+        scaler.style.margin = (scaledW > availW) ? '0' : '0 auto';
       }
       return;
     }
 
     frame.classList.add('is-one-page-frame');
     grid.classList.add('is-one-page-grid');
-
-    // Attach dynamic ResizeObserver to frame to handle window, dock, or layout shifts
-    if (typeof ResizeObserver !== 'undefined' && !frame._hasOnePageObserver) {
-      frame._hasOnePageObserver = true;
-      const ro = new ResizeObserver(() => {
-        if (isOnePageMode) {
-          applyOnePageScaling();
-          updateLiveTimeTracker();
-        }
-      });
-      ro.observe(frame);
-    }
 
     // Reset previous modifications before measuring natural dimensions
     grid.style.transform = 'none';
