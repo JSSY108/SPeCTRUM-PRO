@@ -1373,11 +1373,14 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
 
       // 2. Active Session Detection (Submit attendance link open right now)
       let activeSession = null;
-      let takeEl = Array.from(attDoc.querySelectorAll('a')).find(a =>
-        /submit attendance|hantar kehadiran|rekod kehadiran|take attendance/i.test(a.textContent || '') ||
-        a.classList.contains('takeattendance') ||
-        /take\.php\?.*sessid=\d+/i.test(a.getAttribute('href') || a.href || '')
-      );
+      let takeEl = Array.from(attDoc.querySelectorAll('a')).find(a => {
+        const href = a.getAttribute('href') || a.href || '';
+        const text = (a.textContent || '').trim();
+        const isTakeHref = /(?:attendance|take)\.php\?.*sessid=\d+/i.test(href) && !/view\.php/i.test(href);
+        const hasTakeText = /submit attendance|hantar kehadiran|rekod kehadiran|take attendance/i.test(text);
+        const hasTakeClass = a.classList.contains('takeattendance');
+        return isTakeHref && (hasTakeText || hasTakeClass);
+      });
 
       if (takeEl) {
         let rawTakeUrl = (takeEl.getAttribute('href') || takeEl.href || '').replace(/&amp;/g, '&');
@@ -1460,16 +1463,26 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
             logDiag('Attendance:Form', `[${courseId}] Form fetch note: ${fErr?.message || fErr}`);
           }
 
-          activeSession = {
-            sessid,
-            sesskey,
-            takeUrl: fullTakeUrl,
-            desc: sessionDesc,
-            time: sessionTime || 'Active now',
-            requiresPassword: hasPasswordInput,
-            presentStatusId
-          };
-          logDiag('Attendance:ActiveNow', `[${courseId}] 🟢 Found OPEN attendance session! Desc: "${sessionDesc}", Requires PIN: ${hasPasswordInput}`);
+          if (presentStatusId || hasPasswordInput) {
+            const isWindowOpen = sessionTime
+              ? ((typeof isSessionWindowActive === 'function') ? isSessionWindowActive(sessionTime) : (typeof window.isSessionWindowActive === 'function' ? window.isSessionWindowActive(sessionTime) : true))
+              : true;
+
+            if (isWindowOpen) {
+              activeSession = {
+                sessid,
+                sesskey,
+                takeUrl: fullTakeUrl,
+                desc: sessionDesc,
+                time: sessionTime || 'Active now',
+                requiresPassword: hasPasswordInput,
+                presentStatusId
+              };
+              logDiag('Attendance:ActiveNow', `[${courseId}] 🟢 Found OPEN attendance session! Desc: "${sessionDesc}", Requires PIN: ${hasPasswordInput}`);
+            } else {
+              logDiag('Attendance:ActiveNow', `[${courseId}] ⏳ Attendance session link found but window not open yet (Scheduled: "${sessionTime}").`);
+            }
+          }
         }
       }
 

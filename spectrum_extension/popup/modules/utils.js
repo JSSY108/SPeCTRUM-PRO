@@ -330,6 +330,21 @@
     return null;
   }
 
+  function isSessionWindowActive(timeStr, currentMinutes = null) {
+    if (!timeStr) return true;
+    if (currentMinutes == null) {
+      const d = new Date();
+      currentMinutes = d.getHours() * 60 + d.getMinutes();
+    }
+    const parsed = parseTimeRangeRobust(timeStr);
+    if (!parsed) return true;
+    const startMin = parsed.startHour * 60 + parsed.startMin;
+    const endMin = parsed.endHour * 60 + parsed.endMin;
+    const earliestCheckIn = startMin - 5;
+    const latestCheckIn = endMin + 15;
+    return currentMinutes >= earliestCheckIn && currentMinutes <= latestCheckIn;
+  }
+
   function getAcademicMonday(year, monthIndex, position) {
     if (position === 'last') {
       const lastDay = new Date(year, monthIndex + 1, 0);
@@ -563,6 +578,7 @@
   window.generateCourseAcronym = generateCourseAcronym;
   window.getCourseCategoryTag = getCourseCategoryTag;
   window.parseTimeRangeRobust = parseTimeRangeRobust;
+  window.isSessionWindowActive = isSessionWindowActive;
   window.getAcademicMonday = getAcademicMonday;
   window.getUmAcademicInfo = getUmAcademicInfo;
   window.detectActualAcademicTerm = detectActualAcademicTerm;

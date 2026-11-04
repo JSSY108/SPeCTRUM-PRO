@@ -11213,10 +11213,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       const doc = parser.parseFromString(`<base href="${origin}/mod/attendance/">${html}`, 'text/html');
 
       // 1. Check if an active "Submit attendance" / "Hantar Kehadiran" / take.php link exists right now
-      const takeMatch = html.match(/href=["']([^"']*(?:attendance\.php\?sessid=\d+|take\.php\?sessid=\d+|\bsessid=\d+)[^"']*)["'][^>]*>([^<]*)/i);
-      let takeEl = doc.querySelector('a[href*="attendance.php?sessid="], a[href*="take.php?sessid="], a[href*="sessid="], a.takeattendance');
-      if (!takeEl) {
-        takeEl = Array.from(doc.querySelectorAll('a')).find(a => /submit attendance|hantar kehadiran|rekod kehadiran|take attendance/i.test(a.textContent || ''));
+      let takeEl = null;
+      const allAnchors = Array.from(doc.querySelectorAll('a'));
+      for (const a of allAnchors) {
+        const href = a.getAttribute('href') || a.href || '';
+        const text = (a.textContent || '').trim();
+        const isTakeHref = /(?:attendance|take)\.php\?.*sessid=\d+/i.test(href) && !/view\.php/i.test(href);
+        const hasTakeText = /submit attendance|hantar kehadiran|rekod kehadiran|take attendance/i.test(text);
+        const hasTakeClass = a.classList.contains('takeattendance');
+
+        if (isTakeHref && (hasTakeText || hasTakeClass)) {
+          takeEl = a;
+          break;
+        }
       }
 
       // 2. Also inspect the attendance sessions table to check if student was already marked Present for today
@@ -11234,7 +11243,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      let rawTakeUrl = takeMatch ? takeMatch[1].replace(/&amp;/g, '&') : (takeEl ? (takeEl.getAttribute('href') || takeEl.href || '').replace(/&amp;/g, '&') : '');
+      let rawTakeUrl = takeEl ? (takeEl.getAttribute('href') || takeEl.href || '').replace(/&amp;/g, '&') : '';
       let fullTakeUrl = '';
       if (rawTakeUrl) {
         if (rawTakeUrl.startsWith('/')) fullTakeUrl = `${origin}${rawTakeUrl}`;
