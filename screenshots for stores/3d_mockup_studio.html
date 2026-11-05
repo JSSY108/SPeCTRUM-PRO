@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPeCTRUM PRO — 3D Store Mockup Studio</title>
+<style>
+  :root {
+    --bg-dark: #0f1117;
+    --panel-bg: #181b24;
+    --border: #282d3d;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --accent-glow: rgba(59, 130, 246, 0.25);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* SIDEBAR CONTROLS */
+  .sidebar {
+    width: 380px;
+    background: var(--panel-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    z-index: 10;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.4);
+  }
+  .sidebar-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .badge {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+
+  .sidebar-content {
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 14px;
+    border-radius: 10px;
+  }
+  .group-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* PRESET BUTTONS */
+  .presets-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .preset-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-primary);
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+  }
+  .preset-btn:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: var(--accent);
+  }
+  .preset-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+
+  /* SLIDERS */
+  .slider-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .slider-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+  .slider-val {
+    color: var(--text-primary);
+    font-family: monospace;
+    font-weight: 600;
+  }
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 2px;
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    transition: transform 0.1s;
+    box-shadow: 0 0 6px rgba(0,0,0,0.5);
+  }
+  input[type=range]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+  }
+
+  /* IMAGE SWAP ROW */
+  .img-upload-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .file-label-btn {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: 1px dashed rgba(255,255,255,0.2);
+    color: var(--text-secondary);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    text-align: center;
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .file-label-btn:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+  }
+
+  /* MAIN WORKSPACE */
+  .workspace {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #090a0f;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .topbar {
+    height: 52px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(24, 27, 36, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 5;
+  }
+  .dimensions-badge {
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .export-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .btn-action {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+  .btn-action:hover {
+    background: var(--accent-hover);
+    box-shadow: 0 0 14px var(--accent-glow);
+  }
+  .btn-secondary {
+    background: rgba(255,255,255,0.08);
+    color: var(--text-primary);
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+  .btn-secondary:hover {
+    background: rgba(255,255,255,0.14);
+  }
+
+  /* VIEWPORT & 3D STAGE */
+  .stage-outer {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    overflow: auto;
+  }
+
+  /* THE FIXED 1280x800 COMPOSITION CANVAS */
+  #mockup-canvas-wrapper {
+    width: 1280px;
+    height: 800px;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1);
+    transform-origin: center center;
+    overflow: hidden;
+    border-radius: 12px;
+  }
+
+  /* BACKGROUND THEMES */
+  .bg-theme-studio {
+    background: radial-gradient(circle at 50% 40%, #1e2638 0%, #0d111a 65%, #07090e 100%);
+  }
+  .bg-theme-modern {
+    background: radial-gradient(circle at 75% 20%, #1e3a5f 0%, #0b1526 50%, #050912 100%);
+  }
+  .bg-theme-black {
+    background: #000000;
+  }
+  .bg-theme-light {
+    background: radial-gradient(circle at 50% 30%, #ffffff 0%, #e2e8f0 70%, #cbd5e1 100%);
+  }
+
+  /* 3D SCENE PERSPECTIVE CONTAINER */
+  .stage-3d {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    perspective: 1200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-style: preserve-3d;
+  }
+
+  /* CARDS */
+  .mockup-card {
+    position: absolute;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    user-select: none;
+    transition: transform 0.05s ease-out;
+  }
+  .mockup-card img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+  }
+
+  /* CARD WRAPPER WITH SHADOW AND BORDER */
+  #card-back {
+    width: 980px;
+    height: 612px;
+    border-radius: 14px;
+    z-index: 1;
+  }
+  #card-front {
+    width: 580px;
+    height: 445px;
+    border-radius: 12px;
+    z-index: 2;
+  }
+
+  /* STATUS BAR */
+  .footer-status {
+    position: absolute;
+    bottom: 12px;
+    left: 24px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(15, 17, 23, 0.8);
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="brand-title">
+      <svg width="20" height="20" viewBox="0 0 200 200" fill="none">
+        <rect width="200" height="200" rx="44" fill="#000"/>
+        <polygon points="100,36.4 33,150 167,150" stroke="#FFF" stroke-width="8"/>
+        <polygon points="0,141 50,124 50,120 0,140" fill="#FFF"/>
+        <polygon points="123,72 200,40 200,39 122,70" fill="#FFF"/>
+      </svg>
+      SPeCTRUM PRO
+      <span class="badge">3D Mockup Studio</span>
+    </div>
+  </div>
+
+  <div class="sidebar-content">
+
+    <!-- PRESETS -->
+    <div class="control-group">
+      <div class="group-title">
+        <span>3D Style Presets</span>
+      </div>
+      <div class="presets-grid">
+        <button class="preset-btn active" onclick="applyPreset('isometric')">Isometric Hero</button>
+        <button class="preset-btn" onclick="applyPreset('angledRight')">Diagonal Pop</button>
+        <button class="preset-btn" onclick="applyPreset('frontFloat')">Hover & Front</button>
+        <button class="preset-btn" onclick="applyPreset('subtleAngle')">Subtle Studio</button>
+      </div>
+    </div>
+
+    <!-- CANVAS BACKGROUND -->
+    <div class="control-group">
+      <div class="group-title">
+        <span>Backdrop Theme</span>
+      </div>
+      <div class="presets-grid">
+        <button class="preset-btn active" id="bg-btn-studio" onclick="setBg('studio')">Dark Studio</button>
+        <button class="preset-btn" id="bg-btn-modern" onclick="setBg('modern')">Deep Blue</button>
+        <button class="preset-btn" id="bg-btn-black" onclick="setBg('black')">Pure Black</button>
+        <button class="preset-btn" id="bg-btn-light" onclick="setBg('light')">Light Studio</button>
+      </div>
+      <div class="slider-row" style="margin-top:6px;">
+        <div class="slider-header">
+          <span>Camera Perspective</span>
+          <span class="slider-val" id="val-perspective">1200px</span>
+        </div>
+        <input type="range" id="param-perspective" min="600" max="2500" value="1200" oninput="updateMockup()">
+      </div>
+    </div>
+
+    <!-- FRONT CARD: EXTENSION POPUP -->
+    <div class="control-group">
+      <div class="group-title" style="color:#60a5fa;">
+        <span>Front: Extension Popup</span>
+      </div>
+      <div class="img-upload-row">
+        <label class="file-label-btn" for="input-front-file" id="label-front-file">Swap Image: extension_popup.png</label>
+        <input type="file" id="input-front-file" accept="image/*" style="display:none;" onchange="handleFile(this, 'card-front-img', 'label-front-file')">
+      </div>
+      
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Position X</span>
+          <span class="slider-val" id="val-fX">180px</span>
+        </div>
+        <input type="range" id="param-fX" min="-500" max="500" value="180" oninput="updateMockup()">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Position Y</span>
+          <span class="slider-val" id="val-fY">70px</span>
+        </div>
+        <input type="range" id="param-fY" min="-400" max="400" value="70" oninput="updateMockup()">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Scale</span>
+          <span class="slider-val" id="val-fScale">1.05</span>
+        </div>
+        <input type="range" id="param-fScale" min="50" max="150" value="105" oninput="updateMockup()">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Rotate X (Tilt Up/Down)</span>
+          <span class="slider-val" id="val-fRotX">8deg</span>
+        </div>
+        <input type="range" id="param-fRotX" min="-45" max="45" value="8" oninput="updateMockup()">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Rotate Y (Turn Left/Right)</span>
+          <span class="slider-val" id="val-fRotY">14deg</span>
+        </div>
+        <input type="range" id="param-fRotY" min="-45" max="45" value="14" oninput="updateMockup()">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Rotate Z (Roll)</span>
+          <span class="slider-val" id="val-fRotZ">-2deg</span>
+        </div>
+        <input type="range" id="param-fRotZ" min="-30" max="30" value="-2" oninput="updateMockup()">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>3D Elevation / Depth</span>
+          <span class="slider-val" id="val-fZ">160px</span>
+        </div>
+        <input type="range" id="param-fZ" min="0" max="300" value="160" oninput="updateMockup()">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Drop Shadow Intensity</span>
+          <span class="slider-val" id="val-fShadow">55%</span>
+        </div>
+        <input type="range" id="param-fShadow" min="10" max="80" value="55" oninput="updateMockup()">
+      </div>
+    </div>
+
+    <!-- BACK CARD: FULL STATION CALENDAR -->
+    <div class="control-group">
+      <div class="group-title" style="color:#a78bfa;">
+        <span>Back: Full Station Calendar</span>
+      </div>
+      <div class="img-upload-row">
+        <label class="file-label-btn" for="input-back-file" id="label-back-file">Swap Image: Screenshot ...140537.png</label>
+        <input type="file" id="input-back-file" accept="image/*" style="display:none;" onchange="handleFile(this, 'card-back-img', 'label-back-file')">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Position X</span>
+          <span class="slider-val" id="val-bX">-120px</span>
+        </div>
+        <input type="range" id="param-bX" min="-500" max="500" value="-120" oninput="updateMockup()">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Position Y</span>
+          <span class="slider-val" id="val-bY">-30px</span>
+        </div>
+        <input type="range" id="param-bY" min="-400" max="400" value="-30" oninput="updateMockup()">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Scale</span>
+          <span class="slider-val" id="val-bScale">0.92</span>
+        </div>
+        <input type="range" id="param-bScale" min="50" max="150" value="92" oninput="updateMockup()">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Rotate X</span>
+          <span class="slider-val" id="val-bRotX">8deg</span>
+        </div>
+        <input type="range" id="param-bRotX" min="-45" max="45" value="8" oninput="updateMockup()">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Rotate Y</span>
+          <span class="slider-val" id="val-bRotY">14deg</span>
+        </div>
+        <input type="range" id="param-bRotY" min="-45" max="45" value="14" oninput="updateMockup()">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Rotate Z</span>
+          <span class="slider-val" id="val-bRotZ">-2deg</span>
+        </div>
+        <input type="range" id="param-bRotZ" min="-30" max="30" value="-2" oninput="updateMockup()">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Depth Z-Shift</span>
+          <span class="slider-val" id="val-bZ">-60px</span>
+        </div>
+        <input type="range" id="param-bZ" min="-200" max="100" value="-60" oninput="updateMockup()">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Drop Shadow Intensity</span>
+          <span class="slider-val" id="val-bShadow">35%</span>
+        </div>
+        <input type="range" id="param-bShadow" min="10" max="80" value="35" oninput="updateMockup()">
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- WORKSPACE / PREVIEW -->
+<div class="workspace">
+  <div class="topbar">
+    <div class="dimensions-badge">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <line x1="3" y1="9" x2="21" y2="9"/>
+        <line x1="9" y1="21" x2="9" y2="9"/>
+      </svg>
+      Active Canvas: <strong>1280 × 800 px</strong> (Microsoft Edge & Chrome Web Store Standard)
+    </div>
+
+    <div class="export-actions">
+      <button class="btn-action btn-secondary" onclick="exportComposition(1400, 560, 'SPeCTRUM_PRO_Promo_1400x560.png')">
+        Large Promo (1400×560)
+      </button>
+      <button class="btn-action" onclick="exportComposition(1280, 800, 'SPeCTRUM_PRO_Screenshot_3D_1280x800.png')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Download Screenshot (1280×800)
+      </button>
+    </div>
+  </div>
+
+  <div class="stage-outer" id="stage-outer">
+    <div id="mockup-canvas-wrapper" class="bg-theme-studio">
+      <div class="stage-3d" id="stage-3d">
+        <!-- BACK CARD: FULL STATION -->
+        <div class="mockup-card" id="card-back">
+          <img id="card-back-img" src="Screenshot 2026-11-05 140537.png" alt="Full Station Calendar">
+        </div>
+
+        <!-- FRONT CARD: EXTENSION POPUP -->
+        <div class="mockup-card" id="card-front">
+          <img id="card-front-img" src="extension_popup.png" alt="Extension Popup">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-status">
+    <span>💡 Tip: Adjust sliders on the left for angle and depth. Click Download to save directly as PNG.</span>
+  </div>
+</div>
+
+<script>
+  // Presets definition
+  const presets = {
+    isometric: {
+      perspective: 1200,
+      bX: -120, bY: -30, bScale: 92, bRotX: 8, bRotY: 14, bRotZ: -2, bZ: -60, bShadow: 40,
+      fX: 180, fY: 70, fScale: 105, fRotX: 8, fRotY: 14, fRotZ: -2, fZ: 160, fShadow: 55
+    },
+    angledLeft: {
+      perspective: 1300,
+      bX: -100, bY: -30, bScale: 92, bRotX: 7, bRotY: -12, bRotZ: 1, bZ: -40, bShadow: 35,
+      fX: 190, fY: 70, fScale: 105, fRotX: 7, fRotY: -12, fRotZ: 1, fZ: 150, fShadow: 50
+    },
+    frontFloat: {
+      perspective: 1400,
+      bX: 0, bY: -60, bScale: 95, bRotX: 6, bRotY: 0, bRotZ: 0, bZ: -30, bShadow: 30,
+      fX: 0, fY: 100, fScale: 105, fRotX: 6, fRotY: 0, fRotZ: 0, fZ: 160, fShadow: 60
+    },
+    subtleAngle: {
+      perspective: 1800,
+      bX: -80, bY: -20, bScale: 94, bRotX: 5, bRotY: 8, bRotZ: -1, bZ: -40, bShadow: 35,
+      fX: 160, fY: 60, fScale: 102, fRotX: 5, fRotY: 8, fRotZ: -1, fZ: 130, fShadow: 45
+    }
+  };
+
+  let currentBg = 'studio';
+
+  function applyPreset(name) {
+    const p = presets[name];
+    if (!p) return;
+
+    document.querySelectorAll('.presets-grid .preset-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+
+    for (const [key, val] of Object.entries(p)) {
+      const el = document.getElementById('param-' + key);
+      if (el) el.value = val;
+    }
+    updateMockup();
+  }
+
+  function setBg(theme) {
+    currentBg = theme;
+    const wrapper = document.getElementById('mockup-canvas-wrapper');
+    wrapper.className = 'bg-theme-' + theme;
+    ['studio', 'modern', 'black', 'light'].forEach(t => {
+      const btn = document.getElementById('bg-btn-' + t);
+      if (btn) btn.classList.toggle('active', t === theme);
+    });
+  }
+
+  function getVal(id) {
+    return parseFloat(document.getElementById('param-' + id).value);
+  }
+
+  function updateMockup() {
+    const persp = getVal('perspective');
+    document.getElementById('val-perspective').innerText = persp + 'px';
+    document.getElementById('stage-3d').style.perspective = persp + 'px';
+
+    // Back card
+    const bX = getVal('bX');
+    const bY = getVal('bY');
+    const bZ = getVal('bZ') || -60;
+    const bScale = getVal('bScale') / 100;
+    const bRotX = getVal('bRotX');
+    const bRotY = getVal('bRotY');
+    const bRotZ = getVal('bRotZ');
+    const bShadow = getVal('bShadow') / 100;
+
+    document.getElementById('val-bX').innerText = bX + 'px';
+    document.getElementById('val-bY').innerText = bY + 'px';
+    if (document.getElementById('val-bZ')) document.getElementById('val-bZ').innerText = bZ + 'px';
+    document.getElementById('val-bScale').innerText = bScale.toFixed(2);
+    document.getElementById('val-bRotX').innerText = bRotX + 'deg';
+    document.getElementById('val-bRotY').innerText = bRotY + 'deg';
+    document.getElementById('val-bRotZ').innerText = bRotZ + 'deg';
+    document.getElementById('val-bShadow').innerText = Math.round(bShadow * 100) + '%';
+
+    const cardBack = document.getElementById('card-back');
+    cardBack.style.transform = `translate3d(${bX}px, ${bY}px, ${bZ}px) rotateX(${bRotX}deg) rotateY(${bRotY}deg) rotateZ(${bRotZ}deg) scale(${bScale})`;
+    cardBack.style.boxShadow = `0 30px 60px -12px rgba(0, 0, 0, ${bShadow * 1.5}), 0 18px 36px -18px rgba(0, 0, 0, ${bShadow}), 0 0 0 1px rgba(255, 255, 255, 0.12)`;
+
+    // Front card
+    const fX = getVal('fX');
+    const fY = getVal('fY');
+    const fScale = getVal('fScale') / 100;
+    const fRotX = getVal('fRotX');
+    const fRotY = getVal('fRotY');
+    const fRotZ = getVal('fRotZ');
+    const fZ = getVal('fZ');
+    const fShadow = getVal('fShadow') / 100;
+
+    document.getElementById('val-fX').innerText = fX + 'px';
+    document.getElementById('val-fY').innerText = fY + 'px';
+    document.getElementById('val-fScale').innerText = fScale.toFixed(2);
+    document.getElementById('val-fRotX').innerText = fRotX + 'deg';
+    document.getElementById('val-fRotY').innerText = fRotY + 'deg';
+    document.getElementById('val-fRotZ').innerText = fRotZ + 'deg';
+    document.getElementById('val-fZ').innerText = fZ + 'px';
+    document.getElementById('val-fShadow').innerText = Math.round(fShadow * 100) + '%';
+
+    const cardFront = document.getElementById('card-front');
+    cardFront.style.transform = `translate3d(${fX}px, ${fY}px, ${fZ}px) rotateX(${fRotX}deg) rotateY(${fRotY}deg) rotateZ(${fRotZ}deg) scale(${fScale})`;
+    cardFront.style.boxShadow = `0 40px 80px -15px rgba(0, 0, 0, ${fShadow * 1.6}), 0 25px 45px -20px rgba(0, 0, 0, ${fShadow}), 0 0 0 1px rgba(255, 255, 255, 0.16)`;
+  }
+
+  // Handle local file swap
+  function handleFile(input, targetImgId, labelId) {
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById(targetImgId).src = e.target.result;
+        document.getElementById(labelId).innerText = 'Loaded: ' + file.name;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  // Responsive scale down to fit small preview monitors
+  function resizeFit() {
+    if (window.location.search.includes('render=1')) {
+      document.querySelector('.sidebar').style.display = 'none';
+      document.querySelector('.topbar').style.display = 'none';
+      const footer = document.querySelector('.footer-status');
+      if (footer) footer.style.display = 'none';
+      document.getElementById('stage-outer').style.padding = '0';
+      document.body.style.background = 'transparent';
+      const wrapper = document.getElementById('mockup-canvas-wrapper');
+      wrapper.style.transform = 'none';
+      wrapper.style.borderRadius = '0';
+      wrapper.style.boxShadow = 'none';
+      return;
+    }
+    const stageOuter = document.getElementById('stage-outer');
+    const wrapper = document.getElementById('mockup-canvas-wrapper');
+    const availW = stageOuter.clientWidth - 40;
+    const availH = stageOuter.clientHeight - 40;
+    const scale = Math.min(availW / 1280, availH / 800, 1);
+    wrapper.style.transform = `scale(${scale})`;
+  }
+  window.addEventListener('resize', resizeFit);
+
+  // Initialize
+  updateMockup();
+  resizeFit();
+
+  // HIGH-RESOLUTION RENDER & EXPORT FUNCTION
+  async function exportComposition(targetW, targetH, filename) {
+    const btn = event.currentTarget;
+    const origText = btn.innerHTML;
+    btn.innerHTML = 'Rendering...';
+    btn.disabled = true;
+
+    try {
+      // Create high-res offscreen rendering
+      const exportWrapper = document.getElementById('mockup-canvas-wrapper');
+      
+      // Inline images to Base64 for clean SVG foreignObject rendering
+      const backImg = document.getElementById('card-back-img');
+      const frontImg = document.getElementById('card-front-img');
+      
+      const toBase64 = (img) => {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth || img.width;
+        c.height = img.naturalHeight || img.height;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        return c.toDataURL('image/png');
+      };
+
+      const backB64 = toBase64(backImg);
+      const frontB64 = toBase64(frontImg);
+
+      // Extract current styles
+      const cardBackStyle = document.getElementById('card-back').style.cssText;
+      const cardFrontStyle = document.getElementById('card-front').style.cssText;
+      const stagePerspective = document.getElementById('stage-3d').style.perspective;
+
+      let bgCss = 'background: radial-gradient(circle at 50% 40%, #1e2638 0%, #0d111a 65%, #07090e 100%);';
+      if (currentBg === 'modern') bgCss = 'background: radial-gradient(circle at 75% 20%, #1e3a5f 0%, #0b1526 50%, #050912 100%);';
+      if (currentBg === 'black') bgCss = 'background: #000000;';
+      if (currentBg === 'light') bgCss = 'background: radial-gradient(circle at 50% 30%, #ffffff 0%, #e2e8f0 70%, #cbd5e1 100%);';
+
+      const htmlContent = `
+        <div xmlns="http://www.w3.org/1999/xhtml" style="width:1280px;height:800px;${bgCss}position:relative;overflow:hidden;border-radius:0;">
+          <div style="width:100%;height:100%;perspective:${stagePerspective};display:flex;align-items:center;justify-content:center;transform-style:preserve-3d;position:relative;">
+            <div style="position:absolute;width:980px;height:612px;border-radius:14px;overflow:hidden;${cardBackStyle}">
+              <img src="${backB64}" style="width:100%;height:100%;display:block;object-fit:cover;" />
+            </div>
+            <div style="position:absolute;width:580px;height:445px;border-radius:12px;overflow:hidden;${cardFrontStyle}">
+              <img src="${frontB64}" style="width:100%;height:100%;display:block;object-fit:cover;" />
+            </div>
+          </div>
+        </div>
+      `;
+
+      const svgDoc = `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800">
+        <foreignObject width="100%" height="100%">
+          ${htmlContent}
+        </foreignObject>
+      </svg>`;
+
+      const svgBlob = new Blob([svgDoc], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+
+      const renderImg = new Image();
+      renderImg.onload = () => {
+        const outCanvas = document.createElement('canvas');
+        outCanvas.width = targetW;
+        outCanvas.height = targetH;
+        const ctx = outCanvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(renderImg, 0, 0, targetW, targetH);
+        URL.revokeObjectURL(svgUrl);
+
+        const a = document.createElement('a');
+        a.download = filename;
+        a.href = outCanvas.toDataURL('image/png');
+        a.click();
+        btn.innerHTML = origText;
+        btn.disabled = false;
+      };
+      renderImg.onerror = () => {
+        // Fallback: Notify user to use the CLI renderer
+        alert('Browser security policy blocked foreignObject canvas export. Please use the automated screenshot command or open directly in Chrome!');
+        btn.innerHTML = origText;
+        btn.disabled = false;
+      };
+      renderImg.src = svgUrl;
+
+    } catch (e) {
+      console.error(e);
+      btn.innerHTML = origText;
+      btn.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>
