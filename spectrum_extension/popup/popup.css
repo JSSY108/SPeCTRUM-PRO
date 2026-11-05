@@ -540,8 +540,8 @@ body:not(.is-full-tab) .matrix-btn-text {
 }
 
 body:not(.is-full-tab) .matrix-btn-count {
-  font-size: 7.5px !important;
-  padding: 1px 3px !important;
+  font-size: 9px !important;
+  padding: 1px 4px !important;
 }
 
 body:not(.is-full-tab) .rail-docked-filters {
@@ -558,8 +558,19 @@ body:not(.is-full-tab) .dock-filter-btn .icon-svg {
 }
 
 body:not(.is-full-tab) .dock-badge {
-  font-size: 8px !important;
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+  min-width: 16px !important;
+  height: 16px !important;
+  line-height: 16px !important;
   padding: 0 4px !important;
+  top: -5px !important;
+  right: -5px !important;
+  border-radius: 999px !important;
+  border: 1.5px solid var(--bg-surface, #FFFFFF) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 html:not(.is-full-tab) body:not(.is-full-tab) .fulltab-only {
@@ -1293,13 +1304,19 @@ body:not(.is-full-tab) .is-collapsed .dock-badge,
 .rail-mode-courses .dock-badge,
 .is-collapsed .dock-badge {
   position: absolute !important;
-  top: -3px !important;
-  right: -3px !important;
-  font-size: 7.5px !important;
-  padding: 1px 3px !important;
-  border-radius: 4px !important;
-  line-height: 1 !important;
-  border: 1px solid var(--bg-surface, #FFFFFF) !important;
+  top: -5px !important;
+  right: -5px !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  min-width: 15px !important;
+  height: 15px !important;
+  line-height: 15px !important;
+  padding: 0 3.5px !important;
+  border-radius: 999px !important;
+  border: 1.5px solid var(--bg-surface, #FFFFFF) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 /* Date Card Accordion Trigger */
@@ -2310,17 +2327,24 @@ body:not(.is-full-tab) .is-collapsed .dock-badge,
 
 .dock-badge {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  font-size: 8px;
+  top: -5px;
+  right: -5px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
   font-weight: 800;
-  padding: 0 4px;
+  padding: 0 5px;
   border-radius: 999px;
-  line-height: 12px;
-  height: 12px;
-  min-width: 12px;
+  line-height: 17px;
+  height: 17px;
+  min-width: 17px;
   text-align: center;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 1.5px solid var(--bg-surface, #FFFFFF);
+  z-index: 5;
 }
 
 /* Focused Course Scope Header Bar inside Stream */
