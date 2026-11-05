@@ -44,7 +44,7 @@ SPeCTRUM Pro requests only the minimal permissions required to deliver its core 
 ## 4. Open Source & Transparency
 
 SPeCTRUM Pro is fully open-source. Anyone can inspect and verify our source code, network requests, and permissions implementation on GitHub:
-[https://github.com](https://github.com)
+[https://github.com/JSSY108/SPeCTRUM-PRO](https://github.com/JSSY108/SPeCTRUM-PRO)
 
 ---
 
