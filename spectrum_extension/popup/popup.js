@@ -2830,8 +2830,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const weekPill = document.getElementById('fulltab-week-pill');
 
     const isNonCalendar = (mode === 'materials' || mode === 'preferences' || mode === 'timetable');
-    if (calPrevBtn) calPrevBtn.style.display = isNonCalendar ? 'none' : '';
-    if (calNextBtn) calNextBtn.style.display = isNonCalendar ? 'none' : '';
+    const isListMode = (mode === 'list');
+    if (calPrevBtn) calPrevBtn.style.display = (isNonCalendar || isListMode) ? 'none' : '';
+    if (calNextBtn) calNextBtn.style.display = (isNonCalendar || isListMode) ? 'none' : '';
     if (calTodayBtn) calTodayBtn.style.display = isNonCalendar ? 'none' : '';
     if (weekPill) weekPill.style.display = isNonCalendar ? 'none' : '';
 
@@ -6088,7 +6089,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (btnCalPrev) {
     btnCalPrev.addEventListener('click', () => {
       if (document.body.classList.contains('is-full-tab')) {
-        if (currentFullTabMode === 'materials' || currentFullTabMode === 'preferences') return;
+        if (currentFullTabMode === 'materials' || currentFullTabMode === 'preferences' || currentFullTabMode === 'timetable' || currentFullTabMode === 'list') return;
         if (currentFullTabMode === 'timeline') {
           navigateTimelineMonth(-1);
           return;
@@ -6106,7 +6107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (btnCalNext) {
     btnCalNext.addEventListener('click', () => {
       if (document.body.classList.contains('is-full-tab')) {
-        if (currentFullTabMode === 'materials' || currentFullTabMode === 'preferences') return;
+        if (currentFullTabMode === 'materials' || currentFullTabMode === 'preferences' || currentFullTabMode === 'timetable' || currentFullTabMode === 'list') return;
         if (currentFullTabMode === 'timeline') {
           navigateTimelineMonth(1);
           return;

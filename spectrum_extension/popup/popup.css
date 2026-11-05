@@ -3207,7 +3207,9 @@ body.mode-materials #fulltab-week-pill,
 body.mode-preferences #btn-cal-prev,
 body.mode-preferences #btn-cal-next,
 body.mode-preferences #btn-cal-today,
-body.mode-preferences #fulltab-week-pill {
+body.mode-preferences #fulltab-week-pill,
+body.mode-list #btn-cal-prev,
+body.mode-list #btn-cal-next {
   display: none !important;
 }
 
