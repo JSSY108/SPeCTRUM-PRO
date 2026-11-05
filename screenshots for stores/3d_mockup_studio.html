@@ -87,6 +87,47 @@
     align-items: center;
   }
 
+  /* MODE SELECTOR */
+  .mode-switch-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .mode-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--text-primary);
+    padding: 10px 8px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .mode-btn span.mode-sub {
+    font-size: 9px;
+    font-weight: 400;
+    color: var(--text-secondary);
+  }
+  .mode-btn:hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: var(--accent);
+  }
+  .mode-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 0 14px var(--accent-glow);
+  }
+  .mode-btn.active span.mode-sub {
+    color: rgba(255,255,255,0.85);
+  }
+
   .presets-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -163,7 +204,7 @@
     background: rgba(255,255,255,0.06);
     border: 1px dashed rgba(255,255,255,0.2);
     color: var(--text-secondary);
-    padding: 6px 10px;
+    padding: 8px 10px;
     border-radius: 6px;
     font-size: 11px;
     text-align: center;
@@ -250,6 +291,10 @@
     position: relative;
     background: #000;
     transform-origin: center center;
+    transition: box-shadow 0.2s;
+  }
+  #canvas-container.drag-hover {
+    box-shadow: 0 0 0 3px var(--accent), 0 20px 60px rgba(0,0,0,0.8);
   }
   #canvas-container canvas {
     display: block;
@@ -289,16 +334,30 @@
 
   <div class="sidebar-content">
 
+    <!-- COMPOSITION MODE: 2 PHOTOS vs 1 PHOTO -->
     <div class="control-group">
-      <div class="group-title"><span>3D Style Presets</span></div>
-      <div class="presets-grid">
-        <button class="preset-btn active" onclick="applyPreset('isometric')">Isometric Hero</button>
-        <button class="preset-btn" onclick="applyPreset('angledLeft')">Left Angle</button>
-        <button class="preset-btn" onclick="applyPreset('frontFloat')">Hover & Front</button>
-        <button class="preset-btn" onclick="applyPreset('subtleAngle')">Subtle Studio</button>
+      <div class="group-title"><span>Composition Mode</span></div>
+      <div class="mode-switch-grid">
+        <button class="mode-btn active" id="mode-btn-2" onclick="setMode(2)">
+          <span>2 Photos</span>
+          <span class="mode-sub">Dual 3D Stack</span>
+        </button>
+        <button class="mode-btn" id="mode-btn-1" onclick="setMode(1)">
+          <span>1 Photo</span>
+          <span class="mode-sub">Single Hero Card</span>
+        </button>
       </div>
     </div>
 
+    <!-- PRESETS -->
+    <div class="control-group">
+      <div class="group-title"><span>3D Style Presets</span></div>
+      <div class="presets-grid" id="presets-container">
+        <!-- Rendered dynamically based on mode -->
+      </div>
+    </div>
+
+    <!-- BACKDROP THEME -->
     <div class="control-group">
       <div class="group-title"><span>Backdrop Theme</span></div>
       <div class="presets-grid">
@@ -312,13 +371,13 @@
           <span>Camera Distance</span>
           <span class="slider-val" id="val-camDist">1050</span>
         </div>
-        <input type="range" id="param-camDist" min="700" max="1600" value="1050" oninput="updateControls()">
+        <input type="range" id="param-camDist" min="600" max="1600" value="1050" oninput="updateControls()">
       </div>
     </div>
 
-    <!-- FRONT CARD: EXTENSION POPUP -->
-    <div class="control-group">
-      <div class="group-title" style="color:#60a5fa;"><span>Front: Extension Popup</span></div>
+    <!-- MAIN PHOTO / FRONT CARD -->
+    <div class="control-group" id="group-front-card">
+      <div class="group-title" id="title-front-card" style="color:#60a5fa;"><span>Front: Extension Popup</span></div>
       <div class="img-upload-row">
         <label class="file-label-btn" for="input-front-file" id="label-front-file">Swap Image: extension_popup.png</label>
         <input type="file" id="input-front-file" accept="image/*" style="display:none;" onchange="handleFile(this, 'front')">
@@ -334,11 +393,11 @@
       </div>
       <div class="slider-row">
         <div class="slider-header"><span>3D Elevation (Z-Depth)</span><span class="slider-val" id="val-fZ">140px</span></div>
-        <input type="range" id="param-fZ" min="0" max="350" value="140" oninput="updateControls()">
+        <input type="range" id="param-fZ" min="-100" max="350" value="140" oninput="updateControls()">
       </div>
       <div class="slider-row">
         <div class="slider-header"><span>Scale</span><span class="slider-val" id="val-fScale">1.04</span></div>
-        <input type="range" id="param-fScale" min="50" max="150" value="104" oninput="updateControls()">
+        <input type="range" id="param-fScale" min="40" max="160" value="104" oninput="updateControls()">
       </div>
       <div class="slider-row">
         <div class="slider-header"><span>Rotate X (Tilt)</span><span class="slider-val" id="val-fRotX">8deg</span></div>
@@ -354,12 +413,12 @@
       </div>
       <div class="slider-row">
         <div class="slider-header"><span>Shadow Intensity</span><span class="slider-val" id="val-fShadow">55%</span></div>
-        <input type="range" id="param-fShadow" min="10" max="90" value="55" oninput="updateControls()">
+        <input type="range" id="param-fShadow" min="0" max="100" value="55" oninput="updateControls()">
       </div>
     </div>
 
-    <!-- BACK CARD: FULL STATION CALENDAR -->
-    <div class="control-group">
+    <!-- SECOND PHOTO / BACK CARD (ONLY IN 2-PHOTO MODE) -->
+    <div class="control-group" id="group-back-card">
       <div class="group-title" style="color:#a78bfa;"><span>Back: Full Station Calendar</span></div>
       <div class="img-upload-row">
         <label class="file-label-btn" for="input-back-file" id="label-back-file">Swap Image: Full Station Calendar</label>
@@ -396,7 +455,7 @@
       </div>
       <div class="slider-row">
         <div class="slider-header"><span>Shadow Intensity</span><span class="slider-val" id="val-bShadow">40%</span></div>
-        <input type="range" id="param-bShadow" min="10" max="90" value="40" oninput="updateControls()">
+        <input type="range" id="param-bShadow" min="0" max="100" value="40" oninput="updateControls()">
       </div>
     </div>
 
@@ -434,7 +493,7 @@
   </div>
 
   <div class="footer-status">
-    <span>💡 Tip: Adjust sliders on the left for angle and depth. Click Download to save directly as PNG.</span>
+    <span>💡 Tip: Adjust sliders on the left for angle and depth. Drag and drop any image onto the canvas to replace.</span>
   </div>
 </div>
 
@@ -446,37 +505,119 @@
   let scene, camera, renderer;
   let meshBack, meshFront, shadowBack, shadowFront, bgMesh;
   let currentBg = 'studio';
+  let currentMode = 2; // 2 = Dual Stack, 1 = Single Photo Hero
 
-  const presets = {
+  let imgBack = new Image();
+  let imgFront = new Image();
+
+  // Presets definition for 2-Photo mode
+  const presetsDual = {
     isometric: {
+      name: 'Isometric Hero',
       camDist: 1050,
       bX: -140, bY: 30, bScale: 92, bRotX: 8, bRotY: 14, bRotZ: -2, bZ: -50, bShadow: 40,
       fX: 180, fY: -60, fScale: 104, fRotX: 8, fRotY: 14, fRotZ: -2, fZ: 140, fShadow: 55
     },
     angledLeft: {
+      name: 'Left Angle',
       camDist: 1050,
       bX: -130, bY: 30, bScale: 92, bRotX: 8, bRotY: -14, bRotZ: 2, bZ: -50, bShadow: 40,
       fX: 190, fY: -60, fScale: 104, fRotX: 8, fRotY: -14, fRotZ: 2, fZ: 140, fShadow: 55
     },
     frontFloat: {
+      name: 'Hover & Front',
       camDist: 1050,
       bX: 0, bY: 60, bScale: 95, bRotX: 5, bRotY: 0, bRotZ: 0, bZ: -40, bShadow: 35,
       fX: 0, fY: -70, fScale: 104, fRotX: 5, fRotY: 0, fRotZ: 0, fZ: 150, fShadow: 60
     },
     subtleAngle: {
+      name: 'Subtle Studio',
       camDist: 1050,
       bX: -100, bY: 20, bScale: 94, bRotX: 4, bRotY: 8, bRotZ: -1, bZ: -40, bShadow: 35,
       fX: 160, fY: -50, fScale: 102, fRotX: 4, fRotY: 8, fRotZ: -1, fZ: 130, fShadow: 45
     }
   };
 
+  // Presets definition for 1-Photo mode
+  const presetsSingle = {
+    singleCenter: {
+      name: 'Center Float',
+      camDist: 1020,
+      fX: 0, fY: 0, fZ: 0, fScale: 106, fRotX: 5, fRotY: 0, fRotZ: 0, fShadow: 50
+    },
+    singleIso: {
+      name: 'Isometric Right',
+      camDist: 1020,
+      fX: 0, fY: 0, fZ: 0, fScale: 104, fRotX: 8, fRotY: 15, fRotZ: -2, fShadow: 55
+    },
+    singleLeft: {
+      name: 'Isometric Left',
+      camDist: 1020,
+      fX: 0, fY: 0, fZ: 0, fScale: 104, fRotX: 8, fRotY: -15, fRotZ: 2, fShadow: 55
+    },
+    singleHero: {
+      name: 'Hero Dynamic',
+      camDist: 960,
+      fX: 0, fY: -15, fZ: 30, fScale: 110, fRotX: 12, fRotY: 18, fRotZ: -3, fShadow: 65
+    }
+  };
+
+  function renderPresetButtons() {
+    const container = document.getElementById('presets-container');
+    container.innerHTML = '';
+    const activePresets = (currentMode === 1) ? presetsSingle : presetsDual;
+
+    let first = true;
+    for (const [key, p] of Object.entries(activePresets)) {
+      const btn = document.createElement('button');
+      btn.className = 'preset-btn' + (first ? ' active' : '');
+      btn.innerText = p.name;
+      btn.onclick = () => applyPreset(key);
+      container.appendChild(btn);
+      first = false;
+    }
+  }
+
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('mode-btn-1').classList.toggle('active', mode === 1);
+    document.getElementById('mode-btn-2').classList.toggle('active', mode === 2);
+
+    const backGroup = document.getElementById('group-back-card');
+    const frontTitle = document.getElementById('title-front-card');
+    const frontFileLabel = document.getElementById('label-front-file');
+
+    if (mode === 1) {
+      backGroup.style.display = 'none';
+      frontTitle.innerHTML = '<span>Photo: Main Card Controls</span>';
+      frontFileLabel.innerText = 'Swap Photo (Click or Drag & Drop)';
+      if (meshBack) meshBack.visible = false;
+      if (shadowBack) shadowBack.visible = false;
+      renderPresetButtons();
+      applyPreset('singleCenter');
+    } else {
+      backGroup.style.display = 'flex';
+      frontTitle.innerHTML = '<span>Front: Extension Popup</span>';
+      frontFileLabel.innerText = 'Swap Image: extension_popup.png';
+      if (meshBack) meshBack.visible = true;
+      if (shadowBack) shadowBack.visible = true;
+      renderPresetButtons();
+      applyPreset('isometric');
+    }
+    updateCardGeometry();
+    updateControls();
+  }
+
   function applyPreset(name) {
-    const p = presets[name];
+    const p = (currentMode === 1) ? presetsSingle[name] : presetsDual[name];
     if (!p) return;
-    document.querySelectorAll('.presets-grid .preset-btn').forEach(btn => btn.classList.remove('active'));
-    if (window.event && window.event.target) window.event.target.classList.add('active');
+
+    document.querySelectorAll('.presets-grid .preset-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.innerText === p.name);
+    });
 
     for (const [key, val] of Object.entries(p)) {
+      if (key === 'name') continue;
       const el = document.getElementById('param-' + key);
       if (el) el.value = val;
     }
@@ -580,6 +721,43 @@
     }
   }
 
+  // Update card geometry dynamically based on photo aspect ratio & active mode
+  function updateCardGeometry() {
+    if (!meshFront) return;
+
+    if (currentMode === 1) {
+      const aspect = (imgFront.naturalWidth && imgFront.naturalHeight)
+        ? (imgFront.naturalWidth / imgFront.naturalHeight)
+        : (1280 / 800);
+
+      let w = 980;
+      let h = w / aspect;
+      if (h > 630) {
+        h = 630;
+        w = h * aspect;
+      }
+
+      meshFront.geometry.dispose();
+      meshFront.geometry = new THREE.PlaneGeometry(w, h);
+      shadowFront.geometry.dispose();
+      shadowFront.geometry = new THREE.PlaneGeometry(w * 1.25, h * 1.25);
+    } else {
+      // 2-Photo mode default sizes
+      meshFront.geometry.dispose();
+      meshFront.geometry = new THREE.PlaneGeometry(580, 445);
+      shadowFront.geometry.dispose();
+      shadowFront.geometry = new THREE.PlaneGeometry(800, 620);
+
+      if (meshBack) {
+        meshBack.geometry.dispose();
+        meshBack.geometry = new THREE.PlaneGeometry(980, 612);
+        shadowBack.geometry.dispose();
+        shadowBack.geometry = new THREE.PlaneGeometry(1200, 800);
+      }
+    }
+    render();
+  }
+
   function initThree() {
     const container = document.getElementById('canvas-container');
     scene = new THREE.Scene();
@@ -640,19 +818,24 @@
     };
 
     loadImg(defaultBackB64, (img) => {
+      imgBack = img;
       meshBack.material.map = createRoundedTexture(img, 14, true);
       meshBack.material.needsUpdate = true;
       render();
     });
 
     loadImg(defaultFrontB64, (img) => {
+      imgFront = img;
       meshFront.material.map = createRoundedTexture(img, 12, true);
       meshFront.material.needsUpdate = true;
+      updateCardGeometry();
       render();
     });
 
+    renderPresetButtons();
     updateControls();
     resizeFit();
+    setupDragAndDrop();
   }
 
   function updateControls() {
@@ -662,11 +845,11 @@
     document.getElementById('val-camDist').innerText = camDist;
     camera.position.z = camDist;
 
-    // FRONT CARD
+    // FRONT / MAIN CARD
     const fX = getVal('fX'), fY = getVal('fY'), fZ = getVal('fZ');
     const fScale = getVal('fScale') / 100;
     const fRotX = (getVal('fRotX') * Math.PI) / 180;
-    const fRotY = (-getVal('fRotY') * Math.PI) / 180; // Invert to match visual intuition
+    const fRotY = (-getVal('fRotY') * Math.PI) / 180;
     const fRotZ = (getVal('fRotZ') * Math.PI) / 180;
     const fShadow = getVal('fShadow') / 100;
 
@@ -688,31 +871,33 @@
     shadowFront.rotation.set(-fRotX, fRotY, fRotZ);
     shadowFront.material.opacity = fShadow;
 
-    // BACK CARD
-    const bX = getVal('bX'), bY = getVal('bY'), bZ = getVal('bZ');
-    const bScale = getVal('bScale') / 100;
-    const bRotX = (getVal('bRotX') * Math.PI) / 180;
-    const bRotY = (-getVal('bRotY') * Math.PI) / 180;
-    const bRotZ = (getVal('bRotZ') * Math.PI) / 180;
-    const bShadow = getVal('bShadow') / 100;
+    // BACK CARD (only if in 2-photo mode)
+    if (currentMode === 2) {
+      const bX = getVal('bX'), bY = getVal('bY'), bZ = getVal('bZ');
+      const bScale = getVal('bScale') / 100;
+      const bRotX = (getVal('bRotX') * Math.PI) / 180;
+      const bRotY = (-getVal('bRotY') * Math.PI) / 180;
+      const bRotZ = (getVal('bRotZ') * Math.PI) / 180;
+      const bShadow = getVal('bShadow') / 100;
 
-    document.getElementById('val-bX').innerText = bX + 'px';
-    document.getElementById('val-bY').innerText = bY + 'px';
-    document.getElementById('val-bZ').innerText = bZ + 'px';
-    document.getElementById('val-bScale').innerText = bScale.toFixed(2);
-    document.getElementById('val-bRotX').innerText = getVal('bRotX') + 'deg';
-    document.getElementById('val-bRotY').innerText = getVal('bRotY') + 'deg';
-    document.getElementById('val-bRotZ').innerText = getVal('bRotZ') + 'deg';
-    document.getElementById('val-bShadow').innerText = Math.round(bShadow * 100) + '%';
+      document.getElementById('val-bX').innerText = bX + 'px';
+      document.getElementById('val-bY').innerText = bY + 'px';
+      document.getElementById('val-bZ').innerText = bZ + 'px';
+      document.getElementById('val-bScale').innerText = bScale.toFixed(2);
+      document.getElementById('val-bRotX').innerText = getVal('bRotX') + 'deg';
+      document.getElementById('val-bRotY').innerText = getVal('bRotY') + 'deg';
+      document.getElementById('val-bRotZ').innerText = getVal('bRotZ') + 'deg';
+      document.getElementById('val-bShadow').innerText = Math.round(bShadow * 100) + '%';
 
-    meshBack.position.set(bX, -bY, bZ);
-    meshBack.scale.set(bScale, bScale, 1);
-    meshBack.rotation.set(-bRotX, bRotY, bRotZ);
+      meshBack.position.set(bX, -bY, bZ);
+      meshBack.scale.set(bScale, bScale, 1);
+      meshBack.rotation.set(-bRotX, bRotY, bRotZ);
 
-    shadowBack.position.set(bX, -bY - 20, bZ - 10);
-    shadowBack.scale.set(bScale * 1.1, bScale * 1.1, 1);
-    shadowBack.rotation.set(-bRotX, bRotY, bRotZ);
-    shadowBack.material.opacity = bShadow;
+      shadowBack.position.set(bX, -bY - 20, bZ - 10);
+      shadowBack.scale.set(bScale * 1.1, bScale * 1.1, 1);
+      shadowBack.rotation.set(-bRotX, bRotY, bRotZ);
+      shadowBack.material.opacity = bShadow;
+    }
 
     render();
   }
@@ -725,26 +910,62 @@
 
   function handleFile(input, target) {
     if (input.files && input.files[0]) {
-      const file = input.files[0];
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = () => {
-          if (target === 'front') {
-            meshFront.material.map = createRoundedTexture(img, 12, true);
-            meshFront.material.needsUpdate = true;
-            document.getElementById('label-front-file').innerText = 'Loaded: ' + file.name;
-          } else {
-            meshBack.material.map = createRoundedTexture(img, 14, true);
-            meshBack.material.needsUpdate = true;
-            document.getElementById('label-back-file').innerText = 'Loaded: ' + file.name;
-          }
-          render();
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
+      loadFile(input.files[0], target);
     }
+  }
+
+  function loadFile(file, target) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = () => {
+        if (target === 'front' || currentMode === 1) {
+          imgFront = img;
+          meshFront.material.map = createRoundedTexture(img, 12, true);
+          meshFront.material.needsUpdate = true;
+          document.getElementById('label-front-file').innerText = 'Loaded: ' + file.name;
+          updateCardGeometry();
+        } else {
+          imgBack = img;
+          meshBack.material.map = createRoundedTexture(img, 14, true);
+          meshBack.material.needsUpdate = true;
+          document.getElementById('label-back-file').innerText = 'Loaded: ' + file.name;
+        }
+        render();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Drag and drop onto the canvas container
+  function setupDragAndDrop() {
+    const container = document.getElementById('canvas-container');
+    container.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      container.classList.add('drag-hover');
+    });
+    container.addEventListener('dragleave', () => {
+      container.classList.remove('drag-hover');
+    });
+    container.addEventListener('drop', (e) => {
+      e.preventDefault();
+      container.classList.remove('drag-hover');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        if (currentMode === 1) {
+          loadFile(file, 'front');
+        } else {
+          const rect = container.getBoundingClientRect();
+          const dropX = e.clientX - rect.left;
+          if (dropX < rect.width * 0.45) {
+            loadFile(file, 'back');
+          } else {
+            loadFile(file, 'front');
+          }
+        }
+      }
+    });
   }
 
   function resizeFit() {
@@ -758,7 +979,7 @@
   window.addEventListener('resize', resizeFit);
 
   // -------------------------------------------------------------
-  // ONE-CLICK BULLETPROOF PNG DOWNLOAD (THREE.JS CANVAS TO BLOB)
+  // ONE-CLICK BULLETPROOF PNG DOWNLOAD (EXACT PIXEL RATIO 1:1 GUARANTEE)
   // -------------------------------------------------------------
   function exportPNG(targetW, targetH, filename) {
     const btn = (typeof window.event !== 'undefined' && window.event) ? (window.event.currentTarget || window.event.target) : null;
@@ -772,15 +993,14 @@
     try {
       const prevRatio = renderer.getPixelRatio();
       
-      // CRITICAL FIX: Force pixelRatio to 1 during export so high-DPI Windows display scaling
-      // (125%, 150%, 200%) does NOT inflate the image dimensions beyond the required store px!
+      // Force 1:1 pixel ratio so Windows display scaling (125%, 150%) does not alter image px
       renderer.setPixelRatio(1);
       renderer.setSize(targetW, targetH, false);
       camera.aspect = targetW / targetH;
       camera.updateProjectionMatrix();
       renderer.render(scene, camera);
 
-      // Create an exact guaranteed targetW x targetH export canvas
+      // Render to an exact targetW x targetH offscreen canvas buffer
       const exportCanvas = document.createElement('canvas');
       exportCanvas.width = targetW;
       exportCanvas.height = targetH;
@@ -804,7 +1024,7 @@
 
         setTimeout(() => {
           URL.revokeObjectURL(blobUrl);
-          // Restore 1280x800 preview with original devicePixelRatio
+          // Restore preview
           renderer.setPixelRatio(prevRatio);
           renderer.setSize(1280, 800, false);
           camera.aspect = 1280 / 800;
