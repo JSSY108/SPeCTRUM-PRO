@@ -2697,6 +2697,62 @@
       btnPdf._hasTimetableListener = true;
       btnPdf.addEventListener('click', () => exportTimetablePDF());
     }
+
+    setupTimetableDragScroll();
+  }
+
+  function setupTimetableDragScroll() {
+    const frame = document.getElementById('timetable-scroll-frame');
+    if (!frame || frame._hasDragScroll) return;
+    frame._hasDragScroll = true;
+
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+    let isDragging = false;
+
+    frame.addEventListener('dragstart', (e) => e.preventDefault());
+
+    frame.addEventListener('mousedown', (e) => {
+      if (frame.classList.contains('is-one-page-frame')) return;
+      if (e.target.closest('button, input, select, a, .tt-session-card')) return;
+      if (e.button !== 0) return;
+      isDown = true;
+      isDragging = false;
+      startX = e.pageX - frame.offsetLeft;
+      scrollLeft = frame.scrollLeft;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      const x = e.pageX - frame.offsetLeft;
+      const walk = x - startX;
+      if (!isDragging && Math.abs(walk) > 4) {
+        isDragging = true;
+        frame.style.cursor = 'grabbing';
+      }
+      if (isDragging) {
+        e.preventDefault();
+        frame.scrollLeft = scrollLeft - walk;
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isDown) {
+        isDown = false;
+        frame.style.cursor = '';
+      }
+    });
+
+    // Horizontal wheel support when timetable has horizontal overflow
+    frame.addEventListener('wheel', (e) => {
+      if (frame.classList.contains('is-one-page-frame')) return;
+      if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      if (frame.scrollWidth > frame.clientWidth && e.deltaY !== 0) {
+        e.preventDefault();
+        frame.scrollLeft += e.deltaY * 1.8;
+      }
+    }, { passive: false });
   }
 
   // Global Exports on Window

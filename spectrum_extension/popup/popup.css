@@ -4253,8 +4253,10 @@ body.mode-list #btn-cal-next {
   scroll-behavior: auto; /* auto eliminates scroll animation queue fighting during wheel events */
   overscroll-behavior-x: contain;
   cursor: grab;
-  user-select: auto;
+  user-select: none;
+  -webkit-user-select: none;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y pinch-zoom;
 }
 
 .timeline-kanban-track * {
