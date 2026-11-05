@@ -7010,6 +7010,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateKpiCards();
     renderOccPreferencesTable();
 
+    // Auto-prompt OCC setup if any enrolled course has no configured OCC preference
+    const hasUnconfiguredOcc = coursesData.some(c => !courseOccs || !courseOccs[c.id]);
+    if (hasUnconfiguredOcc) {
+      logDiag('Init', 'Unconfigured OCC detected for cached courses. Auto-prompting OCC setup modal...');
+      setTimeout(() => {
+        openOccSetupModal(true);
+      }, 500);
+    }
+
     if (activitiesCacheBadge) {
       activitiesCacheBadge.textContent = `⚡ Cached (${formatTimeAgo(cached.cachedActivitiesTime || cached.cachedCoursesTime)})`;
       activitiesCacheBadge.style.display = 'inline-flex';
@@ -7023,9 +7032,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
   } else {
-    // No cached courses: switch to activities tab without auto-syncing
+    // No cached courses (Fresh install / New user):
     switchTab('tab-activities');
     initSidebarRail();
+
+    // Auto-sync right away with animation so new users don't have to guess to click Sync!
+    // This connects to SPeCTRUM, fetches enrolled courses, and automatically pops up the OCC setup modal.
+    logDiag('Init', 'New user / empty cache detected: initiating auto-sync with animation...');
+    setTimeout(() => {
+      refreshActivities(false, false);
+    }, 450);
   }
 
   // ========================================================
