@@ -2379,7 +2379,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else if (currentFullTabMode === 'timetable') {
         monthHeading.textContent = t('headers', 'timetableTitle');
       } else if (currentFullTabMode === 'timeline') {
-        monthHeading.textContent = formatMonthYearHeading(now);
+        if (typeof updateTimelineHeaderFromScroll === 'function') updateTimelineHeaderFromScroll();
       } else if (currentFullTabMode === 'list') {
         monthHeading.textContent = (fullListGroupingMode === 'course')
           ? t('headers', 'byCourseFeed')
@@ -2388,7 +2388,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         monthHeading.textContent = formatMonthYearHeading(now);
       }
     }
-    if (weekPill) weekPill.textContent = info.weekPill;
+    if (weekPill && currentFullTabMode !== 'timeline') weekPill.textContent = info.weekPill;
     if (syncTimeEl) {
       syncTimeEl.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
     }
@@ -6090,7 +6090,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (document.body.classList.contains('is-full-tab')) {
         if (currentFullTabMode === 'materials' || currentFullTabMode === 'preferences') return;
         if (currentFullTabMode === 'timeline') {
-          if (timelineScrollWrapper) timelineScrollWrapper.scrollBy({ left: -576, behavior: 'smooth' });
+          navigateTimelineMonth(-1);
           return;
         }
       }
@@ -6108,7 +6108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (document.body.classList.contains('is-full-tab')) {
         if (currentFullTabMode === 'materials' || currentFullTabMode === 'preferences') return;
         if (currentFullTabMode === 'timeline') {
-          if (timelineScrollWrapper) timelineScrollWrapper.scrollBy({ left: 576, behavior: 'smooth' });
+          navigateTimelineMonth(1);
           return;
         }
       }
@@ -8031,6 +8031,138 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  let timelineHeaderRaf = null;
+  function updateTimelineHeaderFromScroll() {
+    if (!timelineScrollWrapper || !timelineTrack) return;
+    if (timelineHeaderRaf) return;
+
+    timelineHeaderRaf = requestAnimationFrame(() => {
+      timelineHeaderRaf = null;
+      try {
+        const topMonthHeading = document.getElementById('fulltab-month-heading');
+        const weekPill = document.getElementById('fulltab-week-pill');
+        if (!topMonthHeading && !weekPill) return;
+
+        const tlSec = document.getElementById('fulltab-section-timeline');
+        if (tlSec && tlSec.style.display === 'none') return;
+
+        const cols = timelineTrack.querySelectorAll('.kanban-day-column');
+        if (!cols.length) return;
+
+        const scrollLeft = timelineScrollWrapper.scrollLeft;
+        const clientWidth = timelineScrollWrapper.clientWidth;
+        const viewLeft = scrollLeft;
+        const viewRight = scrollLeft + clientWidth;
+
+        let bestCol = null;
+        let maxVisibleWidth = -1;
+
+        for (const col of cols) {
+          const colLeft = col.offsetLeft;
+          const colRight = colLeft + col.offsetWidth;
+          const vLeft = Math.max(viewLeft, colLeft);
+          const vRight = Math.min(viewRight, colRight);
+          const visibleWidth = Math.max(0, vRight - vLeft);
+
+          if (visibleWidth > maxVisibleWidth) {
+            maxVisibleWidth = visibleWidth;
+            bestCol = col;
+          }
+        }
+
+        if (!bestCol) bestCol = cols[0];
+        const dateKey = bestCol.getAttribute('data-date-key');
+        if (!dateKey) return;
+
+        const parts = dateKey.split('-').map(Number);
+        if (parts.length >= 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+          const activeDate = new Date(parts[0], parts[1] - 1, parts[2]);
+          if (topMonthHeading) {
+            const newMonthHeading = formatMonthYearHeading(activeDate);
+            if (topMonthHeading.textContent !== newMonthHeading) {
+              topMonthHeading.textContent = newMonthHeading;
+            }
+          }
+          if (weekPill) {
+            const academicInfo = getUmAcademicInfo(activeDate);
+            if (academicInfo && academicInfo.weekPill && weekPill.textContent !== academicInfo.weekPill) {
+              weekPill.textContent = academicInfo.weekPill;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[SPeCTRUM Pro] updateTimelineHeaderFromScroll error:', err);
+      }
+    });
+  }
+
+  function navigateTimelineMonth(direction) {
+    if (!timelineScrollWrapper || !timelineTrack) return;
+    const cols = Array.from(timelineTrack.querySelectorAll('.kanban-day-column'));
+    if (!cols.length) return;
+
+    const scrollLeft = timelineScrollWrapper.scrollLeft;
+    const clientWidth = timelineScrollWrapper.clientWidth;
+    const viewLeft = scrollLeft;
+    const viewRight = scrollLeft + clientWidth;
+
+    let currentCol = cols[0];
+    let maxVisibleWidth = -1;
+    for (const col of cols) {
+      const colLeft = col.offsetLeft;
+      const colRight = colLeft + col.offsetWidth;
+      const vWidth = Math.max(0, Math.min(viewRight, colRight) - Math.max(viewLeft, colLeft));
+      if (vWidth > maxVisibleWidth) {
+        maxVisibleWidth = vWidth;
+        currentCol = col;
+      }
+    }
+
+    const curKey = currentCol.getAttribute('data-date-key') || '';
+    const [curY, curM] = curKey.split('-').map(Number);
+    const curYearMonth = (curY || 2026) * 12 + ((curM || 1) - 1);
+
+    if (direction < 0) {
+      // Find columns in a previous month
+      const prevCols = cols.filter(col => {
+        const key = col.getAttribute('data-date-key') || '';
+        const [y, m] = key.split('-').map(Number);
+        return (y * 12 + (m - 1)) < curYearMonth;
+      });
+
+      if (prevCols.length > 0) {
+        const targetYearMonth = Math.max(...prevCols.map(col => {
+          const [y, m] = (col.getAttribute('data-date-key') || '').split('-').map(Number);
+          return y * 12 + (m - 1);
+        }));
+        const matched = prevCols.filter(col => {
+          const [y, m] = (col.getAttribute('data-date-key') || '').split('-').map(Number);
+          return (y * 12 + (m - 1)) === targetYearMonth;
+        });
+        const targetCol = matched[matched.length - 1] || prevCols[prevCols.length - 1];
+        timelineScrollWrapper.scrollTo({ left: Math.max(0, targetCol.offsetLeft - 16), behavior: 'smooth' });
+      } else {
+        const step = Math.min(timelineScrollWrapper.clientWidth * 0.8, 576);
+        timelineScrollWrapper.scrollBy({ left: -step, behavior: 'smooth' });
+      }
+    } else {
+      // Find columns in a subsequent month
+      const nextCols = cols.filter(col => {
+        const key = col.getAttribute('data-date-key') || '';
+        const [y, m] = key.split('-').map(Number);
+        return (y * 12 + (m - 1)) > curYearMonth;
+      });
+
+      if (nextCols.length > 0) {
+        const targetCol = nextCols[0];
+        timelineScrollWrapper.scrollTo({ left: Math.max(0, targetCol.offsetLeft - 16), behavior: 'smooth' });
+      } else {
+        const step = Math.min(timelineScrollWrapper.clientWidth * 0.8, 576);
+        timelineScrollWrapper.scrollBy({ left: step, behavior: 'smooth' });
+      }
+    }
+  }
+
   function updateTimelineFloatingNavButtons() {
     if (!timelineScrollWrapper) return;
     const scrollLeft = timelineScrollWrapper.scrollLeft;
@@ -8043,6 +8175,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const atEnd = scrollLeft >= maxScroll - 12;
       btnTimelineScrollRight.classList.toggle('is-disabled', atEnd);
     }
+    updateTimelineHeaderFromScroll();
   }
 
   function scrollToToday(immediate = true) {
@@ -8945,7 +9078,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         : `${monthNames[calCurrentMonth]} ${calCurrentYear}`;
     }
     const fulltabHeading = document.getElementById('fulltab-month-heading');
-    if (fulltabHeading && currentFullTabMode !== 'materials' && currentFullTabMode !== 'preferences') {
+    if (fulltabHeading && currentFullTabMode === 'calendar') {
       fulltabHeading.textContent = (currentLang === 'zh')
         ? `${calCurrentYear}年 ${monthNames[calCurrentMonth]}`
         : `${monthNames[calCurrentMonth].toUpperCase()} ${calCurrentYear}`;
@@ -8954,8 +9087,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const calUmInfo = getUmAcademicInfo(calTargetDate);
     const fulltabSemBadge = document.getElementById('fulltab-sem-badge');
     const fulltabWeekPill = document.getElementById('fulltab-week-pill');
-    if (fulltabSemBadge) fulltabSemBadge.textContent = calUmInfo.semName;
-    if (fulltabWeekPill) fulltabWeekPill.textContent = calUmInfo.weekPill;
+    if (fulltabSemBadge && currentFullTabMode === 'calendar') fulltabSemBadge.textContent = calUmInfo.semName;
+    if (fulltabWeekPill && currentFullTabMode === 'calendar') fulltabWeekPill.textContent = calUmInfo.weekPill;
 
     // Collect all events for this month
     const eventsByDate = new Map();
