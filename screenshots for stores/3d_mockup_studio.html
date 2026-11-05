@@ -396,10 +396,27 @@
       </div>
       <div class="slider-row" style="margin-top:6px;">
         <div class="slider-header">
-          <span>Camera Distance</span>
+          <span>Camera Distance (Zoom)</span>
           <span class="slider-val" id="val-camDist">1050</span>
         </div>
-        <input type="range" id="param-camDist" min="600" max="1600" value="1050" oninput="updateControls()">
+        <input type="range" id="param-camDist" min="150" max="1600" value="1050" oninput="updateControls()">
+      </div>
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Camera Pan X (Focus / Alignment)</span>
+          <span class="slider-val" id="val-camPanX">0px</span>
+        </div>
+        <input type="range" id="param-camPanX" min="-600" max="600" value="0" oninput="updateControls()">
+      </div>
+      <div class="presets-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-top: 4px;">
+        <button class="preset-btn" style="padding:4px 6px; font-size:11px;" onclick="focusCamera(-380)">Focus Card 1</button>
+        <button class="preset-btn active" id="btn-cam-center" style="padding:4px 6px; font-size:11px;" onclick="focusCamera(0)">Center</button>
+        <button class="preset-btn" id="btn-cam-card3" style="padding:4px 6px; font-size:11px;" onclick="focusCamera(380)">Focus Card 3</button>
+      </div>
+      <div style="margin-top:6px;">
+        <button class="preset-btn" id="btn-cam-card3-closeup" style="width:100%; border-color:#38bdf8; color:#38bdf8; font-weight:600; padding:6px 10px; font-size:11px; background:rgba(56,189,248,0.08);" onclick="card3CloseUp()">
+          🔍 Closer Distance to Card 3 (Close-Up Hero)
+        </button>
       </div>
     </div>
 
@@ -426,6 +443,10 @@
       <div class="slider-row">
         <div class="slider-header"><span>Cascade Depth (Z-Step)</span><span class="slider-val" id="val-pZStep">30px</span></div>
         <input type="range" id="param-pZStep" min="-100" max="150" value="30" oninput="updateControls()">
+      </div>
+      <div class="slider-row">
+        <div class="slider-header"><span style="color:#38bdf8;">Card 3 Closer Distance (Pop-out)</span><span class="slider-val" id="val-c3ZOffset">0px</span></div>
+        <input type="range" id="param-c3ZOffset" min="-200" max="400" value="0" oninput="updateControls()">
       </div>
       <div class="slider-row">
         <div class="slider-header"><span>Vertical Stagger (Y-Step)</span><span class="slider-val" id="val-pYStep">0px</span></div>
@@ -619,6 +640,16 @@
     tripleParallelIso: {
       name: 'Parallel Isometric',
       camDist: 1050,
+      camPanX: 0,
+      c3ZOffset: 0,
+      pRotX: 8, pRotY: 14, pRotZ: -2,
+      pSpacing: 380, pZStep: 30, pYStep: 0, pScale: 100, pShadow: 55
+    },
+    tripleCard3Hero: {
+      name: 'Card 3 Closer Focus',
+      camDist: 650,
+      camPanX: 360,
+      c3ZOffset: 60,
       pRotX: 8, pRotY: 14, pRotZ: -2,
       pSpacing: 380, pZStep: 30, pYStep: 0, pScale: 100, pShadow: 55
     },
@@ -822,6 +853,11 @@
     document.querySelectorAll('.presets-grid .preset-btn').forEach(btn => {
       btn.classList.toggle('active', btn.innerText === p.name);
     });
+
+    const elCamPan = document.getElementById('param-camPanX');
+    if (elCamPan) elCamPan.value = (p.camPanX !== undefined) ? p.camPanX : 0;
+    const elC3Z = document.getElementById('param-c3ZOffset');
+    if (elC3Z) elC3Z.value = (p.c3ZOffset !== undefined) ? p.c3ZOffset : 0;
 
     for (const [key, val] of Object.entries(p)) {
       if (key === 'name') continue;
@@ -1087,14 +1123,20 @@
     updateControls();
     resizeFit();
     setupDragAndDrop();
+    setupMouseWheelZoom();
   }
 
   function updateControls() {
     if (!mesh1 || !mesh2 || !mesh3) return;
 
     const camDist = getVal('camDist');
+    const camPanX = getVal('camPanX') || 0;
     document.getElementById('val-camDist').innerText = camDist;
+    const panEl = document.getElementById('val-camPanX');
+    if (panEl) panEl.innerText = camPanX + 'px';
+    camera.position.x = camPanX;
     camera.position.z = camDist;
+    camera.lookAt(camPanX, 0, 0);
 
     if (currentMode === 3) {
       // 3-PHOTO PARALLEL MODE
@@ -1137,7 +1179,10 @@
       shadow2.material.opacity = pShadow;
 
       // Card 3 (Right / 中)
-      const x3 = pSpacing, y3 = -pYStep, z3 = pZStep;
+      const c3ZOffset = getVal('c3ZOffset') || 0;
+      const c3El = document.getElementById('val-c3ZOffset');
+      if (c3El) c3El.innerText = c3ZOffset + 'px';
+      const x3 = pSpacing, y3 = -pYStep, z3 = pZStep + c3ZOffset;
       mesh3.position.set(x3, y3, z3);
       mesh3.rotation.set(-pRotX, pRotY, pRotZ);
       mesh3.scale.set(pScale, pScale, 1);
@@ -1277,6 +1322,38 @@
   }
 
   // Interactive Drag & Drop directly onto canvas
+  function focusCamera(targetX) {
+    const el = document.getElementById('param-camPanX');
+    if (el) el.value = targetX;
+    updateControls();
+  }
+
+  function card3CloseUp() {
+    const pSpacing = getVal('pSpacing') || 380;
+    const elPan = document.getElementById('param-camPanX');
+    if (elPan) elPan.value = pSpacing;
+    const elDist = document.getElementById('param-camDist');
+    if (elDist) elDist.value = 650;
+    const elZ = document.getElementById('param-c3ZOffset');
+    if (elZ) elZ.value = 60;
+    updateControls();
+  }
+
+  function setupMouseWheelZoom() {
+    const container = document.getElementById('canvas-container');
+    if (!container) return;
+    container.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const input = document.getElementById('param-camDist');
+      if (!input) return;
+      let val = parseInt(input.value, 10);
+      const delta = Math.sign(e.deltaY) * 50;
+      val = Math.max(150, Math.min(1600, val + delta));
+      input.value = val;
+      updateControls();
+    }, { passive: false });
+  }
+
   function setupDragAndDrop() {
     const container = document.getElementById('canvas-container');
     container.addEventListener('dragover', (e) => {
