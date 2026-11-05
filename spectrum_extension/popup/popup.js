@@ -2428,12 +2428,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       pinBtn.title = '📌 Pinned Mode Active (Will not disappear when clicking outside)';
       pinBtn.classList.add('active');
     }
-    const fulltabPinBtn = document.getElementById('btn-fulltab-detach');
-    if (fulltabPinBtn) {
-      fulltabPinBtn.classList.add('active');
-      const lbl = fulltabPinBtn.querySelector('span');
-      if (lbl) lbl.textContent = 'Pinned';
-    }
 
     // Persist window size and position changes if detached
     if (isDetached) {
@@ -2691,19 +2685,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       } catch (err) {
         console.error('[SPeCTRUM Pro] Pin launch error:', err);
       }
-    });
-  }
-
-  const btnFulltabDetach = document.getElementById('btn-fulltab-detach');
-  if (btnFulltabDetach) {
-    btnFulltabDetach.addEventListener('click', async (e) => {
-      e.preventDefault();
-      try {
-        const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (activeTab && activeTab.id) {
-          chrome.tabs.sendMessage(activeTab.id, { type: 'OPEN_FLOATING_PANEL', pinned: true });
-        }
-      } catch (e) {}
     });
   }
 

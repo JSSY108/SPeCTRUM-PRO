@@ -12298,27 +12298,23 @@ body.is-floating-mode #btn-open-tab {
 }
 
 /* Active Pin Button highlight in Detached Window */
-body.is-detached-window #btn-detach-popup,
-body.is-detached-window #btn-fulltab-detach {
+body.is-detached-window #btn-detach-popup {
   background: var(--brand-accent-bg, rgba(99, 102, 241, 0.12)) !important;
   color: var(--brand-accent, #6366f1) !important;
   border-color: var(--brand-accent, #6366f1) !important;
   box-shadow: 0 0 8px rgba(99, 102, 241, 0.25) !important;
 }
 
-body.is-detached-window #btn-detach-popup .icon-pin,
-body.is-detached-window #btn-fulltab-detach .icon-pin {
+body.is-detached-window #btn-detach-popup .icon-pin {
   transform: rotate(45deg);
   transition: transform 0.2s ease;
 }
 
-#btn-detach-popup .icon-pin,
-#btn-fulltab-detach .icon-pin {
+#btn-detach-popup .icon-pin {
   transition: transform 0.2s ease;
 }
 
-#btn-detach-popup:hover .icon-pin,
-#btn-fulltab-detach:hover .icon-pin {
+#btn-detach-popup:hover .icon-pin {
   transform: scale(1.15);
 }
 
