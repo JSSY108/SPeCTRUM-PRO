@@ -57,3 +57,4 @@ SPeCTRUM Pro is an unofficial open-source utility developed independently by and
 ## 6. Contact
 
 If you have any questions or feedback regarding this Privacy Policy or SPeCTRUM Pro, please open an issue on the official GitHub repository or contact the developer.
+

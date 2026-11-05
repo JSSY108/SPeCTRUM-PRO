@@ -1432,7 +1432,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const text = labelText || (isSpinning ? 'Syncing...' : 'Sync');
     if (btnRefreshActivities) {
       btnRefreshActivities.classList.toggle('spinning', isSpinning);
-      if (!isSpinning) {
+      if (isSpinning) {
+        btnRefreshActivities.classList.add('sync-progress-active');
+      } else {
         btnRefreshActivities.classList.remove('sync-progress-active');
         btnRefreshActivities.style.removeProperty('--sync-pct');
       }
@@ -1441,7 +1443,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fulltabBtn = document.getElementById('btn-fulltab-sync');
     if (fulltabBtn) {
       fulltabBtn.classList.toggle('spinning', isSpinning);
-      if (!isSpinning) {
+      if (isSpinning) {
+        fulltabBtn.classList.add('sync-progress-active');
+      } else {
         fulltabBtn.classList.remove('sync-progress-active');
         fulltabBtn.style.removeProperty('--sync-pct');
       }
@@ -7026,15 +7030,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   } else {
     // No cached courses (Fresh install / New user):
+    // Switch to activities tab cleanly without auto-reloading or uninvited network sync
     switchTab('tab-activities');
     initSidebarRail();
-
-    // Auto-sync right away with animation so new users don't have to guess to click Sync!
-    // This connects to SPeCTRUM, fetches enrolled courses, and automatically pops up the OCC setup modal.
-    logDiag('Init', 'New user / empty cache detected: initiating auto-sync with animation...');
-    setTimeout(() => {
-      refreshActivities(false, false);
-    }, 450);
   }
 
   // ========================================================
