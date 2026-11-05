@@ -7,7 +7,7 @@
 // - Zero-dependency PDF, PNG, and CSV exporters
 // ==========================================================================
 
-(function(window) {
+(function (window) {
   'use strict';
 
   function getSafeAttendances() {
@@ -421,7 +421,7 @@
     if (saved === 'horizontal' || saved === 'vertical') {
       currentTimetableLayout = saved;
     }
-  } catch (e) {}
+  } catch (e) { }
 
   function updateLayoutSwitchUI() {
     const btnVert = document.getElementById('btn-tt-vertical');
@@ -434,7 +434,7 @@
     currentTimetableLayout = (layout === 'horizontal') ? 'horizontal' : 'vertical';
     try {
       localStorage.setItem('spectrum_pro_timetable_layout', currentTimetableLayout);
-    } catch (e) {}
+    } catch (e) { }
     updateLayoutSwitchUI();
     renderTimetableMode();
   }
@@ -450,7 +450,7 @@
     if (savedFit !== null) {
       isOnePageMode = (savedFit === 'true');
     }
-  } catch (e) {}
+  } catch (e) { }
 
   function updateOnePageButtonUI() {
     const btn = document.getElementById('btn-tt-one-page');
@@ -470,7 +470,7 @@
     isOnePageMode = !isOnePageMode;
     try {
       localStorage.setItem('spectrum_pro_timetable_one_page', isOnePageMode ? 'true' : 'false');
-    } catch (e) {}
+    } catch (e) { }
     updateOnePageButtonUI();
     renderTimetableMode();
   }
@@ -516,7 +516,7 @@
       // Proportional 50% scale of the entire timetable canvas.
       // Keeps the EXACT layout, aspect ratios, and column proportions of the original
       // without squeezing or compressing columns into the viewport width.
-      const scale = 0.5;
+      const scale = 0.8;
 
       // Temporarily clear inline transforms to measure natural uncompressed layout dimensions
       grid.style.transform = 'none';
@@ -651,7 +651,7 @@
           }
         }
       }
-    } catch (e) {}
+    } catch (e) { }
 
     // Any day without a single course scheduled (e.g. Friday, Saturday) takes half a row height (weight 0.5)!
     const hasDaySession = dIdx => sessions.some(s => s.dayIndex === dIdx);
@@ -828,7 +828,7 @@
       }
     });
 
-        // Real-Time Timetable Tracker Overlay (Horizontal Layout)
+    // Real-Time Timetable Tracker Overlay (Horizontal Layout)
     html += `
       <div class="tt-live-tracker-overlay horizontal" style="grid-column: 1 / -1; grid-row: 1 / -1;">
         <div id="tt-horizontal-live-tracker" class="tt-live-tracker horizontal">
@@ -866,13 +866,13 @@
     try {
       if (typeof document !== 'undefined') {
         const rootVal = getComputedStyle(document.documentElement).getPropertyValue('--tt-hour-row-height') ||
-                       getComputedStyle(gridEl).getPropertyValue('--tt-hour-row-height');
+          getComputedStyle(gridEl).getPropertyValue('--tt-hour-row-height');
         const parsed = parseInt(rootVal, 10);
         if (!isNaN(parsed) && parsed >= 60 && parsed <= 300) {
           hourHeight = parsed;
         }
       }
-    } catch (e) {}
+    } catch (e) { }
 
     const totalHours = maxHour - minHour;
     const HOUR_HEIGHT = hourHeight;
@@ -1069,7 +1069,7 @@
       html += `</div>`;
     });
 
-        // Real-Time Timetable Tracker Overlay (Vertical Layout)
+    // Real-Time Timetable Tracker Overlay (Vertical Layout)
     html += `
       <div class="tt-live-tracker-overlay vertical" style="grid-column: 1 / -1; grid-row: 2; height: ${totalHeight}px;">
         <div id="tt-vertical-live-tracker" class="tt-live-tracker vertical">

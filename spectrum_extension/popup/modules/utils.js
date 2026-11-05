@@ -375,12 +375,12 @@
       semType = 'SEM I';
       acYearStart = year;
       acYearEnd = year + 1;
-      startDate = getAcademicMonday(acYearStart, 8, 'last');
+      startDate = getAcademicMonday(acYearStart, 9, 'first');
     } else if (month >= 1 && month <= 3) {
       semType = 'SEM I';
       acYearStart = year - 1;
       acYearEnd = year;
-      startDate = getAcademicMonday(acYearStart, 8, 'last');
+      startDate = getAcademicMonday(acYearStart, 9, 'first');
     } else if (month >= 4 && month <= 7) {
       semType = 'SEM II';
       acYearStart = year - 1;

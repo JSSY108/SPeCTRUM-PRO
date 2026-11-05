@@ -53,6 +53,7 @@ let courseOccs = {}; // courseId -> occ string
 let defaultOcc = '';
 let forceShowOccBanner = false;
 let isSyncingActivities = false;
+let customSem1StartDate = '';
 let isSyncOverlayDismissed = false;
 let isScanningMaterials = false;
 let currentSyncAbortController = null;
@@ -2111,8 +2112,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     await chrome.storage.local.set({
       hiddenAttendanceIds: hiddenAttendanceIds,
       hiddenAttendanceDetails: hiddenAttendanceDetails,
-      spineFocalRatio: spineFocalRatio
+      spineFocalRatio: spineFocalRatio,
+      customSem1StartDate: (document.getElementById('pref-sem-start-input')?.value || '').trim()
     });
+    customSem1StartDate = (document.getElementById('pref-sem-start-input')?.value || '').trim();
+    updateDateHeroHeader(activeDateFilterObj || new Date());
+    if (typeof renderCalendarView === 'function') {
+      renderCalendarView(miniCalYear, miniCalMonth);
+    }
+    if (typeof updateFullTabHeader === 'function') updateFullTabHeader();
 
     logDiag('Attendance:Restore', `Restored attendance [${attId}]. Remaining hidden: ${hiddenAttendanceIds.length}`);
 
@@ -2260,15 +2268,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       semType = 'SEM I';
       acYearStart = year;
       acYearEnd = year + 1;
-      // Start of Sem 1: Last Monday of September
-      startDate = getAcademicMonday(acYearStart, 8, 'last');
+      if (typeof customSem1StartDate === 'string' && customSem1StartDate.trim()) {
+        const parsed = new Date(customSem1StartDate.trim() + 'T00:00:00');
+        if (!isNaN(parsed.getTime())) startDate = parsed;
+      }
+      // Start of Sem 1: First Monday of October (e.g. 5 Oct 2026)
+      if (!startDate) startDate = getAcademicMonday(acYearStart, 9, 'first');
     } else if (month >= 1 && month <= 3) {
       // Semester 1 (Winter/Spring term continuation into next year: Jan - Mar)
       semType = 'SEM I';
       acYearStart = year - 1;
       acYearEnd = year;
-      // Start of Sem 1 was last Monday of September of the preceding year
-      startDate = getAcademicMonday(acYearStart, 8, 'last');
+      if (typeof customSem1StartDate === 'string' && customSem1StartDate.trim()) {
+        const parsed = new Date(customSem1StartDate.trim() + 'T00:00:00');
+        if (!isNaN(parsed.getTime())) startDate = parsed;
+      }
+      // Start of Sem 1 was first Monday of October of preceding year
+      if (!startDate) startDate = getAcademicMonday(acYearStart, 9, 'first');
     } else if (month >= 4 && month <= 7) {
       // Semester 2 (Spring/Summer term: Apr - Jul)
       semType = 'SEM II';
@@ -6380,7 +6396,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     autoAttendanceInterval: 15,
     hiddenAttendanceIds: [],
     hiddenAttendanceDetails: {},
-    spineFocalRatio: 0.50
+    spineFocalRatio: 0.50,
+    customSem1StartDate: ''
   };
 
   const stored = await chrome.storage.local.get(defaultSettings);
@@ -6409,6 +6426,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   syncAutoAttBadge();
   hiddenAttendanceIds = stored.hiddenAttendanceIds || [];
   hiddenAttendanceDetails = stored.hiddenAttendanceDetails || {};
+  customSem1StartDate = stored.customSem1StartDate || '';
+  const prefSemStartInput = document.getElementById('pref-sem-start-input');
+  const btnResetSemStart = document.getElementById('btn-reset-sem-start');
+  if (prefSemStartInput) {
+    prefSemStartInput.value = customSem1StartDate || '2026-10-05';
+  }
+  if (btnResetSemStart) {
+    btnResetSemStart.addEventListener('click', async () => {
+      customSem1StartDate = '';
+      if (prefSemStartInput) prefSemStartInput.value = '2026-10-05';
+      await chrome.storage.local.set({ customSem1StartDate: '' });
+      updateDateHeroHeader(activeDateFilterObj || new Date());
+      if (typeof renderCalendarView === 'function') {
+        renderCalendarView(miniCalYear, miniCalMonth);
+      }
+      if (typeof updateFullTabHeader === 'function') updateFullTabHeader();
+    });
+  }
 
   function syncAutoAttBadge() {
     const badge = document.getElementById('pref-auto-att-badge');
