@@ -39,6 +39,13 @@
         </div>
         <h1>SPeCTRUM PRO</h1>
         <span class="version-tag">v1.0</span>
+        <button type="button" id="btn-about-app-popup" class="header-info-btn btn-info-circle-popup" title="About SPeCTRUM PRO & Developer" aria-label="About SPeCTRUM PRO">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+        </button>
       </div>
       <div class="popup-header-actions" style="display:flex;align-items:center;gap:6px;">
         <div class="popup-lang-switcher" id="popup-lang-switcher" aria-label="Language">
@@ -893,7 +900,13 @@
           </svg>
         </div>
         <span class="header-app-title">SPeCTRUM PRO</span>
-        <span class="header-sem-badge" id="fulltab-sem-badge">SEM I · 2026-27</span>
+        <button type="button" id="btn-about-app" class="header-info-btn" title="About SPeCTRUM PRO & Developer" aria-label="About SPeCTRUM PRO">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+        </button>
       </div>
 
       <div class="header-center-title">
@@ -1412,6 +1425,103 @@
           <button type="button" id="btn-cancel-tt-location" class="btn-wireframe">Cancel</button>
           <button type="button" id="btn-save-tt-location" class="btn-cta-solid">Save Changes</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- About SPeCTRUM PRO & Developer Modal (Minimalist Black & White) -->
+  <div id="about-app-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-card about-modal-card">
+      <div class="modal-header about-modal-header">
+        <div class="about-modal-brand">
+          <div class="brand-logo-container about-logo-wrap">
+            <svg class="header-brand-logo-svg stage-settled" viewBox="0 0 200 200" style="width:24px;height:24px;">
+              <polygon class="art-tri" points="100,36.4 32.7,149.5 167.3,149.5" stroke-width="2" />
+              <line class="art-subline" x1="35.7" y1="145.9" x2="164.3" y2="145.9" stroke-width="2" />
+              <polygon class="art-beam art-beam-incident" points="0.2,141.4 50.9,124.6 49.3,120.0 -0.2,140.2" />
+              <circle class="flash-spark" cx="50.1" cy="122.3" r="5" fill="#FFFFFF" />
+              <path class="art-score-track laser-score-top" pathLength="100" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" d="M 50.1 120.7 L 100.7 105.4 L 75.6 87.4 L 122.4 71.1" stroke-width="2.3" />
+              <path class="art-score-track laser-score-bot" pathLength="100" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" d="M 50.1 123.9 L 129.9 111.6 L 98.6 91.1 L 123.7 78.2" stroke-width="2.3" />
+              <line class="art-score-cap cap-score-exit" stroke="#FFFFFF" stroke-linecap="round" x1="122.4" y1="71.1" x2="123.7" y2="78.2" stroke-width="2.3" />
+              <polygon class="art-poly art-score-poly" points="50.1,120.7 100.7,105.4 75.6,87.4 122.4,71.1 123.7,78.2 98.6,91.1 129.9,111.6 50.1,123.9" stroke-width="2.3" />
+              <polygon class="art-beam art-beam-ray1" points="122.8,72.1 200.1,39.8 199.9,39.2 122.0,70.1" />
+              <polygon class="art-beam art-beam-ray2" points="123.1,75.9 200.1,51.7 199.9,50.9 122.7,74.3" />
+              <polygon class="art-beam art-beam-ray3" points="124.1,79.9 200.1,64.4 199.9,63.6 123.7,78.3" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="about-title">SPeCTRUM PRO</h3>
+            <span class="about-version-badge">v1.0.0 · Production</span>
+          </div>
+        </div>
+        <button type="button" id="btn-close-about-modal" class="modal-close-btn" title="Close" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal-body about-modal-body">
+        <!-- Developer Profile Card -->
+        <div class="about-dev-box">
+          <div class="about-dev-header">
+            <div class="about-dev-avatar">JS</div>
+            <div class="about-dev-info">
+              <span class="about-dev-role">CREATOR & DEVELOPER</span>
+              <h4 class="about-dev-name">Jonathan S.</h4>
+              <p class="about-dev-desc">Built with ❤️ for fellow Universiti Malaya (UM) coursemates to eliminate repetitive clicking, automate attendance, and simplify academic life.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Links Section: Store Review, GitHub, Tip Jar -->
+        <div class="about-actions-group">
+          <!-- Smart Store Review Button (Edge vs Chrome detection) -->
+          <a id="btn-about-store-review" href="#" target="_blank" rel="noopener noreferrer" class="about-action-row">
+            <div class="about-action-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            </div>
+            <div class="about-action-text">
+              <div class="about-action-title" id="about-store-title">Review on Chrome Web Store</div>
+              <div class="about-action-subtitle" id="about-store-sub">Help fellow UM students discover this extension</div>
+            </div>
+            <span class="about-action-arrow">↗</span>
+          </a>
+
+          <!-- GitHub Repo Button -->
+          <a id="btn-about-github" href="https://github.com/jonathans-dev/spectrum-pro" target="_blank" rel="noopener noreferrer" class="about-action-row">
+            <div class="about-action-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            </div>
+            <div class="about-action-text">
+              <div class="about-action-title">GitHub Repository</div>
+              <div class="about-action-subtitle">Star the project, inspect code, or report issues</div>
+            </div>
+            <span class="about-action-arrow">↗</span>
+          </a>
+
+          <!-- Tip Jar / Coffee Jump Button -->
+          <button type="button" id="btn-about-tipjar" class="about-action-row about-action-button">
+            <div class="about-action-icon">
+              <span style="font-size:14px;line-height:1;">☕</span>
+            </div>
+            <div class="about-action-text">
+              <div class="about-action-title">Support Developer / Tip Jar</div>
+              <div class="about-action-subtitle">Scan DuitNow QR to buy Jonathan a coffee</div>
+            </div>
+            <span class="about-action-arrow" id="about-tipjar-chevron">▼</span>
+          </button>
+        </div>
+
+        <!-- Inline Expandable DuitNow QR inside modal -->
+        <div id="about-duitnow-section" class="about-duitnow-section" style="display:none;">
+          <div class="about-duitnow-box">
+            <img class="about-qr-img" src="../icons/duitnow_qr.png" alt="DuitNow QR">
+            <p class="about-qr-note">Scan with MAE, Touch 'n Go eWallet, or any Malaysian banking app.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer about-modal-footer">
+        <span class="about-footer-legal">SPeCTRUM PRO · Independent Student Tool · Not affiliated with UM</span>
+        <button type="button" id="btn-dismiss-about-modal" class="btn-cta-solid">Got It</button>
       </div>
     </div>
   </div>

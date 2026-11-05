@@ -12610,6 +12610,80 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+
+  // ========================================================
+  // About SPeCTRUM PRO & Developer Modal Logic
+  // ========================================================
+  function initAboutModal() {
+    const btnAboutApp = document.getElementById('btn-about-app');
+    const btnAboutAppPopup = document.getElementById('btn-about-app-popup');
+    const aboutModal = document.getElementById('about-app-modal');
+    const btnCloseAboutModal = document.getElementById('btn-close-about-modal');
+    const btnDismissAboutModal = document.getElementById('btn-dismiss-about-modal');
+    const btnAboutStoreReview = document.getElementById('btn-about-store-review');
+    const aboutStoreTitle = document.getElementById('about-store-title');
+    const aboutStoreSub = document.getElementById('about-store-sub');
+    const btnAboutTipjar = document.getElementById('btn-about-tipjar');
+    const aboutDuitnowSection = document.getElementById('about-duitnow-section');
+    const aboutTipjarChevron = document.getElementById('about-tipjar-chevron');
+
+    // Browser detection for Chrome Web Store vs Microsoft Edge Add-ons
+    const isEdge = /Edg\//i.test(navigator.userAgent);
+    if (isEdge) {
+      if (aboutStoreTitle) aboutStoreTitle.textContent = 'Review on Edge Add-ons';
+      if (aboutStoreSub) aboutStoreSub.textContent = 'Help fellow Edge coursemates discover SPeCTRUM PRO';
+      if (btnAboutStoreReview) btnAboutStoreReview.href = 'https://microsoftedge.microsoft.com/addons/detail/spectrum-pro';
+    } else {
+      if (aboutStoreTitle) aboutStoreTitle.textContent = 'Review on Chrome Web Store';
+      if (aboutStoreSub) aboutStoreSub.textContent = 'Help fellow UM students discover this extension';
+      const extId = (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) ? chrome.runtime.id : '';
+      if (btnAboutStoreReview) {
+        btnAboutStoreReview.href = extId ? `https://chromewebstore.google.com/detail/${extId}/reviews` : 'https://chromewebstore.google.com/';
+      }
+    }
+
+    function openAboutModal() {
+      if (!aboutModal) return;
+      aboutModal.style.display = 'flex';
+    }
+
+    function closeAboutModal() {
+      if (!aboutModal) return;
+      aboutModal.style.display = 'none';
+      if (aboutDuitnowSection) aboutDuitnowSection.style.display = 'none';
+      if (aboutTipjarChevron) aboutTipjarChevron.textContent = '▼';
+    }
+
+    if (btnAboutApp) btnAboutApp.addEventListener('click', openAboutModal);
+    if (btnAboutAppPopup) btnAboutAppPopup.addEventListener('click', openAboutModal);
+    if (btnCloseAboutModal) btnCloseAboutModal.addEventListener('click', closeAboutModal);
+    if (btnDismissAboutModal) btnDismissAboutModal.addEventListener('click', closeAboutModal);
+
+    if (aboutModal) {
+      aboutModal.addEventListener('click', (e) => {
+        if (e.target === aboutModal) closeAboutModal();
+      });
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && aboutModal && aboutModal.style.display === 'flex') {
+        closeAboutModal();
+      }
+    });
+
+    if (btnAboutTipjar) {
+      btnAboutTipjar.addEventListener('click', () => {
+        if (aboutDuitnowSection) {
+          const isHidden = aboutDuitnowSection.style.display === 'none';
+          aboutDuitnowSection.style.display = isHidden ? 'block' : 'none';
+          if (aboutTipjarChevron) aboutTipjarChevron.textContent = isHidden ? '▲' : '▼';
+        }
+      });
+    }
+  }
+
+  initAboutModal();
+
   if (btnCloseAnnModal) btnCloseAnnModal.addEventListener('click', () => { annModal.style.display = 'none'; });
   if (btnDismissAnnModal) btnDismissAnnModal.addEventListener('click', () => { annModal.style.display = 'none'; });
   if (annModal) {
