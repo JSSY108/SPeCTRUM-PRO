@@ -4695,7 +4695,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const clean = cleanOccNumber(c.userOcc);
         if (clean) occText = ` (OCC ${clean})`;
       }
-      const titleText = `${c.courseCode}: ${c.courseName}${occText} - ${cTotal} active item${cTotal !== 1 ? 's' : ''}`;
+      const titleText = `${c.courseCode}: ${c.courseName}${occText}`;
 
       // In By Course Mode, no dots are displayed on first letter icons per user spec
       return `
@@ -4930,34 +4930,27 @@ document.addEventListener('DOMContentLoaded', async () => {
               <span class="mcp-code">ALL ENROLLED</span>
               <span class="mcp-occ">RESET FILTER</span>
             </div>
-            <div class="mcp-title">All Course Feeds</div>
-            <div class="mcp-instructor">Unified timeline across all subjects</div>
-            <div class="mcp-counter">● ${totalAll} Total Deliverables</div>
+            <div class="mcp-title" style="margin-bottom:0;">All Course Feeds</div>
           `;
         } else {
           const c = courses.find(item => String(item.courseId) === String(cid) || item.courseCode === btn.dataset.courseCode);
           if (!c) return;
 
           const occText = c.userOcc ? formatOccTag(c.userOcc) : 'All Cohorts';
-          const activeTasks = (c.pendingCount !== undefined) ? c.pendingCount : (c.taskCount || 0);
-          const cTotal = (c.annCount || 0) + activeTasks + (c.attCount || 0);
-          const instructor = c.lecturer || 'Course Instructor · Faculty of CSIT';
 
           popover.innerHTML = `
             <div class="mcp-header">
               <span class="mcp-code">${escapeHtml(c.courseCode)}</span>
               <span class="mcp-occ">${escapeHtml(occText)}</span>
             </div>
-            <div class="mcp-title">${escapeHtml(c.courseName)}</div>
-            <div class="mcp-instructor">👤 ${escapeHtml(instructor)}</div>
-            <div class="mcp-counter">● ${cTotal} Active Deliverables (${activeTasks} Tasks)</div>
+            <div class="mcp-title" style="margin-bottom:0;">${escapeHtml(c.courseName)}</div>
           `;
         }
 
         const rect = btn.getBoundingClientRect();
         popover.style.left = (rect.right + 10) + 'px';
-        const popHeight = 110;
-        let topPos = rect.top - 10;
+        const popHeight = 55;
+        let topPos = rect.top - 6;
         if (topPos + popHeight > window.innerHeight) {
           topPos = window.innerHeight - popHeight - 10;
         }
