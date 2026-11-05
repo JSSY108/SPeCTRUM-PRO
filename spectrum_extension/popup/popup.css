@@ -5146,57 +5146,63 @@ body.is-full-tab .materials-pane {
   min-width: 180px;
 }
 
-.mat-search-input {
-  width: 100%;
-  height: 32px;
-  padding: 0 48px 0 32px;
-  border: 1px solid var(--border-hairline);
-  border-radius: var(--radius-sm);
-  font-size: 11.5px;
-  background: var(--bg-subtle);
-  color: var(--text-primary);
-  outline: none;
-  transition: all 0.15s ease;
+input.mat-search-input,
+.mat-search-wrap .mat-search-input,
+#filter-search-input {
+  width: 100% !important;
+  height: 32px !important;
+  padding: 0 28px 0 34px !important;
+  border: 1px solid var(--border-hairline) !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: 11.5px !important;
+  background: var(--bg-subtle) !important;
+  color: var(--text-primary) !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: all 0.15s ease !important;
 }
 
-.mat-search-input:focus {
-  background: #ffffff;
-  border-color: var(--border-strong);
-  box-shadow: 0 0 0 1px var(--border-strong);
+input.mat-search-input:focus,
+.mat-search-wrap .mat-search-input:focus,
+#filter-search-input:focus {
+  background: #ffffff !important;
+  border-color: var(--border-strong) !important;
+  box-shadow: 0 0 0 1px var(--border-strong) !important;
 }
 
 .mat-search-icon {
   position: absolute;
-  left: 9px;
-  width: 13px;
-  height: 13px;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
   color: var(--text-muted);
   pointer-events: none;
+  z-index: 2;
 }
 
 .mat-shortcut-badge {
-  position: absolute;
-  right: 8px;
-  font-size: 9.5px;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  color: var(--text-muted);
-  border: 1px solid var(--border-hairline);
-  border-radius: 3px;
-  padding: 1px 4px;
-  background: var(--bg-surface);
-  pointer-events: none;
+  display: none !important;
 }
 
 .mat-clear-btn {
   position: absolute;
-  right: 28px;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   font-size: 11px;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 4px;
+  line-height: 1;
+  z-index: 2;
+}
+
+.mat-clear-btn:hover {
+  color: var(--text-primary);
 }
 
 .mat-ext-pills {
