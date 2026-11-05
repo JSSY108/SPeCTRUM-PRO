@@ -1434,6 +1434,34 @@
     }
   }
 
+  // Helper: Live update file badge in sidebar tree DOM
+  function updateSidebarFileBadge(fileId, badge) {
+    if (!fileId || !badge) return;
+    const rowEl = document.querySelector(`.file-tree-item[data-file-id="${fileId}"]`);
+    if (rowEl) {
+      const badgeEl = rowEl.querySelector('.file-format-badge');
+      if (badgeEl) {
+        badgeEl.className = `file-format-badge ${badge.cls}`;
+        badgeEl.textContent = badge.label;
+      }
+    }
+  }
+
+  // Helper: Debounced persist coursesData to local storage when file metadata or badges heal
+  let persistTimer = null;
+  function persistCoursesCache() {
+    clearTimeout(persistTimer);
+    persistTimer = setTimeout(() => {
+      try {
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local && Array.isArray(coursesData)) {
+          chrome.storage.local.set({ cachedCoursesData: coursesData, cachedCoursesTime: Date.now() });
+        }
+      } catch (e) {
+        console.warn('[SPeCTRUM Pro] Save cache note:', e);
+      }
+    }, 300);
+  }
+
   // Rich Office Document (.pptx, .docx) Parser via JSZip
   async function parseOfficePreview(arrayBuffer, ext) {
     if (typeof JSZip === 'undefined' || !arrayBuffer) return null;
@@ -1463,13 +1491,19 @@
           const xmlText = await docXml.async('text');
           const parser = new DOMParser();
           const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
-          const paragraphs = Array.from(xmlDoc.querySelectorAll('p')).map(p => {
-            return Array.from(p.querySelectorAll('t')).map(t => t.textContent || '').join('');
+          const pEls = xmlDoc.getElementsByTagName('w:p').length
+            ? Array.from(xmlDoc.getElementsByTagName('w:p'))
+            : Array.from(xmlDoc.querySelectorAll('p'));
+          const paragraphs = pEls.map(p => {
+            const tEls = p.getElementsByTagName('w:t').length
+              ? Array.from(p.getElementsByTagName('w:t'))
+              : Array.from(p.querySelectorAll('t'));
+            return tEls.map(t => t.textContent || '').join('');
           }).map(p => p.trim()).filter(Boolean);
 
           return {
             type: 'docx_doc',
-            paragraphs: paragraphs.slice(0, 12),
+            paragraphs: paragraphs.slice(0, 50),
             badge: 'DOCX'
           };
         }
@@ -1571,7 +1605,7 @@
 
       if (!ext) {
         const urlMatch = (fetchResult.finalUrl || '').match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
-        if (urlMatch) {
+        if (urlMatch && !['php', 'html', 'htm', 'asp', 'aspx', 'jsp'].includes(urlMatch[1].toLowerCase())) {
           ext = urlMatch[1].toLowerCase();
         } else if (contentType.includes('pdf')) {
           ext = 'pdf';
@@ -1591,14 +1625,8 @@
         file.ext = ext;
         const freshBadge = detectFileBadge(file);
         file.badge = freshBadge;
-        const rowEl = document.querySelector(`.file-tree-item[data-file-id="${file.id}"]`);
-        if (rowEl) {
-          const badgeEl = rowEl.querySelector('.file-format-badge');
-          if (badgeEl) {
-            badgeEl.className = `file-format-badge ${freshBadge.cls}`;
-            badgeEl.textContent = freshBadge.label;
-          }
-        }
+        updateSidebarFileBadge(file.id, freshBadge);
+        persistCoursesCache();
       }
 
       const isImage = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext);
@@ -1698,6 +1726,11 @@
       const isPdf = hasPdfMagic || (!isHtmlPage && (contentType.includes('application/pdf') || ext === 'pdf'));
 
       if (isPdf && hasPdfMagic) {
+        file.ext = 'pdf';
+        file.badge = { label: 'PDF', cls: 'badge-pdf' };
+        updateSidebarFileBadge(file.id, file.badge);
+        persistCoursesCache();
+
         if (typeof pdfjsLib === 'undefined') {
           throw new Error('PDF.js not available');
         }
@@ -1767,6 +1800,12 @@
           if (officeData.type === 'office_image') {
             hidePageNavControls();
             activeDocPreview = null;
+            if (officeData.badge === 'PPTX') {
+              file.ext = 'pptx';
+              file.badge = { label: 'PPTX', cls: 'badge-pptx' };
+              updateSidebarFileBadge(file.id, file.badge);
+              persistCoursesCache();
+            }
             const contentArea = document.getElementById('insp-preview-content-area') || frame;
             contentArea.innerHTML = '';
             const wrap = document.createElement('div');
@@ -1780,6 +1819,15 @@
           if (officeData.type === 'docx_doc') {
             hidePageNavControls();
             activeDocPreview = null;
+            ext = 'docx';
+            file.ext = 'docx';
+            file.badge = { label: 'DOCX', cls: 'badge-docx' };
+            updateSidebarFileBadge(file.id, file.badge);
+            const inspTypeBadge = document.getElementById('insp-type-badge');
+            if (inspTypeBadge) inspTypeBadge.textContent = 'DOCX';
+            const inspDownloadText = document.getElementById('insp-download-text');
+            if (inspDownloadText) inspDownloadText.textContent = 'Download Local Copy (.docx)';
+            persistCoursesCache();
             renderDocCard(frame, file, officeData);
             previewCache.set(cacheKey, cachedOfficeData);
             return;
@@ -2295,10 +2343,10 @@
         img.style.transform = `scale(${currentPreviewZoom})`;
         img.style.transformOrigin = 'center center';
       }
-      const box = document.querySelector('.insp-slide-preview-box') || document.getElementById('insp-preview-text');
+      const box = document.querySelector('.insp-slide-preview-box, .insp-doc-preview-box') || document.getElementById('insp-preview-text');
       if (box) {
         box.style.transform = `scale(${currentPreviewZoom})`;
-        box.style.transformOrigin = 'top center';
+        box.style.transformOrigin = 'top left';
       }
     }
   }
@@ -2581,15 +2629,33 @@
     contentArea.innerHTML = '';
     const box = document.createElement('div');
     box.className = 'insp-doc-preview-box';
-    const paragraphsHtml = (data.paragraphs || []).map(p => `<p class="insp-doc-p">${escapeHtml(p)}</p>`).join('');
+
+    const paragraphsHtml = (data.paragraphs || []).map(p => {
+      const clean = p.trim();
+      const isTitle = clean.length < 90 && /^(wia\d+|wix\d+|kue\d+|kua\d+|kcx\d+|[a-z]{3}\d{4})\b/i.test(clean);
+      const isHeading = !isTitle && (
+        (clean.length < 120 && /^(question\s*\d+|tutorial\s*\d+|lab\s*\d+|assignment\s*\d+|section\s*\d+|chapter\s*\d+|part\s*[a-z0-9]|task\s*\d+|activity\s*\d+|case\s*study|exercise\s*\d+)/i.test(clean)) ||
+        (clean.length < 80 && clean.endsWith(':'))
+      );
+      const isSubheading = !isTitle && !isHeading && (clean.length < 80 && /^(learning\s*outcomes?|objectives?|instructions?|overview|background|scenario|requirements?|deliverables?)\b/i.test(clean));
+
+      let cls = 'insp-doc-p';
+      if (isTitle) cls += ' is-title';
+      else if (isHeading) cls += ' is-heading';
+      else if (isSubheading) cls += ' is-subheading';
+
+      return `<p class="${cls}">${escapeHtml(clean)}</p>`;
+    }).join('');
+
     box.innerHTML = `
       <div class="insp-slide-preview-header">
         <span class="insp-slide-badge" style="color:#2563EB;background:#EFF6FF;border-color:rgba(37,99,235,0.25);">📄 ${escapeHtml(data.badge || 'DOCX')}</span>
-        <span class="insp-slide-count-pill">Word Document</span>
+        <span class="insp-slide-count-pill">Word Document · ${(data.paragraphs || []).length} paragraphs</span>
       </div>
-      ${paragraphsHtml || `<div style="font-size:11px;color:var(--text-muted);font-style:italic;">Click Full Reader to view document.</div>`}
+      <div class="insp-doc-body">
+        ${paragraphsHtml || `<div style="font-size:13px;color:var(--text-muted);font-style:italic;padding:12px 0;">No text excerpt could be extracted. Click Open Full Reader to view this document.</div>`}
+      </div>
     `;
-    // No download on preview box click
     contentArea.appendChild(box);
   }
 
@@ -2681,6 +2747,13 @@
       contentArea.appendChild(img);
     } else if (cached.type === 'docx_doc') {
       hidePageNavControls();
+      file.ext = 'docx';
+      file.badge = { label: 'DOCX', cls: 'badge-docx' };
+      updateSidebarFileBadge(file.id, file.badge);
+      const inspTypeBadge = document.getElementById('insp-type-badge');
+      if (inspTypeBadge) inspTypeBadge.textContent = 'DOCX';
+      const inspDownloadText = document.getElementById('insp-download-text');
+      if (inspDownloadText) inspDownloadText.textContent = 'Download Local Copy (.docx)';
       renderDocCard(frame, file, cached);
     } else if (cached.type === 'folder_list') {
       hidePageNavControls();
@@ -3395,69 +3468,160 @@
       title = titleOrFile.title || '';
       fileUrl = titleOrFile.realDownloadUrl || titleOrFile.url || url || '';
       hint = `${titleOrFile.typeHint || ''} ${titleOrFile.type || ''} ${extraHint || ''}`;
-      existingExt = titleOrFile.ext || '';
-      if (titleOrFile.badge && titleOrFile.badge.label && titleOrFile.badge.label !== 'FILE') {
-        return titleOrFile.badge;
-      }
+      existingExt = (titleOrFile.ext || '').trim();
     } else {
       title = String(titleOrFile || '');
       fileUrl = String(url || '');
       hint = String(extraHint || '');
     }
 
-    const combined = `${title} ${fileUrl} ${hint}`.toLowerCase();
+    // 1. Explicit extension match (highest confidence)
+    let cleanExt = existingExt.replace(/^\./, '').toLowerCase();
 
-    // 1. Explicit extension match
-    const extMatch = (existingExt || fileUrl || title).match(/\.([a-zA-Z0-9]+)(?:\?|$)/i);
-    const ext = (existingExt || (extMatch ? extMatch[1] : '')).toLowerCase();
+    // Check title for an explicit extension: e.g. "Tutorial 2.docx" or "Slides.pptx"
+    if (!cleanExt && title) {
+      const titleMatch = title.trim().match(/\.([a-zA-Z0-9]{2,5})(?:\s*\(.*?\))?$/i);
+      if (titleMatch) {
+        const candidate = titleMatch[1].toLowerCase();
+        if (['pdf', 'docx', 'doc', 'dotx', 'pptx', 'ppt', 'pps', 'ppsx', 'xlsx', 'xls', 'csv', 'zip', 'rar', '7z', 'ipynb', 'py', 'txt', 'png', 'jpg', 'jpeg'].includes(candidate)) {
+          cleanExt = candidate;
+        }
+      }
+    }
 
-    if (['pdf'].includes(ext) || combined.includes('.pdf') || combined.includes('pdf document') || combined.includes('/f/pdf')) {
-      return { label: 'PDF', cls: 'badge-pdf' };
+    // Check URL path (without query params) for an explicit file extension: e.g. ".../filename.docx"
+    if (!cleanExt && fileUrl) {
+      const cleanPath = fileUrl.split('?')[0].split('#')[0];
+      const urlMatch = cleanPath.match(/\.([a-zA-Z0-9]{2,5})$/i);
+      if (urlMatch) {
+        const candidate = urlMatch[1].toLowerCase();
+        if (!['php', 'html', 'htm', 'asp', 'aspx', 'jsp', 'cgi', 'action'].includes(candidate)) {
+          cleanExt = candidate;
+        }
+      }
     }
-    if (['pptx', 'ppt', 'pps', 'ppsx'].includes(ext) || combined.includes('.pptx') || combined.includes('.ppt') || combined.includes('/f/powerpoint') || combined.includes('powerpoint') || combined.includes('presentation')) {
-      return { label: 'PPTX', cls: 'badge-pptx' };
+
+    if (cleanExt) {
+      if (['pdf'].includes(cleanExt)) return { label: 'PDF', cls: 'badge-pdf' };
+      if (['docx', 'doc', 'dotx'].includes(cleanExt)) return { label: 'DOCX', cls: 'badge-docx' };
+      if (['pptx', 'ppt', 'pps', 'ppsx'].includes(cleanExt)) return { label: 'PPTX', cls: 'badge-pptx' };
+      if (['zip', 'rar', '7z', 'tar', 'gz'].includes(cleanExt)) return { label: 'ZIP', cls: 'badge-zip' };
+      if (['xlsx', 'xls'].includes(cleanExt)) return { label: 'XLSX', cls: 'badge-csv' };
+      if (['csv'].includes(cleanExt)) return { label: 'CSV', cls: 'badge-csv' };
+      if (['ipynb'].includes(cleanExt)) return { label: 'IPYNB', cls: 'badge-ipynb' };
+      if (['py'].includes(cleanExt)) return { label: 'PY', cls: 'badge-ipynb' };
     }
-    if (['docx', 'doc', 'dotx'].includes(ext) || combined.includes('.docx') || combined.includes('.doc') || combined.includes('/f/document') || combined.includes('word document') || combined.includes('/f/word')) {
+
+    // 2. Moodle typeHint and metadata inspection (handles encoded icons and Moodle labels)
+    let combined = `${title} ${fileUrl} ${hint}`.toLowerCase();
+    try {
+      combined += ' ' + decodeURIComponent(combined);
+    } catch (e) {}
+
+    // DOCX / Word detection:
+    // Handles Moodle's "Word 2007 document", "/f/document", "image=f%2fdocument", "/f/word"
+    if (
+      combined.includes('.docx') ||
+      combined.includes('.doc ') ||
+      combined.endsWith('.doc') ||
+      combined.includes('/f/document') ||
+      combined.includes('/f/word') ||
+      combined.includes('image=f%2fdocument') ||
+      combined.includes('image=f%2fword') ||
+      /\bword\b.*\bdoc/i.test(combined) ||
+      /\bword\b/i.test(hint) ||
+      /\bmsword\b/i.test(combined) ||
+      /\bmicrosoft\s*word\b/i.test(combined) ||
+      /\bword\s*20\d\d\s*document\b/i.test(combined) ||
+      /\bword\s*document\b/i.test(combined)
+    ) {
       return { label: 'DOCX', cls: 'badge-docx' };
     }
-    if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext) || combined.includes('.zip') || combined.includes('.rar') || combined.includes('/f/archive') || combined.includes('/mod/folder/')) {
-      return { label: 'ZIP', cls: 'badge-zip' };
+
+    // PPTX / PowerPoint detection:
+    if (
+      combined.includes('.pptx') ||
+      combined.includes('.ppt ') ||
+      combined.endsWith('.ppt') ||
+      combined.includes('/f/powerpoint') ||
+      combined.includes('image=f%2fpowerpoint') ||
+      /\bpowerpoint\b/i.test(combined) ||
+      /\bpresentation\b/i.test(combined)
+    ) {
+      return { label: 'PPTX', cls: 'badge-pptx' };
     }
-    if (['xlsx', 'xls'].includes(ext) || combined.includes('.xlsx') || combined.includes('.xls') || combined.includes('/f/spreadsheet') || combined.includes('spreadsheet') || combined.includes('excel')) {
+
+    // PDF detection:
+    if (
+      combined.includes('.pdf') ||
+      combined.includes('/f/pdf') ||
+      combined.includes('image=f%2fpdf') ||
+      combined.includes('pdf document')
+    ) {
+      return { label: 'PDF', cls: 'badge-pdf' };
+    }
+
+    // XLSX / Spreadsheet detection:
+    if (
+      combined.includes('.xlsx') ||
+      combined.includes('.xls ') ||
+      combined.endsWith('.xls') ||
+      combined.includes('/f/spreadsheet') ||
+      combined.includes('image=f%2fspreadsheet') ||
+      /\bspreadsheet\b/i.test(combined) ||
+      /\bexcel\b/i.test(combined)
+    ) {
       return { label: 'XLSX', cls: 'badge-csv' };
     }
-    if (['csv'].includes(ext) || combined.includes('.csv')) {
-      return { label: 'CSV', cls: 'badge-csv' };
+
+    // ZIP / Archive detection:
+    if (
+      combined.includes('.zip') ||
+      combined.includes('.rar') ||
+      combined.includes('/f/archive') ||
+      combined.includes('image=f%2farchive') ||
+      combined.includes('/mod/folder/') ||
+      hint.includes('folder')
+    ) {
+      return { label: 'ZIP', cls: 'badge-zip' };
     }
-    if (['ipynb'].includes(ext) || combined.includes('.ipynb') || combined.includes('notebook') || combined.includes('jupyter')) {
+
+    // Python / Jupyter detection:
+    if (combined.includes('.ipynb') || combined.includes('jupyter') || combined.includes('notebook')) {
       return { label: 'IPYNB', cls: 'badge-ipynb' };
     }
-    if (['py'].includes(ext) || combined.includes('.py') || combined.includes('/f/sourcecode') || combined.includes('python')) {
+    if (combined.includes('.py') || combined.includes('/f/sourcecode') || combined.includes('python')) {
       return { label: 'PY', cls: 'badge-ipynb' };
     }
 
-    // 2. Keyword heuristics on academic course material titles
+    // 3. Keyword heuristics on academic course material titles
     if (/\b(slides?|presentation|powerpoint|lecture\s*slides?)\b/i.test(title)) {
       return { label: 'PPTX', cls: 'badge-pptx' };
     }
-    if (/\b(dataset|archive|codebase|source\s*files?|folder|package)\b/i.test(title) || hint.includes('folder')) {
+    if (/\b(dataset|archive|codebase|source\s*files?|package)\b/i.test(title)) {
       return { label: 'ZIP', cls: 'badge-zip' };
     }
     if (/\b(excel|data\s*sheet|spreadsheet)\b/i.test(title)) {
       return { label: 'XLSX', cls: 'badge-csv' };
     }
-    if (/\b(word\s*doc|doc\b|template|rubric\s*doc|form\b)/i.test(title)) {
+    if (/\b(word\s*doc|template|rubric\s*doc|form\b)/i.test(title)) {
       return { label: 'DOCX', cls: 'badge-docx' };
     }
-    if (/\b(proforma|pro-forma|cif|course\s*information|weekly\s*plan|syllabus|notification|policy|guideline|guide|handbook|timetable|schedule|reading|article|paper|notes|tutorial|lab|assignment|ch\b|chapter|book\b)/i.test(title)) {
+    // Note: tutorial, lab, and assignment are deliberately excluded from PDF assumption
+    if (/\b(proforma|pro-forma|cif|course\s*information|weekly\s*plan|syllabus|notification|policy|guideline|guide|handbook|timetable|schedule|reading|article|paper|ch\b|chapter|book\b)/i.test(title)) {
       return { label: 'PDF', cls: 'badge-pdf' };
     }
 
-    // 3. Moodle activity fallbacks: In SPeCTRUM, /mod/resource/ materials are lecture PDFs
+    // 4. Fallback: preserve known non-FILE badges if already present
+    if (titleOrFile && typeof titleOrFile === 'object' && titleOrFile.badge && titleOrFile.badge.label && titleOrFile.badge.label !== 'FILE' && titleOrFile.badge.label !== 'PDF') {
+      return titleOrFile.badge;
+    }
+
+    // 5. Default Moodle activity resource fallbacks
     if (fileUrl.includes('/mod/resource/view.php') || hint.includes('resource')) {
       return { label: 'PDF', cls: 'badge-pdf' };
     }
-    if (fileUrl.includes('/mod/folder/view.php') || hint.includes('folder')) {
+    if (fileUrl.includes('/mod/folder/view.php')) {
       return { label: 'ZIP', cls: 'badge-zip' };
     }
 
