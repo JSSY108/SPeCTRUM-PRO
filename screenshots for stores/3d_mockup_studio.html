@@ -770,12 +770,24 @@
     }
 
     try {
+      const prevRatio = renderer.getPixelRatio();
+      
+      // CRITICAL FIX: Force pixelRatio to 1 during export so high-DPI Windows display scaling
+      // (125%, 150%, 200%) does NOT inflate the image dimensions beyond the required store px!
+      renderer.setPixelRatio(1);
       renderer.setSize(targetW, targetH, false);
       camera.aspect = targetW / targetH;
       camera.updateProjectionMatrix();
       renderer.render(scene, camera);
 
-      renderer.domElement.toBlob((blob) => {
+      // Create an exact guaranteed targetW x targetH export canvas
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = targetW;
+      exportCanvas.height = targetH;
+      const ctx = exportCanvas.getContext('2d');
+      ctx.drawImage(renderer.domElement, 0, 0, targetW, targetH);
+
+      exportCanvas.toBlob((blob) => {
         if (!blob) {
           alert('Could not export image blob.');
           if (btn) { btn.innerHTML = origText; btn.disabled = false; }
@@ -792,7 +804,8 @@
 
         setTimeout(() => {
           URL.revokeObjectURL(blobUrl);
-          // Restore 1280x800 preview
+          // Restore 1280x800 preview with original devicePixelRatio
+          renderer.setPixelRatio(prevRatio);
           renderer.setSize(1280, 800, false);
           camera.aspect = 1280 / 800;
           camera.updateProjectionMatrix();
