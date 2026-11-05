@@ -1083,6 +1083,31 @@ function updateHeaderTranslations() {
       if (mDays[idx]) cell.textContent = mDays[idx];
     });
   }
+
+  // Update Mini-Calendar Legend
+  const legendToday = document.getElementById('btn-mini-cal-today');
+  if (legendToday) {
+    const rectSpan = legendToday.querySelector('.legend-rect');
+    const rectHtml = rectSpan ? rectSpan.outerHTML : '<span class="legend-rect rect-today"></span>';
+    legendToday.innerHTML = rectHtml + (currentLang === 'zh' ? '今日' : (currentLang === 'bm' ? 'Hari Ini' : 'Today'));
+  }
+  const legendItems = document.querySelectorAll('#mini-cal-legend .legend-item:not(.legend-today-btn)');
+  if (legendItems && legendItems.length >= 3) {
+    const dotNotice = legendItems[0].querySelector('.legend-dot');
+    const dotTutorial = legendItems[1].querySelector('.legend-dot');
+    const dotAtt = legendItems[2].querySelector('.legend-dot');
+    legendItems[0].innerHTML = (dotNotice ? dotNotice.outerHTML : '<span class="legend-dot dot-notice"></span>') + (currentLang === 'zh' ? '通知' : (currentLang === 'bm' ? 'Notis' : 'Notice'));
+    legendItems[1].innerHTML = (dotTutorial ? dotTutorial.outerHTML : '<span class="legend-dot dot-tutorial"></span>') + (currentLang === 'zh' ? '作业' : (currentLang === 'bm' ? 'Tugasan' : 'Tutorial'));
+    legendItems[2].innerHTML = (dotAtt ? dotAtt.outerHTML : '<span class="legend-dot dot-attendance"></span>') + (currentLang === 'zh' ? '签到' : (currentLang === 'bm' ? 'Kehadiran' : 'Attendance'));
+  }
+
+  // Update sub-tabs in popup subtoolbar
+  const pillNotice = document.querySelector('.radio-pill-btn[data-sub="sub-announcements"] span:first-child');
+  if (pillNotice) pillNotice.textContent = t('cards', 'notice');
+  const pillTutorial = document.querySelector('.radio-pill-btn[data-sub="sub-assignments"] span:first-child');
+  if (pillTutorial) pillTutorial.textContent = t('tooltips', 'assign');
+  const pillAtt = document.querySelector('.radio-pill-btn[data-sub="sub-attendance"] span:first-child');
+  if (pillAtt) pillAtt.textContent = t('tooltips', 'att');
 }
 
 window.t = t;
@@ -2337,13 +2362,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     const calExpMainDate = document.getElementById('cal-exp-main-date');
 
     const dayNum = d.getDate();
-    const weekdayName = d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+    let weekdayName = '';
+    if (currentLang === 'zh') {
+      const zhDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+      weekdayName = zhDays[d.getDay()];
+    } else if (currentLang === 'bm') {
+      const bmDays = ['AHAD', 'ISNIN', 'SELASA', 'RABU', 'KHAMIS', 'JUMAAT', 'SABTU'];
+      weekdayName = bmDays[d.getDay()];
+    } else {
+      weekdayName = d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+    }
+
     const umInfo = getUmAcademicInfo(d);
     const weekNum = parseInt(umInfo.weekNum, 10) || 1;
 
     if (numeralEl) numeralEl.textContent = dayNum;
     if (dayEl) dayEl.textContent = weekdayName;
-    if (subEl) subEl.textContent = `WEEK ${weekNum}`;
+    if (subEl) {
+      if (currentLang === 'zh') {
+        subEl.textContent = `第 ${weekNum} 周`;
+      } else if (currentLang === 'bm') {
+        subEl.textContent = `MINGGU ${weekNum}`;
+      } else {
+        subEl.textContent = `WEEK ${weekNum}`;
+      }
+    }
 
     const todayKey = formatDateKey(new Date());
     const currentKey = formatDateKey(d);
@@ -2351,7 +2394,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (todayBadge) {
       todayBadge.style.display = isToday ? 'inline-flex' : 'none';
+      todayBadge.textContent = (currentLang === 'zh') ? '今日' : ((currentLang === 'bm') ? 'HARI INI' : 'TODAY');
     }
+
+    const segDots = document.getElementById('btn-seg-dots');
+    const segCount = document.getElementById('btn-seg-count');
+    if (segDots) segDots.textContent = (currentLang === 'zh') ? '圆点' : ((currentLang === 'bm') ? 'Titik' : 'Dots');
+    if (segCount) segCount.textContent = (currentLang === 'zh') ? '计数' : ((currentLang === 'bm') ? 'Kiraan' : 'Count');
 
     if (calExpMainDate) {
       const monStr = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
@@ -4853,7 +4902,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (headerTitle) {
-      headerTitle.textContent = isAllActive ? 'COURSES (ALL)' : ('COURSES (' + activeAcronym + ')');
+      if (currentLang === 'zh') {
+        headerTitle.textContent = isAllActive ? '全部课程' : ('课程 (' + activeAcronym + ')');
+      } else if (currentLang === 'bm') {
+        headerTitle.textContent = isAllActive ? 'KURSUS (SEMUA)' : ('KURSUS (' + activeAcronym + ')');
+      } else {
+        headerTitle.textContent = isAllActive ? 'COURSES (ALL)' : ('COURSES (' + activeAcronym + ')');
+      }
     }
     if (headerBadge) {
       headerBadge.textContent = activeDeliverablesCount;
@@ -5949,11 +6004,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       renderAllActivities();
       initStickyDateObserver();
       syncRailCounts();
-      if (popupSidebarMode === 'courses') {
+      if (typeof syncPopupActivityStreams === 'function') {
         syncPopupActivityStreams();
-        const stream = document.getElementById('popup-cards-stream');
-        if (stream) scrollSpineToToday(stream, true);
       }
+      const stream = document.getElementById('popup-cards-stream');
+      if (stream) scrollSpineToToday(stream, true);
     } else if (tabId === 'tab-timetable') {
       if (typeof renderTimetableMode === 'function') renderTimetableMode();
     } else if (tabId === 'tab-materials') {
@@ -7446,7 +7501,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderAttendanceList();
     renderOccBanners();
     updateKpiCards();
-    if (popupSidebarMode === 'courses') {
+    if (typeof syncPopupActivityStreams === 'function') {
       syncPopupActivityStreams();
     }
     const ttPane = document.getElementById('tab-timetable');
@@ -13043,12 +13098,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         switchTab(tabId);
       }
       if (tabId === 'tab-activities') {
-        if (typeof currentActivitiesGrouping !== 'undefined' && currentActivitiesGrouping === 'course') {
-          if (typeof renderByCourseScopedFeed === 'function') renderByCourseScopedFeed();
-        } else {
-          if (typeof renderAllActivities === 'function') renderAllActivities();
-        }
+        if (typeof renderAllActivities === 'function') renderAllActivities();
+        if (typeof syncPopupActivityStreams === 'function') syncPopupActivityStreams();
         if (typeof renderMiniCalendar === 'function') renderMiniCalendar();
+        let targetD = activeDateFilterObj;
+        if (!targetD && miniCalSelectedDateKey) {
+          const parts = miniCalSelectedDateKey.split('-').map(Number);
+          if (parts.length >= 3 && !isNaN(parts[0])) {
+            targetD = new Date(parts[0], parts[1] - 1, parts[2]);
+          }
+        }
+        if (typeof updateDateHeroHeader === 'function') updateDateHeroHeader(targetD || new Date());
+        if (typeof renderCourseFilterMatrix === 'function') renderCourseFilterMatrix();
       } else if (tabId === 'tab-timetable') {
         if (typeof renderTimetableMode === 'function') renderTimetableMode();
       } else if (tabId === 'tab-materials') {
