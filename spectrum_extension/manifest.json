@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SPeCTRUM Pro - UM Course Material Downloader",
-  "version": "1.0.0",
-  "description": "1-click download lecture notes, slides (PDF, PPTX) from Universiti Malaya SPeCTRUM LMS, organized by course and week.",
+  "version": "1.0.1",
+  "description": "1-click download lecture notes, slides, and learning resources from Universiti Malaya SPeCTRUM LMS, organized by course and week.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
