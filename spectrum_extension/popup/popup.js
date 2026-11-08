@@ -1679,7 +1679,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnCancelPin = document.getElementById('btn-cancel-pin');
   const btnClosePinModal = document.getElementById('btn-close-pin-modal');
 
-    // Animated OCC Logo Loading & Notification Controller
+      // Animated OCC Logo Loading Overlay Controller
   let occToastTimeout = null;
   function showOccNotification(status, message) {
     const overlay = document.getElementById('sync-cinematic-overlay');
@@ -1689,25 +1689,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const hudCurrent = document.getElementById('sync-hud-current');
     const hudSub = document.getElementById('sync-hud-sub');
 
-    // Also support lightweight pill banner
-    let pill = document.getElementById('occ-status-pill');
-    if (!pill) {
-      pill = document.createElement('div');
-      pill.id = 'occ-status-pill';
-      pill.className = 'occ-status-pill';
-      pill.innerHTML = `
-        <div class="occ-pulse-dot"></div>
-        <span class="occ-status-pill-text"></span>
-      `;
-      document.body.appendChild(pill);
-    }
-
     if (occToastTimeout) {
       clearTimeout(occToastTimeout);
       occToastTimeout = null;
     }
-
-    const textEl = pill.querySelector('.occ-status-pill-text');
 
     if (status === 'loading') {
       isSyncOverlayDismissed = false;
@@ -1744,11 +1729,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (hudPercent) hudPercent.textContent = '48%';
       if (hudBarFill) hudBarFill.style.width = '48%';
 
-      // 3. Floating Status Pill & Sync Button State
-      pill.classList.remove('success');
-      pill.style.display = 'inline-flex';
-      pill.style.opacity = '1';
-      if (textEl) textEl.textContent = message || defaultCurrent;
       updateSyncButtonSpinState(true, (currentLang === 'zh') ? '加载 OCC...' : 'Loading OCC...');
 
     } else if (status === 'success') {
@@ -1762,8 +1742,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (hudCurrent) hudCurrent.textContent = message || defaultSuccessMsg;
       if (hudSub) hudSub.textContent = (currentLang === 'zh') ? '准备就绪' : 'Ready';
 
-      pill.classList.add('success');
-      if (textEl) textEl.textContent = message || defaultSuccessMsg;
       updateSyncButtonSpinState(false, 'Sync');
 
       occToastTimeout = setTimeout(() => {
@@ -1782,14 +1760,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (overlay.style.opacity === '0') overlay.style.display = 'none';
           }, 320);
         }
-
-        // Fade out floating pill
-        pill.style.opacity = '0';
-        pill.style.transform = 'translate(-50%, -8px) scale(0.95)';
-        setTimeout(() => {
-          pill.style.display = 'none';
-          pill.style.transform = 'translateX(-50%)';
-        }, 300);
       }, 1300);
     }
   }
