@@ -49,3 +49,4 @@ All images in this directory have been verified and standardized to exact **1280
 - **Store Title**: Native Trilingual Localization (English, Malay, Chinese)
 - **Short Caption**: Full localized support in English (En), Bahasa Melayu (BM), and Chinese (中文) with seamless 1-click language switching.
 - **Detailed Description**: Designed for diverse academic communities. Switch effortlessly between English, Bahasa Melayu, and Chinese with instantaneous UI translation across all calendars, activities, and timetable views.
+

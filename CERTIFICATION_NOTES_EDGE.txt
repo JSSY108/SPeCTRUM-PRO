@@ -1,0 +1,24 @@
+Dear Microsoft Edge Certification Team,
+
+Thank you for reviewing SPeCTRUM PRO.
+
+1. ABOUT THIS EXTENSION:
+SPeCTRUM PRO is an academic productivity companion for students and faculty of Universiti Malaya (UM). It organizes course schedules, visualizes weekly timetables, tracks assignment deadlines, and enables course material downloads from the university's Moodle LMS (spectrum.um.edu.my).
+
+2. TESTER CREDENTIALS & ACCESS:
+Live data sync interfaces with Universiti Malaya's portal (spectrum.um.edu.my), which requires university institutional single-sign-on (SSO). Institutional security policies prevent creating external test accounts. All interface features, preferences, and offline states can be fully tested without credentials.
+
+3. HOW TO TEST THE EXTENSION:
+- Pop-up & Workstation: Click the SPeCTRUM PRO toolbar icon. Click 'Full Screen' in the header to view the expanded academic dashboard.
+- Multilingual Support: Click the language buttons (En / BM / 中) in the header to test instant translation across English, Bahasa Melayu, and Chinese.
+- Dark / Light Mode: Toggle the theme switch in the top bar to test live theme styling.
+- Navigation Tabs: Switch between Activities, Timetable, Materials, and Preferences tabs.
+- Graceful Offline State: Without a UM login, the extension cleanly displays instructional guidance directing users to log in to spectrum.um.edu.my.
+- Diagnostics: Click 'Logs' in the top bar to inspect diagnostic logging.
+
+4. PRIVACY & PERMISSIONS:
+- All student data, cached timetables, and user preferences are stored strictly locally on the user's device via chrome.storage.local.
+- No third-party servers, tracking, or analytics are used.
+- Network requests are strictly limited to the university portal (spectrum.um.edu.my) to retrieve student course files.
+
+Please let us know if any further information is needed. Thank you!
