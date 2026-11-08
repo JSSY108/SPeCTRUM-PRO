@@ -2,7 +2,19 @@
 node_modules/
 package-lock.json
 
-# Temporary scratch & build directories
+# Store submission assets & screenshots
+screenshots for stores/
+*.zip
+CERTIFICATION_NOTES*.txt
+
+# Specifications & promotional video production
+*SPEC*.md
+image/
+SPECTRUM PRO LOGO.png
+
+# Development test tools & scratch files
+test_*.html
+timetable_export_tuner.html
 scratch/
 .agent/
 *temp*/
@@ -17,7 +29,6 @@ clone*/
 *.ppsx
 *.potx
 *.pdf
-spectrum_extension.zip
 
 # OS & Editor metadata
 Thumbs.db
