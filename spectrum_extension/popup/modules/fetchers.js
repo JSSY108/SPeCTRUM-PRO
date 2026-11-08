@@ -1449,9 +1449,17 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
           if (occMatches) {
             const finalTime = timeColText || (sessDate && (sessDate.getHours() !== 0 || sessDate.getMinutes() !== 0) ? `${String(sessDate.getHours()).padStart(2, '0')}:${String(sessDate.getMinutes()).padStart(2, '0')}` : '');
             const finalDateStr = (finalTime && !dateColText.includes(finalTime)) ? `${dateColText} ${finalTime}` : dateColText;
-            list.push({
+            const dKey = formatDateKey(sessDate);
+            const normTime = extractOnlyTime(finalTime) || finalTime;
+
+            const existingIdx = list.findIndex(s => {
+              const sNormTime = extractOnlyTime(s.time) || s.time;
+              return s.dateKey === dKey && sNormTime === normTime;
+            });
+
+            const newSess = {
               date: sessDate,
-              dateKey: formatDateKey(sessDate),
+              dateKey: dKey,
               dateStr: finalDateStr,
               time: finalTime,
               desc: descColText || 'Class Session',
@@ -1461,7 +1469,15 @@ async function fetchCourseAttendance(courseId, courseCode, courseName, userOcc, 
               isFuture,
               isToday,
               isPresent
-            });
+            };
+
+            if (existingIdx !== -1) {
+              if (isPresent || statusType === 'present' || statusType === 'active') {
+                list[existingIdx] = newSess;
+              }
+            } else {
+              list.push(newSess);
+            }
           }
         }
       }

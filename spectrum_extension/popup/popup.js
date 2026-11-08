@@ -5452,13 +5452,28 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
+    const seenMiniCalAtt = new Set();
     attendancesData.forEach(att => {
       if (isAttendanceHidden && isAttendanceHidden(att)) return;
       if (activeCourse && !isActivityForCourse(att, activeCourse)) return;
-      if (att.activeSession) addEvent(formatDateKey(new Date()), 'att');
+      const cCode = att.courseCode || att.courseName || att.courseId || '';
+      if (att.activeSession) {
+        const sig = `${cCode}_${todayKey}_active`;
+        if (!seenMiniCalAtt.has(sig)) {
+          seenMiniCalAtt.add(sig);
+          addEvent(todayKey, 'att');
+        }
+      }
       if (Array.isArray(att.sessions)) {
         att.sessions.forEach(sess => {
-          if (sess.dateKey) addEvent(sess.dateKey, 'att');
+          if (sess.dateKey) {
+            const tStr = (typeof extractOnlyTime === 'function' ? extractOnlyTime(sess.time || sess.dateStr || '') : '') || sess.time || sess.dateStr || '';
+            const sig = `${cCode}_${sess.dateKey}_${tStr}`;
+            if (!seenMiniCalAtt.has(sig)) {
+              seenMiniCalAtt.add(sig);
+              addEvent(sess.dateKey, 'att');
+            }
+          }
         });
       }
     });
@@ -5676,15 +5691,47 @@ document.addEventListener('DOMContentLoaded', async () => {
         return isPending && isTargetToday;
       }) : [];
 
-      // 3. Attendance sessions on this date
-      let allAtt = showAtt ? attendancesData.filter(att => {
+      // 3. Attendance sessions on this date (deduplicated by course and time window)
+      const matchingAttSessions = [];
+      const seenAttFilterSigs = new Set();
+
+      let candidateAtts = showAtt ? attendancesData.filter(att => {
         if (typeof isAttendanceHidden === 'function' && isAttendanceHidden(att)) return false;
-        if (att.activeSession && formatDateKey(new Date()) === dateKey) return true;
-        if (Array.isArray(att.sessions)) {
-          return att.sessions.some(s => s.dateKey === dateKey);
-        }
-        return false;
+        if (activeCourse && !isActivityForCourse(att, activeCourse)) return false;
+        return true;
       }) : [];
+
+      candidateAtts.forEach(att => {
+        const cCode = att.courseCode || att.courseName || att.courseId || '';
+        const matchingSessions = Array.isArray(att.sessions)
+          ? att.sessions.filter(s => s.dateKey === dateKey)
+          : [];
+
+        if (matchingSessions.length > 0) {
+          matchingSessions.forEach(sess => {
+            const tStr = (typeof extractOnlyTime === 'function' ? extractOnlyTime(sess.time || sess.dateStr || '') : '') || sess.time || sess.dateStr || '';
+            const sig = `${cCode}_${dateKey}_${tStr}`;
+            if (!seenAttFilterSigs.has(sig)) {
+              seenAttFilterSigs.add(sig);
+              matchingAttSessions.push({ att, sess });
+            } else if (sess.isPresent || sess.statusType === 'present' || sess.statusType === 'active') {
+              const idx = matchingAttSessions.findIndex(item => {
+                const itemCode = item.att.courseCode || item.att.courseName || item.att.courseId || '';
+                const itemTime = (typeof extractOnlyTime === 'function' ? extractOnlyTime(item.sess.time || item.sess.dateStr || '') : '') || item.sess.time || item.sess.dateStr || '';
+                return itemCode === cCode && itemTime === tStr;
+              });
+              if (idx !== -1) matchingAttSessions[idx] = { att, sess };
+            }
+          });
+        } else if (att.activeSession && (dateKey === formatDateKey(new Date()))) {
+          const tStr = (typeof extractOnlyTime === 'function' ? extractOnlyTime(att.activeSession.time || '') : '') || 'active';
+          const sig = `${cCode}_${dateKey}_${tStr}`;
+          if (!seenAttFilterSigs.has(sig)) {
+            seenAttFilterSigs.add(sig);
+            matchingAttSessions.push({ att, sess: att.activeSession });
+          }
+        }
+      });
 
       // Scoped subject filtering for this specific day!
       if (activeCourse) {
@@ -5693,10 +5740,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (!isActivityForCourse(a, activeCourse)) return false;
           return (typeof isAssignmentMatchingOcc === 'function') ? isAssignmentMatchingOcc(a, activeCourse.userOcc) : true;
         });
-        allAtt = allAtt.filter(att => isActivityForCourse(att, activeCourse));
       }
 
-      const total = allAnns.length + allAssigns.length + allAtt.length;
+      const total = allAnns.length + allAssigns.length + matchingAttSessions.length;
 
       filteredList.style.display = 'flex';
       filteredList.style.flexDirection = 'column';
@@ -5772,37 +5818,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (allAnns.length) html += allAnns.map(a => typeof renderAnnouncementCardHtml === 'function' ? renderAnnouncementCardHtml(a) : '').join('');
         if (allAssigns.length) html += allAssigns.map(a => typeof renderAssignmentCardHtml === 'function' ? renderAssignmentCardHtml(a) : '').join('');
-        if (allAtt.length) {
-          allAtt.forEach(att => {
-            const matchingSessions = Array.isArray(att.sessions) 
-              ? att.sessions.filter(s => s.dateKey === dateKey)
-              : [];
-            
-            if (matchingSessions.length > 0) {
-              matchingSessions.forEach(sess => {
-                if (typeof renderAttendanceCardHtml === 'function') {
-                  html += renderAttendanceCardHtml(att, {
-                    session: sess,
-                    dateKey: dateKey,
-                    date: sess.date || dateObj,
-                    timeStr: sess.time || sess.dateStr || '',
-                    isLive: Boolean(att.activeSession && (dateKey === formatDateKey(new Date()))),
-                    isVerified: Boolean(sess.isPresent || sess.statusType === 'present' || sess.statusType === 'submitted'),
-                    cid: att.courseId
-                  });
-                }
+        if (matchingAttSessions.length) {
+          matchingAttSessions.forEach(({ att, sess }) => {
+            if (typeof renderAttendanceCardHtml === 'function') {
+              html += renderAttendanceCardHtml(att, {
+                session: sess,
+                dateKey: dateKey,
+                date: sess.date || dateObj,
+                timeStr: sess.time || sess.dateStr || '',
+                isLive: Boolean(att.activeSession && (dateKey === formatDateKey(new Date()))),
+                isVerified: Boolean(sess.isPresent || sess.statusType === 'present' || sess.statusType === 'submitted'),
+                cid: att.courseId
               });
-            } else {
-              if (typeof renderAttendanceCardHtml === 'function') {
-                html += renderAttendanceCardHtml(att, {
-                  session: att.activeSession || att.nextSession,
-                  dateKey: dateKey,
-                  date: dateObj,
-                  timeStr: att.activeSession?.time || att.nextSession?.time || att.nextSession?.dateStr || '',
-                  isLive: Boolean(att.activeSession && (dateKey === formatDateKey(new Date()))),
-                  cid: att.courseId
-                });
-              }
             }
           });
         }
@@ -5883,24 +5910,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isPending = !a.isSubmitted && !a.isOverdue;
         return isPending && isTargetToday;
       }) : [];
-      let dAtt = (typeof attendancesData !== 'undefined') ? attendancesData.filter(att => {
-        if (typeof isAttendanceHidden === 'function' && isAttendanceHidden(att)) return false;
-        if (att.activeSession && formatDateKey(new Date()) === targetDateKey) return true;
-        if (Array.isArray(att.sessions)) {
-          return att.sessions.some(s => s.dateKey === targetDateKey);
-        }
-        return false;
-      }) : [];
+      const seenRailAttSigs = new Set();
+      if (typeof attendancesData !== 'undefined') {
+        attendancesData.forEach(att => {
+          if (typeof isAttendanceHidden === 'function' && isAttendanceHidden(att)) return false;
+          if (activeCourse && !isActivityForCourse(att, activeCourse)) return false;
+          const cCode = att.courseCode || att.courseName || att.courseId || '';
+          if (att.activeSession && formatDateKey(new Date()) === targetDateKey) {
+            seenRailAttSigs.add(`${cCode}_${targetDateKey}_active`);
+          }
+          if (Array.isArray(att.sessions)) {
+            att.sessions.forEach(s => {
+              if (s.dateKey === targetDateKey) {
+                const tStr = (typeof extractOnlyTime === 'function' ? extractOnlyTime(s.time || s.dateStr || '') : '') || s.time || s.dateStr || '';
+                seenRailAttSigs.add(`${cCode}_${targetDateKey}_${tStr}`);
+              }
+            });
+          }
+        });
+      }
 
       if (activeCourse) {
         dAnns = dAnns.filter(a => isActivityForCourse(a, activeCourse));
         dAssigns = dAssigns.filter(a => isActivityForCourse(a, activeCourse) && ((typeof isAssignmentMatchingOcc === 'function') ? isAssignmentMatchingOcc(a, activeCourse.userOcc) : true));
-        dAtt = dAtt.filter(a => isActivityForCourse(a, activeCourse));
       }
 
       annCount = dAnns.length;
       assignCount = dAssigns.length;
-      attCount = dAtt.length;
+      attCount = seenRailAttSigs.size;
     } else {
       annCount = (typeof announcementsData !== 'undefined') ? announcementsData.length : 0;
       assignCount = (typeof assignmentsData !== 'undefined') ? assignmentsData.length : 0;
@@ -7011,6 +7048,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Helper: Sanitize cached attendance sessions (ensure date is parsed Date object & stable IDs)
   function sanitizeAttendances(list) {
     if (!Array.isArray(list)) return [];
+    const dedupedList = [];
+    const seenAttKeys = new Set();
+
     list.forEach((att, idx) => {
       const urlIdMatch = ((att.attUrl || '').match(/id=(\d+)/) || [])[1];
       if (!att.cmid && urlIdMatch) {
@@ -7023,7 +7063,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (att.id && att.id.endsWith('_lec')) att.subType = 'lecture';
         else if (att.id && att.id.endsWith('_tut')) att.subType = 'tutorial';
       }
+
+      // Deduplicate sessions inside each attendance item by date and normalized time
       if (Array.isArray(att.sessions)) {
+        const uniqueSessions = [];
+        const seenSessSigs = new Set();
+
         att.sessions.forEach(sess => {
           if (sess.date && typeof sess.date === 'string') {
             sess.date = new Date(sess.date);
@@ -7033,8 +7078,25 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (!sess.dateKey && sess.date && (sess.date instanceof Date) && !isNaN(sess.date.getTime())) {
             sess.dateKey = formatDateKey(sess.date);
           }
+
+          const tStr = (typeof extractOnlyTime === 'function' ? extractOnlyTime(sess.time || sess.dateStr || '') : '') || sess.time || sess.dateStr || '';
+          const sig = `${sess.dateKey || ''}_${tStr}`;
+
+          if (!seenSessSigs.has(sig)) {
+            seenSessSigs.add(sig);
+            uniqueSessions.push(sess);
+          } else if (sess.isPresent || sess.statusType === 'present' || sess.statusType === 'active') {
+            const existingIdx = uniqueSessions.findIndex(s => {
+              const sTime = (typeof extractOnlyTime === 'function' ? extractOnlyTime(s.time || s.dateStr || '') : '') || s.time || s.dateStr || '';
+              return `${s.dateKey || ''}_${sTime}` === sig;
+            });
+            if (existingIdx !== -1) uniqueSessions[existingIdx] = sess;
+          }
         });
+
+        att.sessions = uniqueSessions;
       }
+
       if (att.nextSession) {
         if (att.nextSession.date && typeof att.nextSession.date === 'string') {
           att.nextSession.date = new Date(att.nextSession.date);
@@ -7045,8 +7107,15 @@ document.addEventListener('DOMContentLoaded', async () => {
           att.nextSession.dateKey = formatDateKey(att.nextSession.date);
         }
       }
+
+      // Deduplicate identical attendance records
+      const attKey = `${att.id}_${att.attUrl || ''}`;
+      if (!seenAttKeys.has(attKey)) {
+        seenAttKeys.add(attKey);
+        dedupedList.push(att);
+      }
     });
-    return list;
+    return dedupedList;
   }
 
   // 5. Initial Cache Load (Instant display)
@@ -7838,21 +7907,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                   const typeInfo = getAttendanceTypeInfo(att, sess.desc || '');
                   const cleanDesc = cleanSessionDesc(sess.desc || 'Class Session', typeInfo.label);
+                  const courseKey = att.courseCode || att.courseName || 'Course';
+                  const tStr = (typeof extractOnlyTime === 'function' ? extractOnlyTime(sess.time || sess.dateStr || '') : '') || sess.time || sess.dateStr || '';
 
-                  timelineEvents.push({
+                  const existingIdx = timelineEvents.findIndex(e => {
+                    if (e.type !== 'attendance') return false;
+                    const ec = e.courseCode || e.courseName || '';
+                    const et = (typeof extractOnlyTime === 'function' ? extractOnlyTime(e.sessObj?.time || e.sessObj?.dateStr || '') : '') || e.sessObj?.time || '';
+                    return e.dateKey === dateKey && ec === courseKey && et === tStr;
+                  });
+
+                  const newTlEv = {
                     type: 'attendance',
                     date: d,
                     dateKey,
                     title: cleanDesc,
                     attTypeInfo: typeInfo,
-                    courseCode: att.courseCode || att.courseName || 'Course',
+                    courseCode: courseKey,
                     courseName: att.courseName || '',
                     status,
                     statusLabel: `${typeInfo.icon} ${typeInfo.label} · ${statusLabel}`,
                     url: att.attUrl,
                     obj: att,
                     sessObj: sess
-                  });
+                  };
+
+                  if (existingIdx !== -1) {
+                    if (sess.isPresent || status === 'submitted' || status === 'active') {
+                      timelineEvents[existingIdx] = newTlEv;
+                    }
+                  } else {
+                    timelineEvents.push(newTlEv);
+                  }
                 }
               }
             });
@@ -9423,12 +9509,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (fulltabSemBadge && currentFullTabMode === 'calendar') fulltabSemBadge.textContent = calUmInfo.semName;
     if (fulltabWeekPill && currentFullTabMode === 'calendar') fulltabWeekPill.textContent = calUmInfo.weekPill;
 
-    // Collect all events for this month
+    // Collect all events for this month (with strict deduplication for identical attendance sessions)
     const eventsByDate = new Map();
 
     function addCalEvent(dateKey, ev) {
       if (!eventsByDate.has(dateKey)) eventsByDate.set(dateKey, []);
-      eventsByDate.get(dateKey).push(ev);
+      const dayEvents = eventsByDate.get(dateKey);
+      if (ev.type === 'att') {
+        const cCode = ev.courseCode || ev.obj?.courseCode || ev.obj?.courseId || '';
+        const tStr = (typeof extractOnlyTime === 'function' ? extractOnlyTime(ev.timeStr || ev.sessObj?.time || ev.sessObj?.dateStr || '') : '') || ev.timeStr || '';
+        const existingIdx = dayEvents.findIndex(e => {
+          if (e.type !== 'att') return false;
+          const ecCode = e.courseCode || e.obj?.courseCode || e.obj?.courseId || '';
+          const etStr = (typeof extractOnlyTime === 'function' ? extractOnlyTime(e.timeStr || e.sessObj?.time || e.sessObj?.dateStr || '') : '') || e.timeStr || '';
+          return ecCode === cCode && etStr === tStr;
+        });
+        if (existingIdx !== -1) {
+          // If already present, upgrade if the new one is marked present or active
+          const isBetter = ev.status === 'present' || ev.status === 'active' || ev.sessObj?.isPresent;
+          if (isBetter) dayEvents[existingIdx] = ev;
+          return;
+        }
+      }
+      dayEvents.push(ev);
     }
 
     const showTasks = chkCalTasks ? chkCalTasks.checked : (chkTlTasks ? chkTlTasks.checked : true);
@@ -9694,6 +9797,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sidebarCount = document.getElementById('cal-sidebar-item-count');
     const sidebarList = document.getElementById('cal-sidebar-cards-list');
 
+    // Strict deduplication of items for this date (prevents duplicate attendance cards and inflated counts)
+    const uniqueEvents = [];
+    const seenAgendaSigs = new Set();
+    (events || []).forEach(ev => {
+      const cCode = ev.courseCode || ev.courseId || ev.obj?.courseCode || ev.obj?.courseId || '';
+      const tStr = (typeof extractOnlyTime === 'function' ? extractOnlyTime(ev.timeStr || ev.sessObj?.time || ev.sessObj?.dateStr || '') : '') || ev.timeStr || '';
+      const type = ev.type || 'generic';
+      const title = ev.title || ev.obj?.title || '';
+      const sig = (type === 'att' || type === 'attendance')
+        ? `att_${cCode}_${tStr}`
+        : `${type}_${cCode}_${ev.id || title}_${tStr}`;
+
+      if (!seenAgendaSigs.has(sig)) {
+        seenAgendaSigs.add(sig);
+        uniqueEvents.push(ev);
+      } else if (ev.status === 'present' || ev.status === 'active' || ev.sessObj?.isPresent) {
+        const idx = uniqueEvents.findIndex(e => {
+          const ecCode = e.courseCode || e.courseId || e.obj?.courseCode || e.obj?.courseId || '';
+          const etStr = (typeof extractOnlyTime === 'function' ? extractOnlyTime(e.timeStr || e.sessObj?.time || e.sessObj?.dateStr || '') : '') || e.timeStr || '';
+          return (e.type === 'att' || e.type === 'attendance') && ecCode === cCode && etStr === tStr;
+        });
+        if (idx !== -1) uniqueEvents[idx] = ev;
+      }
+    });
+
     const parsedDate = new Date(dateKey + 'T00:00:00');
     let formattedDate = dateKey;
     if (!isNaN(parsedDate.getTime())) {
@@ -9714,10 +9842,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const countLabel = currentLang === 'zh'
-      ? `${events.length} 项`
+      ? `${uniqueEvents.length} 项`
       : (currentLang === 'bm'
-        ? `${events.length} item`
-        : `${events.length} item${events.length === 1 ? '' : 's'}`);
+        ? `${uniqueEvents.length} item`
+        : `${uniqueEvents.length} item${uniqueEvents.length === 1 ? '' : 's'}`);
 
     if (sidebar && sidebarTitle && sidebarList) {
       if (calSection) calSection.classList.add('has-sidebar');
@@ -9725,10 +9853,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       sidebarTitle.textContent = formattedDate;
       if (sidebarCount) sidebarCount.textContent = countLabel;
 
-      if (events.length === 0) {
+      if (uniqueEvents.length === 0) {
         sidebarList.innerHTML = `<div style="text-align:center;padding:24px 12px;color:var(--text-muted);font-size:12px;">${t('cards', 'noActToday')}</div>`;
       } else {
-        sidebarList.innerHTML = events.map(ev => {
+        sidebarList.innerHTML = uniqueEvents.map(ev => {
           if (ev.type === 'task' || ev.type === 'assignment') return renderAssignmentCardHtml(ev.obj || ev);
           if (ev.type === 'att' || ev.type === 'attendance') return renderTimelineAttendanceCardHtml(ev, dateKey);
           return renderAnnouncementCardHtml(ev.obj || ev);
@@ -9741,10 +9869,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (calDayAgenda && calAgendaDate && calAgendaList) {
       calAgendaDate.textContent = formattedDate;
       if (calAgendaCount) calAgendaCount.textContent = countLabel;
-      if (events.length === 0) {
+      if (uniqueEvents.length === 0) {
         calAgendaList.innerHTML = `<div style="text-align:center;padding:18px;color:var(--text-muted);font-size:11.5px;">${t('cards', 'noActToday')}</div>`;
       } else {
-        calAgendaList.innerHTML = events.map(ev => {
+        calAgendaList.innerHTML = uniqueEvents.map(ev => {
           if (ev.type === 'task' || ev.type === 'assignment') return renderAssignmentCardHtml(ev.obj || ev);
           if (ev.type === 'att' || ev.type === 'attendance') return renderTimelineAttendanceCardHtml(ev);
           return renderAnnouncementCardHtml(ev.obj || ev);
