@@ -1679,6 +1679,57 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnCancelPin = document.getElementById('btn-cancel-pin');
   const btnClosePinModal = document.getElementById('btn-close-pin-modal');
 
+  // Animated OCC Notification Pill Controller
+  let occToastTimeout = null;
+  function showOccNotification(status, message) {
+    let pill = document.getElementById('occ-status-pill');
+    if (!pill) {
+      pill = document.createElement('div');
+      pill.id = 'occ-status-pill';
+      pill.className = 'occ-status-pill';
+      pill.innerHTML = `
+        <div class="occ-pulse-dot"></div>
+        <span class="occ-status-pill-text"></span>
+      `;
+      document.body.appendChild(pill);
+    }
+
+    if (occToastTimeout) {
+      clearTimeout(occToastTimeout);
+      occToastTimeout = null;
+    }
+
+    const textEl = pill.querySelector('.occ-status-pill-text');
+    pill.style.display = 'inline-flex';
+    pill.style.opacity = '1';
+
+    if (status === 'loading') {
+      pill.classList.remove('success');
+      const defaultMsg = (currentLang === 'zh')
+        ? '⚡ 正在自动识别 OCC...'
+        : ((currentLang === 'bm') ? '⚡ Memuatkan OCC...' : '⚡ Loading OCC...');
+      if (textEl) textEl.textContent = message || defaultMsg;
+      updateSyncButtonSpinState(true, (currentLang === 'zh') ? '加载 OCC...' : 'Loading OCC...');
+      document.querySelectorAll('.brand-logo-container').forEach(c => c.classList.add('anim-fetching'));
+    } else if (status === 'success') {
+      pill.classList.add('success');
+      const defaultMsg = (currentLang === 'zh')
+        ? '✔ OCC 识别完成！'
+        : ((currentLang === 'bm') ? '✔ OCC Berjaya Dikesan!' : '✔ OCC Groups Loaded!');
+      if (textEl) textEl.textContent = message || defaultMsg;
+      updateSyncButtonSpinState(false, 'Sync');
+      document.querySelectorAll('.brand-logo-container').forEach(c => c.classList.remove('anim-fetching'));
+      occToastTimeout = setTimeout(() => {
+        pill.style.opacity = '0';
+        pill.style.transform = 'translate(-50%, -8px) scale(0.95)';
+        setTimeout(() => {
+          pill.style.display = 'none';
+          pill.style.transform = 'translateX(-50%)';
+        }, 300);
+      }, 1800);
+    }
+  }
+
   // Elements - Mandatory / Fast OCC Setup Modal
   const occSetupModal = document.getElementById('occ-setup-modal');
   const quickOccInput = document.getElementById('quick-occ-input');
@@ -6666,6 +6717,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const origText = btnAutoDetectAllOcc.textContent;
       btnAutoDetectAllOcc.disabled = true;
       btnAutoDetectAllOcc.textContent = (currentLang === 'zh') ? '识别中...' : ((currentLang === 'bm') ? 'Mengesan...' : 'Detecting...');
+      showOccNotification('loading');
 
       try {
         let coursesList = getKnownCoursesList();
@@ -6712,6 +6764,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           renderOccPreferencesTable();
           renderAllActivities();
+          showOccNotification('success');
           if (typeof syncPopupActivityStreams === 'function') syncPopupActivityStreams();
 
           if (resetOccStatus) {
@@ -7173,14 +7226,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Auto-detect OCC in background if any enrolled course has no configured OCC preference
     const hasUnconfiguredOcc = coursesData.some(c => !courseOccs || !courseOccs[c.id]);
     if (hasUnconfiguredOcc && typeof fetchUserCourseOccs === 'function') {
-      logDiag('Init', '⚡ Unconfigured OCC detected. Running seamless background auto-detection (no popup)...');
+      logDiag('Init', '⚡ Unconfigured OCC detected. Running seamless background auto-detection with animated notification...');
+      showOccNotification('loading');
       const missing = coursesData.filter(c => !courseOccs || !courseOccs[c.id]);
       fetchUserCourseOccs(missing).then(detected => {
         let updated = false;
+        let count = 0;
         Object.keys(detected).forEach(cid => {
           if (detected[cid]) {
             courseOccs[cid] = String(detected[cid]);
             updated = true;
+            count++;
           }
         });
         if (updated) {
@@ -7188,8 +7244,17 @@ document.addEventListener('DOMContentLoaded', async () => {
           renderOccPreferencesTable();
           renderAllActivities();
           if (typeof syncPopupActivityStreams === 'function') syncPopupActivityStreams();
+          const successMsg = (currentLang === 'zh')
+            ? `✔ 已自动识别 ${count} 门课程 OCC！`
+            : `✔ Auto-detected ${count} course OCC(s)!`;
+          showOccNotification('success', successMsg);
+        } else {
+          showOccNotification('success', (currentLang === 'zh') ? '✔ 课程已就绪' : '✔ OCC Check Ready');
         }
-      }).catch(e => console.warn('Background auto OCC detection note:', e));
+      }).catch(e => {
+        console.warn('Background auto OCC detection note:', e);
+        showOccNotification('success', (currentLang === 'zh') ? '✔ 课程已就绪' : '✔ OCC Ready');
+      });
     }
 
     if (activitiesCacheBadge) {
@@ -11150,10 +11215,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       // 1.5. Automatic OCC Discovery for unconfigured courses
       const missingOccCourses = coursesData.filter(c => !courseOccs || !courseOccs[c.id]);
       if (missingOccCourses.length > 0 && typeof fetchUserCourseOccs === 'function') {
+        showOccNotification('loading');
         updateActivitiesFetchProgress(
           20,
-          `Auto-detecting your OCC groups for ${missingOccCourses.length} course(s)...`,
-          'Detecting groups',
+          (currentLang === 'zh') ? '⚡ 正在自动识别课程 OCC 组别...' : '⚡ Loading OCC groups from SPeCTRUM...',
+          'Loading OCC',
           'AUTO OCC DISCOVERY'
         );
         logDiag('Sync:OCC', `⚡ Auto-detecting OCCs for ${missingOccCourses.length} unconfigured course(s)...`);
@@ -11164,21 +11230,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             userName: (typeof fetchRes !== 'undefined' ? fetchRes?.userName : '')
           });
           let anyNewOcc = false;
+          let detectedCount = 0;
           Object.keys(detectedOccs).forEach(cid => {
             if (detectedOccs[cid]) {
               courseOccs[cid] = String(detectedOccs[cid]);
               anyNewOcc = true;
+              detectedCount++;
               logDiag('Sync:OCC', `✔ Auto-detected OCC ${detectedOccs[cid]} for course [${cid}]`);
             }
           });
           if (anyNewOcc) {
-            const occValues = Object.values(courseOccs);
-            if (!defaultOcc && occValues.length > 0) defaultOcc = occValues[0];
-            await chrome.storage.local.set({ courseOccs, defaultOcc });
+            await chrome.storage.local.set({ courseOccs });
             renderOccPreferencesTable();
+            const msg = (currentLang === 'zh')
+              ? `✔ 已自动识别 ${detectedCount} 门课程 OCC！`
+              : `✔ Auto-detected ${detectedCount} course OCC(s)!`;
+            showOccNotification('success', msg);
+          } else {
+            showOccNotification('success');
           }
         } catch (e) {
           logDiag('Sync:OCC', 'Auto OCC detection note: ' + (e?.message || e));
+          showOccNotification('success');
         }
       }
 
