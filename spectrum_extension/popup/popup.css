@@ -7812,6 +7812,99 @@ body.is-full-tab .pref-card-title {
   text-decoration: underline;
 }
 
+/* Noticeable Action Buttons for OCC Overrides */
+.btn-pref-autodetect {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 12px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  background: #18181b;
+  border: 1px solid #18181b;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-pref-autodetect:hover {
+  background: #27272a;
+  border-color: #27272a;
+  transform: translateY(-0.5px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.btn-pref-autodetect:active {
+  transform: translateY(0.5px);
+}
+
+.btn-pref-autodetect:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+[data-theme="dark"] .btn-pref-autodetect {
+  background: #f8fafc;
+  color: #09090b;
+  border-color: #f8fafc;
+  box-shadow: 0 1px 4px rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .btn-pref-autodetect:hover {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.25);
+}
+
+.btn-pref-reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 11px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary, #52525b);
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-strong, #d4d4d8);
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-pref-reset:hover {
+  color: #dc2626;
+  border-color: #fca5a5;
+  background: #fef2f2;
+  box-shadow: 0 1px 4px rgba(220, 38, 38, 0.12);
+}
+
+.btn-pref-reset:active {
+  transform: translateY(0.5px);
+}
+
+[data-theme="dark"] .btn-pref-reset {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .btn-pref-reset:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
 /* Toast */
 .pref-status-toast {
   font-size: 10.5px;

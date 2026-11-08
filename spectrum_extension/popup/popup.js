@@ -793,7 +793,7 @@ function updatePreferencesTranslations() {
     const subhead = occCard.querySelector('.pref-subhead-title');
     if (subhead) subhead.textContent = t('settings', 'perCourseOverrides');
     const btnResetAll = document.getElementById('btn-reset-all-occ');
-    if (btnResetAll) btnResetAll.textContent = t('settings', 'resetAll');
+    if (btnResetAll) btnResetAll.textContent = (currentLang === 'zh') ? '↺ 重置全部' : ((currentLang === 'bm') ? '↺ Set Semula' : '↺ Reset All');
     const btnAutoDetect = document.getElementById('btn-autodetect-all-occ');
     if (btnAutoDetect) {
       btnAutoDetect.textContent = (currentLang === 'zh') ? '⚡ 自动识别' : ((currentLang === 'bm') ? '⚡ Kesan Automatik' : '⚡ Auto-Detect');
@@ -13266,14 +13266,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     occCoursesTable.innerHTML = coursesList.map(c => {
-      const tag = getCourseCategoryTag(c.code, c.title);
       const val = courseOccs[c.id] || '';
       return `
         <div class="pref-course-card">
           <div class="pref-course-info">
             <div class="pref-course-code-row">
               <span class="pref-course-code">${escapeHtml(c.code)}</span>
-              <span class="pref-course-tag">${escapeHtml(tag)}</span>
             </div>
             <div class="pref-course-title" title="${escapeHtml(c.name || c.title)}">${escapeHtml(c.title || c.name || '')}</div>
           </div>
