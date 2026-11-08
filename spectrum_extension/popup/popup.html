@@ -689,20 +689,7 @@
             </div>
             <span class="pref-badge pref-badge-subtle">ST-01</span>
           </div>
-          <p class="pref-card-desc">Specify cohort occurrence filters for selective biometric check-ins.</p>
-
-          <!-- Default Academic OCC Cohort Box -->
-          <div class="pref-row-box pref-default-occ-box">
-            <div class="pref-row-text">
-              <div class="pref-row-title">Default Academic OCC Cohort</div>
-              <div class="pref-row-subtitle">Fallback for unmapped modules</div>
-            </div>
-            <div class="pref-stepper">
-              <button type="button" id="btn-default-occ-minus" class="stepper-btn" aria-label="Decrease Default OCC">−</button>
-              <input type="text" id="default-occ-input" class="stepper-input" value="4" maxlength="3" inputmode="numeric">
-              <button type="button" id="btn-default-occ-plus" class="stepper-btn" aria-label="Increase Default OCC">+</button>
-            </div>
-          </div>
+          <p class="pref-card-desc">Cohort occurrence (OCC) groups are auto-detected for your courses. You can customize them per-course below.</p>
 
           <!-- Per-Course Overrides Subhead -->
           <div class="pref-subhead-row">
@@ -1242,7 +1229,7 @@
 
 
   <!-- Mandatory OCC Setup Modal -->
-  <div id="occ-setup-modal" class="modal-overlay" style="display:none;">
+  <div id="occ-setup-modal" class="modal-overlay" style="display:none !important;visibility:hidden;">
     <div class="modal-card">
       <div class="modal-header">
         <h3 id="occ-modal-title">⚡ Set OCC Numbers for Your Courses</h3>

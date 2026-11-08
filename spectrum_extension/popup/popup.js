@@ -7170,13 +7170,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateKpiCards();
     renderOccPreferencesTable();
 
-    // Auto-prompt OCC setup if any enrolled course has no configured OCC preference
+    // Auto-detect OCC in background if any enrolled course has no configured OCC preference
     const hasUnconfiguredOcc = coursesData.some(c => !courseOccs || !courseOccs[c.id]);
-    if (hasUnconfiguredOcc) {
-      logDiag('Init', 'Unconfigured OCC detected for cached courses. Auto-prompting OCC setup modal...');
-      setTimeout(() => {
-        openOccSetupModal(true);
-      }, 500);
+    if (hasUnconfiguredOcc && typeof fetchUserCourseOccs === 'function') {
+      logDiag('Init', '⚡ Unconfigured OCC detected. Running seamless background auto-detection (no popup)...');
+      const missing = coursesData.filter(c => !courseOccs || !courseOccs[c.id]);
+      fetchUserCourseOccs(missing).then(detected => {
+        let updated = false;
+        Object.keys(detected).forEach(cid => {
+          if (detected[cid]) {
+            courseOccs[cid] = String(detected[cid]);
+            updated = true;
+          }
+        });
+        if (updated) {
+          chrome.storage.local.set({ courseOccs });
+          renderOccPreferencesTable();
+          renderAllActivities();
+          if (typeof syncPopupActivityStreams === 'function') syncPopupActivityStreams();
+        }
+      }).catch(e => console.warn('Background auto OCC detection note:', e));
     }
 
     if (activitiesCacheBadge) {
@@ -11169,16 +11182,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      // 2. Validate course-specific OCC setup for all discovered courses
-      const unconfiguredCourse = coursesData.find(c => !courseOccs || !courseOccs[c.id]);
-      if (!bypassOccModal && unconfiguredCourse) {
-        logDiag('Sync:OCC', `Course-specific OCC not configured for [${unconfiguredCourse.code || unconfiguredCourse.id}]. Opening mandatory setup modal.`);
-        hideActivitiesFetchProgress(0);
-        updateSyncButtonSpinState(false, 'Sync');
-        isSyncingActivities = false;
-        await openOccSetupModal(true);
-        return;
-      }
+      // 2. Ensure every course has a fallback OCC without blocking user with popups
+      coursesData.forEach(c => {
+        if (!courseOccs[c.id]) {
+          courseOccs[c.id] = '1';
+        }
+      });
+      await chrome.storage.local.set({ courseOccs });
+      renderOccPreferencesTable();
 
       // 2. Fetch all activities across courses within active date window
       const allAnnouncements = [];
@@ -12360,6 +12371,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   let hasSkippedOccSetup = false;
 
   async function openOccSetupModal(isMandatory = true) {
+    // Disabled: modal popups suppressed per user preference. OCC is auto-detected directly.
+    if (occSetupModal) occSetupModal.style.display = 'none';
+    return;
     if (!occSetupModal) return;
 
     // Strict no-close button enforcement: NEVER show close button if mandatory or if courses lack OCCs
@@ -13032,7 +13046,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <span class="pref-occ-label">OCC</span>
             <div class="pref-stepper">
               <button type="button" class="stepper-btn stepper-course-minus" data-course-id="${escapeHtml(c.id)}" aria-label="Decrease OCC">−</button>
-              <input type="text" class="stepper-input occ-table-input" data-course-id="${escapeHtml(c.id)}" value="${escapeHtml(val)}" placeholder="${escapeHtml(defaultOcc || '4')}" maxlength="3" inputmode="numeric">
+              <input type="text" class="stepper-input occ-table-input" data-course-id="${escapeHtml(c.id)}" value="${escapeHtml(val)}" placeholder="1" maxlength="3" inputmode="numeric">
               <button type="button" class="stepper-btn stepper-course-plus" data-course-id="${escapeHtml(c.id)}" aria-label="Increase OCC">+</button>
             </div>
           </div>
@@ -13046,7 +13060,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const cid = btn.dataset.courseId;
         const inp = occCoursesTable.querySelector(`.occ-table-input[data-course-id="${cid}"]`);
         if (!inp) return;
-        let cur = parseInt(inp.value.trim() || defaultOcc || '4', 10);
+        let cur = parseInt(inp.value.trim() || '1', 10);
         if (isNaN(cur) || cur <= 1) cur = 1;
         else cur -= 1;
         inp.value = cur;
@@ -13060,11 +13074,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const cid = btn.dataset.courseId;
         const inp = occCoursesTable.querySelector(`.occ-table-input[data-course-id="${cid}"]`);
         if (!inp) return;
-        let cur = parseInt(inp.value.trim() || defaultOcc || '4', 10);
+        let cur = parseInt(inp.value.trim() || '1', 10);
         if (isNaN(cur) || cur < 1) cur = 1;
         else cur += 1;
         inp.value = cur;
         courseOccs[cid] = String(cur);
+      });
+    });
+
+    occCoursesTable.querySelectorAll('.occ-table-input').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const cid = inp.dataset.courseId;
+        const v = inp.value.trim();
+        if (v) courseOccs[cid] = v;
+        else delete courseOccs[cid];
       });
     });
   }
