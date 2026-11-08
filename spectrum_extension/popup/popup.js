@@ -1679,9 +1679,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnCancelPin = document.getElementById('btn-cancel-pin');
   const btnClosePinModal = document.getElementById('btn-close-pin-modal');
 
-  // Animated OCC Notification Pill Controller
+    // Animated OCC Logo Loading & Notification Controller
   let occToastTimeout = null;
   function showOccNotification(status, message) {
+    const overlay = document.getElementById('sync-cinematic-overlay');
+    const hudTitle = document.getElementById('sync-hud-title');
+    const hudPercent = document.getElementById('sync-hud-percent');
+    const hudBarFill = document.getElementById('sync-hud-bar-fill');
+    const hudCurrent = document.getElementById('sync-hud-current');
+    const hudSub = document.getElementById('sync-hud-sub');
+
+    // Also support lightweight pill banner
     let pill = document.getElementById('occ-status-pill');
     if (!pill) {
       pill = document.createElement('div');
@@ -1700,33 +1708,89 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const textEl = pill.querySelector('.occ-status-pill-text');
-    pill.style.display = 'inline-flex';
-    pill.style.opacity = '1';
 
     if (status === 'loading') {
-      pill.classList.remove('success');
-      const defaultMsg = (currentLang === 'zh')
-        ? '⚡ 正在自动识别 OCC...'
-        : ((currentLang === 'bm') ? '⚡ Memuatkan OCC...' : '⚡ Loading OCC...');
-      if (textEl) textEl.textContent = message || defaultMsg;
-      updateSyncButtonSpinState(true, (currentLang === 'zh') ? '加载 OCC...' : 'Loading OCC...');
+      isSyncOverlayDismissed = false;
+      if (typeof window !== 'undefined') window.isSyncOverlayDismissed = false;
+
+      // 1. Activate SPeCTRUM Pro Logo Loading Animation (Prism & Laser Beams)
       document.querySelectorAll('.brand-logo-container').forEach(c => c.classList.add('anim-fetching'));
+      document.querySelectorAll('.header-brand-logo-svg').forEach(svg => {
+        svg.classList.remove('stage-settled');
+        svg.classList.add('stage-fetching');
+      });
+
+      // 2. Display Centered Glassmorphism Logo Stage Overlay
+      if (overlay) {
+        overlay.style.display = 'flex';
+        void overlay.offsetWidth;
+        overlay.classList.add('active');
+        overlay.style.opacity = '1';
+      }
+
+      const defaultTitle = (currentLang === 'zh')
+        ? '⚡ 正在自动识别 OCC 组别'
+        : ((currentLang === 'bm') ? '⚡ PENGESANAN OCC AUTOMATIK' : '⚡ OCC AUTO-DISCOVERY');
+      const defaultCurrent = (currentLang === 'zh')
+        ? '⚡ 正在加载/识别课程 OCC 组别...'
+        : ((currentLang === 'bm') ? '⚡ Memuatkan OCC dari SPeCTRUM...' : '⚡ Loading OCC from SPeCTRUM...');
+      const defaultSub = (currentLang === 'zh')
+        ? '正在匹配选课组别与时间表...'
+        : ((currentLang === 'bm') ? 'Menyemak jadual waktu & kumpulan...' : 'Checking class occurrences & timetable...');
+
+      if (hudTitle) hudTitle.textContent = defaultTitle;
+      if (hudCurrent) hudCurrent.textContent = message || defaultCurrent;
+      if (hudSub) hudSub.textContent = defaultSub;
+      if (hudPercent) hudPercent.textContent = '48%';
+      if (hudBarFill) hudBarFill.style.width = '48%';
+
+      // 3. Floating Status Pill & Sync Button State
+      pill.classList.remove('success');
+      pill.style.display = 'inline-flex';
+      pill.style.opacity = '1';
+      if (textEl) textEl.textContent = message || defaultCurrent;
+      updateSyncButtonSpinState(true, (currentLang === 'zh') ? '加载 OCC...' : 'Loading OCC...');
+
     } else if (status === 'success') {
-      pill.classList.add('success');
-      const defaultMsg = (currentLang === 'zh')
+      const defaultSuccessMsg = (currentLang === 'zh')
         ? '✔ OCC 识别完成！'
-        : ((currentLang === 'bm') ? '✔ OCC Berjaya Dikesan!' : '✔ OCC Groups Loaded!');
-      if (textEl) textEl.textContent = message || defaultMsg;
+        : ((currentLang === 'bm') ? '✔ OCC Berjaya Dimuatkan!' : '✔ OCC Groups Loaded!');
+
+      // Complete progress bar & show success state
+      if (hudPercent) hudPercent.textContent = '100%';
+      if (hudBarFill) hudBarFill.style.width = '100%';
+      if (hudCurrent) hudCurrent.textContent = message || defaultSuccessMsg;
+      if (hudSub) hudSub.textContent = (currentLang === 'zh') ? '准备就绪' : 'Ready';
+
+      pill.classList.add('success');
+      if (textEl) textEl.textContent = message || defaultSuccessMsg;
       updateSyncButtonSpinState(false, 'Sync');
-      document.querySelectorAll('.brand-logo-container').forEach(c => c.classList.remove('anim-fetching'));
+
       occToastTimeout = setTimeout(() => {
+        // Stop logo fetching animation and settle
+        document.querySelectorAll('.brand-logo-container').forEach(c => c.classList.remove('anim-fetching'));
+        document.querySelectorAll('.header-brand-logo-svg').forEach(svg => {
+          svg.classList.remove('stage-fetching');
+          svg.classList.add('stage-settled');
+        });
+
+        // Smoothly fade out overlay
+        if (overlay) {
+          overlay.classList.remove('active');
+          overlay.style.opacity = '0';
+          setTimeout(() => {
+            if (overlay.style.opacity === '0') overlay.style.display = 'none';
+          }, 320);
+        }
+
+        // Fade out floating pill
         pill.style.opacity = '0';
         pill.style.transform = 'translate(-50%, -8px) scale(0.95)';
         setTimeout(() => {
           pill.style.display = 'none';
           pill.style.transform = 'translateX(-50%)';
         }, 300);
-      }, 1800);
+      }, 1300);
     }
   }
 
