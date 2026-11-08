@@ -707,7 +707,10 @@
           <!-- Per-Course Overrides Subhead -->
           <div class="pref-subhead-row">
             <span class="pref-subhead-title">PER-COURSE ENROLLED OVERRIDES</span>
-            <button type="button" id="btn-reset-all-occ" class="pref-link-btn">Reset All</button>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button type="button" id="btn-autodetect-all-occ" class="pref-link-btn" style="color:var(--accent);font-weight:600;">⚡ Auto-Detect</button>
+              <button type="button" id="btn-reset-all-occ" class="pref-link-btn">Reset All</button>
+            </div>
           </div>
           <div id="reset-occ-status" class="pref-status-toast" style="display:none;">✔ All OCC preferences cleared!</div>
 
@@ -1248,7 +1251,10 @@
       <div class="modal-body">
         <p style="font-size:11.5px;line-height:1.45;margin-bottom:12px;">Enter your Tutorial/Lab Occurrence (OCC) group for each course so SPeCTRUM PRO tracks the correct attendance sessions.</p>
         <div style="background:var(--bg-subtle);border:1px solid var(--border-hairline);border-radius:var(--radius-xs);padding:8px;margin-bottom:12px;">
-          <div style="font-size:10.5px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">Quick Fill All Courses:</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:10.5px;font-weight:600;color:var(--text-secondary);">Quick Fill All Courses:</span>
+            <button type="button" id="btn-modal-autodetect-occ" class="pref-link-btn" style="color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;">⚡ Auto-Detect My OCCs</button>
+          </div>
           <div id="quick-occ-pills" style="display:flex;flex-wrap:wrap;gap:4px;">
             <button type="button" class="btn-wireframe btn-occ-quick" data-occ="1">OCC 1</button>
             <button type="button" class="btn-wireframe btn-occ-quick" data-occ="2">OCC 2</button>

@@ -794,6 +794,14 @@ function updatePreferencesTranslations() {
     if (subhead) subhead.textContent = t('settings', 'perCourseOverrides');
     const btnResetAll = document.getElementById('btn-reset-all-occ');
     if (btnResetAll) btnResetAll.textContent = t('settings', 'resetAll');
+    const btnAutoDetect = document.getElementById('btn-autodetect-all-occ');
+    if (btnAutoDetect) {
+      btnAutoDetect.textContent = (currentLang === 'zh') ? '⚡ 自动识别' : ((currentLang === 'bm') ? '⚡ Kesan Automatik' : '⚡ Auto-Detect');
+    }
+    const btnModalAuto = document.getElementById('btn-modal-autodetect-occ');
+    if (btnModalAuto) {
+      btnModalAuto.textContent = (currentLang === 'zh') ? '⚡ 自动识别我的 OCC' : ((currentLang === 'bm') ? '⚡ Kesan Automatik OCC' : '⚡ Auto-Detect My OCCs');
+    }
   }
 
   const autoCard = prefTab.querySelector('.pref-card:nth-of-type(2)');
@@ -6651,6 +6659,86 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateKpiCards();
   });
 
+  // Auto-Detect All OCC Groups in Preferences
+  const btnAutoDetectAllOcc = document.getElementById('btn-autodetect-all-occ');
+  if (btnAutoDetectAllOcc) {
+    btnAutoDetectAllOcc.addEventListener('click', async () => {
+      const origText = btnAutoDetectAllOcc.textContent;
+      btnAutoDetectAllOcc.disabled = true;
+      btnAutoDetectAllOcc.textContent = (currentLang === 'zh') ? '识别中...' : ((currentLang === 'bm') ? 'Mengesan...' : 'Detecting...');
+
+      try {
+        let coursesList = getKnownCoursesList();
+        if (coursesList.length === 0) {
+          const fetchRes = await fetchEnrolledCoursesDirectly();
+          if (fetchRes && fetchRes.courses) {
+            allCoursesDiscovered = fetchRes.allCourses || fetchRes.courses;
+            coursesList = getKnownCoursesList();
+          }
+        }
+
+        if (coursesList.length === 0) {
+          if (resetOccStatus) {
+            resetOccStatus.textContent = (currentLang === 'zh') ? '未检测到课程，请确保已登录 SPeCTRUM' : 'No courses found. Please ensure you are logged in.';
+            resetOccStatus.style.display = 'block';
+            setTimeout(() => { resetOccStatus.style.display = 'none'; }, 3000);
+          }
+          return;
+        }
+
+        const detected = await fetchUserCourseOccs(coursesList);
+        let count = 0;
+        Object.keys(detected).forEach(cid => {
+          if (detected[cid]) {
+            courseOccs[cid] = String(detected[cid]);
+            count++;
+          }
+        });
+
+        if (count > 0) {
+          const occVals = Object.values(courseOccs);
+          if (!defaultOcc && occVals.length > 0) defaultOcc = occVals[0];
+          if (defaultOccInput && defaultOcc) defaultOccInput.value = defaultOcc;
+
+          attendancesData.forEach(a => {
+            a.userOcc = courseOccs[a.courseId] || defaultOcc || '';
+          });
+
+          await chrome.storage.local.set({
+            defaultOcc,
+            courseOccs,
+            cachedAttendances: attendancesData
+          });
+
+          renderOccPreferencesTable();
+          renderAllActivities();
+          if (typeof syncPopupActivityStreams === 'function') syncPopupActivityStreams();
+
+          if (resetOccStatus) {
+            resetOccStatus.textContent = (currentLang === 'zh')
+              ? `✔ 成功自动识别 ${count} 门课程的 OCC！`
+              : ((currentLang === 'bm')
+                ? `✔ Berjaya kesan OCC untuk ${count} kursus!`
+                : `✔ Auto-detected OCC for ${count} course(s)!`);
+            resetOccStatus.style.display = 'block';
+            setTimeout(() => { resetOccStatus.style.display = 'none'; }, 3000);
+          }
+        } else {
+          if (resetOccStatus) {
+            resetOccStatus.textContent = (currentLang === 'zh') ? '未能自动识别 OCC，可手动输入' : 'Could not detect OCC groups automatically. You can set them manually.';
+            resetOccStatus.style.display = 'block';
+            setTimeout(() => { resetOccStatus.style.display = 'none'; }, 3500);
+          }
+        }
+      } catch (err) {
+        console.error('[OCC:AutoDetect] Error:', err);
+      } finally {
+        btnAutoDetectAllOcc.disabled = false;
+        btnAutoDetectAllOcc.textContent = origText;
+      }
+    });
+  }
+
   // Reset All OCC Preferences (Reset to initial state for testing)
   const btnResetAllOcc = document.getElementById('btn-reset-all-occ');
   const resetOccStatus = document.getElementById('reset-occ-status');
@@ -11046,6 +11134,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
+      // 1.5. Automatic OCC Discovery for unconfigured courses
+      const missingOccCourses = coursesData.filter(c => !courseOccs || !courseOccs[c.id]);
+      if (missingOccCourses.length > 0 && typeof fetchUserCourseOccs === 'function') {
+        updateActivitiesFetchProgress(
+          20,
+          `Auto-detecting your OCC groups for ${missingOccCourses.length} course(s)...`,
+          'Detecting groups',
+          'AUTO OCC DISCOVERY'
+        );
+        logDiag('Sync:OCC', `⚡ Auto-detecting OCCs for ${missingOccCourses.length} unconfigured course(s)...`);
+        try {
+          const detectedOccs = await fetchUserCourseOccs(missingOccCourses, {
+            sesskey: (typeof fetchRes !== 'undefined' ? fetchRes?.sesskey : ''),
+            userId: (typeof fetchRes !== 'undefined' ? fetchRes?.userId : 0),
+            userName: (typeof fetchRes !== 'undefined' ? fetchRes?.userName : '')
+          });
+          let anyNewOcc = false;
+          Object.keys(detectedOccs).forEach(cid => {
+            if (detectedOccs[cid]) {
+              courseOccs[cid] = String(detectedOccs[cid]);
+              anyNewOcc = true;
+              logDiag('Sync:OCC', `✔ Auto-detected OCC ${detectedOccs[cid]} for course [${cid}]`);
+            }
+          });
+          if (anyNewOcc) {
+            const occValues = Object.values(courseOccs);
+            if (!defaultOcc && occValues.length > 0) defaultOcc = occValues[0];
+            await chrome.storage.local.set({ courseOccs, defaultOcc });
+            renderOccPreferencesTable();
+          }
+        } catch (e) {
+          logDiag('Sync:OCC', 'Auto OCC detection note: ' + (e?.message || e));
+        }
+      }
+
       // 2. Validate course-specific OCC setup for all discovered courses
       const unconfiguredCourse = coursesData.find(c => !courseOccs || !courseOccs[c.id]);
       if (!bypassOccModal && unconfiguredCourse) {
@@ -12314,6 +12437,45 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
     if (occSetupModal) occSetupModal.style.display = 'none';
+  }
+
+  const btnModalAutoDetect = document.getElementById('btn-modal-autodetect-occ');
+  if (btnModalAutoDetect && !btnModalAutoDetect.dataset.bound) {
+    btnModalAutoDetect.dataset.bound = 'true';
+    btnModalAutoDetect.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const origText = btnModalAutoDetect.textContent;
+      btnModalAutoDetect.disabled = true;
+      btnModalAutoDetect.textContent = (currentLang === 'zh') ? '识别中...' : 'Detecting...';
+
+      try {
+        const coursesList = getKnownCoursesList();
+        if (coursesList.length > 0 && typeof fetchUserCourseOccs === 'function') {
+          const detected = await fetchUserCourseOccs(coursesList);
+          let foundCount = 0;
+          Object.keys(detected).forEach(cid => {
+            const val = detected[cid];
+            if (val) {
+              courseOccs[cid] = String(val);
+              const inp = document.querySelector(`.occ-modal-course-inp[data-course-id="${cid}"]`);
+              if (inp) {
+                inp.value = val;
+                inp.style.borderColor = 'var(--accent)';
+              }
+              foundCount++;
+            }
+          });
+          if (foundCount > 0) {
+            logDiag('OCC:Modal', `Auto-detected ${foundCount} course OCCs inside modal.`);
+          }
+        }
+      } catch (err) {
+        console.warn('Modal OCC auto-detect note:', err);
+      } finally {
+        btnModalAutoDetect.disabled = false;
+        btnModalAutoDetect.textContent = origText;
+      }
+    });
   }
 
   if (quickOccPills) {

@@ -30,6 +30,10 @@ async function fetchEnrolledCoursesDirectly() {
     const userMatch = html.match(/"userId":(\d+)/i) || html.match(/"userid":(\d+)/i);
     if (userMatch) userId = parseInt(userMatch[1], 10);
 
+    let userName = '';
+    const nameMatch = html.match(/class="[^"]*usertext[^"]*"[^>]*>([^<]+)<\/span>/i) || html.match(/"userfullname":"([^"]+)"/);
+    if (nameMatch) userName = nameMatch[1].trim();
+
     // Try Moodle timeline AJAX service
     if (sesskey) {
       try {
@@ -125,11 +129,206 @@ async function fetchEnrolledCoursesDirectly() {
     }
 
     const sorted = results.sort((a, b) => a.name.localeCompare(b.name));
-    return { loggedIn: true, courses: sorted, allCourses: sorted };
+    return { loggedIn: true, courses: sorted, allCourses: sorted, sesskey, userId, userName };
   } catch (err) {
     console.log('[SPeCTRUM Pro] Enrolled courses fetch note:', err?.message || err);
     return { loggedIn: false, courses: [] };
   }
+}
+
+// ========================================================
+// 1B. Automated Course OCC Group Discovery
+// Resolves student's enrolled OCC groups automatically:
+// Tier 1: Batched Moodle WebService AJAX (core_group_get_course_user_groups) - 1 request for all courses
+// Tier 2: Direct Course User Profile (/user/view.php?id={uid}&course={cid}) - no search needed
+// Tier 3: Participants Page Search (/user/index.php?id={cid}&search={name}) - targeted fallback
+// ========================================================
+
+function extractOccNumberFromGroupText(str) {
+  if (!str || typeof str !== 'string') return null;
+  const clean = str.trim();
+  // 1. Explicit OCC matches: "OCC 1", "OCC01", "OCC-2", "OCC_3", "OCC4"
+  const mOcc = clean.match(/\bOCC[-_\s]*0*(\d{1,2})\b/i);
+  if (mOcc) return String(parseInt(mOcc[1], 10));
+
+  // 2. Group / Kumpulan matches: "Group 1", "Kumpulan 02", "KUMP 3", "Grp 4"
+  const mGrp = clean.match(/\b(?:group|kumpulan|kump|grp)[-_\s]*0*(\d{1,2})\b/i);
+  if (mGrp) return String(parseInt(mGrp[1], 10));
+
+  // 3. Fallback: If string contains "OCC" anywhere with numbers
+  if (/occ/i.test(clean)) {
+    const mNum = clean.match(/\d+/);
+    if (mNum) return String(parseInt(mNum[0], 10));
+  }
+  return null;
+}
+
+async function fetchUserCourseOccs(courses, options = {}) {
+  const origin = SPECTRUM_ORIGIN;
+  const parser = new DOMParser();
+  const results = {}; // courseId -> occ string (e.g. "1")
+  if (!Array.isArray(courses) || courses.length === 0) return results;
+
+  let sesskey = options.sesskey || '';
+  let userId = options.userId || 0;
+  let userName = options.userName || '';
+
+  // 1. Ensure we have sesskey, userId, and userName from /my/courses.php if not provided
+  if (!sesskey || !userId || !userName) {
+    try {
+      const res = await fetchWithTimeout(`${origin}/my/courses.php`, { credentials: 'include' }, 8000);
+      if (res.ok && !res.url.includes('/login/')) {
+        const html = await res.text();
+        if (!sesskey) {
+          const sMatch = html.match(/"sesskey":"([^"]+)"/) || html.match(/sesskey=([a-zA-Z0-9]+)/);
+          if (sMatch) sesskey = sMatch[1];
+        }
+        if (!userId) {
+          const uMatch = html.match(/"userId":(\d+)/i) || html.match(/"userid":(\d+)/i);
+          if (uMatch) userId = parseInt(uMatch[1], 10);
+        }
+        if (!userName) {
+          const nMatch = html.match(/class="[^"]*usertext[^"]*"[^>]*>([^<]+)<\/span>/i) ||
+                        html.match(/"userfullname":"([^"]+)"/);
+          if (nMatch) userName = nMatch[1].trim();
+        }
+      }
+    } catch (e) {
+      console.log('[OCC:Discovery] Note fetching user session:', e?.message || e);
+    }
+  }
+
+  const pendingCourses = courses.filter(c => c && c.id && /^\d+$/.test(String(c.id)));
+  if (pendingCourses.length === 0) return results;
+
+  // -------------------------------------------------------------
+  // TIER 1: Batched Moodle AJAX Service (core_group_get_course_user_groups)
+  // 1 single HTTP request queries ALL courses simultaneously!
+  // -------------------------------------------------------------
+  if (sesskey && userId) {
+    try {
+      const requests = pendingCourses.map((c, idx) => ({
+        index: idx,
+        methodname: 'core_group_get_course_user_groups',
+        args: {
+          courseid: parseInt(c.id, 10),
+          userid: parseInt(userId, 10)
+        }
+      }));
+
+      const ajaxRes = await fetchWithTimeout(`${origin}/lib/ajax/service.php?sesskey=${sesskey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requests),
+        credentials: 'include'
+      }, 10000);
+
+      if (ajaxRes.ok) {
+        const data = await ajaxRes.json();
+        if (Array.isArray(data)) {
+          data.forEach((item, idx) => {
+            const course = pendingCourses[idx];
+            if (!course) return;
+            const groups = item?.data?.groups;
+            if (Array.isArray(groups) && groups.length > 0) {
+              for (const g of groups) {
+                const num = extractOccNumberFromGroupText(g.name);
+                if (num) {
+                  results[String(course.id)] = num;
+                  break;
+                }
+              }
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.log('[OCC:Discovery] Tier 1 AJAX note:', e?.message || e);
+    }
+  }
+
+  // -------------------------------------------------------------
+  // TIER 2: Direct Course User Profile (/user/view.php?id={uid}&course={cid})
+  // For any courses still unresolved, fetch the user's course profile card
+  // -------------------------------------------------------------
+  const remainingTier2 = pendingCourses.filter(c => !results[String(c.id)]);
+  if (remainingTier2.length > 0 && userId) {
+    const chunkSize = 4;
+    for (let i = 0; i < remainingTier2.length; i += chunkSize) {
+      const chunk = remainingTier2.slice(i, i + chunkSize);
+      await Promise.all(chunk.map(async (course) => {
+        try {
+          const profileUrl = `${origin}/user/view.php?id=${userId}&course=${course.id}`;
+          const res = await fetchWithTimeout(profileUrl, { credentials: 'include' }, 8000);
+          if (res.ok && !res.url.includes('/login/')) {
+            const html = await res.text();
+            const doc = parser.parseFromString(html, 'text/html');
+            const labelNodes = Array.from(doc.querySelectorAll('dt, th, .label, .contentnode strong'));
+            for (const lbl of labelNodes) {
+              if (/groups?|kumpulan/i.test(lbl.textContent || '')) {
+                const valueEl = lbl.nextElementSibling || lbl.closest('dl, tr, div')?.querySelector('dd, td, .content');
+                if (valueEl) {
+                  const num = extractOccNumberFromGroupText(valueEl.textContent || '');
+                  if (num) {
+                    results[String(course.id)] = num;
+                    return;
+                  }
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.log(`[OCC:Discovery] Tier 2 profile note for course ${course.id}:`, e?.message || e);
+        }
+      }));
+    }
+  }
+
+  // -------------------------------------------------------------
+  // TIER 3: Participants Page Search (/user/index.php?id={cid}&search={name})
+  // Resilient fallback: search participants by user's name
+  // -------------------------------------------------------------
+  const remainingTier3 = pendingCourses.filter(c => !results[String(c.id)]);
+  if (remainingTier3.length > 0 && userName) {
+    const searchKw = userName.split(/\s+/).slice(0, 2).join(' ');
+    const chunkSize = 3;
+    for (let i = 0; i < remainingTier3.length; i += chunkSize) {
+      const chunk = remainingTier3.slice(i, i + chunkSize);
+      await Promise.all(chunk.map(async (course) => {
+        try {
+          const partUrl = `${origin}/user/index.php?id=${course.id}&search=${encodeURIComponent(searchKw)}`;
+          const res = await fetchWithTimeout(partUrl, { credentials: 'include' }, 8000);
+          if (res.ok && !res.url.includes('/login/')) {
+            const html = await res.text();
+            const doc = parser.parseFromString(html, 'text/html');
+            let targetTr = null;
+            if (userId) {
+              targetTr = doc.querySelector(`tr[data-uid="${userId}"], a[href*="id=${userId}"]`)?.closest('tr');
+            }
+            if (!targetTr) {
+              const rows = Array.from(doc.querySelectorAll('tbody tr, table tr'));
+              targetTr = rows.find(r => r.textContent.toLowerCase().includes(userName.toLowerCase()));
+            }
+
+            if (targetTr) {
+              const groupCell = targetTr.querySelector('.groups, td[class*="group"], td.c4, td.c3');
+              if (groupCell) {
+                const num = extractOccNumberFromGroupText(groupCell.textContent || '');
+                if (num) {
+                  results[String(course.id)] = num;
+                  return;
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.log(`[OCC:Discovery] Tier 3 search note for course ${course.id}:`, e?.message || e);
+        }
+      }));
+    }
+  }
+
+  return results;
 }
 
 // 2. Direct Course Materials Fetcher
@@ -1806,4 +2005,6 @@ if (typeof window !== "undefined") {
   window.parseMoodleDate = parseMoodleDate;
   window.calculateAssignmentTiming = calculateAssignmentTiming;
   window.executeInTab = executeInTab;
+  window.extractOccNumberFromGroupText = extractOccNumberFromGroupText;
+  window.fetchUserCourseOccs = fetchUserCourseOccs;
 }
