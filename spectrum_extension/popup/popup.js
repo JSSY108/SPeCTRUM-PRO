@@ -1440,6 +1440,9 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 12000) {
 window.fetchWithTimeout = fetchWithTimeout;
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Bind instant reactive language refresh immediately on DOM ready
+  window.onLanguageChange = applyLanguageUiRefresh;
+
   // Elements - Header & Tabs
   const tabButtons = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
