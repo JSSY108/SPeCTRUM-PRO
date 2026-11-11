@@ -550,10 +550,10 @@
     if (typeof chrome === 'undefined' || !chrome.tabs || !chrome.tabs.query) return null;
     try {
       const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (activeTab && activeTab.url && (activeTab.url.includes('spectrum.um.edu.my') || activeTab.url.includes('login.microsoftonline.com'))) {
+      if (activeTab && activeTab.url && activeTab.url.includes('spectrum.um.edu.my')) {
         return activeTab;
       }
-      const spectrumTabs = await chrome.tabs.query({ url: ["*://spectrum.um.edu.my/*", "*://login.microsoftonline.com/*"] });
+      const spectrumTabs = await chrome.tabs.query({ url: ["https://spectrum.um.edu.my/*"] });
       if (spectrumTabs && spectrumTabs.length > 0) {
         return spectrumTabs[0];
       }

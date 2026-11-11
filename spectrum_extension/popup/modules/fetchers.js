@@ -1978,39 +1978,6 @@ async function submitAttendanceDirect(takeUrl, statusId, sesskey, password = '')
   }
 }
 
-// Optional In-Tab Fallback Runner
-function executeInTab(tabId, func, args = []) {
-  return new Promise((resolve, reject) => {
-    if (!chrome.scripting || !chrome.scripting.executeScript) {
-      return reject(new Error("chrome.scripting API is not available."));
-    }
-    chrome.scripting.executeScript({
-      target: { tabId },
-      func: func,
-      args: args,
-      world: 'MAIN'
-    }, (results) => {
-      if (chrome.runtime.lastError) {
-        chrome.scripting.executeScript({
-          target: { tabId },
-          func: func,
-          args: args
-        }, (fallbackResults) => {
-          if (chrome.runtime.lastError) return reject(chrome.runtime.lastError);
-          resolve(fallbackResults && fallbackResults[0] ? fallbackResults[0].result : null);
-        });
-        return;
-      }
-      if (results && results[0]) {
-        resolve(results[0].result);
-      } else {
-        resolve(null);
-      }
-    });
-  });
-}
-
-
 if (typeof window !== "undefined") {
   window.fetchEnrolledCoursesDirectly = fetchEnrolledCoursesDirectly;
   window.fetchCourseMaterialsDirectly = fetchCourseMaterialsDirectly;
@@ -2020,7 +1987,6 @@ if (typeof window !== "undefined") {
   window.submitAttendanceDirect = submitAttendanceDirect;
   window.parseMoodleDate = parseMoodleDate;
   window.calculateAssignmentTiming = calculateAssignmentTiming;
-  window.executeInTab = executeInTab;
   window.extractOccNumberFromGroupText = extractOccNumberFromGroupText;
   window.fetchUserCourseOccs = fetchUserCourseOccs;
 }

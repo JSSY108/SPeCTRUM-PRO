@@ -38,13 +38,12 @@
     }
   },
   "host_permissions": [
-    "*://spectrum.um.edu.my/*",
-    "https://login.microsoftonline.com/*"
+    "https://spectrum.um.edu.my/*"
   ],
   "content_scripts": [
     {
       "matches": [
-        "<all_urls>"
+        "https://spectrum.um.edu.my/*"
       ],
       "js": [
         "scripts/content.js"
@@ -61,8 +60,8 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "icons/*",
-        "popup/*"
+        "icons/icon48.png",
+        "popup/popup.html"
       ],
       "matches": [
         "<all_urls>"

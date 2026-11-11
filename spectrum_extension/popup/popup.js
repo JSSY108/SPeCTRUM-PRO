@@ -6943,10 +6943,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (typeof chrome === 'undefined' || !chrome.tabs || !chrome.tabs.query) return null;
     try {
       const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (activeTab && activeTab.url && (activeTab.url.includes('spectrum.um.edu.my') || activeTab.url.includes('login.microsoftonline.com'))) {
+      if (activeTab && activeTab.url && activeTab.url.includes('spectrum.um.edu.my')) {
         return activeTab;
       }
-      const spectrumTabs = await chrome.tabs.query({ url: ["*://spectrum.um.edu.my/*", "*://login.microsoftonline.com/*"] });
+      const spectrumTabs = await chrome.tabs.query({ url: ["https://spectrum.um.edu.my/*"] });
       if (spectrumTabs && spectrumTabs.length > 0) {
         return spectrumTabs[0];
       }
@@ -10935,11 +10935,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function openSpectrumLogin() {
     try {
       if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.query) {
-        const tabs = await chrome.tabs.query({});
-        const existingTab = tabs.find(t => t.url && (
-          t.url.includes('spectrum.um.edu.my') || 
-          t.url.includes('login.microsoftonline.com')
-        ));
+        const tabs = await chrome.tabs.query({ url: ['https://spectrum.um.edu.my/*'] });
+        const existingTab = tabs.find(t => t.url && t.url.includes('spectrum.um.edu.my'));
         if (existingTab && existingTab.id) {
           await chrome.tabs.update(existingTab.id, { active: true });
           if (existingTab.windowId && chrome.windows) {
@@ -11717,10 +11714,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Parse live attendance form directly from SPeCTRUM
+  async function isSpectrumSsoRedirect() {
+    try {
+      const probe = await fetchWithTimeout(`${SPECTRUM_ORIGIN}/my/courses.php`, {
+        credentials: 'include',
+        redirect: 'manual'
+      }, 6000);
+      return Boolean(probe && probe.type === 'opaqueredirect');
+    } catch (e) {
+      return false;
+    }
+  }
+
   // Parse live attendance form directly from SPeCTRUM
   async function parseAttendanceFormDetails(takeUrl) {
     logDiag('Attendance:Submit', `[Form] Fetching live form from: ${takeUrl}`);
-    const res = await fetchWithTimeout(takeUrl, { credentials: 'include' }, 12000);
+    let res;
+    try {
+      res = await fetchWithTimeout(takeUrl, { credentials: 'include' }, 12000);
+    } catch (fetchErr) {
+      if (await isSpectrumSsoRedirect()) {
+        logDiag('Attendance:Submit', '[Form] 🔒 Redirected to SSO login.');
+        return { loginRequired: true };
+      }
+      throw new Error('Unable to reach SPeCTRUM. Please check your internet connection and try again.');
+    }
     logDiag('Attendance:Submit', `[Form] HTTP ${res.status}, final URL: ${res.url}`);
 
     if (!res.ok) throw new Error(`HTTP ${res.status} when fetching attendance form.`);
@@ -11930,6 +11948,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
     } catch (err) {
       const elapsed = Math.round(performance.now() - startTime);
+      if (await isSpectrumSsoRedirect()) {
+        logDiag('Attendance:Probe', `[CID: ${courseId}] 🔒 Redirected to SSO login after ${elapsed}ms.`);
+        return { loginRequired: true };
+      }
       logDiag('Attendance:Probe', `❌ [CID: ${courseId}] Probe exception in ${elapsed}ms: ${err?.message || err}`);
       return { error: err?.message || String(err) };
     }
@@ -13096,12 +13118,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const aboutDuitnowSection = document.getElementById('about-duitnow-section');
     const aboutTipjarChevron = document.getElementById('about-tipjar-chevron');
 
+    const versionBadge = document.getElementById('about-version-badge');
+    if (versionBadge && typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getManifest) {
+      const ver = chrome.runtime.getManifest()?.version;
+      if (ver) versionBadge.textContent = `v${ver} · Production`;
+    }
+
     // Browser detection for Chrome Web Store vs Microsoft Edge Add-ons
     const isEdge = /Edg\//i.test(navigator.userAgent);
     if (isEdge) {
       if (aboutStoreTitle) aboutStoreTitle.textContent = 'Review on Edge Add-ons';
       if (aboutStoreSub) aboutStoreSub.textContent = 'Help fellow Edge coursemates discover SPeCTRUM PRO';
-      if (btnAboutStoreReview) btnAboutStoreReview.href = 'https://microsoftedge.microsoft.com/addons/detail/spectrum-pro';
+      if (btnAboutStoreReview) btnAboutStoreReview.href = 'https://microsoftedge.microsoft.com/addons/search/SPeCTRUM%20PRO';
     } else {
       if (aboutStoreTitle) aboutStoreTitle.textContent = 'Review on Chrome Web Store';
       if (aboutStoreSub) aboutStoreSub.textContent = 'Help fellow UM students discover this extension';

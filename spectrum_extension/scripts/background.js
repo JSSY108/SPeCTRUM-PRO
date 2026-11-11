@@ -433,7 +433,14 @@ async function runBackgroundAttendanceCheck() {
     }
 
     // Verify session by pinging SPeCTRUM
-    const pingRes = await fetch('https://spectrum.um.edu.my/my/courses.php', { credentials: 'include' });
+    let pingRes;
+    try {
+      pingRes = await fetch('https://spectrum.um.edu.my/my/courses.php', { credentials: 'include' });
+    } catch (pingErr) {
+      console.log('[SPeCTRUM Pro] User not logged in or network unreachable. Skipping background check.', pingErr?.message || pingErr);
+      await appendBackgroundLog('Background:Daemon', '⚠️ Skipped: SPeCTRUM session expired (SSO redirect) or network unreachable.');
+      return { skipped: true, reason: 'Not logged in or offline' };
+    }
     if (!pingRes.ok || pingRes.url.includes('/login/')) {
       console.log('[SPeCTRUM Pro] User not currently logged in to SPeCTRUM. Skipping background check.');
       await appendBackgroundLog('Background:Daemon', '⚠️ Skipped: SPeCTRUM session expired or user not logged in.');
@@ -789,7 +796,12 @@ async function checkCourseAttendance(courseId, courseName, userOcc, hiddenAttend
         }
 
         // Inspect the take attendance form
-        const formRes = await fetch(fullTakeUrl, { credentials: 'include' });
+        let formRes;
+        try {
+          formRes = await fetch(fullTakeUrl, { credentials: 'include' });
+        } catch (formFetchErr) {
+          continue;
+        }
         if (!formRes.ok || formRes.url.includes('/login/')) continue;
         const formHtml = await formRes.text();
 

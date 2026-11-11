@@ -58,7 +58,6 @@
   const findSpectrumTab = (typeof window !== 'undefined' && window.findSpectrumTab) ? window.findSpectrumTab : (async () => null);
   const fetchCourseMaterialsDirectly = (typeof window !== 'undefined' && window.fetchCourseMaterialsDirectly) ? window.fetchCourseMaterialsDirectly : (async () => null);
   const fetchEnrolledCoursesDirectly = (typeof window !== 'undefined' && window.fetchEnrolledCoursesDirectly) ? window.fetchEnrolledCoursesDirectly : (async () => null);
-  const executeInTab = (typeof window !== 'undefined' && window.executeInTab) ? window.executeInTab : (async () => null);
   const fetchWithTimeout = (typeof window !== 'undefined' && window.fetchWithTimeout) ? window.fetchWithTimeout : (typeof fetch !== 'undefined' ? fetch : null);
 
   let currentExtFilter = 'ALL';
@@ -3647,6 +3646,9 @@
     }
 
     const res = await fetchWithTimeout(fetchUrl, { credentials: 'include' }, 12000);
+    if (!res || !res.ok || res.url.includes('/login/') || res.url.includes('microsoftonline.com')) {
+      return null;
+    }
     const contentType = (res.headers.get('content-type') || '').toLowerCase();
 
     if (contentType.includes('text/html')) {
