@@ -2139,6 +2139,7 @@
         showInspector: false,           // Completely removes property inspector panel
         showFormatToolbar: false,       // Suppress format bar
         showCompatibilityToasts: false, // Suppress warning toasts
+        googleFonts: false,             // Keep slide rendering strictly offline/local
         customization: {
           hiddenPanels: [
             'inspector',
