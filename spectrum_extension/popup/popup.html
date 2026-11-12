@@ -438,6 +438,12 @@
                 <span id="btn-tt-one-page-label">1 Page</span>
               </button>
 
+              <!-- Add Manual Class Button -->
+              <button type="button" id="btn-add-tt-session" class="btn-timetable-export btn-tt-add-class" title="Manually add a recurring weekly class (useful for courses without online attendance)">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span id="btn-add-tt-session-label">Add Class</span>
+              </button>
+
               <div class="timetable-toolbar-divider"></div>
 
               <button type="button" id="btn-export-timetable-csv" class="btn-timetable-export" title="Export as CSV spreadsheet (Excel, Notion, Google Calendar)">
@@ -1409,6 +1415,116 @@
         <div style="display:flex;gap:8px;margin-left:auto;">
           <button type="button" id="btn-cancel-tt-location" class="btn-wireframe">Cancel</button>
           <button type="button" id="btn-save-tt-location" class="btn-cta-solid">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add / Edit Manual Timetable Session Modal -->
+  <div id="tt-add-session-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-card" style="max-width:440px;">
+      <div class="modal-header">
+        <h3 id="tt-manual-modal-title">+ Add Class to Timetable</h3>
+        <button type="button" id="btn-close-tt-manual-modal" class="modal-close-btn" title="Close">✕</button>
+      </div>
+      <div class="modal-body" style="max-height:76vh;overflow-y:auto;">
+        <!-- Quick Pick from Synced Courses -->
+        <div id="tt-manual-course-picker-wrap" class="tt-modal-section" style="margin-bottom:12px;display:none;">
+          <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px;">Quick Fill from Synced Courses:</div>
+          <div id="tt-manual-course-chips" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+        </div>
+
+        <!-- Course Code & OCC -->
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <div style="flex:1.4;">
+            <label for="tt-manual-code" style="display:block;font-size:10.5px;font-weight:700;color:var(--text-secondary);margin-bottom:4px;">COURSE CODE *</label>
+            <input type="text" id="tt-manual-code" placeholder="e.g. WIA2003" maxlength="24" autocomplete="off" style="width:100%;font-size:12.5px;padding:6px 10px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;border-radius:6px;border:1px solid var(--border-hairline);background:var(--bg-surface);color:var(--text-primary);">
+          </div>
+          <div style="flex:1;">
+            <label for="tt-manual-occ" style="display:block;font-size:10.5px;font-weight:700;color:var(--text-secondary);margin-bottom:4px;">OCC / GROUP</label>
+            <input type="text" id="tt-manual-occ" placeholder="e.g. OCC 1" maxlength="20" autocomplete="off" style="width:100%;font-size:12.5px;padding:6px 10px;font-family:'JetBrains Mono',monospace;border-radius:6px;border:1px solid var(--border-hairline);background:var(--bg-surface);color:var(--text-primary);">
+          </div>
+        </div>
+
+        <!-- Course Name -->
+        <div style="margin-bottom:10px;">
+          <label for="tt-manual-name" style="display:block;font-size:10.5px;font-weight:700;color:var(--text-secondary);margin-bottom:4px;">COURSE NAME *</label>
+          <input type="text" id="tt-manual-name" placeholder="e.g. Probability and Statistics" maxlength="100" autocomplete="off" style="width:100%;font-size:12.5px;padding:6px 10px;border-radius:6px;border:1px solid var(--border-hairline);background:var(--bg-surface);color:var(--text-primary);">
+        </div>
+
+        <!-- Day of Week & Class Type -->
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <div style="flex:1;">
+            <label for="tt-manual-day" style="display:block;font-size:10.5px;font-weight:700;color:var(--text-secondary);margin-bottom:4px;">DAY OF WEEK</label>
+            <select id="tt-manual-day" style="width:100%;font-size:12.5px;padding:6px 8px;border-radius:6px;border:1px solid var(--border-hairline);background:var(--bg-surface);color:var(--text-primary);">
+              <option value="1">Monday</option>
+              <option value="2">Tuesday</option>
+              <option value="3">Wednesday</option>
+              <option value="4">Thursday</option>
+              <option value="5">Friday</option>
+              <option value="6">Saturday</option>
+              <option value="0">Sunday</option>
+            </select>
+          </div>
+          <div style="flex:1.25;">
+            <label style="display:block;font-size:10.5px;font-weight:700;color:var(--text-secondary);margin-bottom:4px;">SESSION TYPE</label>
+            <div id="tt-manual-type-chips" style="display:flex;flex-wrap:wrap;gap:4px;">
+              <button type="button" class="btn-wireframe btn-tt-type-chip is-selected" data-type="LEC">LEC</button>
+              <button type="button" class="btn-wireframe btn-tt-type-chip" data-type="TUT">TUT</button>
+              <button type="button" class="btn-wireframe btn-tt-type-chip" data-type="LAB">LAB</button>
+              <button type="button" class="btn-wireframe btn-tt-type-chip" data-type="SEM">SEM</button>
+              <button type="button" class="btn-wireframe btn-tt-type-chip" data-type="WRK">WRK</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Start & End Time -->
+        <div class="tt-modal-section" style="margin-bottom:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <label style="font-size:10.5px;font-weight:700;color:var(--text-secondary);letter-spacing:0.3px;">CLASS TIME (START – END):</label>
+            <span id="tt-manual-duration-preview" style="font-size:10.5px;color:var(--primary-accent);font-weight:700;font-family:'JetBrains Mono',monospace;">2h 00m</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="flex:1;">
+              <span style="font-size:10px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:3px;">Start Time</span>
+              <input type="time" id="tt-manual-start" value="09:00" style="width:100%;font-size:13px;padding:6px 10px;font-family:'JetBrains Mono',monospace;border-radius:6px;border:1px solid var(--border-hairline);background:var(--bg-surface);color:var(--text-primary);">
+            </div>
+            <span style="color:var(--text-muted);font-weight:700;margin-top:14px;user-select:none;">–</span>
+            <div style="flex:1;">
+              <span style="font-size:10px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:3px;">End Time</span>
+              <input type="time" id="tt-manual-end" value="11:00" style="width:100%;font-size:13px;padding:6px 10px;font-family:'JetBrains Mono',monospace;border-radius:6px;border:1px solid var(--border-hairline);background:var(--bg-surface);color:var(--text-primary);">
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;margin-top:7px;">
+            <span style="font-size:10px;color:var(--text-muted);">Quick dur:</span>
+            <button type="button" class="btn-wireframe btn-manual-dur-quick" data-dur="1" style="font-size:9.5px;padding:2px 6px;">1h</button>
+            <button type="button" class="btn-wireframe btn-manual-dur-quick" data-dur="1.5" style="font-size:9.5px;padding:2px 6px;">1.5h</button>
+            <button type="button" class="btn-wireframe btn-manual-dur-quick" data-dur="2" style="font-size:9.5px;padding:2px 6px;">2h</button>
+            <button type="button" class="btn-wireframe btn-manual-dur-quick" data-dur="3" style="font-size:9.5px;padding:2px 6px;">3h</button>
+          </div>
+        </div>
+
+        <!-- Location / Venue -->
+        <div class="tt-modal-section" style="margin-bottom:4px;">
+          <label for="tt-manual-location" style="display:block;font-size:10.5px;font-weight:700;color:var(--text-secondary);margin-bottom:4px;letter-spacing:0.3px;">CLASS LOCATION / VENUE (OPTIONAL):</label>
+          <input type="text" id="tt-manual-location" placeholder="e.g. The Cube, DK1, Online (Google Meet)..." maxlength="50" autocomplete="off" style="width:100%;font-size:12.5px;padding:6px 10px;border-radius:6px;border:1px solid var(--border-hairline);background:var(--bg-surface);color:var(--text-primary);">
+          <div id="tt-manual-quick-locations" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">
+            <button type="button" class="btn-wireframe btn-manual-loc-quick" data-loc="The Cube">The Cube</button>
+            <button type="button" class="btn-wireframe btn-manual-loc-quick" data-loc="DK1">DK1</button>
+            <button type="button" class="btn-wireframe btn-manual-loc-quick" data-loc="DK2">DK2</button>
+            <button type="button" class="btn-wireframe btn-manual-loc-quick" data-loc="DK3">DK3</button>
+            <button type="button" class="btn-wireframe btn-manual-loc-quick" data-loc="Auditorium CS">Auditorium</button>
+            <button type="button" class="btn-wireframe btn-manual-loc-quick" data-loc="Computer Lab 1">Lab 1</button>
+            <button type="button" class="btn-wireframe btn-manual-loc-quick" data-loc="Online (Google Meet)">Online (G-Meet)</button>
+            <button type="button" class="btn-wireframe btn-manual-loc-quick" data-loc="Online (Zoom)">Online (Zoom)</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;">
+        <button type="button" id="btn-delete-tt-manual" class="btn-wireframe" style="color:#ef4444;border-color:rgba(239,68,68,0.35);font-size:11px;display:none;">Delete Class</button>
+        <div style="display:flex;gap:8px;margin-left:auto;">
+          <button type="button" id="btn-cancel-tt-manual" class="btn-wireframe">Cancel</button>
+          <button type="button" id="btn-save-tt-manual" class="btn-cta-solid">Add Class</button>
         </div>
       </div>
     </div>

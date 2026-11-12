@@ -54,23 +54,79 @@
   }
 
   let customSessionOverrides = {};
+  let manualTimetableSessions = [];
   let customOverridesLoaded = false;
+
+  function normalizeManualSessionRecord(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    const dayIndex = Number(raw.dayIndex);
+    const startHour = Number(raw.startHour);
+    const startMin = Number(raw.startMin || 0);
+    const endHour = Number(raw.endHour);
+    const endMin = Number(raw.endMin || 0);
+    if (!Number.isInteger(dayIndex) || dayIndex < 0 || dayIndex > 6) return null;
+    if (!Number.isInteger(startHour) || !Number.isInteger(endHour)) return null;
+    const sMins = startHour * 60 + startMin;
+    const eMins = endHour * 60 + endMin;
+    if (eMins <= sMins) return null;
+
+    const courseCode = cleanSingleCourseCode(String(raw.courseCode || '').trim().toUpperCase()) || 'COURSE';
+    const courseName = String(raw.courseName || courseCode).trim() || courseCode;
+    const typeLabel = String(raw.typeLabel || 'LEC').trim().toUpperCase() || 'LEC';
+    let occ = String(raw.occ || 'OCC 1').trim().toUpperCase();
+    if (occ && !occ.startsWith('OCC')) occ = `OCC ${occ}`;
+    const venue = String(raw.venue || '').trim();
+    const id = String(raw.id || `m_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`);
+
+    return {
+      id,
+      dayIndex,
+      courseCode,
+      courseName,
+      typeLabel,
+      occ: occ || 'OCC 1',
+      startHour,
+      startMin,
+      endHour,
+      endMin,
+      venue
+    };
+  }
 
   async function loadCustomLocations() {
     try {
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        const res = await chrome.storage.local.get(['timetableLocations', 'timetableSessionOverrides']);
+        const res = await chrome.storage.local.get(['timetableLocations', 'timetableSessionOverrides', 'manualTimetableSessions']);
         if (res) {
           const locs = (res.timetableLocations && typeof res.timetableLocations === 'object') ? res.timetableLocations : {};
           const ovrs = (res.timetableSessionOverrides && typeof res.timetableSessionOverrides === 'object') ? res.timetableSessionOverrides : {};
           customSessionOverrides = Object.assign({}, locs, ovrs);
+          if (Array.isArray(res.manualTimetableSessions)) {
+            manualTimetableSessions = res.manualTimetableSessions.map(normalizeManualSessionRecord).filter(Boolean);
+          }
         }
       }
     } catch (e) {
       console.warn('Failed to load custom timetable session overrides:', e);
     }
     customOverridesLoaded = true;
+    if (typeof document !== 'undefined') {
+      const ttPane = document.getElementById('tab-timetable');
+      if (ttPane && ttPane.style.display !== 'none') {
+        renderTimetableMode();
+      }
+    }
     return customSessionOverrides;
+  }
+
+  async function persistManualTimetableSessions() {
+    try {
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        await chrome.storage.local.set({ manualTimetableSessions });
+      }
+    } catch (e) {
+      console.warn('Failed to save manual timetable sessions:', e);
+    }
   }
 
   async function saveSessionOverride(key, fallbackKey, overrideData) {
@@ -195,160 +251,218 @@
     return str.trim() || name;
   }
 
+  function buildFormattedSessionSlot(opts) {
+    const pad = n => String(n).padStart(2, '0');
+    const venue = String(opts.venue || '').trim();
+    const isOnline = /online|zoom|teams|google meet|meet|webex/i.test(venue);
+    const venueIcon = isOnline ? '🌐' : '📍';
+    const durHours = Math.max(0.5, (opts.endHour + opts.endMin / 60) - (opts.startHour + opts.startMin / 60));
+    const durText = `${durHours.toFixed(durHours % 1 === 0 ? 0 : 1)}h`;
+    const timeStr = `${pad(opts.startHour)}:${pad(opts.startMin)} - ${pad(opts.endHour)}:${pad(opts.endMin)}`;
+    const rawTimeStr = `${pad(opts.rawStartHour)}:${pad(opts.rawStartMin)} - ${pad(opts.rawEndHour)}:${pad(opts.rawEndMin)}`;
+    const venueDisplay = venue ? `${venueIcon} ${venue} · ${durText}` : durText;
+
+    return {
+      key: opts.key,
+      fallbackKey: opts.fallbackKey || '',
+      manualId: opts.manualId || '',
+      isManual: Boolean(opts.isManual),
+      dayIndex: opts.dayIndex,
+      dayName: opts.dayName,
+      courseCode: opts.courseCode,
+      courseName: opts.courseName,
+      typeLabel: opts.typeLabel,
+      occ: opts.occ,
+      timeStr,
+      rawTimeStr,
+      startHour: opts.startHour,
+      startMin: opts.startMin,
+      endHour: opts.endHour,
+      endMin: opts.endMin,
+      rawStartHour: opts.rawStartHour,
+      rawStartMin: opts.rawStartMin,
+      rawEndHour: opts.rawEndHour,
+      rawEndMin: opts.rawEndMin,
+      isCustomTime: Boolean(opts.isCustomTime),
+      durHours,
+      durText,
+      venue,
+      venueDisplay,
+      venueIcon
+    };
+  }
+
   function extractWeeklyTimetableSessions(atts = null) {
     const records = atts || getSafeAttendances();
-    if (!Array.isArray(records) || records.length === 0) return [];
     const DAY_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
     const rawSlots = [];
     const parseTime = getSafeTimeParser();
 
-    records.forEach(att => {
-      const rawCourseCode = att.courseCode || '';
-      const courseCode = cleanSingleCourseCode(rawCourseCode);
-      const courseName = cleanTimetableCourseName(att.courseName || '', rawCourseCode || courseCode);
-      const userOcc = att.userOcc || '';
+    if (Array.isArray(records) && records.length > 0) {
+      records.forEach(att => {
+        const rawCourseCode = att.courseCode || '';
+        const courseCode = cleanSingleCourseCode(rawCourseCode);
+        const courseName = cleanTimetableCourseName(att.courseName || '', rawCourseCode || courseCode);
+        const userOcc = att.userOcc || '';
 
-      const allSess = [];
-      if (Array.isArray(att.sessions) && att.sessions.length > 0) {
-        allSess.push(...att.sessions);
-      } else {
-        if (att.activeSession) allSess.push(att.activeSession);
-        if (att.nextSession) allSess.push(att.nextSession);
-      }
-
-      allSess.forEach(sess => {
-        let d = sess.date instanceof Date ? sess.date : null;
-        if (!d && sess.dateKey) d = new Date(sess.dateKey + 'T12:00:00');
-        if (!d && sess.date && !isNaN(new Date(sess.date).getTime())) d = new Date(sess.date);
-
-        let dayIndex = (d && !isNaN(d.getTime())) ? d.getDay() : -1;
-        if (dayIndex < 0 && sess.dateStr) {
-          const dayMatch = String(sess.dateStr).match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)/i);
-          if (dayMatch) {
-            const map = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
-            dayIndex = map[dayMatch[1].toLowerCase()] ?? -1;
-          }
-        }
-        if (dayIndex < 0) return;
-
-        // Filter out ad-hoc, placeholder, or fabricated non-recurring entries
-        // e.g. "One attendance for lecture and tutorial"
-        const descText = String(sess.desc || '').trim();
-        if (/one attendance for lecture/i.test(descText) || /satu kehadiran/i.test(descText)) {
-          return;
-        }
-
-        const cleanCode = cleanSingleCourseCode(courseCode);
-        // Specifically filter out fabricated Friday session for Probability and Statistics (WIA2003 / WIB2003)
-        if (dayIndex === 5 && (/WIA2003|WIB2003/i.test(cleanCode) || /probability/i.test(courseName))) {
-          return;
-        }
-
-        const dayName = DAY_NAMES[dayIndex];
-        const sessTimeDesc = sess.time || sess.dateStr || sess.desc || '';
-        const timeInfo = parseTime ? parseTime(sessTimeDesc) : null;
-        if (!timeInfo) return;
-
-        let typeLabel = 'LEC';
-        const descLower = (sess.desc || att.attTitle || '').toLowerCase();
-        if (descLower.includes('tut') || descLower.includes('tuto')) typeLabel = 'TUT';
-        else if (descLower.includes('lab')) typeLabel = 'LAB';
-        else if (descLower.includes('sem')) typeLabel = 'SEM';
-        else if (descLower.includes('workshop')) typeLabel = 'WRK';
-
-        let occStr = '';
-        if (userOcc) {
-          const occM = String(userOcc).match(/\d+/);
-          occStr = occM ? `OCC ${parseInt(occM[0], 10)}` : String(userOcc).trim();
-          if (!occStr.toLowerCase().startsWith('occ')) occStr = `OCC ${occStr}`;
+        const allSess = [];
+        if (Array.isArray(att.sessions) && att.sessions.length > 0) {
+          allSess.push(...att.sessions);
         } else {
-          const occM = (sess.desc || '').match(/OCC[- ]*(\d+)/i);
-          occStr = occM ? `OCC ${parseInt(occM[1], 10)}` : 'OCC 1';
+          if (att.activeSession) allSess.push(att.activeSession);
+          if (att.nextSession) allSess.push(att.nextSession);
         }
 
-        const pad = n => String(n).padStart(2, '0');
-        const rawStartHour = timeInfo.startHour;
-        const rawStartMin = timeInfo.startMin;
-        const rawEndHour = timeInfo.endHour;
-        const rawEndMin = timeInfo.endMin;
-        const rawKey = `${dayIndex}_${rawStartHour}_${rawStartMin}_${rawEndHour}_${rawEndMin}_${cleanCode}_${typeLabel}`;
-        const fallbackKey = `${cleanCode}_${dayIndex}_${typeLabel}`;
+        allSess.forEach(sess => {
+          let d = sess.date instanceof Date ? sess.date : null;
+          if (!d && sess.dateKey) d = new Date(sess.dateKey + 'T12:00:00');
+          if (!d && sess.date && !isNaN(new Date(sess.date).getTime())) d = new Date(sess.date);
 
-        // Check custom user-defined override (location, custom time, or hidden)
-        const override = (customSessionOverrides && (customSessionOverrides[rawKey] || customSessionOverrides[fallbackKey] || customSessionOverrides[`${cleanCode}_${dayIndex}_${rawStartHour}`])) || null;
-        if (override && (override.hidden || override.isDeleted)) return;
-
-        let startHour = rawStartHour;
-        let startMin = rawStartMin;
-        let endHour = rawEndHour;
-        let endMin = rawEndMin;
-        let isCustomTime = false;
-        let customLoc = '';
-
-        if (override) {
-          if (typeof override === 'object') {
-            if (override.venue) customLoc = override.venue.trim();
-            if (override.hasCustomTime && typeof override.startHour === 'number' && typeof override.endHour === 'number') {
-              startHour = override.startHour;
-              startMin = override.startMin;
-              endHour = override.endHour;
-              endMin = override.endMin;
-              isCustomTime = true;
+          let dayIndex = (d && !isNaN(d.getTime())) ? d.getDay() : -1;
+          if (dayIndex < 0 && sess.dateStr) {
+            const dayMatch = String(sess.dateStr).match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)/i);
+            if (dayMatch) {
+              const map = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
+              dayIndex = map[dayMatch[1].toLowerCase()] ?? -1;
             }
-          } else if (typeof override === 'string') {
-            customLoc = override.trim();
           }
-        }
+          if (dayIndex < 0) return;
 
-        let venue = customLoc || '';
-        if (!venue) {
-          const rawDesc = (sess.desc || '').replace(/^(?:lecture|tutorial|lab|workshop)\s*[-–—:]?\s*/i, '').trim();
-          // Filter out dummy/placeholder session descriptions from Spectrum Moodle (including "sessions", "session")
-          const isDummyDesc = !rawDesc ||
-            /^(?:regular\s+class(?:\s+session)?|sesi\s+kelas\s+biasa|class\s+sessions?|sessions?|sesi\s+kelas|none|null|tba|tbd)$/i.test(rawDesc) ||
-            /^occ[- ]*\d+$/i.test(rawDesc) ||
-            /^(?:all\s+groups?|kumpulan\s+semua)$/i.test(rawDesc);
-          if (!isDummyDesc && rawDesc.length >= 2) {
-            venue = rawDesc;
+          // Filter out ad-hoc, placeholder, or fabricated non-recurring entries
+          // e.g. "One attendance for lecture and tutorial"
+          const descText = String(sess.desc || '').trim();
+          if (/one attendance for lecture/i.test(descText) || /satu kehadiran/i.test(descText)) {
+            return;
           }
-        }
 
-        const isOnline = /online|zoom|teams|google meet|meet|webex/i.test(venue);
-        const venueIcon = isOnline ? '🌐' : '📍';
-        const durHours = Math.max(0.5, (endHour + endMin / 60) - (startHour + startMin / 60));
-        const durText = `${durHours.toFixed(durHours % 1 === 0 ? 0 : 1)}h`;
-        const timeStr = `${pad(startHour)}:${pad(startMin)} - ${pad(endHour)}:${pad(endMin)}`;
-        const rawTimeStr = `${pad(rawStartHour)}:${pad(rawStartMin)} - ${pad(rawEndHour)}:${pad(rawEndMin)}`;
-        const venueDisplay = venue ? `${venueIcon} ${venue} · ${durText}` : durText;
+          const cleanCode = cleanSingleCourseCode(courseCode);
+          // Specifically filter out fabricated Friday session for Probability and Statistics (WIA2003 / WIB2003)
+          if (dayIndex === 5 && (/WIA2003|WIB2003/i.test(cleanCode) || /probability/i.test(courseName))) {
+            return;
+          }
 
-        rawSlots.push({
-          key: rawKey,
-          fallbackKey,
-          dayIndex,
-          dayName,
-          courseCode,
-          courseName,
-          typeLabel,
-          occ: occStr,
-          timeStr,
-          rawTimeStr,
-          startHour,
-          startMin,
-          endHour,
-          endMin,
-          rawStartHour,
-          rawStartMin,
-          rawEndHour,
-          rawEndMin,
-          isCustomTime,
-          durHours,
-          durText,
-          venue,
-          venueDisplay,
-          venueIcon
+          const dayName = DAY_NAMES[dayIndex];
+          const sessTimeDesc = sess.time || sess.dateStr || sess.desc || '';
+          const timeInfo = parseTime ? parseTime(sessTimeDesc) : null;
+          if (!timeInfo) return;
+
+          let typeLabel = 'LEC';
+          const descLower = (sess.desc || att.attTitle || '').toLowerCase();
+          if (descLower.includes('tut') || descLower.includes('tuto')) typeLabel = 'TUT';
+          else if (descLower.includes('lab')) typeLabel = 'LAB';
+          else if (descLower.includes('sem')) typeLabel = 'SEM';
+          else if (descLower.includes('workshop')) typeLabel = 'WRK';
+
+          let occStr = '';
+          if (userOcc) {
+            const occM = String(userOcc).match(/\d+/);
+            occStr = occM ? `OCC ${parseInt(occM[0], 10)}` : String(userOcc).trim();
+            if (!occStr.toLowerCase().startsWith('occ')) occStr = `OCC ${occStr}`;
+          } else {
+            const occM = (sess.desc || '').match(/OCC[- ]*(\d+)/i);
+            occStr = occM ? `OCC ${parseInt(occM[1], 10)}` : 'OCC 1';
+          }
+
+          const rawStartHour = timeInfo.startHour;
+          const rawStartMin = timeInfo.startMin;
+          const rawEndHour = timeInfo.endHour;
+          const rawEndMin = timeInfo.endMin;
+          const rawKey = `${dayIndex}_${rawStartHour}_${rawStartMin}_${rawEndHour}_${rawEndMin}_${cleanCode}_${typeLabel}`;
+          const fallbackKey = `${cleanCode}_${dayIndex}_${typeLabel}`;
+
+          // Check custom user-defined override (location, custom time, or hidden)
+          const override = (customSessionOverrides && (customSessionOverrides[rawKey] || customSessionOverrides[fallbackKey] || customSessionOverrides[`${cleanCode}_${dayIndex}_${rawStartHour}`])) || null;
+          if (override && (override.hidden || override.isDeleted)) return;
+
+          let startHour = rawStartHour;
+          let startMin = rawStartMin;
+          let endHour = rawEndHour;
+          let endMin = rawEndMin;
+          let isCustomTime = false;
+          let customLoc = '';
+
+          if (override) {
+            if (typeof override === 'object') {
+              if (override.venue) customLoc = override.venue.trim();
+              if (override.hasCustomTime && typeof override.startHour === 'number' && typeof override.endHour === 'number') {
+                startHour = override.startHour;
+                startMin = override.startMin;
+                endHour = override.endHour;
+                endMin = override.endMin;
+                isCustomTime = true;
+              }
+            } else if (typeof override === 'string') {
+              customLoc = override.trim();
+            }
+          }
+
+          let venue = customLoc || '';
+          if (!venue) {
+            const rawDesc = (sess.desc || '').replace(/^(?:lecture|tutorial|lab|workshop)\s*[-–—:]?\s*/i, '').trim();
+            // Filter out dummy/placeholder session descriptions from Spectrum Moodle (including "sessions", "session")
+            const isDummyDesc = !rawDesc ||
+              /^(?:regular\s+class(?:\s+session)?|sesi\s+kelas\s+biasa|class\s+sessions?|sessions?|sesi\s+kelas|none|null|tba|tbd)$/i.test(rawDesc) ||
+              /^occ[- ]*\d+$/i.test(rawDesc) ||
+              /^(?:all\s+groups?|kumpulan\s+semua)$/i.test(rawDesc);
+            if (!isDummyDesc && rawDesc.length >= 2) {
+              venue = rawDesc;
+            }
+          }
+
+          rawSlots.push(buildFormattedSessionSlot({
+            key: rawKey,
+            fallbackKey,
+            isManual: false,
+            dayIndex,
+            dayName,
+            courseCode,
+            courseName,
+            typeLabel,
+            occ: occStr,
+            startHour,
+            startMin,
+            endHour,
+            endMin,
+            rawStartHour,
+            rawStartMin,
+            rawEndHour,
+            rawEndMin,
+            isCustomTime,
+            venue
+          }));
         });
       });
-    });
+    }
+
+    // Merge user-added manual sessions when rendering the active workspace timetable
+    if (atts === null && Array.isArray(manualTimetableSessions) && manualTimetableSessions.length > 0) {
+      manualTimetableSessions.forEach(m => {
+        const norm = normalizeManualSessionRecord(m);
+        if (!norm) return;
+        rawSlots.push(buildFormattedSessionSlot({
+          key: `manual_${norm.id}`,
+          fallbackKey: '',
+          manualId: norm.id,
+          isManual: true,
+          dayIndex: norm.dayIndex,
+          dayName: DAY_NAMES[norm.dayIndex],
+          courseCode: norm.courseCode,
+          courseName: norm.courseName,
+          typeLabel: norm.typeLabel,
+          occ: norm.occ,
+          startHour: norm.startHour,
+          startMin: norm.startMin,
+          endHour: norm.endHour,
+          endMin: norm.endMin,
+          rawStartHour: norm.startHour,
+          rawStartMin: norm.startMin,
+          rawEndHour: norm.endHour,
+          rawEndMin: norm.endMin,
+          isCustomTime: false,
+          venue: norm.venue
+        }));
+      });
+    }
 
     const uniqueMap = new Map();
     rawSlots.forEach(s => {
@@ -765,10 +879,15 @@
           const rawStartTimeVal = `${pad(s.rawStartHour)}:${pad(s.rawStartMin)}`;
           const rawEndTimeVal = `${pad(s.rawEndHour)}:${pad(s.rawEndMin)}`;
 
+          const manualBadgeHtml = s.isManual ? '<span class="tt-manual-tag">MANUAL</span>' : '';
+          const cardTitleTip = s.isManual ? 'Click to edit or delete manual class' : 'Click to edit session time or location';
+
           html += `
             <div class="tt-session-card${liveClass}"
                  data-session-key="${esc(s.key)}"
                  data-fallback-key="${esc(s.fallbackKey)}"
+                 data-is-manual="${s.isManual ? '1' : '0'}"
+                 data-manual-id="${esc(s.manualId || '')}"
                  data-course-code="${esc(s.courseCode)}"
                  data-course-name="${esc(s.courseName)}"
                  data-type-label="${esc(s.typeLabel)}"
@@ -782,13 +901,14 @@
                  data-raw-end-time="${rawEndTimeVal}"
                  data-is-custom-time="${s.isCustomTime ? '1' : '0'}"
                  data-venue="${esc(s.venue || '')}"
-                 title="Click to edit session time or location"
+                 title="${cardTitleTip}"
                  style="grid-column: ${startCol} / ${endCol}; grid-row: ${rowNum};">
               <div class="tt-card-header">
                 <div class="tt-card-code-badge">
                   <span class="tt-code">${esc(cleanSingleCourseCode(s.courseCode))}</span>
                   ${acronymHtml}
                   <span class="tt-type-tag">${esc(s.typeLabel)}</span>
+                  ${manualBadgeHtml}
                   ${liveBadgeHtml}
                 </div>
                 <span class="tt-time-range">${esc(s.timeStr)}</span>
@@ -1027,10 +1147,15 @@
           const rawStartTimeVal = `${pad(s.rawStartHour)}:${pad(s.rawStartMin)}`;
           const rawEndTimeVal = `${pad(s.rawEndHour)}:${pad(s.rawEndMin)}`;
 
+          const manualBadgeHtmlV = s.isManual ? '<span class="tt-manual-tag">MANUAL</span>' : '';
+          const cardTitleTipV = s.isManual ? 'Click to edit or delete manual class' : 'Click to edit session time or location';
+
           html += `
             <div class="tt-session-card${compactClass}${liveClass}"
                  data-session-key="${esc(s.key)}"
                  data-fallback-key="${esc(s.fallbackKey)}"
+                 data-is-manual="${s.isManual ? '1' : '0'}"
+                 data-manual-id="${esc(s.manualId || '')}"
                  data-course-code="${esc(s.courseCode)}"
                  data-course-name="${esc(s.courseName)}"
                  data-type-label="${esc(s.typeLabel)}"
@@ -1044,13 +1169,14 @@
                  data-raw-end-time="${rawEndTimeVal}"
                  data-is-custom-time="${s.isCustomTime ? '1' : '0'}"
                  data-venue="${esc(s.venue || '')}"
-                 title="Click to edit session time or location"
+                 title="${cardTitleTipV}"
                  style="top: ${topPx}px; height: ${heightPx}px; ${posStyle}">
               <div class="tt-card-header">
                 <div class="tt-card-code-badge">
                   <span class="tt-code">${esc(cleanSingleCourseCode(s.courseCode))}</span>
                   ${acronymHtml}
                   ${isCompact ? `<span class="tt-card-occ-inline">${subtitleText}</span>` : ''}
+                  ${manualBadgeHtmlV}
                   ${liveBadgeHtml}
                 </div>
                 <span class="tt-type-tag">${esc(s.typeLabel)}</span>
@@ -1206,46 +1332,21 @@
     const countEl = document.getElementById('timetable-session-count');
     if (!gridEl) return;
 
-    const sessions = extractWeeklyTimetableSessions();
-    if (countEl) {
-      countEl.textContent = `${sessions.length} Contact Session${sessions.length === 1 ? '' : 's'}`;
-    }
-
-    if (sessions.length === 0) {
-      const scalerEl = document.getElementById('timetable-scaler');
-      if (scalerEl) {
-        scalerEl.style.width = '100%';
-        scalerEl.style.height = 'auto';
-        scalerEl.style.margin = '';
-      }
-      gridEl.style.transform = 'none';
-      gridEl.className = 'timetable-grid';
-      gridEl.style.gridTemplateColumns = '1fr';
-      gridEl.style.gridTemplateRows = 'none';
-      gridEl.style.minWidth = '0px';
-      gridEl.innerHTML = `
-        <div class="tt-empty-state" style="padding: 56px 24px; text-align: center; font-family: var(--font-sans); color: var(--text-muted);">
-          <div style="font-size: 32px; margin-bottom: 12px;">🗓</div>
-          <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">No Timetable Sessions Found</div>
-          <div style="font-size: 13px; max-width: 440px; margin: 0 auto; line-height: 1.5;">
-            Synchronize your course attendance to automatically populate your weekly academic timetable.
-          </div>
-        </div>
-      `;
-      return;
-    }
-
-    if (currentTimetableLayout === 'horizontal') {
-      renderHorizontalGrid(gridEl, sessions);
-    } else {
-      renderVerticalGrid(gridEl, sessions);
-    }
-
     if (!gridEl._hasLocationClickListener) {
       gridEl._hasLocationClickListener = true;
       gridEl.addEventListener('click', (e) => {
+        if (e.target.closest('#btn-empty-add-tt-session')) {
+          openManualSessionModal(null);
+          return;
+        }
         const card = e.target.closest('.tt-session-card');
         if (!card) return;
+        if (card.dataset.isManual === '1') {
+          const mId = card.dataset.manualId;
+          const existing = manualTimetableSessions.find(m => m.id === mId) || null;
+          openManualSessionModal(existing);
+          return;
+        }
         openLocationModal({
           key: card.dataset.sessionKey,
           fallbackKey: card.dataset.fallbackKey,
@@ -1264,6 +1365,51 @@
           currentVenue: card.dataset.venue || ''
         });
       });
+    }
+
+    const sessions = extractWeeklyTimetableSessions();
+    if (countEl) {
+      if (typeof window !== 'undefined' && typeof window.updateTimetableTranslations === 'function') {
+        window.updateTimetableTranslations();
+      } else {
+        countEl.textContent = `${sessions.length} Contact Session${sessions.length === 1 ? '' : 's'}`;
+      }
+    }
+
+    if (sessions.length === 0) {
+      const scalerEl = document.getElementById('timetable-scaler');
+      if (scalerEl) {
+        scalerEl.style.width = '100%';
+        scalerEl.style.height = 'auto';
+        scalerEl.style.margin = '';
+      }
+      gridEl.style.transform = 'none';
+      gridEl.className = 'timetable-grid';
+      gridEl.style.gridTemplateColumns = '1fr';
+      gridEl.style.gridTemplateRows = 'none';
+      gridEl.style.minWidth = '0px';
+      const esc = getSafeEscapeHtml();
+      const emptyTitle = esc(getTimetableText('timetable', 'noSessionsFound', 'No Timetable Sessions Found'));
+      const emptyAddLabel = esc(getTimetableText('timetable', 'addClass', 'Add Class'));
+      gridEl.innerHTML = `
+        <div class="tt-empty-state" style="padding: 56px 24px; text-align: center; font-family: var(--font-sans); color: var(--text-muted);">
+          <div style="font-size: 32px; margin-bottom: 12px;">🗓</div>
+          <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">${emptyTitle}</div>
+          <div style="font-size: 13px; max-width: 460px; margin: 0 auto; line-height: 1.5;">
+            Synchronize your course attendance to auto-populate sessions, or add your weekly classes manually if your course uses offline attendance.
+          </div>
+          <button type="button" id="btn-empty-add-tt-session" class="btn-cta-solid tt-empty-add-btn">
+            <span>+ ${emptyAddLabel}</span>
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    if (currentTimetableLayout === 'horizontal') {
+      renderHorizontalGrid(gridEl, sessions);
+    } else {
+      renderVerticalGrid(gridEl, sessions);
     }
 
     applyOnePageScaling();
@@ -1291,10 +1437,10 @@
     return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
   }
 
-  function updateDurationPreview() {
-    const startInp = document.getElementById('tt-time-start');
-    const endInp = document.getElementById('tt-time-end');
-    const previewEl = document.getElementById('tt-time-duration-preview');
+  function updateTimeDurationPreview(startId, endId, previewId) {
+    const startInp = document.getElementById(startId);
+    const endInp = document.getElementById(endId);
+    const previewEl = document.getElementById(previewId);
     if (!startInp || !endInp || !previewEl) return;
 
     const startM = parseMinutes(startInp.value);
@@ -1307,6 +1453,139 @@
       previewEl.textContent = formatDurationMinutes(endM - startM);
       previewEl.style.color = 'var(--primary-accent)';
     }
+  }
+
+  function applyQuickDuration(startId, endId, previewId, durHours) {
+    const startInp = document.getElementById(startId);
+    const endInp = document.getElementById(endId);
+    if (!startInp || !endInp) return;
+    const dur = parseFloat(durHours) || 1;
+    const startM = parseMinutes(startInp.value);
+    const newEndM = startM + Math.round(dur * 60);
+    const endH = Math.min(23, Math.floor(newEndM / 60));
+    const endMin = newEndM % 60;
+    const pad = n => String(n).padStart(2, '0');
+    endInp.value = `${pad(endH)}:${pad(endMin)}`;
+    updateTimeDurationPreview(startId, endId, previewId);
+  }
+
+  function updateDurationPreview() {
+    updateTimeDurationPreview('tt-time-start', 'tt-time-end', 'tt-time-duration-preview');
+  }
+
+  function closeLocationModal() {
+    const modal = document.getElementById('tt-location-modal');
+    if (modal) modal.style.display = 'none';
+    activeSessionForLocation = null;
+  }
+
+  let activeManualEditId = null;
+
+  function getAvailableCourseSuggestions() {
+    const byCode = new Map();
+    const occMap = (typeof window !== 'undefined' && window.courseOccs && typeof window.courseOccs === 'object') ? window.courseOccs : {};
+    const lists = [];
+    if (typeof window !== 'undefined') {
+      if (Array.isArray(window.coursesData)) lists.push(...window.coursesData);
+      if (Array.isArray(window.allCoursesDiscovered)) lists.push(...window.allCoursesDiscovered);
+    }
+    lists.forEach(c => {
+      if (!c) return;
+      const rawCode = c.code || c.courseCode || c.shortname || '';
+      const cleanCode = cleanSingleCourseCode(rawCode).toUpperCase();
+      if (!cleanCode) return;
+      const rawName = c.name || c.fullname || c.courseName || rawCode;
+      const cleanName = cleanTimetableCourseName(rawName, rawCode || cleanCode);
+      const rawOcc = c.userOcc || occMap[c.id] || occMap[c.courseId] || '';
+      const occMatch = String(rawOcc).match(/\d+/);
+      const occ = occMatch ? `OCC ${parseInt(occMatch[0], 10)}` : (String(rawOcc).trim() || 'OCC 1');
+      if (!byCode.has(cleanCode)) {
+        byCode.set(cleanCode, { code: cleanCode, name: cleanName, occ });
+      }
+    });
+    getSafeAttendances().forEach(a => {
+      if (!a) return;
+      const cleanCode = cleanSingleCourseCode(a.courseCode || '').toUpperCase();
+      if (!cleanCode || byCode.has(cleanCode)) return;
+      const cleanName = cleanTimetableCourseName(a.courseName || '', a.courseCode || cleanCode);
+      const occMatch = String(a.userOcc || '').match(/\d+/);
+      const occ = occMatch ? `OCC ${parseInt(occMatch[0], 10)}` : 'OCC 1';
+      byCode.set(cleanCode, { code: cleanCode, name: cleanName, occ });
+    });
+    return Array.from(byCode.values()).slice(0, 12);
+  }
+
+  function populateManualCourseChips(selectedCode = '') {
+    const wrap = document.getElementById('tt-manual-course-picker-wrap');
+    const chipsEl = document.getElementById('tt-manual-course-chips');
+    if (!wrap || !chipsEl) return;
+    const suggestions = getAvailableCourseSuggestions();
+    if (suggestions.length === 0) {
+      wrap.style.display = 'none';
+      chipsEl.innerHTML = '';
+      return;
+    }
+    const esc = getSafeEscapeHtml();
+    const normSel = cleanSingleCourseCode(selectedCode).toUpperCase();
+    chipsEl.innerHTML = suggestions.map(s => {
+      const selClass = normSel && normSel === s.code ? ' is-selected' : '';
+      return `<button type="button" class="btn-wireframe btn-tt-course-chip${selClass}" data-code="${esc(s.code)}" data-name="${esc(s.name)}" data-occ="${esc(s.occ)}" title="${esc(s.name)}">${esc(s.code)}</button>`;
+    }).join('');
+    wrap.style.display = 'block';
+  }
+
+  function setManualModalType(typeVal) {
+    const norm = String(typeVal || 'LEC').trim().toUpperCase() || 'LEC';
+    document.querySelectorAll('#tt-manual-type-chips .btn-tt-type-chip').forEach(btn => {
+      btn.classList.toggle('is-selected', (btn.dataset.type || '').toUpperCase() === norm);
+    });
+  }
+
+  function openManualSessionModal(existingManual = null) {
+    const modal = document.getElementById('tt-add-session-modal');
+    if (!modal) return;
+    const isEdit = Boolean(existingManual && existingManual.id);
+    activeManualEditId = isEdit ? existingManual.id : null;
+
+    const titleEl = document.getElementById('tt-manual-modal-title');
+    const codeInp = document.getElementById('tt-manual-code');
+    const nameInp = document.getElementById('tt-manual-name');
+    const occInp = document.getElementById('tt-manual-occ');
+    const daySel = document.getElementById('tt-manual-day');
+    const startInp = document.getElementById('tt-manual-start');
+    const endInp = document.getElementById('tt-manual-end');
+    const locInp = document.getElementById('tt-manual-location');
+    const btnDel = document.getElementById('btn-delete-tt-manual');
+    const btnSave = document.getElementById('btn-save-tt-manual');
+
+    const pad = n => String(n).padStart(2, '0');
+    if (titleEl) titleEl.textContent = isEdit ? '✏️ Edit Manual Class' : '+ Add Class to Timetable';
+    if (btnSave) btnSave.textContent = isEdit ? 'Save Changes' : 'Add Class';
+    if (btnDel) btnDel.style.display = isEdit ? 'inline-block' : 'none';
+
+    const defOcc = (typeof window !== 'undefined' && window.defaultOcc) ? String(window.defaultOcc).trim() : 'OCC 1';
+    if (codeInp) codeInp.value = isEdit ? (existingManual.courseCode || '') : '';
+    if (nameInp) nameInp.value = isEdit ? (existingManual.courseName || '') : '';
+    if (occInp) occInp.value = isEdit ? (existingManual.occ || 'OCC 1') : defOcc;
+    if (daySel) daySel.value = isEdit ? String(existingManual.dayIndex) : '1';
+    setManualModalType(isEdit ? existingManual.typeLabel : 'LEC');
+    if (startInp) startInp.value = isEdit ? `${pad(existingManual.startHour)}:${pad(existingManual.startMin || 0)}` : '09:00';
+    if (endInp) endInp.value = isEdit ? `${pad(existingManual.endHour)}:${pad(existingManual.endMin || 0)}` : '11:00';
+    if (locInp) locInp.value = isEdit ? (existingManual.venue || '') : '';
+
+    populateManualCourseChips(isEdit ? existingManual.courseCode : '');
+    updateTimeDurationPreview('tt-manual-start', 'tt-manual-end', 'tt-manual-duration-preview');
+
+    modal.style.display = 'flex';
+    setTimeout(() => {
+      if (codeInp) codeInp.focus();
+    }, 50);
+  }
+
+  function closeManualSessionModal() {
+    const modal = document.getElementById('tt-add-session-modal');
+    if (modal) modal.style.display = 'none';
+    activeManualEditId = null;
   }
 
   function openLocationModal(sessInfo) {
@@ -1351,12 +1630,6 @@
         startInp.focus();
       }
     }, 50);
-  }
-
-  function closeLocationModal() {
-    const modal = document.getElementById('tt-location-modal');
-    if (modal) modal.style.display = 'none';
-    activeSessionForLocation = null;
   }
 
   function downloadBlobFile(blob, filename) {
@@ -2548,15 +2821,7 @@
       // Quick duration buttons
       modal.querySelectorAll('.btn-dur-quick').forEach(btn => {
         btn.addEventListener('click', () => {
-          if (!startInp || !endInp) return;
-          const dur = parseFloat(btn.dataset.dur) || 1;
-          const startM = parseMinutes(startInp.value);
-          const newEndM = startM + Math.round(dur * 60);
-          const endH = Math.min(23, Math.floor(newEndM / 60));
-          const endMin = newEndM % 60;
-          const pad = n => String(n).padStart(2, '0');
-          endInp.value = `${pad(endH)}:${pad(endMin)}`;
-          updateDurationPreview();
+          applyQuickDuration('tt-time-start', 'tt-time-end', 'tt-time-duration-preview', btn.dataset.dur);
         });
       });
 
@@ -2672,6 +2937,156 @@
     }
     updateOnePageButtonUI();
 
+    // Add Manual Class button & modal listeners
+    const btnAddClass = document.getElementById('btn-add-tt-session');
+    if (btnAddClass && !btnAddClass._hasAddManualListener) {
+      btnAddClass._hasAddManualListener = true;
+      btnAddClass.addEventListener('click', () => openManualSessionModal(null));
+    }
+
+    const addModal = document.getElementById('tt-add-session-modal');
+    if (addModal && !addModal._hasManualModalListeners) {
+      addModal._hasManualModalListeners = true;
+
+      const btnManualClose = document.getElementById('btn-close-tt-manual-modal');
+      const btnManualCancel = document.getElementById('btn-cancel-tt-manual');
+      const btnManualSave = document.getElementById('btn-save-tt-manual');
+      const btnManualDelete = document.getElementById('btn-delete-tt-manual');
+      const mCodeInp = document.getElementById('tt-manual-code');
+      const mNameInp = document.getElementById('tt-manual-name');
+      const mOccInp = document.getElementById('tt-manual-occ');
+      const mDaySel = document.getElementById('tt-manual-day');
+      const mStartInp = document.getElementById('tt-manual-start');
+      const mEndInp = document.getElementById('tt-manual-end');
+      const mLocInp = document.getElementById('tt-manual-location');
+      const mCourseChips = document.getElementById('tt-manual-course-chips');
+      const mTypeChips = document.getElementById('tt-manual-type-chips');
+      const mLocChips = document.getElementById('tt-manual-quick-locations');
+
+      addModal.addEventListener('click', (e) => {
+        if (e.target === addModal) closeManualSessionModal();
+      });
+      if (btnManualClose) btnManualClose.addEventListener('click', closeManualSessionModal);
+      if (btnManualCancel) btnManualCancel.addEventListener('click', closeManualSessionModal);
+
+      if (mStartInp) mStartInp.addEventListener('input', () => updateTimeDurationPreview('tt-manual-start', 'tt-manual-end', 'tt-manual-duration-preview'));
+      if (mEndInp) mEndInp.addEventListener('input', () => updateTimeDurationPreview('tt-manual-start', 'tt-manual-end', 'tt-manual-duration-preview'));
+
+      addModal.querySelectorAll('.btn-manual-dur-quick').forEach(btn => {
+        btn.addEventListener('click', () => {
+          applyQuickDuration('tt-manual-start', 'tt-manual-end', 'tt-manual-duration-preview', btn.dataset.dur);
+        });
+      });
+
+      if (mCourseChips) {
+        mCourseChips.addEventListener('click', (e) => {
+          const chip = e.target.closest('.btn-tt-course-chip');
+          if (!chip) return;
+          if (mCodeInp) mCodeInp.value = chip.dataset.code || '';
+          if (mNameInp) mNameInp.value = chip.dataset.name || '';
+          if (mOccInp && chip.dataset.occ) mOccInp.value = chip.dataset.occ;
+          mCourseChips.querySelectorAll('.btn-tt-course-chip').forEach(c => c.classList.toggle('is-selected', c === chip));
+        });
+      }
+
+      if (mTypeChips) {
+        mTypeChips.addEventListener('click', (e) => {
+          const chip = e.target.closest('.btn-tt-type-chip');
+          if (!chip) return;
+          setManualModalType(chip.dataset.type || 'LEC');
+        });
+      }
+
+      if (mLocChips) {
+        mLocChips.addEventListener('click', (e) => {
+          const chip = e.target.closest('.btn-manual-loc-quick');
+          if (!chip) return;
+          if (mLocInp) {
+            mLocInp.value = chip.dataset.loc || chip.textContent.trim();
+            mLocInp.focus();
+          }
+        });
+      }
+
+      const saveManualSessionFromModal = async () => {
+        const rawCode = mCodeInp ? mCodeInp.value.trim().toUpperCase() : '';
+        const rawName = mNameInp ? mNameInp.value.trim() : '';
+        if (!rawCode) {
+          alert('Please enter a Course Code (e.g. WIA2003).');
+          if (mCodeInp) mCodeInp.focus();
+          return;
+        }
+        if (!rawName) {
+          alert('Please enter a Course Name.');
+          if (mNameInp) mNameInp.focus();
+          return;
+        }
+        const startVal = mStartInp ? mStartInp.value.trim() : '';
+        const endVal = mEndInp ? mEndInp.value.trim() : '';
+        if (!startVal || !endVal || !startVal.includes(':') || !endVal.includes(':')) {
+          alert('Please provide valid start and end times.');
+          return;
+        }
+        if (parseMinutes(endVal) <= parseMinutes(startVal)) {
+          alert('End time must be later than start time.');
+          if (mEndInp) mEndInp.focus();
+          return;
+        }
+        const [sH, sM] = startVal.split(':').map(n => parseInt(n, 10));
+        const [eH, eM] = endVal.split(':').map(n => parseInt(n, 10));
+        const selectedTypeBtn = addModal.querySelector('#tt-manual-type-chips .btn-tt-type-chip.is-selected');
+        const typeLabel = selectedTypeBtn ? (selectedTypeBtn.dataset.type || 'LEC') : 'LEC';
+
+        const record = normalizeManualSessionRecord({
+          id: activeManualEditId || `m_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          dayIndex: mDaySel ? parseInt(mDaySel.value, 10) : 1,
+          courseCode: rawCode,
+          courseName: rawName,
+          typeLabel,
+          occ: mOccInp ? mOccInp.value.trim() : 'OCC 1',
+          startHour: sH,
+          startMin: sM,
+          endHour: eH,
+          endMin: eM,
+          venue: mLocInp ? mLocInp.value.trim() : ''
+        });
+        if (!record) return;
+
+        const existingIdx = activeManualEditId ? manualTimetableSessions.findIndex(m => m.id === activeManualEditId) : -1;
+        if (existingIdx >= 0) {
+          manualTimetableSessions[existingIdx] = record;
+        } else {
+          manualTimetableSessions.push(record);
+        }
+
+        await persistManualTimetableSessions();
+        closeManualSessionModal();
+        renderTimetableMode();
+      };
+
+      if (btnManualSave) btnManualSave.addEventListener('click', saveManualSessionFromModal);
+
+      if (btnManualDelete) {
+        btnManualDelete.addEventListener('click', async () => {
+          if (!activeManualEditId) return;
+          manualTimetableSessions = manualTimetableSessions.filter(m => m.id !== activeManualEditId);
+          await persistManualTimetableSessions();
+          closeManualSessionModal();
+          renderTimetableMode();
+        });
+      }
+
+      addModal.addEventListener('keydown', async (e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeManualSessionModal();
+        } else if (e.key === 'Enter' && e.target && e.target.tagName === 'INPUT') {
+          e.preventDefault();
+          await saveManualSessionFromModal();
+        }
+      });
+    }
+
     if (typeof window !== 'undefined' && !window._hasTimetableResizeListener) {
       window._hasTimetableResizeListener = true;
       window.addEventListener('resize', () => {
@@ -2771,6 +3186,7 @@
   window.exportTimetablePDF = exportTimetablePDF;
   window.updateLiveTimeTracker = updateLiveTimeTracker;
   window.initTimetableControls = initTimetableControls;
+  window.openManualSessionModal = openManualSessionModal;
 
   if (typeof document !== 'undefined') {
     if (document.readyState === 'loading') {

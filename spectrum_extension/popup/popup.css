@@ -10323,8 +10323,8 @@ body:not(.is-full-tab) .timetable-footer-toolbar .timetable-toolbar-left {
 body:not(.is-full-tab) .timetable-footer-toolbar .timetable-toolbar-right {
   width: 100% !important;
   justify-content: center !important;
-  gap: 5px !important;
-  flex-wrap: nowrap !important;
+  gap: 4px !important;
+  flex-wrap: wrap !important;
 }
 
 body:not(.is-full-tab) .timetable-footer-toolbar .btn-timetable-export,
@@ -11154,6 +11154,75 @@ body:not(.is-full-tab) .timetable-scroll-frame {
 
 [data-theme="dark"] .btn-tt-one-page.active svg {
   stroke: #18181B !important;
+}
+
+/* Manual Add Class Button & Modal Chips */
+.btn-tt-add-class {
+  gap: 5px;
+  padding: 6px 11px;
+  border-color: var(--border-strong);
+  font-weight: 700;
+}
+
+.btn-tt-add-class:hover {
+  background: #18181B;
+  color: #FFFFFF;
+  border-color: #18181B;
+}
+
+[data-theme="dark"] .btn-tt-add-class {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+[data-theme="dark"] .btn-tt-add-class:hover {
+  background: #FAFAFA;
+  color: #18181B;
+  border-color: #FAFAFA;
+}
+
+.btn-tt-type-chip.is-selected,
+.btn-tt-course-chip.is-selected {
+  background: #18181B;
+  color: #FFFFFF;
+  border-color: #18181B;
+}
+
+[data-theme="dark"] .btn-tt-type-chip.is-selected,
+[data-theme="dark"] .btn-tt-course-chip.is-selected {
+  background: #FAFAFA;
+  color: #18181B;
+  border-color: #FAFAFA;
+}
+
+.tt-manual-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(14, 165, 233, 0.12);
+  color: #0284c7;
+  border: 1px solid rgba(2, 132, 199, 0.25);
+}
+
+[data-theme="dark"] .tt-manual-tag {
+  background: rgba(56, 189, 248, 0.14);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.tt-empty-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 8px 16px;
+  border-radius: 7px;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .timetable-toolbar-divider {
