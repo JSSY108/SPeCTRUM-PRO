@@ -7174,17 +7174,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   const activeSpectrumTab = await findSpectrumTab();
   activeTabSession = activeSpectrumTab;
 
+  const isSpectrumOpen = Boolean(
+    activeSpectrumTab &&
+    activeSpectrumTab.url &&
+    !activeSpectrumTab.url.includes('/login/') &&
+    !activeSpectrumTab.url.includes('login.microsoftonline.com')
+  );
+
   const hasAnyCached = cached.cachedCoursesData && cached.cachedCoursesData.length > 0;
   if (!activeSpectrumTab) {
     showLoginPrompt({ reason: 'not_open', showModal: true });
   } else if (activeSpectrumTab.url && activeSpectrumTab.url.includes('login.microsoftonline.com')) {
     showLoginPrompt({ reason: 'sso', detail: activeSpectrumTab.url, showModal: true });
+  } else if (activeSpectrumTab.url && activeSpectrumTab.url.includes('/login/')) {
+    showLoginPrompt({ reason: 'login_page', detail: activeSpectrumTab.url, showModal: true });
   }
 
   if (statusIndicator) {
     const textEl = document.getElementById('status-indicator-text');
     if (textEl) {
-      if (activeSpectrumTab && !activeSpectrumTab.url.includes('login.microsoftonline.com')) {
+      if (isSpectrumOpen) {
         textEl.textContent = 'Connected to UM SPeCTRUM';
       } else if (hasAnyCached) {
         textEl.textContent = 'SPeCTRUM Offline (Cached)';
@@ -7192,7 +7201,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         textEl.textContent = 'SPeCTRUM Offline';
       }
     } else {
-      if (activeSpectrumTab && !activeSpectrumTab.url.includes('login.microsoftonline.com')) {
+      if (isSpectrumOpen) {
         statusIndicator.className = 'status-indicator ready';
         statusIndicator.innerHTML = '<span class="dot"></span> <span id="status-text">Connected</span>';
       } else if (hasAnyCached) {
@@ -7383,9 +7392,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   } else {
     // No cached courses (Fresh install / New user):
-    // Switch to activities tab cleanly without auto-reloading or uninvited network sync
     switchTab('tab-activities');
     initSidebarRail();
+
+    // Auto-detect SPeCTRUM: If SPeCTRUM is open & user is logged in, auto-trigger initial sync!
+    if (isSpectrumOpen) {
+      logDiag('Init', '⚡ SPeCTRUM detected on initial launch with no cache. Auto-triggering initial sync...');
+      hideLoginPrompt();
+      refreshActivities(true);
+    }
   }
 
   // ========================================================
@@ -10964,19 +10979,152 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   window.openSpectrumLogin = openSpectrumLogin;
 
+  let authWatcherTimer = null;
+  let isWatchingForLogin = false;
+  let isVerifyingLogin = false;
+
+  async function checkAndAutoSyncIfLoggedIn() {
+    if (isVerifyingLogin || isSyncingActivities) return false;
+    isVerifyingLogin = true;
+    try {
+      const specTab = await findSpectrumTab();
+      if (!specTab || !specTab.url) return false;
+      if (specTab.url.includes('/login/') || specTab.url.includes('login.microsoftonline.com')) {
+        return false;
+      }
+
+      // Check MoodleSession cookie if chrome.cookies is accessible
+      if (typeof chrome !== 'undefined' && chrome.cookies) {
+        try {
+          const cookie = await chrome.cookies.get({ url: 'https://spectrum.um.edu.my', name: 'MoodleSession' });
+          if (!cookie || !cookie.value) return false;
+        } catch (cErr) {}
+      }
+
+      // Verify session probe via fetch
+      let isAuthed = false;
+      try {
+        const probe = await fetchWithTimeout('https://spectrum.um.edu.my/my/courses.php', {
+          credentials: 'include',
+          redirect: 'manual'
+        }, 5000);
+        if (probe && probe.status === 200 && probe.type !== 'opaqueredirect') {
+          isAuthed = true;
+        }
+      } catch (fErr) {
+        try {
+          const fullRes = await fetchWithTimeout('https://spectrum.um.edu.my/my/courses.php', {
+            credentials: 'include'
+          }, 5000);
+          if (fullRes && fullRes.status === 200 && !fullRes.url.includes('/login/') && !fullRes.url.includes('microsoftonline.com')) {
+            isAuthed = true;
+          }
+        } catch (e2) {}
+      }
+
+      if (isAuthed) {
+        logDiag('Auth:Watcher', '✔ SPeCTRUM login verified! Dismissing login prompt and starting auto-sync...');
+        stopAutoLoginWatcher();
+        hideLoginPrompt();
+
+        const statusIndicatorEl = document.getElementById('connection-status');
+        if (statusIndicatorEl) {
+          const textEl = document.getElementById('status-indicator-text');
+          if (textEl) {
+            textEl.textContent = 'Connected to UM SPeCTRUM';
+          } else {
+            statusIndicatorEl.className = 'status-indicator ready';
+            statusIndicatorEl.innerHTML = '<span class="dot"></span> <span id="status-text">Connected</span>';
+          }
+        }
+
+        if (!isSyncingActivities) {
+          await refreshActivities(true);
+        }
+        return true;
+      }
+    } catch (err) {
+      logDiag('Auth:Watcher', `Login watch error: ${err?.message || err}`);
+    } finally {
+      isVerifyingLogin = false;
+    }
+    return false;
+  }
+
+  function startAutoLoginWatcher() {
+    if (isWatchingForLogin && authWatcherTimer) return;
+    isWatchingForLogin = true;
+    if (authWatcherTimer) {
+      clearInterval(authWatcherTimer);
+      authWatcherTimer = null;
+    }
+    authWatcherTimer = setInterval(() => {
+      checkAndAutoSyncIfLoggedIn();
+    }, 2500);
+  }
+
+  function stopAutoLoginWatcher() {
+    isWatchingForLogin = false;
+    if (authWatcherTimer) {
+      clearInterval(authWatcherTimer);
+      authWatcherTimer = null;
+    }
+  }
+
+  window.checkAndAutoSyncIfLoggedIn = checkAndAutoSyncIfLoggedIn;
+  window.startAutoLoginWatcher = startAutoLoginWatcher;
+  window.stopAutoLoginWatcher = stopAutoLoginWatcher;
+
   function showLoginPrompt({ reason = 'expired', detail = '', showModal = true } = {}) {
     const isNotOpen = reason === 'not_open';
     const isSSO = reason === 'sso' || (detail && detail.includes('microsoftonline.com'));
+    const isLoginPage = reason === 'login_page' || (detail && detail.includes('/login/'));
 
     let title = 'SPeCTRUM Login Required';
-    let desc = 'You are currently not logged in to Universiti Malaya SPeCTRUM. Please log in to your account, then click Sync.';
+    let desc = 'You are currently not logged in to Universiti Malaya SPeCTRUM. Please log in to your account; SPeCTRUM Pro will auto-sync once logged in.';
 
-    if (isSSO) {
-      title = 'SPeCTRUM Session Expired';
-      desc = 'Your SPeCTRUM session has expired and redirected to Microsoft SSO login. Please log in with your UM student/staff account to continue.';
-    } else if (isNotOpen) {
-      title = 'SPeCTRUM Not Open';
-      desc = 'Please open and log in to spectrum.um.edu.my in your browser to access live courses and sync your activities.';
+    if (currentLang === 'zh') {
+      if (isSSO) {
+        title = 'SPeCTRUM 登录状态已过期';
+        desc = '您的 SPeCTRUM 登录已过期并跳转至统一身份认证。请登录您的马来亚大学学生/教职工账户，系统将在登录后自动完成同步。';
+      } else if (isNotOpen) {
+        title = '未检测到 SPeCTRUM';
+        desc = '请在浏览器中打开并登录 spectrum.um.edu.my。SPeCTRUM Pro 会自动检测登录状态并为您同步课程与日程。';
+      } else if (isLoginPage) {
+        title = '需要登录 SPeCTRUM';
+        desc = '请在 spectrum.um.edu.my 页面完成登录。登录成功后，SPeCTRUM Pro 会自动开始同步。';
+      } else {
+        title = '需要登录 SPeCTRUM';
+        desc = '您当前尚未登录马来亚大学 SPeCTRUM。请先登录，系统将在检测到登录后自动同步课程与日程。';
+      }
+    } else if (currentLang === 'bm') {
+      if (isSSO) {
+        title = 'Sesi SPeCTRUM Tamat Tempoh';
+        desc = 'Sesi SPeCTRUM anda telah tamat tempoh dan dialihkan ke log masuk SSO Microsoft. Sila log masuk dengan akaun pelajar/staf UM anda untuk meneruskan.';
+      } else if (isNotOpen) {
+        title = 'SPeCTRUM Belum Dibuka';
+        desc = 'Sila buka dan log masuk ke spectrum.um.edu.my dalam pelayar anda. SPeCTRUM Pro akan mengesan log masuk anda secara automatik dan menyegerakkan kursus anda.';
+      } else if (isLoginPage) {
+        title = 'Log Masuk SPeCTRUM Diperlukan';
+        desc = 'Sila lengkapkan log masuk di spectrum.um.edu.my. SPeCTRUM Pro akan menyegerakkan data secara automatik sebaik sahaja anda log masuk.';
+      } else {
+        title = 'Log Masuk SPeCTRUM Diperlukan';
+        desc = 'Anda belum log masuk ke Universiti Malaya SPeCTRUM. Sila log masuk ke akaun anda dan SPeCTRUM Pro akan menyegerakkan aktiviti secara automatik.';
+      }
+    } else {
+      if (isSSO) {
+        title = 'SPeCTRUM Session Expired';
+        desc = 'Your SPeCTRUM session has expired and redirected to Microsoft SSO login. Please log in with your UM student/staff account; SPeCTRUM Pro will auto-sync once logged in.';
+      } else if (isNotOpen) {
+        title = 'SPeCTRUM Not Open';
+        desc = 'Please open and log in to spectrum.um.edu.my in your browser. SPeCTRUM Pro will automatically detect your login and synchronize your courses and activities.';
+      } else if (isLoginPage) {
+        title = 'SPeCTRUM Login Required';
+        desc = 'Please complete your login on spectrum.um.edu.my. SPeCTRUM Pro will automatically detect your login and start synchronization.';
+      } else {
+        title = 'SPeCTRUM Login Required';
+        desc = 'You are currently not logged in to Universiti Malaya SPeCTRUM. Please log in to your account, and SPeCTRUM Pro will automatically sync your activities.';
+      }
     }
 
     // Direct Auth Prompt Modal (Banners removed for clean modern design)
@@ -10988,6 +11136,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (authModalDesc) authModalDesc.textContent = desc;
       authModal.style.display = 'flex';
     }
+
+    // Start auto-login watcher to auto-sync as soon as user logs in
+    startAutoLoginWatcher();
 
     // Status Indicator
     if (statusIndicator) {
@@ -11001,6 +11152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function hideLoginPrompt() {
     const authModal = document.getElementById('auth-prompt-modal');
     if (authModal) authModal.style.display = 'none';
+    stopAutoLoginWatcher();
   }
   window.hideLoginPrompt = hideLoginPrompt;
 
@@ -13609,20 +13761,45 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (btnCloseAuthModal && authPromptModal) {
     btnCloseAuthModal.addEventListener('click', () => {
       authPromptModal.style.display = 'none';
+      stopAutoLoginWatcher();
     });
   }
   if (authPromptModal) {
     authPromptModal.addEventListener('click', (e) => {
-      if (e.target === authPromptModal) authPromptModal.style.display = 'none';
+      if (e.target === authPromptModal) {
+        authPromptModal.style.display = 'none';
+        stopAutoLoginWatcher();
+      }
     });
   }
   if (btnAuthModalLogin) {
-    btnAuthModalLogin.addEventListener('click', () => openSpectrumLogin());
+    btnAuthModalLogin.addEventListener('click', () => {
+      startAutoLoginWatcher();
+      openSpectrumLogin();
+    });
   }
   if (btnAuthModalRetry) {
     btnAuthModalRetry.addEventListener('click', () => {
       if (authPromptModal) authPromptModal.style.display = 'none';
+      stopAutoLoginWatcher();
       refreshActivities(true);
+    });
+  }
+
+  // Automatic SPeCTRUM Login Watcher Event Bridges
+  window.addEventListener('focus', () => {
+    if (isWatchingForLogin || (!hasAnyCached && coursesData.length === 0)) {
+      checkAndAutoSyncIfLoggedIn();
+    }
+  });
+
+  if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.onUpdated) {
+    chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+      if (changeInfo.status === 'complete' && tab && tab.url && tab.url.includes('spectrum.um.edu.my') && !tab.url.includes('/login/') && !tab.url.includes('microsoftonline.com')) {
+        if (isWatchingForLogin || (!hasAnyCached && coursesData.length === 0)) {
+          checkAndAutoSyncIfLoggedIn();
+        }
+      }
     });
   }
 
