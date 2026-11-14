@@ -6,6 +6,7 @@ package-lock.json
 screenshots for stores/
 *.zip
 CERTIFICATION_NOTES*.txt
+CHROME_WEB_STORE_LISTING.md
 
 # Specifications & promotional video production
 *SPEC*.md

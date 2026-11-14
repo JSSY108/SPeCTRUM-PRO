@@ -1,93 +1,104 @@
-# SPeCTRUM PRO™
+# SPeCTRUM PRO™ — All-in-One UM Academic Companion
 
-SPeCTRUM Pro is a **complete student productivity hub** for **Universiti Malaya's SPeCTRUM** (`spectrum.um.edu.my`).
+SPeCTRUM Pro is an all-in-one academic companion and productivity workstation built specifically for students and faculty of **Universiti Malaya (UM)** using the SPeCTRUM learning management system (`spectrum.um.edu.my`).
 
----
-
-## 🌟 Architecture & Tab Layout
-
-### 🔹 Tab 1: Activities Hub (Default Main Tab)
-- **Interactive Timeline Visualizer**:
-  - Horizontal scrollable timeline track across dates with interactive milestone points.
-  - Color-coded status dots:
-    - 🔴 **Overdue**
-    - 🟠 **Due Soon** (<3 days remaining)
-    - 🟢 **Active Now** (pulsing dot for currently open attendance sessions)
-    - 🔵 **Upcoming**
-    - 🟣 **Submitted / Recorded**
-  - Navigation controls (`◀ Prev`, `Today`, `Next ▶`) with auto-centering on **Today**.
-- **Three Core Sections**:
-  1. 📢 **Announcements**: All course announcements, news, and lecturer updates aggregated in one place with a 1-click popup reader modal.
-  2. 📝 **Assignments**: Deadlines, countdowns, and submission statuses.
-  3. 📅 **Attendance**: Real-time session monitoring with 1-click **Auto-Take Attendance** and PIN entry prompts.
-- **Dual Display Modes (Timeline vs By Course)**:
-  - 🕒 **Ascending Timeline**: Chronologically sorted with nearest deadlines and active tasks at the top.
-  - 📚 **Group by Course**: Organized by course cards with collapsible accordions.
-- **100% Cached**: Everything loads instantly from local storage upon opening without waiting spinners.
+Tired of navigating nested folders and disjointed course pages? SPeCTRUM Pro unifies your courses, schedules, deadlines, attendance check-ins, and study materials into a single, cohesive academic hub.
 
 ---
 
-### 🔹 Tab 2: Course Materials (Dedicated Downloader)
-- Separate, dedicated tab for downloading lecture slides (PDF, PPTX), notes, and lab sheets.
-- Search filter for courses, sections, or files.
-- Select All / Deselect All and selective file checking.
-- Clean 1-click **Download Selected Files (.ZIP)** with automatic folder organization:
+## 🌟 Core Architecture & Features
+
+### 🔹 Tab 1: Activities Hub (Default View)
+- **Dual Perspective (Calendar View & Course View)**:
+  - 📅 **Calendar & Monthly Grid**: Visual agenda and calendar day cells showing announcements, assignments, and attendance sessions.
+  - 📚 **Group by Course**: Organized course cards with collapsible sections.
+- **Three Core Streams**:
+  1. 📢 **Announcements**: Course announcements and lecturer notices aggregated into a single feed with an instant modal reader.
+  2. 📝 **Assignments**: Track upcoming deadlines, active countdowns, and submission statuses (Submitted, Due Soon, Overdue).
+  3. 📅 **Attendance Monitoring**: Real-time session detection with 1-click check-in and automatic PIN input support.
+- **100% Offline Cached**: Instantly renders cached schedules and activities from local storage upon opening.
+
+---
+
+### 🔹 Tab 2: Weekly Timetable Visualizer
+- **Interactive Weekly Schedule**: Automatically parsed from your enrolled course schedule and tutorial OCC groups.
+- **Detailed Class Cards**: Displays class start/end times, durations, course codes, and classroom/lab locations for every day of the week.
+- **Visual Export**: Export your timetable as a clean high-resolution image (PNG) or calendar event format.
+
+---
+
+### 🔹 Tab 3: Course Materials (Batch Downloader)
+- **1-Click Batch Downloader**: Download lecture notes, slides, and lab sheets across your enrolled courses in one click.
+- **Automatic Folder Organization**: Files are structured cleanly by course code, name, and semester week:
   ```text
   [Course Code] Course Name/
   └── Week 01 - Introduction/
       └── Lecture_01_Slides.pdf
   ```
+- **Selective Downloads**: Search and filter by course or section; check only the specific files you need.
 
 ---
 
-### 🔹 Tab 3: Preferences
-- **OCC Group Management**: Set a global default OCC or customize per-course OCC overrides so SPeCTRUM Pro takes attendance and downloads materials strictly for your tutorial/lab group.
-- **Attendance Background Automation**: Toggle periodic background checking and set the interval (10m, 15m, 30m, 60m).
-- **File Types**: Choose allowed download formats (.pdf, .pptx, .ppt, .docx, .xlsx, .zip).
-- **System Course Exclusions**: Hide non-academic courses (e.g. LEAP, Turnitin).
-- **Cache Management**: Instant clear and rescan buttons.
+### 🔹 Tab 4: Preferences & Automation
+- **⚡ Occurrence (OCC) Auto-Detection**:
+  - Automatically identifies your specific tutorial, lab, and lecture OCC numbers directly from your SPeCTRUM course enrollment.
+  - One-click **Auto-Detect** and **Reset All** controls.
+  - Per-course OCC override controls to customize individual classes.
+- **Attendance Background Automation**:
+  - Optional periodic background checking (10m, 15m, 30m, 60m).
+  - Desktop notifications when an active class attendance check-in window opens.
+- **Academic Week Calibration**: Calibrate the Semester Week 1 start date for accurate week numbering across timelines and timetables.
+- **System Course Exclusions**: Cleanly hide non-academic portal courses (e.g., LEAP, Turnitin, Co-curriculum).
+- **Multilingual Support**: Instant live interface translation across **English**, **Bahasa Melayu (BM)**, and **Chinese (中文)**.
+- **Theme Engine**: Toggle between **Light**, **Dark**, and **Cyberpunk** themes.
 
 ---
 
-### 🔹 Tab 4: Tip Jar ☕
-- Support development by scanning your DuitNow QR code directly in the extension.
+## 🖥️ Workspace Display Modes
+
+- **Compact Popup (520px × 600px)**:
+  - Designed for fast glances and instant actions: check today's tasks, take attendance with 1 click, or preview unread announcements.
+- **Full-Screen Workstation**:
+  - Click **"Full Screen"** in the top bar to expand into an immersive, wide-screen dashboard layout.
+  - Updates in real-time via `chrome.storage.onChanged` as background syncs complete.
+- **Floating Pinned Companion (`Alt+S`)**:
+  - Toggle a non-intrusive floating panel right inside your current browsing tab without switching contexts.
 
 ---
 
-## ⚡ Small Extension vs. Full Tab Mode
+## 🔒 Privacy & Security First
 
-- **Small Popup Window (520px x 600px)**:
-  - Designed for **quick glance and instant action**: check today's tasks, take attendance with 1 click, or preview unread announcements.
-- **Full Tab Mode (Big Screen)**:
-  - Click **"Full Tab"** at the top right of the popup to open the full dashboard in a standard browser tab.
-  - Expands the **Interactive Horizontal Timeline Visualizer** across the screen.
-  - **Real-Time Auto-Update**: Full Tab listens to `chrome.storage.onChanged`. When an extension scan completes in any window or in the background, the Full Tab **updates automatically in real-time** without requiring a page reload!
+- **Local-Only Sandbox**: Zero remote servers, zero external analytics, and zero telemetry.
+- **No Account Creation**: SPeCTRUM Pro functions exclusively through your existing browser session. Your student credentials/passwords are never requested, stored, or processed.
+- **Direct Connection**: All network calls connect exclusively to `spectrum.um.edu.my` and Microsoft SSO endpoints.
+- Read our full [Privacy Policy](PRIVACY.md).
 
 ---
 
-## ⚡ How to Load & Test in Microsoft Edge (30 Seconds)
+## 🚀 How to Load & Test Locally
 
-1. Open **Microsoft Edge** and enter:
+### In Google Chrome / Microsoft Edge
+1. Open your browser's extension manager:
+   - Chrome: `chrome://extensions`
+   - Edge: `edge://extensions`
+2. Enable **Developer mode** (toggle in top-right for Chrome, left sidebar for Edge).
+3. Click **"Load unpacked"** and select:
    ```text
-   edge://extensions
+   c:\Users\jonat\Projects\Spectrum PRO\spectrum_extension
    ```
-2. Turn **ON** "Developer mode" in the left sidebar.
-3. If already loaded, click the **↻ Reload** button on the **SPeCTRUM Pro** card.  
-   *(If loading for the first time, click **"Load unpacked"** and select `c:\Users\jonat\Projects\Spectrum PRO\spectrum_extension`)*.
-4. Open [SPeCTRUM](https://spectrum.um.edu.my/my/courses.php) in your browser.
-5. Click the **SPeCTRUM Pro** icon in your toolbar to explore Tab 1 (Activities), Tab 2 (Course Materials), the Timeline Visualizer, and the Full Tab view!
+4. Navigate to [SPeCTRUM](https://spectrum.um.edu.my) and click the SPeCTRUM Pro toolbar icon.
 
 ---
 
-## 📤 Sharing with Coursemates
+## 📦 Production Package
 
-The updated extension package is zipped and ready to share at:
+The latest production-ready extension package (v1.0.4) is generated at:
 ```text
 c:\Users\jonat\Projects\Spectrum PRO\spectrum_extension.zip
 ```
 
 ---
 
-## License & Trademarks
+## 📄 License & Trademarks
 
-The source code of this project is licensed under the [MIT License](LICENSE). However, the brand identity, name, and logo are strictly protected. Please read the [Trademark Policy](TRADEMARK.md) before forking or distributing this project.
+The source code of this project is licensed under the [MIT License](LICENSE). The brand identity, product name, and logo are protected under our [Trademark Policy](TRADEMARK.md).

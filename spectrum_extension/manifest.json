@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SPeCTRUM Pro - UM Academic Companion",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "All-in-one academic companion for Universiti Malaya SPeCTRUM: track deadlines, timetables, attendance, and course materials.",
   "icons": {
     "16": "icons/icon16.png",
