@@ -12300,6 +12300,122 @@ body:not(.is-full-tab) .timetable-scroll-frame {
   background: var(--bg-hover);
 }
 
+/* Privacy Consent Modal Card (Purple Nickel Prominent Disclosure) */
+.privacy-consent-card {
+  max-width: 460px;
+  word-spacing: 0.16em;
+  letter-spacing: 0.012em;
+}
+
+.privacy-consent-header {
+  align-items: center;
+}
+
+.privacy-consent-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.privacy-consent-header-title h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.privacy-consent-icon {
+  font-size: 18px;
+}
+
+.privacy-consent-body {
+  padding: 16px 18px;
+}
+
+.privacy-consent-lead {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.privacy-consent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 14px;
+}
+
+.privacy-disclosure-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--bg-surface-secondary, rgba(0, 0, 0, 0.02));
+  border: 1px solid var(--border-hairline);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .privacy-disclosure-item {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.privacy-disclosure-icon {
+  font-size: 14px;
+  line-height: 1.2;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.privacy-disclosure-content {
+  flex: 1;
+}
+
+.privacy-disclosure-content code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+
+[data-theme="dark"] .privacy-disclosure-content code {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.privacy-consent-links {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding: 4px 2px;
+}
+
+.privacy-consent-links a {
+  color: var(--primary, #0284c7);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.privacy-consent-footer {
+  padding: 12px 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid var(--border-hairline);
+}
+
+.btn-privacy-agree {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  padding: 8px 18px;
+  cursor: pointer;
+}
+
 /* Auth Modal Card */
 .auth-modal-card {
   max-width: 440px;

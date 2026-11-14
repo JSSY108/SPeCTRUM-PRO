@@ -7171,6 +7171,79 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (bCourse) bCourse.classList.toggle('active', currentActivitiesMode === 'bycourse');
   }
 
+  // Chrome Web Store User Data Policy (Purple Nickel) Compliance: Prominent Disclosure Check
+  const privacyConsentStore = await chrome.storage.local.get({ privacyConsentAccepted: false });
+  let hasPrivacyConsent = Boolean(privacyConsentStore && privacyConsentStore.privacyConsentAccepted);
+
+  const privacyConsentModal = document.getElementById('privacy-consent-modal');
+  const btnPrivacyConsentAgree = document.getElementById('btn-privacy-consent-agree');
+  const btnClosePrivacyConsentModal = document.getElementById('btn-close-privacy-consent-modal');
+  const btnReopenPrivacyDisclosure = document.getElementById('btn-reopen-privacy-disclosure');
+
+  function showPrivacyConsent(isReview = false) {
+    if (!privacyConsentModal) return;
+    if (btnClosePrivacyConsentModal) {
+      btnClosePrivacyConsentModal.style.display = isReview ? 'block' : 'none';
+    }
+    if (btnPrivacyConsentAgree) {
+      btnPrivacyConsentAgree.innerHTML = isReview ? '<span>Understood</span>' : '<span>Agree &amp; Continue</span>';
+    }
+    privacyConsentModal.style.display = 'flex';
+  }
+
+  function hidePrivacyConsent() {
+    if (privacyConsentModal) privacyConsentModal.style.display = 'none';
+  }
+
+  async function handlePostConsentStartup() {
+    const activeTab = await findSpectrumTab();
+    activeTabSession = activeTab;
+
+    const isOpen = Boolean(
+      activeTab &&
+      activeTab.url &&
+      !activeTab.url.includes('/login/') &&
+      !activeTab.url.includes('login.microsoftonline.com')
+    );
+
+    const hasCached = cached.cachedCoursesData && cached.cachedCoursesData.length > 0;
+    if (!activeTab) {
+      showLoginPrompt({ reason: 'not_open', showModal: true });
+    } else if (activeTab.url && activeTab.url.includes('login.microsoftonline.com')) {
+      showLoginPrompt({ reason: 'sso', detail: activeTab.url, showModal: true });
+    } else if (activeTab.url && activeTab.url.includes('/login/')) {
+      showLoginPrompt({ reason: 'login_page', detail: activeTab.url, showModal: true });
+    }
+
+    if (isOpen && !hasCached) {
+      logDiag('Init', '⚡ SPeCTRUM detected post-consent with no cache. Auto-triggering initial sync...');
+      hideLoginPrompt();
+      refreshActivities(true);
+    }
+  }
+
+  if (btnPrivacyConsentAgree) {
+    btnPrivacyConsentAgree.addEventListener('click', async () => {
+      hidePrivacyConsent();
+      if (!hasPrivacyConsent) {
+        hasPrivacyConsent = true;
+        await chrome.storage.local.set({
+          privacyConsentAccepted: true,
+          privacyConsentDate: new Date().toISOString()
+        });
+        await handlePostConsentStartup();
+      }
+    });
+  }
+
+  if (btnClosePrivacyConsentModal) {
+    btnClosePrivacyConsentModal.addEventListener('click', () => hidePrivacyConsent());
+  }
+
+  if (btnReopenPrivacyDisclosure) {
+    btnReopenPrivacyDisclosure.addEventListener('click', () => showPrivacyConsent(true));
+  }
+
   const activeSpectrumTab = await findSpectrumTab();
   activeTabSession = activeSpectrumTab;
 
@@ -7182,12 +7255,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   );
 
   const hasAnyCached = cached.cachedCoursesData && cached.cachedCoursesData.length > 0;
-  if (!activeSpectrumTab) {
-    showLoginPrompt({ reason: 'not_open', showModal: true });
-  } else if (activeSpectrumTab.url && activeSpectrumTab.url.includes('login.microsoftonline.com')) {
-    showLoginPrompt({ reason: 'sso', detail: activeSpectrumTab.url, showModal: true });
-  } else if (activeSpectrumTab.url && activeSpectrumTab.url.includes('/login/')) {
-    showLoginPrompt({ reason: 'login_page', detail: activeSpectrumTab.url, showModal: true });
+  if (!hasPrivacyConsent) {
+    showPrivacyConsent(false);
+  } else {
+    if (!activeSpectrumTab) {
+      showLoginPrompt({ reason: 'not_open', showModal: true });
+    } else if (activeSpectrumTab.url && activeSpectrumTab.url.includes('login.microsoftonline.com')) {
+      showLoginPrompt({ reason: 'sso', detail: activeSpectrumTab.url, showModal: true });
+    } else if (activeSpectrumTab.url && activeSpectrumTab.url.includes('/login/')) {
+      showLoginPrompt({ reason: 'login_page', detail: activeSpectrumTab.url, showModal: true });
+    }
   }
 
   if (statusIndicator) {
@@ -7396,7 +7473,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initSidebarRail();
 
     // Auto-detect SPeCTRUM: If SPeCTRUM is open & user is logged in, auto-trigger initial sync!
-    if (isSpectrumOpen) {
+    if (hasPrivacyConsent && isSpectrumOpen) {
       logDiag('Init', '⚡ SPeCTRUM detected on initial launch with no cache. Auto-triggering initial sync...');
       hideLoginPrompt();
       refreshActivities(true);
@@ -10985,6 +11062,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function checkAndAutoSyncIfLoggedIn() {
     if (isVerifyingLogin || isSyncingActivities) return false;
+    try {
+      const consentStore = await chrome.storage.local.get({ privacyConsentAccepted: false });
+      if (!consentStore || !consentStore.privacyConsentAccepted) return false;
+    } catch (e) {
+      return false;
+    }
     isVerifyingLogin = true;
     try {
       const specTab = await findSpectrumTab();

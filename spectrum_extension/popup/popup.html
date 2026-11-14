@@ -1147,6 +1147,59 @@
   <!-- ========================================================================
        MODALS: Announcement Reader, PIN Entry, OCC Setup, Diagnostics
        ======================================================================== -->
+  <!-- In-Product Prominent Privacy Disclosure & Consent Modal (Chrome Web Store Purple Nickel / UDP Compliance) -->
+  <div id="privacy-consent-modal" class="modal-overlay" style="display:none; z-index: 100000;">
+    <div class="modal-card privacy-consent-card">
+      <div class="modal-header privacy-consent-header">
+        <div class="privacy-consent-header-title">
+          <span class="privacy-consent-icon">🛡️</span>
+          <h3 id="privacy-consent-title">Privacy &amp; Data Disclosure</h3>
+        </div>
+        <button type="button" id="btn-close-privacy-consent-modal" class="modal-close-btn" title="Dismiss" style="display:none;">✕</button>
+      </div>
+      <div class="modal-body privacy-consent-body">
+        <p class="privacy-consent-lead">
+          Welcome to <strong>SPeCTRUM Pro</strong>. Before accessing your student workstation, please review our user data collection, handling, storage, and sharing practices:
+        </p>
+        <div class="privacy-consent-list">
+          <div class="privacy-disclosure-item">
+            <div class="privacy-disclosure-icon">🍪</div>
+            <div class="privacy-disclosure-content">
+              <strong>Authentication &amp; Cookies:</strong> We inspect your browser's <code>MoodleSession</code> cookie on <code>spectrum.um.edu.my</code> strictly to detect your active login status. We <em>never</em> prompt for, access, or store your university password or username.
+            </div>
+          </div>
+          <div class="privacy-disclosure-item">
+            <div class="privacy-disclosure-icon">💻</div>
+            <div class="privacy-disclosure-content">
+              <strong>100% Local On-Device Storage:</strong> All enrolled courses, deadlines, timetables, and download links are processed and stored exclusively in your local browser via <code>chrome.storage.local</code>. Zero developer servers or cloud databases exist.
+            </div>
+          </div>
+          <div class="privacy-disclosure-item">
+            <div class="privacy-disclosure-icon">🔒</div>
+            <div class="privacy-disclosure-content">
+              <strong>Direct &amp; Encrypted University HTTPS:</strong> All network requests connect directly and securely with Universiti Malaya (<code>https://spectrum.um.edu.my</code>) over encrypted TLS/HTTPS.
+            </div>
+          </div>
+          <div class="privacy-disclosure-item">
+            <div class="privacy-disclosure-icon">🚫</div>
+            <div class="privacy-disclosure-content">
+              <strong>Zero Third-Party Sharing:</strong> We do not sell, transfer, or share your data with advertisers, tracking services, or any third party.
+            </div>
+          </div>
+        </div>
+        <div class="privacy-consent-links">
+          <span>By clicking <strong>Agree &amp; Continue</strong>, you consent to local data processing as disclosed in our </span>
+          <a href="https://github.com/JSSY108/SPeCTRUM-PRO/blob/main/PRIVACY.md" target="_blank" rel="noopener noreferrer">Privacy Policy ↗</a>.
+        </div>
+      </div>
+      <div class="modal-footer privacy-consent-footer">
+        <button type="button" id="btn-privacy-consent-agree" class="btn-cta-solid btn-privacy-agree">
+          <span>Agree &amp; Continue</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- SPeCTRUM Authentication & Login Required Modal -->
   <div id="auth-prompt-modal" class="modal-overlay" style="display:none;">
     <div class="modal-card auth-modal-card">
@@ -1608,6 +1661,18 @@
             </div>
             <span class="about-action-arrow">↗</span>
           </a>
+
+          <!-- In-Product Prominent Privacy Disclosure Re-Review -->
+          <button type="button" id="btn-reopen-privacy-disclosure" class="about-action-row about-action-button">
+            <div class="about-action-icon">
+              <span style="font-size:14px;line-height:1;">🛡️</span>
+            </div>
+            <div class="about-action-text">
+              <div class="about-action-title">In-Product Privacy Disclosure</div>
+              <div class="about-action-subtitle">Review permissions, local storage, and consent status</div>
+            </div>
+            <span class="about-action-arrow">→</span>
+          </button>
 
           <!-- Tip Jar / Coffee Jump Button -->
           <button type="button" id="btn-about-tipjar" class="about-action-row about-action-button">
