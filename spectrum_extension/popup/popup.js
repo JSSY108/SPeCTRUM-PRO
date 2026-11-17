@@ -12916,17 +12916,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      // 0. Always verify active SPeCTRUM session upfront
+      // 0. Always verify active SPeCTRUM session upfront (use redirect: 'manual' to cleanly capture SSO redirects without triggering CORS errors)
       try {
         logDiag('Auth:Ping', 'Pinging https://spectrum.um.edu.my/my/courses.php ...');
-        const pingRes = await fetchWithTimeout('https://spectrum.um.edu.my/my/courses.php', { credentials: 'include' }, 10000);
-        logDiag('Auth:Ping', `Ping status: HTTP ${pingRes.status} | Final URL: ${pingRes.url}`);
-        if (!pingRes || pingRes.url.includes('/login/') || pingRes.url.includes('microsoftonline.com') || pingRes.status === 401 || pingRes.status === 403) {
-          logDiag('Auth:Ping', `❌ Session expired or redirected to SSO: ${pingRes.url}`);
+        const pingRes = await fetchWithTimeout('https://spectrum.um.edu.my/my/courses.php', { credentials: 'include', redirect: 'manual' }, 10000);
+        logDiag('Auth:Ping', `Ping status: HTTP ${pingRes.status} | Type: ${pingRes.type}`);
+        if (!pingRes || pingRes.type === 'opaqueredirect' || (pingRes.url && pingRes.url.includes('/login/')) || (pingRes.url && pingRes.url.includes('microsoftonline.com')) || pingRes.status === 401 || pingRes.status === 403) {
+          const detailUrl = (pingRes && pingRes.type === 'opaqueredirect') ? 'SSO Redirect (MoodleSession expired)' : (pingRes ? pingRes.url : '');
+          logDiag('Auth:Ping', `❌ Session expired or redirected to SSO: ${detailUrl}`);
           setDiagBadge(diagBadgeSession, 'err', 'Session: SSO/Expired');
           updateActivitiesFetchProgress(100, '🔒 SPeCTRUM login required. Please sign in.', 'Session Required', 'LOGIN REQUIRED');
           hideActivitiesFetchProgress(1200);
-          showLoginPrompt({ reason: 'sso', detail: pingRes ? pingRes.url : '', showModal: true });
+          showLoginPrompt({ reason: 'sso', detail: detailUrl, showModal: true });
           showNotLoggedInState();
           return;
         }

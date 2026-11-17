@@ -14,8 +14,8 @@ async function fetchEnrolledCoursesDirectly() {
   const seen = new Set();
 
   try {
-    const res = await fetchWithTimeout(`${origin}/my/courses.php`, { credentials: 'include' }, 12000);
-    if (!res.ok || res.url.includes('/login/')) {
+    const res = await fetchWithTimeout(`${origin}/my/courses.php`, { credentials: 'include', redirect: 'manual' }, 12000);
+    if (!res || res.type === 'opaqueredirect' || !res.ok || (res.url && res.url.includes('/login/'))) {
       return { loggedIn: false, courses: [] };
     }
 
@@ -176,8 +176,8 @@ async function fetchUserCourseOccs(courses, options = {}) {
   // 1. Ensure we have sesskey, userId, and userName from /my/courses.php if not provided
   if (!sesskey || !userId || !userName) {
     try {
-      const res = await fetchWithTimeout(`${origin}/my/courses.php`, { credentials: 'include' }, 8000);
-      if (res.ok && !res.url.includes('/login/')) {
+      const res = await fetchWithTimeout(`${origin}/my/courses.php`, { credentials: 'include', redirect: 'manual' }, 8000);
+      if (res && res.type !== 'opaqueredirect' && res.ok && (!res.url || !res.url.includes('/login/'))) {
         const html = await res.text();
         if (!sesskey) {
           const sMatch = html.match(/"sesskey":"([^"]+)"/) || html.match(/sesskey=([a-zA-Z0-9]+)/);

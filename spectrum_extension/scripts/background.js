@@ -654,16 +654,16 @@ async function runBackgroundAttendanceCheck() {
       return { skipped: true, reason: 'No cached courses' };
     }
 
-    // Verify session by pinging SPeCTRUM
+    // Verify session by pinging SPeCTRUM (use redirect: 'manual' to prevent browser following SSO to Microsoft and throwing CORS error)
     let pingRes;
     try {
-      pingRes = await fetch('https://spectrum.um.edu.my/my/courses.php', { credentials: 'include' });
+      pingRes = await fetch('https://spectrum.um.edu.my/my/courses.php', { credentials: 'include', redirect: 'manual' });
     } catch (pingErr) {
       console.log('[SPeCTRUM Pro] User not logged in or network unreachable. Skipping background check.', pingErr?.message || pingErr);
-      await appendBackgroundLog('Background:Daemon', '⚠️ Skipped: SPeCTRUM session expired (SSO redirect) or network unreachable.');
+      await appendBackgroundLog('Background:Daemon', '⚠️ Skipped: SPeCTRUM session expired or network unreachable.');
       return { skipped: true, reason: 'Not logged in or offline' };
     }
-    if (!pingRes.ok || pingRes.url.includes('/login/')) {
+    if (pingRes.type === 'opaqueredirect' || !pingRes.ok || (pingRes.url && pingRes.url.includes('/login/'))) {
       console.log('[SPeCTRUM Pro] User not currently logged in to SPeCTRUM. Skipping background check.');
       await appendBackgroundLog('Background:Daemon', '⚠️ Skipped: SPeCTRUM session expired or user not logged in.');
       return { skipped: true, reason: 'Not logged in' };
