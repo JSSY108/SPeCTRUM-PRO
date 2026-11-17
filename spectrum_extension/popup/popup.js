@@ -14702,12 +14702,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     return `<div class="test-meta-grid">${chips.join('')}</div>`;
   }
 
+  function sanitizeNoticeHtml(html) {
+    if (!html || typeof html !== 'string') return '';
+    try {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      // Strip out any potentially executable elements
+      doc.querySelectorAll('script, iframe, object, embed, style, link, meta, form, input, button, textarea').forEach(el => el.remove());
+      // Strip out inline on* event listeners and javascript: schemes
+      doc.querySelectorAll('*').forEach(el => {
+        const toRemove = [];
+        for (let i = 0; i < el.attributes.length; i++) {
+          const attr = el.attributes[i];
+          const name = attr.name.toLowerCase();
+          const val = attr.value.toLowerCase().trim();
+          if (name.startsWith('on') || val.startsWith('javascript:') || val.startsWith('data:text/html')) {
+            toRemove.push(attr.name);
+          }
+        }
+        toRemove.forEach(n => el.removeAttribute(n));
+      });
+      return doc.body.innerHTML;
+    } catch (e) {
+      return '';
+    }
+  }
+
   function renderTestModalBody(contentHtml = '', rawText = '', parsed = null) {
     if (!modalAnnContent) return;
 
-    // Sanitize any residual Moodle boilerplate
+    // Sanitize any residual Moodle boilerplate and potentially unsafe elements
     if (contentHtml) {
-      contentHtml = contentHtml
+      contentHtml = sanitizeNoticeHtml(contentHtml)
         .replace(/Skip to main content/gi, '')
         .replace(/Select activity\s*/gi, '')
         .trim();
