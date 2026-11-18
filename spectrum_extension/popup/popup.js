@@ -15587,9 +15587,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
       if (aboutStoreTitle) aboutStoreTitle.textContent = 'Review on Chrome Web Store';
       if (aboutStoreSub) aboutStoreSub.textContent = 'Help fellow UM students discover this extension';
-      const extId = (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) ? chrome.runtime.id : '';
       if (btnAboutStoreReview) {
-        btnAboutStoreReview.href = extId ? `https://chromewebstore.google.com/detail/${extId}/reviews` : 'https://chromewebstore.google.com/';
+        btnAboutStoreReview.href = 'https://chromewebstore.google.com/detail/spectrum-pro-um-academic/conffhhlhmcjidpadnnmbjcihapfecgn';
       }
     }
 
