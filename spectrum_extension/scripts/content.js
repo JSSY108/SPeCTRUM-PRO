@@ -346,12 +346,26 @@
   });
 
   // On-page Auto-Attendance Assistant for attendance.php
-  function handleAttendancePage() {
+  async function handleAttendancePage() {
     const url = window.location.href;
     if (!url.includes('/mod/attendance/attendance.php') && !url.includes('/mod/attendance/take.php')) {
       if (url.includes('/mod/attendance/view.php') && /present|hadir|recorded/i.test(document.body.innerText)) {
         try { chrome.runtime.sendMessage({ type: 'DATA_UPDATED' }); } catch (e) {}
       }
+      return;
+    }
+
+    // Safety check: honor user setting before interacting with attendance forms
+    const settings = await new Promise((resolve) => {
+      try {
+        chrome.storage.local.get({ autoAttendanceEnabled: true }, resolve);
+      } catch (e) {
+        resolve({ autoAttendanceEnabled: true });
+      }
+    });
+
+    if (!settings.autoAttendanceEnabled) {
+      console.log('[SPeCTRUM Pro Content] Auto-attendance is disabled in settings. Skipping form interaction.');
       return;
     }
 
@@ -361,7 +375,7 @@
     const radios = Array.from(form.querySelectorAll('input[type="radio"][name="status"]'));
     if (radios.length === 0) return;
 
-    // Find radio for Present / Hadir
+    // Find radio specifically for Present / Hadir (never match Absent / Late / Excused)
     let presentRadio = null;
     for (const r of radios) {
       let text = '';
@@ -372,14 +386,19 @@
       const container = r.closest('.form-check, .fitem, tr, td, div');
       if (container) text += ' ' + container.textContent;
 
-      if (/present|hadir|\b[PH]\b/i.test(text)) {
+      const isAffirmativePresent = /present|hadir|\b[PH]\b/i.test(text);
+      const isNegativeStatus = /absent|tidak hadir|ponteng|late|lewat|excused|alasan/i.test(text);
+
+      if (isAffirmativePresent && !isNegativeStatus) {
         presentRadio = r;
         break;
       }
     }
 
-    if (!presentRadio && radios.length > 0) {
-      presentRadio = radios[0];
+    // CRITICAL SAFETY GUARDRAIL: Never fallback to radios[0] if Present is not found!
+    if (!presentRadio) {
+      console.warn('[SPeCTRUM Pro Content] "Present" status option could not be unambiguously confirmed. Auto-submit aborted to prevent accidental Absent submission.');
+      return;
     }
 
     if (presentRadio && !presentRadio.checked) {

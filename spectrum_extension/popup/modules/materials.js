@@ -1558,42 +1558,65 @@
       }
       let arrayBuffer = null;
       let contentType = '';
+      const MAX_PREVIEW_BYTES = 8 * 1024 * 1024; // 8MB safe threshold for client-side inline preview
 
       async function doFetch(targetUrl) {
         let ab = null;
         let ct = '';
         let finalUrl = targetUrl;
+        let isOversized = false;
         try {
           const res = await fetch(targetUrl, { credentials: 'include', redirect: 'follow' });
           if (res.ok) {
             ct = (res.headers.get('content-type') || '').toLowerCase();
             finalUrl = res.url || targetUrl;
-            ab = await res.arrayBuffer();
+            const cl = parseInt(res.headers.get('content-length') || '0', 10);
+            if (cl > MAX_PREVIEW_BYTES) {
+              isOversized = true;
+            } else {
+              const buf = await res.arrayBuffer();
+              if (buf.byteLength > MAX_PREVIEW_BYTES) {
+                isOversized = true;
+              } else {
+                ab = buf;
+              }
+            }
           }
         } catch (directErr) {
           console.log('[SPeCTRUM Pro] Direct fetch failed, trying background worker:', directErr);
         }
 
-        if (!ab) {
+        if (!ab && !isOversized) {
           const bgResp = await chrome.runtime.sendMessage({
             type: 'FETCH_FILE_PREVIEW',
             url: targetUrl
           });
-          if (bgResp && bgResp.success && bgResp.dataBase64) {
-            ct = (bgResp.mimeType || '').toLowerCase();
-            const binaryString = atob(bgResp.dataBase64);
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
+          if (bgResp) {
+            if (bgResp.isOversized) {
+              isOversized = true;
+              ct = (bgResp.mimeType || '').toLowerCase();
+            } else if (bgResp.success && bgResp.dataBase64) {
+              ct = (bgResp.mimeType || '').toLowerCase();
+              const binaryString = atob(bgResp.dataBase64);
+              const len = binaryString.length;
+              const bytes = new Uint8Array(len);
+              for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+              ab = bytes.buffer;
             }
-            ab = bytes.buffer;
           }
         }
-        return { arrayBuffer: ab, contentType: ct, finalUrl };
+        return { arrayBuffer: ab, contentType: ct, finalUrl, isOversized };
       }
 
       let fetchResult = await doFetch(fetchUrl);
+      if (fetchResult.isOversized) {
+        if (activePreviewFileId !== cacheKey) return;
+        renderPlaceholder(frame, file, 'File is too large for inline preview (> 8MB). Please download or view on SPeCTRUM directly.');
+        return;
+      }
+
       arrayBuffer = fetchResult.arrayBuffer;
       contentType = fetchResult.contentType;
       if (fetchResult.finalUrl && fetchResult.finalUrl.includes('pluginfile.php') && !isExcludedMoodleFile(fetchResult.finalUrl)) {
@@ -2086,6 +2109,33 @@
     }
   }
 
+  let pptxScriptLoadingPromise = null;
+  function ensurePptxLibraryLoaded() {
+    if (window.pptxVanillaBundle?.createPptxViewer || window.createPptxViewer) {
+      return Promise.resolve();
+    }
+    if (pptxScriptLoadingPromise) return pptxScriptLoadingPromise;
+
+    pptxScriptLoadingPromise = new Promise((resolve, reject) => {
+      try {
+        if (!document.querySelector('link[href*="pptx-vanilla-viewer"]')) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = '../libs/pptx-vanilla-viewer.styles.css';
+          document.head.appendChild(link);
+        }
+        const script = document.createElement('script');
+        script.src = '../libs/pptx-vanilla-viewer.bundle.js';
+        script.onload = () => resolve();
+        script.onerror = (e) => reject(new Error('Failed to load presentation engine'));
+        document.body.appendChild(script);
+      } catch (e) {
+        reject(e);
+      }
+    });
+    return pptxScriptLoadingPromise;
+  }
+
   async function renderPptxWithLibrary(contentArea, file, arrayBuffer) {
     hidePageNavControls();
     contentArea.innerHTML = '';
@@ -2095,13 +2145,23 @@
       activeDocPreview = null;
     }
 
-    // Resolve ChristopherVR createPptxViewer factory
-    const createViewerFn = (window.pptxVanillaBundle && window.pptxVanillaBundle.createPptxViewer) ||
-                           window.createPptxViewer;
+    // Resolve ChristopherVR createPptxViewer factory (lazy-loaded on demand)
+    let createViewerFn = (window.pptxVanillaBundle && window.pptxVanillaBundle.createPptxViewer) ||
+                         window.createPptxViewer;
+
+    if (!createViewerFn) {
+      renderPlaceholder(contentArea, file, 'Loading presentation engine...');
+      try {
+        await ensurePptxLibraryLoaded();
+        createViewerFn = (window.pptxVanillaBundle && window.pptxVanillaBundle.createPptxViewer) || window.createPptxViewer;
+      } catch (lazyErr) {
+        console.warn('[SPeCTRUM Pro] Failed to load ChristopherVR viewer engine:', lazyErr);
+      }
+    }
 
     if (!createViewerFn) {
       console.warn('[SPeCTRUM Pro] ChristopherVR viewer engine not ready yet.');
-      renderPlaceholder(contentArea, file, 'Engine loading...');
+      renderPlaceholder(contentArea, file, 'Click Full Reader to view PowerPoint presentation');
       return;
     }
 

@@ -57,11 +57,11 @@ async function appendBackgroundLog(category, message, details = null) {
 // Initialize alarms on install or startup
 chrome.runtime.onInstalled.addListener(async (details) => {
   console.log('[SPeCTRUM Pro] Extension installed/updated:', details.reason);
-  await setupAlarm();
+  await setupAlarm(true);
 });
 
 chrome.runtime.onStartup.addListener(async () => {
-  await setupAlarm();
+  await setupAlarm(true);
 });
 
 // ---------------------------------------------------------------------------
@@ -255,13 +255,22 @@ async function bumpRetryState(nowMs = Date.now()) {
   }
 }
 
-// Setup or update the schedule based on user preferences
-async function setupAlarm() {
+// Setup or update the schedule based on user preferences.
+// When force is false, keeps an existing valid future alarm to prevent starvation on transient worker wake-ups.
+async function setupAlarm(force = false) {
+  if (!force) {
+    try {
+      const existing = await chrome.alarms.get(ALARM_NAME);
+      if (existing && existing.scheduledTime > Date.now()) {
+        return { scheduled: true, when: existing.scheduledTime };
+      }
+    } catch (e) {}
+  }
   return scheduleNextCheck();
 }
 
-// Ensure the alarm is armed on initial worker startup
-setupAlarm();
+// Ensure the alarm is armed on initial worker startup (non-forcing)
+setupAlarm(false);
 
 // Alarm listener: run one check, then re-arm for the next deadline.
 chrome.alarms.onAlarm.addListener(async (alarm) => {
@@ -319,7 +328,7 @@ if (chrome.commands && chrome.commands.onCommand) {
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'UPDATE_ALARM_SETTINGS') {
-    setupAlarm().then(() => sendResponse({ success: true }));
+    setupAlarm(true).then(() => sendResponse({ success: true }));
     return true;
   }
   if (message.type === 'CHECK_ATTENDANCE_NOW') {
@@ -414,14 +423,22 @@ async function handleFetchFilePreview(fileUrl, retryCount = 0) {
       }
     }
     
-    // Limit to 64MB for preview payload (allows full presentation slide decks & large PDFs)
-    const maxPreviewBytes = 64 * 1024 * 1024;
-    const bufferSlice = arrayBuffer.byteLength > maxPreviewBytes 
-      ? arrayBuffer.slice(0, maxPreviewBytes) 
-      : arrayBuffer;
+    // Safe threshold for client-side inline preview payload (8MB).
+    // Files exceeding 8MB must not be piped through IPC/base64 or parsed in-memory by JS viewers
+    // to prevent memory exhaustion, IPC size limit violations, and service worker/tab crashes.
+    const maxPreviewBytes = 8 * 1024 * 1024;
+    if (arrayBuffer.byteLength > maxPreviewBytes) {
+      return {
+        success: false,
+        isOversized: true,
+        mimeType: contentType,
+        sizeBytes: arrayBuffer.byteLength,
+        message: 'File is too large for inline preview (> 8MB).'
+      };
+    }
 
     let binary = '';
-    const bytes = new Uint8Array(bufferSlice);
+    const bytes = new Uint8Array(arrayBuffer);
     const chunkSz = 0x8000;
     for (let i = 0; i < bytes.length; i += chunkSz) {
       binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSz));
@@ -509,7 +526,15 @@ chrome.notifications.onClicked.addListener((notificationId) => {
 // Time range parsing and active window verification for background daemon
 function parseSessionTimeRange(str) {
   if (!str) return null;
-  const s = String(str).trim();
+  let s = String(str).trim();
+
+  // Strip day names, date ranges, and 4-digit years (e.g. "Wednesday, 10 - 12 May 2026")
+  // so date ranges never collide with time ranges.
+  s = s.replace(/\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/gi, ' ');
+  s = s.replace(/\b\d{1,2}\s*(?:-|–|—|to)\s*\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*(?:\s+\d{2,4})?/gi, ' ');
+  s = s.replace(/\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*(?:\s+\d{2,4})?/gi, ' ');
+  s = s.replace(/\b\d{4}\b/g, ' ');
+
   const rangeMatch = s.match(/(?:^|[^\d])(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?\s*(?:-|–|—|to)\s*(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?/i);
   if (rangeMatch) {
     let sh = parseInt(rangeMatch[1], 10);
@@ -907,6 +932,56 @@ async function runBackgroundAttendanceCheck() {
   }
 }
 
+// Helper to unambiguously extract "Present" / "Hadir" status ID from attendance form HTML.
+// Returns empty string if not affirmatively detected. Never defaults to arbitrary radios.
+function findPresentStatusIdInHtml(formHtml) {
+  if (!formHtml) return '';
+
+  const labelMap = {};
+  const labelRegex = /<label[^>]+for=["']([^"']+)["'][^>]*>([\s\S]*?)<\/label>/gi;
+  let lblM;
+  while ((lblM = labelRegex.exec(formHtml)) !== null) {
+    labelMap[lblM[1]] = lblM[2].replace(/<[^>]+>/g, ' ').trim();
+  }
+
+  const radioTagRegex = /<input[^>]+name=["']status["'][^>]*>/gi;
+  let rTagM;
+  while ((rTagM = radioTagRegex.exec(formHtml)) !== null) {
+    const tag = rTagM[0];
+    const valM = tag.match(/value=["'](\d+)["']/i);
+    if (!valM) continue;
+    const val = valM[1];
+
+    const idM = tag.match(/id=["']([^"']+)["']/i);
+    const radioId = idM ? idM[1] : '';
+
+    let associatedText = '';
+    if (radioId && labelMap[radioId]) {
+      associatedText += ' ' + labelMap[radioId];
+    }
+
+    const afterPos = rTagM.index + tag.length;
+    const afterSnippet = formHtml.slice(afterPos, afterPos + 300);
+    const labelEndMatch = afterSnippet.match(/^([\s\S]*?)(?:<\/label>|<\/td>|<\/div>|<input)/i);
+    if (labelEndMatch) {
+      associatedText += ' ' + labelEndMatch[1].replace(/<[^>]+>/g, ' ');
+    }
+
+    const beforePos = Math.max(0, rTagM.index - 300);
+    const contextSnippet = formHtml.slice(beforePos, afterPos + 300);
+
+    const isAffirmativePresent = /present|hadir|\b[PH]\b/i.test(associatedText) ||
+                                 (/<tr>[\s\S]*?(?:present|hadir|\b[PH]\b)[\s\S]*?<\/tr>/i.test(contextSnippet) && contextSnippet.includes(`value="${val}"`));
+    const isNegativeStatus = /absent|tidak hadir|ponteng|late|lewat|excused|alasan/i.test(associatedText);
+
+    if (isAffirmativePresent && !isNegativeStatus) {
+      return val;
+    }
+  }
+
+  return '';
+}
+
 // Check attendance page for active sessions
 async function checkCourseAttendance(courseId, courseName, userOcc, hiddenAttendanceIds = [], knownAttUrls = [], currentMinutes = null) {
   if (currentMinutes == null) {
@@ -1054,22 +1129,8 @@ async function checkCourseAttendance(courseId, courseName, userOcc, hiddenAttend
         // Check for genuine attendance PIN/password inside the attendance form
         const hasPasswordInput = /<input[^>]+(?:name=["'](?:studentpassword|qrpass)["']|(?:type=["']password["'][^>]*name=["'](?:studentpassword|password|qrpass|pin)["']))/i.test(formSnippet);
 
-        // Find radio option for "Present" / "Hadir"
-        let presentStatusId = '';
-        const radioRegex = /<input[^>]+type=["']radio["'][^>]+name=["']status["'][^>]+value=["'](\d+)["'][^>]*>([\s\S]*?)<\/label>/gi;
-        let rMatch;
-        while ((rMatch = radioRegex.exec(formSnippet)) !== null) {
-          const val = rMatch[1];
-          const label = rMatch[2];
-          if (/present|hadir|\b[PH]\b/i.test(label) || !presentStatusId) {
-            presentStatusId = val;
-            if (/present|hadir|\b[PH]\b/i.test(label)) break;
-          }
-        }
-        if (!presentStatusId) {
-          const rMatch = formSnippet.match(/<input[^>]+type=["']radio["'][^>]+name=["']status["'][^>]+value=["'](\d+)["']/i);
-          if (rMatch) presentStatusId = rMatch[1];
-        }
+        // Find radio option for "Present" / "Hadir" (strictly affirmative, never defaulting to Absent)
+        const presentStatusId = findPresentStatusIdInHtml(formSnippet);
 
         // Must have either a valid status radio option OR a required PIN in the attendance form
         if (!presentStatusId && !hasPasswordInput) {
@@ -1225,27 +1286,14 @@ async function submitAttendance(takeUrl, statusId, sesskey, password = '', cours
       if (sidMatch) fields['sessid'] = sidMatch[1];
     }
 
-    // Find "Present" / "Hadir" status ID from live form
+    // Find "Present" / "Hadir" status ID from live form (strictly affirmative, never defaulting to Absent)
     let presentVal = statusId || '';
     if (!presentVal) {
-      const radioRegex = /<input[^>]+type=["']radio["'][^>]+name=["']status["'][^>]+value=["'](\d+)["'][^>]*>([\s\S]*?)<\/label>/gi;
-      let rMatch;
-      while ((rMatch = radioRegex.exec(formSnippet)) !== null) {
-        const val = rMatch[1];
-        const label = rMatch[2];
-        if (/present|hadir|\b[PH]\b/i.test(label) || !presentVal) {
-          presentVal = val;
-          if (/present|hadir|\b[PH]\b/i.test(label)) break;
-        }
-      }
-    }
-    if (!presentVal) {
-      const firstRadio = formSnippet.match(/<input[^>]+type=["']radio["'][^>]+name=["']status["'][^>]+value=["'](\d+)["']/i);
-      if (firstRadio) presentVal = firstRadio[1];
+      presentVal = findPresentStatusIdInHtml(formSnippet);
     }
 
     if (!presentVal) {
-      await appendBackgroundLog('Attendance:AutoSubmit', `❌ Could not find "Present" status radio in form for ${courseName || fullTakeUrl}`);
+      await appendBackgroundLog('Attendance:AutoSubmit', `❌ Could not unambiguously confirm "Present" status radio in form for ${courseName || fullTakeUrl}. Auto-submit aborted to prevent accidental Absent submission.`);
       return false;
     }
 
