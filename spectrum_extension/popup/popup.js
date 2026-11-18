@@ -7731,11 +7731,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   courseOccs = stored.courseOccs || {};
   if (chkAutoAttendance) {
     chkAutoAttendance.checked = stored.autoAttendanceEnabled !== false;
-    chkAutoAttendance.addEventListener('change', syncAutoAttBadge);
+    chkAutoAttendance.addEventListener('change', async () => {
+      syncAutoAttBadge();
+      const enabled = chkAutoAttendance.checked;
+      await chrome.storage.local.set({ autoAttendanceEnabled: enabled });
+      chrome.runtime.sendMessage({ type: 'UPDATE_ALARM_SETTINGS' });
+    });
   }
   if (selAttendanceInterval) {
     selAttendanceInterval.value = normalizeResyncOption(stored.autoAttendanceInterval);
-    selAttendanceInterval.addEventListener('change', syncAutoAttBadge);
+    selAttendanceInterval.addEventListener('change', async () => {
+      syncAutoAttBadge();
+      const val = parseInt(selAttendanceInterval.value, 10) || 240;
+      await chrome.storage.local.set({ autoAttendanceInterval: val });
+      chrome.runtime.sendMessage({ type: 'UPDATE_ALARM_SETTINGS' });
+    });
   }
   syncAutoAttBadge();
   hiddenAttendanceIds = stored.hiddenAttendanceIds || [];

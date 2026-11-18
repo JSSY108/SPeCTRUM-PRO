@@ -174,9 +174,20 @@ async function computeNextCheckPlan(nowMs = Date.now()) {
     }
   }
 
-  const target = best ? best.when : nowMs + resyncMs;
-  let when = Math.max(target, nowMs + MIN_SLEEP_SECONDS * 1000);
-  let reason = best ? best.reason : 'resync';
+  // The next wake time should be either an upcoming class session or the periodic validation cadence,
+  // whichever arrives soonest:
+  const nextResync = nowMs + resyncMs;
+  let when;
+  let reason;
+  if (best && best.when < nextResync) {
+    when = best.when;
+    reason = best.reason;
+  } else {
+    when = nextResync;
+    reason = 'resync';
+  }
+
+  when = Math.max(when, nowMs + MIN_SLEEP_SECONDS * 1000);
 
   const cap = nowMs + MAX_SLEEP_MINUTES * 60000;
   if (when > cap) {
