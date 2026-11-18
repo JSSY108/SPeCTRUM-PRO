@@ -55,6 +55,8 @@
 
   let customSessionOverrides = {};
   let manualTimetableSessions = [];
+  let activeIcsFilename = null;
+  let activeIcsSessions = [];
   let customOverridesLoaded = false;
 
   function normalizeManualSessionRecord(raw) {
@@ -96,7 +98,13 @@
   async function loadCustomLocations() {
     try {
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        const res = await chrome.storage.local.get(['timetableLocations', 'timetableSessionOverrides', 'manualTimetableSessions']);
+        const res = await chrome.storage.local.get([
+          'timetableLocations',
+          'timetableSessionOverrides',
+          'manualTimetableSessions',
+          'activeIcsFilename',
+          'activeIcsSessions'
+        ]);
         if (res) {
           const locs = (res.timetableLocations && typeof res.timetableLocations === 'object') ? res.timetableLocations : {};
           const ovrs = (res.timetableSessionOverrides && typeof res.timetableSessionOverrides === 'object') ? res.timetableSessionOverrides : {};
@@ -104,12 +112,37 @@
           if (Array.isArray(res.manualTimetableSessions)) {
             manualTimetableSessions = res.manualTimetableSessions.map(normalizeManualSessionRecord).filter(Boolean);
           }
+          if (typeof res.activeIcsFilename === 'string') {
+            activeIcsFilename = res.activeIcsFilename;
+          } else {
+            activeIcsFilename = null;
+          }
+          if (Array.isArray(res.activeIcsSessions)) {
+            activeIcsSessions = res.activeIcsSessions.map(normalizeManualSessionRecord).filter(Boolean);
+          } else {
+            activeIcsSessions = [];
+          }
+
+          // Seamless auto-migration: if user previously imported an .ics into manualTimetableSessions,
+          // migrate them to activeIcsSessions and set activeIcsFilename so they get clean replace mode immediately!
+          if (!activeIcsFilename && Array.isArray(manualTimetableSessions)) {
+            const legacyIcs = manualTimetableSessions.filter(m => m.source === 'ics' || (m.id && String(m.id).startsWith('ics_')));
+            if (legacyIcs.length > 0) {
+              activeIcsSessions = legacyIcs;
+              activeIcsFilename = 'Calendar.ics';
+              manualTimetableSessions = manualTimetableSessions.filter(m => m.source !== 'ics' && !(m.id && String(m.id).startsWith('ics_')));
+              await chrome.storage.local.set({ activeIcsFilename, activeIcsSessions, manualTimetableSessions });
+            }
+          }
         }
       }
     } catch (e) {
       console.warn('Failed to load custom timetable session overrides:', e);
     }
     customOverridesLoaded = true;
+    if (typeof updateIcsCapsuleUI === 'function') {
+      updateIcsCapsuleUI();
+    }
     if (typeof document !== 'undefined') {
       const ttPane = document.getElementById('tab-timetable');
       if (ttPane && ttPane.style.display !== 'none') {
@@ -443,6 +476,47 @@
     return parsedSlots;
   }
 
+  function formatIcsCapsuleName(name, maxLen = 14) {
+    if (!name || typeof name !== 'string') return 'Schedule.ics';
+    const trimmed = name.trim();
+    if (trimmed.length <= maxLen) return trimmed;
+
+    const extMatch = trimmed.match(/(\.[a-zA-Z0-9]+)$/);
+    const ext = extMatch ? extMatch[1] : '.ics';
+    const base = extMatch ? trimmed.slice(0, -ext.length) : trimmed;
+
+    const remaining = maxLen - ext.length - 3; // 3 for '...'
+    if (remaining <= 2) {
+      return trimmed.slice(0, 3) + '...' + ext;
+    }
+    const frontLen = Math.ceil(remaining / 2);
+    const backLen = Math.floor(remaining / 2);
+    return base.slice(0, frontLen) + '...' + base.slice(-backLen) + ext;
+  }
+
+  function updateIcsCapsuleUI() {
+    if (typeof document === 'undefined') return;
+    const btnImportIcs = document.getElementById('btn-import-timetable-ics');
+    const capsule = document.getElementById('ics-active-capsule');
+    const filenameEl = document.getElementById('ics-capsule-filename-text');
+
+    const hasActiveIcs = Boolean(activeIcsFilename && Array.isArray(activeIcsSessions) && activeIcsSessions.length > 0);
+
+    if (hasActiveIcs) {
+      if (btnImportIcs) btnImportIcs.style.display = 'none';
+      if (capsule) {
+        capsule.style.display = 'inline-flex';
+        capsule.title = `${activeIcsFilename} (${activeIcsSessions.length} session${activeIcsSessions.length === 1 ? '' : 's'}). Hover to delete or replace.`;
+      }
+      if (filenameEl) {
+        filenameEl.textContent = formatIcsCapsuleName(activeIcsFilename, 14);
+      }
+    } else {
+      if (btnImportIcs) btnImportIcs.style.display = 'inline-flex';
+      if (capsule) capsule.style.display = 'none';
+    }
+  }
+
   function buildFormattedSessionSlot(opts) {
     const pad = n => String(n).padStart(2, '0');
     const venue = String(opts.venue || '').trim();
@@ -489,8 +563,11 @@
     const DAY_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
     const rawSlots = [];
     const parseTime = getSafeTimeParser();
+    const hasActiveIcs = Boolean(activeIcsFilename && Array.isArray(activeIcsSessions) && activeIcsSessions.length > 0);
 
-    if (Array.isArray(records) && records.length > 0) {
+    // If an .ics file is uploaded & active, it completely replaces the SPeCTRUM timetable.
+    // Raw SPeCTRUM attendances are bypassed so only authoritative .ics classes are shown.
+    if (!hasActiveIcs && Array.isArray(records) && records.length > 0) {
       records.forEach(att => {
         const rawCourseCode = att.courseCode || '';
         const courseCode = cleanSingleCourseCode(rawCourseCode);
@@ -666,11 +743,70 @@
           }));
         });
       });
+    } else if (hasActiveIcs) {
+      activeIcsSessions.forEach(m => {
+        const norm = normalizeManualSessionRecord(m);
+        if (!norm) return;
+        const cleanCode = cleanSingleCourseCode(norm.courseCode);
+        const dayIndex = norm.dayIndex;
+        if (dayIndex < 0 || dayIndex > 6) return;
+        const rawKey = `${dayIndex}_${norm.startHour}_${norm.startMin}_${norm.endHour}_${norm.endMin}_${cleanCode}_${norm.typeLabel}`;
+        const fallbackKey = `${cleanCode}_${dayIndex}_${norm.typeLabel}`;
+
+        const override = (customSessionOverrides && (customSessionOverrides[rawKey] || customSessionOverrides[fallbackKey])) || null;
+        if (override && (override.hidden || override.isDeleted)) return;
+
+        let startHour = norm.startHour;
+        let startMin = norm.startMin;
+        let endHour = norm.endHour;
+        let endMin = norm.endMin;
+        let isCustomTime = false;
+        let customLoc = norm.venue || '';
+
+        if (override) {
+          if (typeof override === 'object') {
+            if (override.venue) customLoc = override.venue.trim();
+            if (override.hasCustomTime) {
+              if (Number.isInteger(override.startHour)) startHour = override.startHour;
+              if (Number.isInteger(override.startMin)) startMin = override.startMin;
+              if (Number.isInteger(override.endHour)) endHour = override.endHour;
+              if (Number.isInteger(override.endMin)) endMin = override.endMin;
+              isCustomTime = true;
+            }
+          } else if (typeof override === 'string') {
+            customLoc = override.trim();
+          }
+        }
+
+        rawSlots.push(buildFormattedSessionSlot({
+          key: `ics_${norm.id}`,
+          fallbackKey,
+          manualId: norm.id,
+          isManual: true,
+          dayIndex,
+          dayName: DAY_NAMES[dayIndex],
+          courseCode: cleanCode,
+          courseName: norm.courseName,
+          typeLabel: norm.typeLabel,
+          occ: norm.occ,
+          startHour,
+          startMin,
+          endHour,
+          endMin,
+          rawStartHour: norm.startHour,
+          rawStartMin: norm.startMin,
+          rawEndHour: norm.endHour,
+          rawEndMin: norm.endMin,
+          isCustomTime,
+          venue: customLoc
+        }));
+      });
     }
 
     // Merge user-added manual sessions when rendering the active workspace timetable
     if (atts === null && Array.isArray(manualTimetableSessions) && manualTimetableSessions.length > 0) {
       manualTimetableSessions.forEach(m => {
+        if (m.source === 'ics' || (m.id && String(m.id).startsWith('ics_'))) return;
         const norm = normalizeManualSessionRecord(m);
         if (!norm) return;
         rawSlots.push(buildFormattedSessionSlot({
@@ -1641,7 +1777,7 @@
     if (typeof window !== 'undefined') window._hasTimetableStorageListener = true;
     chrome.storage.onChanged.addListener(async (changes, area) => {
       if (area !== 'local') return;
-      if (changes.timetableLocations || changes.timetableSessionOverrides || changes.manualTimetableSessions || changes.cachedAttendances) {
+      if (changes.timetableLocations || changes.timetableSessionOverrides || changes.manualTimetableSessions || changes.activeIcsFilename || changes.activeIcsSessions || changes.cachedAttendances) {
         await loadCustomLocations();
         renderTimetableMode();
       }
@@ -1651,6 +1787,7 @@
   function renderTimetableMode() {
     updateLayoutSwitchUI();
     updateOnePageButtonUI();
+    updateIcsCapsuleUI();
     const gridEl = document.getElementById('timetable-grid');
     const countEl = document.getElementById('timetable-session-count');
     if (!gridEl) return;
@@ -1674,7 +1811,8 @@
         if (!card) return;
         if (card.dataset.isManual === '1') {
           const mId = card.dataset.manualId;
-          const existing = manualTimetableSessions.find(m => m.id === mId) || null;
+          const existing = manualTimetableSessions.find(m => m.id === mId) ||
+                           activeIcsSessions.find(m => m.id === mId) || null;
           openManualSessionModal(existing);
           return;
         }
@@ -3343,16 +3481,48 @@
       btnAddClass.addEventListener('click', () => openManualSessionModal(null));
     }
 
-    // Import .ics Calendar File button & handler
+    // Import .ics Calendar File & Active Capsule Controls
     const btnImportIcs = document.getElementById('btn-import-timetable-ics');
     const inputImportIcs = document.getElementById('input-import-timetable-ics');
+    const btnIcsDelete = document.getElementById('btn-ics-delete');
+    const btnIcsReplace = document.getElementById('btn-ics-replace');
+
     if (btnImportIcs && inputImportIcs && !btnImportIcs._hasImportListener) {
       btnImportIcs._hasImportListener = true;
       btnImportIcs.addEventListener('click', () => {
         inputImportIcs.value = '';
         inputImportIcs.click();
       });
+    }
 
+    if (btnIcsReplace && inputImportIcs && !btnIcsReplace._hasReplaceListener) {
+      btnIcsReplace._hasReplaceListener = true;
+      btnIcsReplace.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        inputImportIcs.value = '';
+        inputImportIcs.click();
+      });
+    }
+
+    if (btnIcsDelete && !btnIcsDelete._hasDeleteListener) {
+      btnIcsDelete._hasDeleteListener = true;
+      btnIcsDelete.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const confirmMsg = getTimetableText('timetable', 'removeIcsConfirm', 'Remove imported .ics calendar and restore your SPeCTRUM timetable?');
+        if (!confirm(confirmMsg)) return;
+
+        activeIcsFilename = null;
+        activeIcsSessions = [];
+        await chrome.storage.local.remove(['activeIcsFilename', 'activeIcsSessions']);
+        updateIcsCapsuleUI();
+        renderTimetableMode();
+      });
+    }
+
+    if (inputImportIcs && !inputImportIcs._hasChangeListener) {
+      inputImportIcs._hasChangeListener = true;
       inputImportIcs.addEventListener('change', async (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
@@ -3363,10 +3533,15 @@
             alert('No valid class schedule events found in the selected .ics file. Please verify that the file contains VEVENT records.');
             return;
           }
-          manualTimetableSessions.push(...parsed);
-          await chrome.storage.local.set({ manualTimetableSessions });
+          activeIcsFilename = file.name;
+          activeIcsSessions = parsed;
+          await chrome.storage.local.set({
+            activeIcsFilename,
+            activeIcsSessions
+          });
+          updateIcsCapsuleUI();
           renderTimetableMode();
-          alert(`✔ Successfully imported ${parsed.length} class session(s) from "${file.name}" into your timetable!`);
+          alert(`✔ Successfully loaded ${parsed.length} class session(s) from "${file.name}"! SPeCTRUM timetable has been replaced with this schedule.`);
         } catch (err) {
           console.error('[SPeCTRUM Pro] .ics import error:', err);
           alert('Failed to parse .ics file: ' + (err?.message || err));
@@ -3494,14 +3669,20 @@
         });
         if (!record) return;
 
-        const existingIdx = activeManualEditId ? manualTimetableSessions.findIndex(m => m.id === activeManualEditId) : -1;
-        if (existingIdx >= 0) {
-          manualTimetableSessions[existingIdx] = record;
+        const inIcsIdx = activeManualEditId ? activeIcsSessions.findIndex(m => m.id === activeManualEditId) : -1;
+        if (inIcsIdx >= 0) {
+          activeIcsSessions[inIcsIdx] = record;
+          await chrome.storage.local.set({ activeIcsSessions });
         } else {
-          manualTimetableSessions.push(record);
+          const existingIdx = activeManualEditId ? manualTimetableSessions.findIndex(m => m.id === activeManualEditId) : -1;
+          if (existingIdx >= 0) {
+            manualTimetableSessions[existingIdx] = record;
+          } else {
+            manualTimetableSessions.push(record);
+          }
+          await persistManualTimetableSessions();
         }
 
-        await persistManualTimetableSessions();
         closeManualSessionModal();
         renderTimetableMode();
       };
@@ -3514,8 +3695,14 @@
           const confirmTpl = getTimetableText('timetable', 'deleteConfirm', 'Are you sure you want to delete {course} from your timetable?');
           const confirmMsg = confirmTpl.replace('{course}', 'this manual class');
           if (!confirm(confirmMsg)) return;
-          manualTimetableSessions = manualTimetableSessions.filter(m => m.id !== activeManualEditId);
-          await persistManualTimetableSessions();
+          const inIcsIdx = activeManualEditId ? activeIcsSessions.findIndex(m => m.id === activeManualEditId) : -1;
+          if (inIcsIdx >= 0) {
+            activeIcsSessions = activeIcsSessions.filter(m => m.id !== activeManualEditId);
+            await chrome.storage.local.set({ activeIcsSessions });
+          } else {
+            manualTimetableSessions = manualTimetableSessions.filter(m => m.id !== activeManualEditId);
+            await persistManualTimetableSessions();
+          }
           closeManualSessionModal();
           renderTimetableMode();
         });

@@ -489,11 +489,30 @@
                 <span id="btn-add-tt-session-label">Add Class</span>
               </button>
 
-              <!-- Import .ics Calendar File Button -->
-              <button type="button" id="btn-import-timetable-ics" class="btn-timetable-export" title="Import classes from .ics calendar file (Google Calendar, Maya, Apple Calendar)">
-                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                <span id="btn-import-timetable-ics-label">Import .ics</span>
-              </button>
+              <!-- Import .ics Calendar File / Active File Capsule -->
+              <div class="timetable-ics-control-wrap" id="timetable-ics-control-wrap">
+                <button type="button" id="btn-import-timetable-ics" class="btn-timetable-export" title="Import classes from .ics calendar file (Google Calendar, Maya, Apple Calendar)">
+                  <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <span id="btn-import-timetable-ics-label">Import .ics</span>
+                </button>
+
+                <!-- Active ICS Capsule (Shown when an .ics schedule is actively overriding timetable) -->
+                <div id="ics-active-capsule" class="ics-active-capsule" style="display:none;" title="Active schedule calendar. Hover to delete or replace.">
+                  <div class="ics-capsule-idle" id="ics-capsule-idle">
+                    <svg class="icon-svg ics-capsule-file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <span class="ics-capsule-filename" id="ics-capsule-filename-text">schedule.ics</span>
+                  </div>
+                  <div class="ics-capsule-hover-actions" id="ics-capsule-hover-actions">
+                    <button type="button" id="btn-ics-delete" class="ics-capsule-btn ics-btn-delete" title="Remove .ics & restore SPeCTRUM schedule" aria-label="Delete imported .ics">
+                      <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                    <div class="ics-capsule-divider"></div>
+                    <button type="button" id="btn-ics-replace" class="ics-capsule-btn ics-btn-replace" title="Replace with another .ics file" aria-label="Replace .ics">
+                      <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
               <input type="file" id="input-import-timetable-ics" accept=".ics,text/calendar" style="display:none;">
 
               <div class="timetable-toolbar-divider"></div>
