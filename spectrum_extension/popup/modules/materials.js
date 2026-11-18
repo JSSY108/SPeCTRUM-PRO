@@ -1614,6 +1614,13 @@
       if (fetchResult.isOversized) {
         if (activePreviewFileId !== cacheKey) return;
         renderPlaceholder(frame, file, 'File is too large for inline preview (> 8MB). Please download or view on SPeCTRUM directly.');
+        try {
+          chrome.runtime.sendMessage({
+            type: 'LOG_EVENT',
+            category: 'Preview:Inspector',
+            message: `📦 "${file.title || 'File'}" exceeds 8MB preview limit. Inline preview blocked; direct download prompt served.`
+          });
+        } catch (e) {}
         return;
       }
 

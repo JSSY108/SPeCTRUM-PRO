@@ -195,6 +195,7 @@ async function scheduleNextCheck() {
 
     if (!plan.when) {
       await chrome.storage.local.set({ nextAttendanceCheckAt: 0, nextAttendanceCheckReason: 'disabled' });
+      await appendBackgroundLog('Daemon:Schedule', '🛑 Daemon idle: Auto-attendance is disabled in preferences.');
       return { scheduled: false, reason: plan.reason };
     }
 
@@ -206,6 +207,7 @@ async function scheduleNextCheck() {
 
     const inMinutes = Math.max(0, Math.round((plan.when - Date.now()) / 60000));
     console.log(`[SPeCTRUM Pro] Next attendance check in ${inMinutes} min (${plan.reason}).`);
+    await appendBackgroundLog('Daemon:Schedule', `⏰ Next attendance check in ${inMinutes} min (${plan.reason}) at ${new Date(plan.when).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
     return { scheduled: true, when: plan.when, reason: plan.reason };
   } catch (err) {
     console.warn('[SPeCTRUM Pro] Failed to schedule attendance check:', err?.message || err);
@@ -327,6 +329,11 @@ if (chrome.commands && chrome.commands.onCommand) {
 
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'LOG_EVENT') {
+    appendBackgroundLog(message.category || 'General', message.message || '', message.details || null)
+      .then(() => sendResponse({ success: true }));
+    return true;
+  }
   if (message.type === 'UPDATE_ALARM_SETTINGS') {
     setupAlarm(true).then(() => sendResponse({ success: true }));
     return true;
@@ -428,6 +435,8 @@ async function handleFetchFilePreview(fileUrl, retryCount = 0) {
     // to prevent memory exhaustion, IPC size limit violations, and service worker/tab crashes.
     const maxPreviewBytes = 8 * 1024 * 1024;
     if (arrayBuffer.byteLength > maxPreviewBytes) {
+      const mb = (arrayBuffer.byteLength / 1048576).toFixed(2);
+      await appendBackgroundLog('Preview:Oversized', `📦 File exceeds 8MB preview limit (${mb} MB). Inline preview blocked; direct download prompt served.`, targetUrl);
       return {
         success: false,
         isOversized: true,
@@ -1134,8 +1143,11 @@ async function checkCourseAttendance(courseId, courseName, userOcc, hiddenAttend
 
         // Must have either a valid status radio option OR a required PIN in the attendance form
         if (!presentStatusId && !hasPasswordInput) {
+          await appendBackgroundLog('Daemon:Scan', `⚠️ Found open session form for ${courseName || courseId}, but "Present" status radio could not be verified. Skipping auto-submit to prevent Absent submission.`);
           continue;
         }
+
+        await appendBackgroundLog('Daemon:Scan', `🎯 Active attendance session verified for ${courseName || courseId}. Present ID: ${presentStatusId || 'N/A (PIN required)'}, Password: ${hasPasswordInput ? 'YES' : 'NO'}`);
 
         return {
           activeSession: {

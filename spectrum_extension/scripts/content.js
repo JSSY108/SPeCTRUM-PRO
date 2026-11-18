@@ -366,6 +366,13 @@
 
     if (!settings.autoAttendanceEnabled) {
       console.log('[SPeCTRUM Pro Content] Auto-attendance is disabled in settings. Skipping form interaction.');
+      try {
+        chrome.runtime.sendMessage({
+          type: 'LOG_EVENT',
+          category: 'Content:Attendance',
+          message: '⏸️ Attendance form opened on SPeCTRUM, but auto-attendance is disabled in settings. Skipping form interaction.'
+        });
+      } catch (e) {}
       return;
     }
 
@@ -398,6 +405,13 @@
     // CRITICAL SAFETY GUARDRAIL: Never fallback to radios[0] if Present is not found!
     if (!presentRadio) {
       console.warn('[SPeCTRUM Pro Content] "Present" status option could not be unambiguously confirmed. Auto-submit aborted to prevent accidental Absent submission.');
+      try {
+        chrome.runtime.sendMessage({
+          type: 'LOG_EVENT',
+          category: 'Content:Attendance',
+          message: '⚠️ "Present/Hadir" radio option not found or ambiguous. Auto-submit blocked to protect student attendance.'
+        });
+      } catch (e) {}
       return;
     }
 
@@ -416,9 +430,23 @@
       banner.innerHTML = `<span>🔑 <b>SPeCTRUM Pro:</b> "Present" selected! Enter your attendance PIN and press Enter.</span>`;
       document.body.appendChild(banner);
       pwdInput.focus();
+      try {
+        chrome.runtime.sendMessage({
+          type: 'LOG_EVENT',
+          category: 'Content:Attendance',
+          message: '🔑 "Present" option selected. Waiting for student to enter attendance PIN.'
+        });
+      } catch (e) {}
     } else {
       banner.innerHTML = `<span>⚡ <b>SPeCTRUM Pro:</b> "Present" selected! Auto-saving attendance...</span>`;
       document.body.appendChild(banner);
+      try {
+        chrome.runtime.sendMessage({
+          type: 'LOG_EVENT',
+          category: 'Content:Attendance',
+          message: '✅ "Present" option verified. Auto-submitting attendance form...'
+        });
+      } catch (e) {}
 
       const submitBtn = form.querySelector('input[type="submit"][name="submitbutton"], button[type="submit"], input[type="submit"]');
       if (submitBtn) {
