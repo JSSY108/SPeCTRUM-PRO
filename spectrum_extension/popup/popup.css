@@ -9744,7 +9744,7 @@ body:not(.is-full-tab) .att-card-aside {
 .att-header-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -10276,11 +10276,17 @@ body:not(.is-full-tab) .att-card-aside {
 }
 
 .spectrum-card:hover .btn-delete-assignment,
-.assignment-card:hover .btn-delete-assignment {
+.assignment-card:hover .btn-delete-assignment,
+.attendance-card:hover .btn-delete-assignment,
+.card-attendance:hover .btn-delete-assignment,
+.spectrum-card:hover .btn-delete-attendance,
+.attendance-card:hover .btn-delete-attendance,
+.card-attendance:hover .btn-delete-attendance {
   opacity: 0.9;
 }
 
-.btn-delete-assignment:hover {
+.btn-delete-assignment:hover,
+.btn-delete-attendance:hover {
   opacity: 1 !important;
   color: #EF4444 !important;
   background: rgba(239, 68, 68, 0.12) !important;
@@ -10288,11 +10294,13 @@ body:not(.is-full-tab) .att-card-aside {
   transform: scale(1.08);
 }
 
-.btn-delete-assignment:active {
+.btn-delete-assignment:active,
+.btn-delete-attendance:active {
   transform: scale(0.95);
 }
 
-.btn-delete-assignment svg {
+.btn-delete-assignment svg,
+.btn-delete-attendance svg {
   display: block;
   pointer-events: none;
 }

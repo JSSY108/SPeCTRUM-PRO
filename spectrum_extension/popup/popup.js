@@ -159,6 +159,7 @@ const I18N = {
       items: '{n} item{s}',
       assignment: 'Assignment',
       deleteAssignmentTip: 'Not required for my OCC / Delete assignment',
+      deleteAttendanceTip: 'Not my OCC / Delete duplicate attendance',
       semesterRate: 'Semester Rate',
       takenSessions: 'Taken',
       maxAttainable: 'Max Attainable',
@@ -376,6 +377,7 @@ const I18N = {
       items: '{n} item',
       assignment: 'Tugasan',
       deleteAssignmentTip: 'Bukan untuk OCC saya / Padam tugasan',
+      deleteAttendanceTip: 'Bukan untuk OCC saya / Padam kehadiran pendua',
       semesterRate: 'Kadar Semester',
       takenSessions: 'Diambil',
       maxAttainable: 'Maksimum Boleh Capai',
@@ -593,6 +595,7 @@ const I18N = {
       items: '{n} 项',
       assignment: '作业',
       deleteAssignmentTip: '非本OCC作业 / 删除作业',
+      deleteAttendanceTip: '非本OCC出席 / 删除重复出席',
       semesterRate: '学期出席率',
       takenSessions: '已记录',
       maxAttainable: '最高可达',
@@ -2444,8 +2447,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (currentActivitiesMode === 'calendar') {
         renderCalendarView(calCurrentYear, calCurrentMonth);
       }
+      if (document.getElementById('fulllist-wrapper')?.style.display !== 'none' && typeof renderFullListMode === 'function') {
+        renderFullListMode();
+      }
+      if (typeof activeDateFilter !== 'undefined' && activeDateFilter && typeof applyMiniCalDateFilter === 'function') {
+        applyMiniCalDateFilter(activeDateFilter, activeDateFilterObj);
+      }
+      if (typeof syncPopupActivityStreams === 'function') {
+        syncPopupActivityStreams();
+      }
       renderHiddenAttendanceSettings();
       updateKpiCards();
+
+      const successMsg = (currentLang === 'zh')
+        ? '✔ 已删除重复出席（可在偏好设置中恢复）'
+        : (currentLang === 'bm'
+          ? '✔ Kehadiran pendua dipadam (boleh pulih di Tetapan)'
+          : '✔ Duplicate attendance removed (can restore in Preferences)');
+      if (typeof showOccNotification === 'function') showOccNotification('success', successMsg);
     } catch (err) {
       logDiag('Attendance:RemoveErr', `Error removing duplicate attendance [${attId}]: ${err?.message || err}`);
       console.error('[SPeCTRUM Pro] Error removing duplicate attendance:', err);
@@ -2477,10 +2496,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     logDiag('Attendance:Restore', `Restored attendance [${attId}]. Remaining hidden: ${hiddenAttendanceIds.length}`);
 
+    attendancesData.forEach(a => {
+      if (String(a.id) === String(attId) || (a.cmid && String(a.cmid) === String(attId))) {
+        a._hidden = false;
+      }
+    });
+
     renderAttendanceList();
     renderTimelineVisualizer();
     if (currentActivitiesMode === 'calendar') {
       renderCalendarView(calCurrentYear, calCurrentMonth);
+    }
+    if (document.getElementById('fulllist-wrapper')?.style.display !== 'none' && typeof renderFullListMode === 'function') {
+      renderFullListMode();
+    }
+    if (typeof activeDateFilter !== 'undefined' && activeDateFilter && typeof applyMiniCalDateFilter === 'function') {
+      applyMiniCalDateFilter(activeDateFilter, activeDateFilterObj);
+    }
+    if (typeof syncPopupActivityStreams === 'function') {
+      syncPopupActivityStreams();
     }
     renderHiddenAttendanceSettings();
     updateKpiCards();
@@ -2495,12 +2529,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       hiddenAttendanceDetails: {}
     });
 
+    attendancesData.forEach(a => {
+      a._hidden = false;
+    });
+
     logDiag('Attendance:RestoreAll', 'Restored all hidden attendance duplicates.');
 
     renderAttendanceList();
     renderTimelineVisualizer();
     if (currentActivitiesMode === 'calendar') {
       renderCalendarView(calCurrentYear, calCurrentMonth);
+    }
+    if (document.getElementById('fulllist-wrapper')?.style.display !== 'none' && typeof renderFullListMode === 'function') {
+      renderFullListMode();
+    }
+    if (typeof activeDateFilter !== 'undefined' && activeDateFilter && typeof applyMiniCalDateFilter === 'function') {
+      applyMiniCalDateFilter(activeDateFilter, activeDateFilterObj);
+    }
+    if (typeof syncPopupActivityStreams === 'function') {
+      syncPopupActivityStreams();
     }
     renderHiddenAttendanceSettings();
     updateKpiCards();
@@ -4374,7 +4421,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
   }
 
-  // Document-level delegation for assignment deletion and restoration
+  // Document-level delegation for assignment/attendance deletion and restoration
   document.addEventListener('click', async (e) => {
     const btnTestDetails = e.target.closest('.btn-test-details');
     if (btnTestDetails) {
@@ -4384,6 +4431,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       const item = findTestOrAssignmentById(testId, btnTestDetails.closest('.spectrum-card'));
       if (item) {
         openTestDetailsModal(item);
+      }
+      return;
+    }
+
+    const btnDelAtt = e.target.closest('.btn-delete-attendance, .btn-remove-att-duplicate');
+    if (btnDelAtt) {
+      e.preventDefault();
+      e.stopPropagation();
+      const attId = btnDelAtt.dataset.attId;
+      if (attId) {
+        const card = btnDelAtt.closest('.attendance-card') || btnDelAtt.closest('.spectrum-card') || btnDelAtt.closest('.att-subitem-card');
+        if (card) {
+          card.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+          card.style.opacity = '0';
+          card.style.transform = 'scale(0.96)';
+          card.style.pointerEvents = 'none';
+        }
+        await removeAttendanceDuplicate(attId);
       }
       return;
     }
@@ -4898,7 +4963,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const occNum = cleanOccNumber(occRaw) || '1';
 
     // 5. Action / Status Routing
-    const rawAttId = att.id || sessionData.cardId || '';
+    const rawAttId = att.id || sessionData.cardId || sessionData.attId || (att.cmid ? `att_${att.courseId || ''}_${att.cmid}` : '') || (att.attUrl ? (att.attUrl.match(/id=(\d+)/) || [])[1] : '') || '';
     const cid = att.courseId || sessionData.cid || '';
     const takeUrl = sessionData.takeUrl || att.activeSession?.takeUrl || att.attUrl || 'https://spectrum.um.edu.my';
     const attPageUrl = att.attUrl || takeUrl || (cid ? `https://spectrum.um.edu.my/course/view.php?id=${cid}` : 'https://spectrum.um.edu.my');
@@ -4967,7 +5032,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (isEnded) {
       stateClass = 'state-ended';
       statusPillHtml = `<span class="att-status-pill">${t('cards', 'ended')}</span>`;
-      stateBadgeHtml = `<span class="att-state-badge state-locked">${t('cards', 'locked')}</span>`;
+      stateBadgeHtml = '';
       windowSubHtml = `<span class="att-window-sub">${t('cards', 'sessionEnded')}</span>`;
       actionBtnHtml = `<a href="${escapeHtml(takeUrl)}" target="_blank" class="btn-att-action btn-att-faint" title="Open attendance in SPeCTRUM">${t('cards', 'checkPortal')}</a>`;
     } else if (isFuture) {
@@ -5101,7 +5166,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       startHour,
       startMin,
       endHour,
-      endMin
+      endMin,
+      isVerified: Boolean(isVerified)
     };
   }
 
@@ -5124,6 +5190,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="att-header-right">
               ${vm.stateBadgeHtml}
               <span class="att-occ-tag">OCC ${escapeHtml(vm.occNum)}</span>
+              ${!vm.isVerified ? `
+                <button type="button" class="btn-delete-assignment btn-delete-attendance btn-remove-att-duplicate" data-att-id="${escapeHtml(vm.rawAttId)}" data-course-id="${escapeHtml(vm.cid)}" title="${escapeHtml(t('cards', 'deleteAttendanceTip', 'Not my OCC / Delete duplicate attendance'))}" aria-label="Delete attendance duplicate">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 6L6 18M6 6l12 12"></path>
+                  </svg>
+                </button>
+              ` : ''}
             </div>
           </div>
           <div class="att-row-hero">
