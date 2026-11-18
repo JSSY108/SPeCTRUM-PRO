@@ -7748,6 +7748,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
   syncAutoAttBadge();
+
+  // Auto-Attendance Friendly Guide (Collapsible Box)
+  const btnAutoAttInfo = document.getElementById('btn-auto-att-info');
+  const infoBox = document.getElementById('pref-auto-att-info-box');
+  const btnCloseInfo = document.getElementById('btn-close-auto-att-info');
+  if (btnAutoAttInfo && infoBox && !btnAutoAttInfo._hasInfoListener) {
+    btnAutoAttInfo._hasInfoListener = true;
+    btnAutoAttInfo.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isClosed = infoBox.style.display === 'none' || !infoBox.style.display;
+      infoBox.style.display = isClosed ? 'block' : 'none';
+    });
+  }
+  if (btnCloseInfo && infoBox && !btnCloseInfo._hasCloseListener) {
+    btnCloseInfo._hasCloseListener = true;
+    btnCloseInfo.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      infoBox.style.display = 'none';
+    });
+  }
   hiddenAttendanceIds = stored.hiddenAttendanceIds || [];
   hiddenAttendanceDetails = stored.hiddenAttendanceDetails || {};
   hiddenAssignmentIds = stored.hiddenAssignmentIds || [];

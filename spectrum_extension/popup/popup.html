@@ -808,8 +808,49 @@
             <div class="pref-card-title-wrap">
               <span class="pref-bullet pref-bullet-green" id="pref-auto-att-bullet">●</span>
               <h3 class="pref-card-title">ATTENDANCE AUTOMATION</h3>
+              <button type="button" class="pref-info-btn" id="btn-auto-att-info" title="How does auto-attendance work?" aria-label="Auto-attendance guide">
+                <svg viewBox="0 0 24 24" class="icon-svg" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+              </button>
             </div>
             <span class="pref-badge pref-badge-active" id="pref-auto-att-badge">DAEMON ACTIVE</span>
+          </div>
+
+          <!-- Collapsible Friendly Explanation Card (Toggled by Info Icon) -->
+          <div class="pref-info-box" id="pref-auto-att-info-box" style="display: none;">
+            <div class="pref-info-header">
+              <span class="pref-info-title">💡 How Auto-Attendance Works</span>
+              <button type="button" class="pref-info-close" id="btn-close-auto-att-info" title="Close guide">✕</button>
+            </div>
+            <div class="pref-info-content">
+              <div class="pref-info-step">
+                <span class="pref-info-step-icon">🎯</span>
+                <div class="pref-info-step-text">
+                  <strong>During Class Time:</strong> SPeCTRUM Pro wakes up 4 minutes before your class starts, then checks every 2 minutes while attendance is open. Once marked, it goes back to sleep.
+                </div>
+              </div>
+              <div class="pref-info-step">
+                <span class="pref-info-step-icon">🛡️</span>
+                <div class="pref-info-step-text">
+                  <strong>Safety Re-Scan (Validation Cadence):</strong> When no class is active, it checks periodically (e.g. every 2 or 4 hours) just in case a lecturer scheduled a surprise class.
+                </div>
+              </div>
+              <div class="pref-info-step">
+                <span class="pref-info-step-icon">🌙</span>
+                <div class="pref-info-step-text">
+                  <strong>Night Sleep (11:00 PM – 7:30 AM):</strong> No classes happen at night! It pauses completely while you sleep to save battery, and automatically resumes at <strong>7:45 AM</strong>.
+                </div>
+              </div>
+              <div class="pref-info-step">
+                <span class="pref-info-step-icon">🔑</span>
+                <div class="pref-info-step-text">
+                  <strong>Password Classes:</strong> If a lecturer requires an attendance PIN, a prompt will pop up so you can easily enter it.
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Automation Row Box -->
