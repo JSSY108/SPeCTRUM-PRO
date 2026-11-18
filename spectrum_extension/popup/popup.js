@@ -3503,9 +3503,76 @@ document.addEventListener('DOMContentLoaded', async () => {
   const railBtnPref = document.getElementById('rail-btn-pref');
   const railBtnMat = document.getElementById('rail-btn-mat');
 
+  let hasUnsavedPreferences = false;
+
+  function confirmUnsavedPreferences(onProceed) {
+    const modal = document.getElementById('unsaved-pref-modal');
+    if (!modal) {
+      onProceed();
+      return;
+    }
+    modal.style.display = 'flex';
+
+    const btnSave = document.getElementById('btn-unsaved-save');
+    const btnDiscard = document.getElementById('btn-unsaved-discard');
+    const btnClose = document.getElementById('btn-close-unsaved-pref-modal');
+
+    const cleanup = () => {
+      modal.style.display = 'none';
+      if (btnSave) btnSave.onclick = null;
+      if (btnDiscard) btnDiscard.onclick = null;
+      if (btnClose) btnClose.onclick = null;
+      modal.onclick = null;
+    };
+
+    if (btnSave) {
+      btnSave.onclick = () => {
+        cleanup();
+        const btnSaveSettings = document.getElementById('btn-save-settings');
+        if (btnSaveSettings) {
+          btnSaveSettings.click();
+        }
+        hasUnsavedPreferences = false;
+        setTimeout(onProceed, 120);
+      };
+    }
+
+    if (btnDiscard) {
+      btnDiscard.onclick = async () => {
+        cleanup();
+        if (typeof revertPreferencesToSaved === 'function') {
+          await revertPreferencesToSaved();
+        }
+        hasUnsavedPreferences = false;
+        onProceed();
+      };
+    }
+
+    if (btnClose) {
+      btnClose.onclick = () => {
+        cleanup();
+      };
+    }
+
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        cleanup();
+      }
+    };
+  }
+
   function setFullTabMode(mode) {
     const validModes = ['calendar', 'timeline', 'list', 'timetable', 'materials', 'preferences'];
     if (!mode || !validModes.includes(mode)) mode = 'calendar';
+
+    if (currentFullTabMode === 'preferences' && mode !== 'preferences' && hasUnsavedPreferences) {
+      confirmUnsavedPreferences(() => {
+        hasUnsavedPreferences = false;
+        setFullTabMode(mode);
+      });
+      return;
+    }
+
     currentFullTabMode = mode;
     ensureTabsInCorrectSurface();
 
@@ -7137,7 +7204,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function switchTab(tabId) {
     if (!tabId) return;
-    ensureTabsInCorrectSurface();
 
     const isFull = document.body.classList.contains('is-full-tab');
 
@@ -7158,6 +7224,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
     }
+
+    const prefTab = document.getElementById('tab-filters');
+    const isPrefActiveInPopup = prefTab && (prefTab.classList.contains('active') || prefTab.style.display !== 'none');
+    if (!isFull && isPrefActiveInPopup && tabId !== 'tab-filters' && hasUnsavedPreferences) {
+      confirmUnsavedPreferences(() => {
+        hasUnsavedPreferences = false;
+        switchTab(tabId);
+      });
+      return;
+    }
+
+    ensureTabsInCorrectSurface();
 
     try {
       localStorage.setItem('spectrum_last_popup_tab', tabId);
@@ -7873,6 +7951,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (e) {}
     setTimeout(renderNextCheckLabel, 600);
 
+    hasUnsavedPreferences = false;
     const saveIcon = `<svg viewBox="0 0 24 24" class="footer-icon-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>`;
     btnSaveSettings.innerHTML = `${saveIcon} <span>✔ Saved!</span>`;
     setTimeout(() => { btnSaveSettings.innerHTML = `${saveIcon} <span>Save Preferences</span>`; }, 1500);
@@ -7893,6 +7972,67 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderOccPreferencesTable();
     renderHiddenAttendanceSettings();
     updateKpiCards();
+  });
+
+  // Revert preferences inputs to saved state in storage when user discards changes
+  async function revertPreferencesToSaved() {
+    try {
+      const stored = await chrome.storage.local.get(defaultSettings);
+      if (stored.spineFocalRatio !== undefined) {
+        setSpineFocalRatio(parseFloat(stored.spineFocalRatio), false);
+      }
+      if (chkMaterialsOnly) chkMaterialsOnly.checked = stored.materialsOnly !== false;
+      if (chkExcludeSystem) chkExcludeSystem.checked = stored.excludeSystem !== false;
+      if (chkExts && chkExts.length > 0) {
+        chkExts.forEach(chk => {
+          chk.checked = (stored.extensions || defaultSettings.extensions).includes(chk.value);
+        });
+      }
+      defaultOcc = stored.defaultOcc || '';
+      if (defaultOccInput) defaultOccInput.value = defaultOcc || '4';
+      courseOccs = stored.courseOccs || {};
+      if (chkAutoAttendance) {
+        chkAutoAttendance.checked = stored.autoAttendanceEnabled !== false;
+      }
+      if (selAttendanceInterval) {
+        selAttendanceInterval.value = normalizeResyncOption(stored.autoAttendanceInterval);
+      }
+      syncAutoAttBadge();
+      hiddenAttendanceIds = stored.hiddenAttendanceIds || [];
+      hiddenAttendanceDetails = stored.hiddenAttendanceDetails || {};
+      hiddenAssignmentIds = stored.hiddenAssignmentIds || [];
+      hiddenAssignmentDetails = stored.hiddenAssignmentDetails || {};
+      customSem1StartDate = stored.customSem1StartDate || '';
+      const prefSemStartInput = document.getElementById('pref-sem-start-input');
+      if (prefSemStartInput) prefSemStartInput.value = customSem1StartDate;
+      renderOccPreferencesTable();
+      renderHiddenAttendanceSettings();
+      renderHiddenAssignmentSettings();
+      updatePreferencesStorageStats();
+      hasUnsavedPreferences = false;
+    } catch (e) {
+      console.warn('Revert preferences error:', e);
+    }
+  }
+
+  // Track any modifications made in Preferences pane
+  const prefPaneContainer = document.getElementById('tab-filters');
+  if (prefPaneContainer) {
+    prefPaneContainer.addEventListener('input', (e) => {
+      if (e.target.closest('#btn-clear-cache') || e.target.closest('#btn-save-settings')) return;
+      hasUnsavedPreferences = true;
+    });
+    prefPaneContainer.addEventListener('change', (e) => {
+      if (e.target.closest('#btn-clear-cache') || e.target.closest('#btn-save-settings')) return;
+      hasUnsavedPreferences = true;
+    });
+  }
+
+  window.addEventListener('beforeunload', (e) => {
+    if (hasUnsavedPreferences && (currentFullTabMode === 'preferences' || document.getElementById('tab-filters')?.classList.contains('active'))) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
   });
 
   // Auto-Detect All OCC Groups in Preferences

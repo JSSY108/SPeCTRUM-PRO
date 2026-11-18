@@ -886,7 +886,6 @@
             <span id="pref-storage-size" class="pref-storage-size">42.4 KB</span>
           </div>
           <div class="pref-footer-right">
-            <span id="pref-storage-status" class="pref-badge-ok">SP-Storage OK</span>
             <button id="btn-save-settings" class="pref-btn-save" type="button">
               <svg viewBox="0 0 24 24" class="footer-icon-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -1208,6 +1207,25 @@
   <!-- ========================================================================
        MODALS: Announcement Reader, PIN Entry, OCC Setup, Diagnostics
        ======================================================================== -->
+  <!-- Unsaved Preferences Confirmation Modal -->
+  <div id="unsaved-pref-modal" class="modal-overlay" style="display:none; z-index: 100000;">
+    <div class="modal-card" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3 style="margin: 0; font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+          <span>⚠️</span> Unsaved Preferences
+        </h3>
+        <button type="button" id="btn-close-unsaved-pref-modal" class="modal-close-btn" title="Close">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 16px 20px; font-size: 12.5px; line-height: 1.5; color: var(--text-primary);">
+        You have unsaved changes in your Preferences. Would you like to save them before leaving?
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px;">
+        <button type="button" id="btn-unsaved-discard" class="btn-wireframe" style="font-size: 11px; padding: 6px 12px; cursor: pointer;">Discard Changes</button>
+        <button type="button" id="btn-unsaved-save" class="pref-btn-save" style="font-size: 11px; padding: 6px 14px; cursor: pointer;">Save &amp; Continue</button>
+      </div>
+    </div>
+  </div>
+
   <!-- In-Product Prominent Privacy Disclosure & Consent Modal (Chrome Web Store Purple Nickel / UDP Compliance) -->
   <div id="privacy-consent-modal" class="modal-overlay" style="display:none; z-index: 100000;">
     <div class="modal-card privacy-consent-card">
