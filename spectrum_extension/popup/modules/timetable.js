@@ -74,7 +74,10 @@
 
     const courseCode = cleanSingleCourseCode(String(raw.courseCode || '').trim().toUpperCase()) || 'COURSE';
     const courseName = String(raw.courseName || courseCode).trim() || courseCode;
-    const typeLabel = String(raw.typeLabel || 'LEC').trim().toUpperCase() || 'LEC';
+    let typeLabel = String(raw.typeLabel || 'LEC').trim().toUpperCase() || 'LEC';
+    if (typeLabel.includes('/')) {
+      typeLabel = typeLabel.split('/')[0].trim() || 'LEC';
+    }
     let occ = String(raw.occ || 'OCC 1').trim().toUpperCase();
     if (occ && !occ.startsWith('OCC')) occ = `OCC ${occ}`;
     const venue = String(raw.venue || '').trim();
@@ -537,7 +540,7 @@
       dayName: opts.dayName,
       courseCode: opts.courseCode,
       courseName: opts.courseName,
-      typeLabel: opts.typeLabel,
+      typeLabel: (String(opts.typeLabel || 'LEC').split('/')[0].trim().toUpperCase()) || 'LEC',
       occ: opts.occ,
       timeStr,
       rawTimeStr,
@@ -863,6 +866,14 @@
         const prevCode = cleanSingleCourseCode(prev.courseCode).toUpperCase();
         if (prevCode !== currCode) return false;
 
+        // Distinct session types (e.g. Lecture vs Tutorial, Lab vs Lecture) are separate classes
+        // and must NEVER be merged together into a hybrid card
+        const prevType = String(prev.typeLabel || '').trim().toUpperCase();
+        const currType = String(curr.typeLabel || '').trim().toUpperCase();
+        if (prevType && currType && prevType !== currType) {
+          return false;
+        }
+
         const prevStart = prev.startHour * 60 + prev.startMin;
         const prevEnd = prev.endHour * 60 + prev.endMin;
 
@@ -900,9 +911,8 @@
         const pad = n => String(n).padStart(2, '0');
         prev.timeStr = `${pad(prev.startHour)}:${pad(prev.startMin)} - ${pad(prev.endHour)}:${pad(prev.endMin)}`;
 
-        // Combine type labels if different (e.g., LEC / TUT)
-        if (curr.typeLabel && prev.typeLabel && curr.typeLabel !== prev.typeLabel && !prev.typeLabel.includes(curr.typeLabel)) {
-          prev.typeLabel = `${prev.typeLabel} / ${curr.typeLabel}`;
+        if (!prev.typeLabel && curr.typeLabel) {
+          prev.typeLabel = curr.typeLabel;
         }
         // Retain venue if missing
         if (!prev.venue && curr.venue) {
@@ -1320,7 +1330,6 @@
           const rawStartTimeVal = `${pad(s.rawStartHour)}:${pad(s.rawStartMin)}`;
           const rawEndTimeVal = `${pad(s.rawEndHour)}:${pad(s.rawEndMin)}`;
 
-          const manualBadgeHtml = s.isManual ? '<span class="tt-manual-tag">MANUAL</span>' : '';
           const cardTitleTip = s.isManual ? 'Click to edit or delete manual class' : 'Click to edit or delete class session';
 
           html += `
@@ -1349,7 +1358,6 @@
                   <span class="tt-code">${esc(cleanSingleCourseCode(s.courseCode))}</span>
                   ${acronymHtml}
                   <span class="tt-type-tag">${esc(s.typeLabel)}</span>
-                  ${manualBadgeHtml}
                   ${liveBadgeHtml}
                 </div>
                 <span class="tt-time-range">${esc(s.timeStr)}</span>
@@ -1588,7 +1596,6 @@
           const rawStartTimeVal = `${pad(s.rawStartHour)}:${pad(s.rawStartMin)}`;
           const rawEndTimeVal = `${pad(s.rawEndHour)}:${pad(s.rawEndMin)}`;
 
-          const manualBadgeHtmlV = s.isManual ? '<span class="tt-manual-tag">MANUAL</span>' : '';
           const cardTitleTipV = s.isManual ? 'Click to edit or delete manual class' : 'Click to edit or delete class session';
 
           html += `
@@ -1617,7 +1624,6 @@
                   <span class="tt-code">${esc(cleanSingleCourseCode(s.courseCode))}</span>
                   ${acronymHtml}
                   ${isCompact ? `<span class="tt-card-occ-inline">${subtitleText}</span>` : ''}
-                  ${manualBadgeHtmlV}
                   ${liveBadgeHtml}
                 </div>
                 <span class="tt-type-tag">${esc(s.typeLabel)}</span>
