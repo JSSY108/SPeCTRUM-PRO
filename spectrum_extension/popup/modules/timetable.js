@@ -505,6 +505,30 @@
           if (att.nextSession) allSess.push(att.nextSession);
         }
 
+        // Compute recurring slot frequencies across semester logs (>= 6 sessions)
+        // to filter out one-off replacement/ad-hoc classes that only occurred once in the entire semester
+        const slotFrequencies = new Map();
+        if (Array.isArray(att.sessions) && att.sessions.length >= 6) {
+          att.sessions.forEach(s => {
+            let sDate = s.date instanceof Date ? s.date : (s.dateKey ? new Date(s.dateKey + 'T12:00:00') : (s.date ? new Date(s.date) : null));
+            let sDay = (sDate && !isNaN(sDate.getTime())) ? sDate.getDay() : -1;
+            if (sDay < 0 && s.dateStr) {
+              const m = String(s.dateStr).match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)/i);
+              if (m) {
+                const map = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
+                sDay = map[m[1].toLowerCase()] ?? -1;
+              }
+            }
+            if (sDay < 0) return;
+            const tInfo = parseTime ? parseTime(s.time || s.dateStr || s.desc || '') : null;
+            if (!tInfo) return;
+            const key = `${sDay}_${tInfo.startHour}_${tInfo.startMin}`;
+            slotFrequencies.set(key, (slotFrequencies.get(key) || 0) + 1);
+          });
+        }
+        let maxFreq = 0;
+        slotFrequencies.forEach(freq => { if (freq > maxFreq) maxFreq = freq; });
+
         allSess.forEach(sess => {
           let d = sess.date instanceof Date ? sess.date : null;
           if (!d && sess.dateKey) d = new Date(sess.dateKey + 'T12:00:00');
@@ -545,14 +569,32 @@
           else if (descLower.includes('sem')) typeLabel = 'SEM';
           else if (descLower.includes('workshop')) typeLabel = 'WRK';
 
+          // If this slot occurred only 1 time across a course with >= 6 logged sessions,
+          // it was a one-off replacement session and should not be pinned to every week.
+          if (maxFreq >= 4) {
+            const freqKey = `${dayIndex}_${timeInfo.startHour}_${timeInfo.startMin}`;
+            const freq = slotFrequencies.get(freqKey) || 0;
+            if (freq <= 1) return;
+          }
+
           let occStr = '';
+          const sessOccM = (sess.desc || '').match(/OCC[- ]*(\d+)/i) ||
+                           (sess.desc || '').match(/kumpulan[- ]*(\d+)/i) ||
+                           (sess.desc || '').match(/group[- ]*(\d+)/i);
+          const sessOccNum = sessOccM ? parseInt(sessOccM[1], 10) : null;
+
           if (userOcc) {
-            const occM = String(userOcc).match(/\d+/);
-            occStr = occM ? `OCC ${parseInt(occM[0], 10)}` : String(userOcc).trim();
+            const userOccM = String(userOcc).match(/\d+/);
+            const userOccNum = userOccM ? parseInt(userOccM[0], 10) : null;
+
+            // If session explicitly indicates another OCC cohort, skip it!
+            if (userOccNum !== null && sessOccNum !== null && sessOccNum !== userOccNum) {
+              return;
+            }
+            occStr = userOccM ? `OCC ${userOccNum}` : String(userOcc).trim();
             if (!occStr.toLowerCase().startsWith('occ')) occStr = `OCC ${occStr}`;
           } else {
-            const occM = (sess.desc || '').match(/OCC[- ]*(\d+)/i);
-            occStr = occM ? `OCC ${parseInt(occM[1], 10)}` : 'OCC 1';
+            occStr = sessOccNum !== null ? `OCC ${sessOccNum}` : 'OCC 1';
           }
 
           const rawStartHour = timeInfo.startHour;
