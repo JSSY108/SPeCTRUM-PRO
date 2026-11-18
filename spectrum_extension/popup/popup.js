@@ -5291,6 +5291,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     return 720;
   }
 
+  // Extract start time in minutes for attendance session objects (0..1439)
+  function getAttendanceSessionStartMinutes(att, sess, dateKey) {
+    if (!att && !sess) return 720;
+    try {
+      if (typeof computeAttendanceCardViewModel === 'function') {
+        const vm = computeAttendanceCardViewModel(att || {}, {
+          session: sess,
+          timeStr: sess?.time || sess?.dateStr || att?.activeSession?.time,
+          dateKey: dateKey || sess?.dateKey,
+          date: sess?.date
+        });
+        if (vm && typeof vm.startHour === 'number' && !isNaN(vm.startHour)) {
+          return vm.startHour * 60 + (vm.startMin || 0);
+        }
+      }
+    } catch (e) {}
+
+    const cand = sess?.time || sess?.dateStr || sess?.desc || att?.activeSession?.time || '';
+    if (cand && typeof cand === 'string') {
+      const parsed = (typeof parseTimeRangeRobust === 'function') ? parseTimeRangeRobust(cand) : null;
+      if (parsed && typeof parsed.startHour === 'number' && !isNaN(parsed.startHour)) {
+        return parsed.startHour * 60 + (parsed.startMin || 0);
+      }
+    }
+    return 720;
+  }
+
   // ========================================================================
   // TIMELINE SPINE ACTIVE DOT FOCAL CONTROLLER
   // - Lights up date dots when cards cross the focal line
@@ -6997,6 +7024,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (allAnns.length) html += allAnns.map(a => typeof renderAnnouncementCardHtml === 'function' ? renderAnnouncementCardHtml(a) : '').join('');
         if (allAssigns.length) html += allAssigns.map(a => typeof renderAssignmentCardHtml === 'function' ? renderAssignmentCardHtml(a) : '').join('');
         if (matchingAttSessions.length) {
+          // Sort attendance sessions chronologically by start time from earliest
+          matchingAttSessions.sort((a, b) => {
+            const timeA = getAttendanceSessionStartMinutes(a.att, a.sess, dateKey);
+            const timeB = getAttendanceSessionStartMinutes(b.att, b.sess, dateKey);
+            if (timeA !== timeB) return timeA - timeB;
+            return (a.att.courseCode || '').localeCompare(b.att.courseCode || '');
+          });
+
           matchingAttSessions.forEach(({ att, sess }) => {
             if (typeof renderAttendanceCardHtml === 'function') {
               html += renderAttendanceCardHtml(att, {
@@ -9413,10 +9448,12 @@ document.addEventListener('DOMContentLoaded', async () => {
               statusLabel: `${typeInfo.icon} ${typeInfo.label} · ${att.activeSession.requiresPassword ? '🔑 PIN' : '🟢 OPEN NOW'}`,
               url: att.attUrl,
               obj: att,
+              timeStr: att.activeSession.time || att.activeSession.dateStr || '',
               sessObj: {
                 date: new Date(now.getTime()),
                 dateKey: todayKey,
                 dateStr: 'Active Now',
+                time: att.activeSession.time || '',
                 desc: cleanDesc,
                 statusType: 'active',
                 statusLabel: '🟢 OPEN NOW'
@@ -9474,7 +9511,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     statusLabel: `${typeInfo.icon} ${typeInfo.label} · ${statusLabel}`,
                     url: att.attUrl,
                     obj: att,
-                    sessObj: sess
+                    sessObj: sess,
+                    timeStr: sess.time || sess.dateStr || ''
                   };
 
                   if (existingIdx !== -1) {
@@ -9515,7 +9553,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     statusLabel: `${typeInfo.icon} ${typeInfo.label} · ⏳ Scheduled`,
                     url: att.attUrl,
                     obj: att,
-                    sessObj: nextSess
+                    sessObj: nextSess,
+                    timeStr: nextSess.time || nextSess.dateStr || ''
                   });
                 }
               }
@@ -9622,11 +9661,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       logDiag('Timeline:Summary', `Placed ${placedCount} distinct events across ${daysMap.size} day columns (${droppedOutsideSpanCount} outside span).`);
 
-      // Sort events within each day column: assignments first, then attendance, then notices
+      // Sort events within each day column:
+      // 1. Attendance cards (daily class schedule) sorted chronologically by start time from earliest (e.g. 08:00 before 15:00)
+      // 2. Assignments & Tests sorted by due time
+      // 3. Announcements
       daysMap.forEach(day => {
         day.events.sort((a, b) => {
-          const pMap = { assignment: 1, task: 1, attendance: 2, att: 2, announcement: 3, notice: 3 };
-          return (pMap[a.type] || 9) - (pMap[b.type] || 9);
+          const isAttA = (a.type === 'attendance' || a.type === 'att');
+          const isAttB = (b.type === 'attendance' || b.type === 'att');
+
+          // If both are attendance, sort strictly by start time ascending (earliest first: e.g. 08:00 before 15:00)
+          if (isAttA && isAttB) {
+            const timeA = getEventStartTimeMinutes(a);
+            const timeB = getEventStartTimeMinutes(b);
+            if (timeA !== timeB) return timeA - timeB;
+            return (a.courseCode || '').localeCompare(b.courseCode || '');
+          }
+
+          // Category order: Attendance classes first, then Assignments/Tests, then Notices
+          const pMap = { attendance: 1, att: 1, assignment: 2, task: 2, test: 2, announcement: 3, notice: 3 };
+          const pA = pMap[a.type] || 9;
+          const pB = pMap[b.type] || 9;
+          if (pA !== pB) return pA - pB;
+
+          // For same category, sort by time ascending
+          const timeA = getEventStartTimeMinutes(a);
+          const timeB = getEventStartTimeMinutes(b);
+          if (timeA !== timeB) return timeA - timeB;
+
+          return (a.courseCode || a.title || '').localeCompare(b.courseCode || b.title || '');
         });
       });
 
@@ -10222,24 +10285,34 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (item.dueDate && !isNaN(new Date(item.dueDate).getTime())) return new Date(item.dueDate).getTime();
     }
     if (type === 'attendance') {
-      if (item.activeSession) return Date.now();
-      if (item.date && !isNaN(new Date(item.date).getTime())) return new Date(item.date).getTime();
-      if (item.nextSession?.date) {
-        const d = new Date(item.nextSession.date);
-        if (!isNaN(d.getTime())) return d.getTime();
+      const getSessTimestamp = (s) => {
+        if (!s) return null;
+        let d = (s.date instanceof Date) ? s.date : (s.date ? new Date(s.date) : null);
+        if ((!d || isNaN(d.getTime())) && s.dateKey) {
+          d = new Date(s.dateKey + 'T00:00:00');
+        }
+        if (!d || isNaN(d.getTime())) return null;
+
+        const rawTime = s.time || s.dateStr || s.desc || '';
+        const parsed = (typeof parseTimeRangeRobust === 'function') ? parseTimeRangeRobust(rawTime) : null;
+        const h = parsed ? parsed.startHour : (d.getHours() || 9);
+        const m = parsed ? parsed.startMin : (d.getMinutes() || 0);
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m, 0).getTime();
+      };
+
+      if (item.activeSession) {
+        const activeTime = getSessTimestamp(item.activeSession);
+        if (activeTime) return activeTime;
       }
-      if (item.nextSession?.dateKey) {
-        const d = new Date(item.nextSession.dateKey + 'T12:00:00');
-        if (!isNaN(d.getTime())) return d.getTime();
+      if (item.nextSession) {
+        const nextTime = getSessTimestamp(item.nextSession);
+        if (nextTime) return nextTime;
       }
       if (Array.isArray(item.sessions) && item.sessions.length > 0) {
-        const ts = item.sessions.map(s => {
-          if (s.date && !isNaN(new Date(s.date).getTime())) return new Date(s.date).getTime();
-          if (s.dateKey) return new Date(s.dateKey + 'T12:00:00').getTime();
-          return 0;
-        }).filter(t => t > 0);
-        if (ts.length > 0) return Math.min(...ts);
+        const times = item.sessions.map(getSessTimestamp).filter(t => t && t > 0);
+        if (times.length > 0) return Math.min(...times);
       }
+      if (item.date && !isNaN(new Date(item.date).getTime())) return new Date(item.date).getTime();
     }
     return 0;
   }
@@ -11574,6 +11647,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         if (idx !== -1) uniqueEvents[idx] = ev;
       }
+    });
+
+    // Sort items for this day: attendance cards chronologically from earliest start time, then assessments, then notices
+    uniqueEvents.sort((a, b) => {
+      const isAttA = (a.type === 'att' || a.type === 'attendance');
+      const isAttB = (b.type === 'att' || b.type === 'attendance');
+
+      if (isAttA && isAttB) {
+        const timeA = getEventStartTimeMinutes(a);
+        const timeB = getEventStartTimeMinutes(b);
+        if (timeA !== timeB) return timeA - timeB;
+        return (a.courseCode || '').localeCompare(b.courseCode || '');
+      }
+
+      const pMap = { att: 1, attendance: 1, task: 2, assignment: 2, test: 2, announcement: 3, notice: 3 };
+      const pA = pMap[a.type] || 9;
+      const pB = pMap[b.type] || 9;
+      if (pA !== pB) return pA - pB;
+
+      const timeA = getEventStartTimeMinutes(a);
+      const timeB = getEventStartTimeMinutes(b);
+      if (timeA !== timeB) return timeA - timeB;
+
+      return (a.courseCode || a.title || '').localeCompare(b.courseCode || b.title || '');
     });
 
     const parsedDate = new Date(dateKey + 'T00:00:00');
