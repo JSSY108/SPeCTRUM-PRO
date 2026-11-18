@@ -13829,3 +13829,202 @@ body.is-detached-window #btn-detach-popup .icon-pin {
   color: var(--text-muted);
   font-family: var(--font-mono);
 }
+
+/* ==========================================================================
+   HERO NEXT / ONGOING CLASS CARD (STRICT WHITE/BLACK MINIMALIST)
+   ========================================================================== */
+.hero-next-class-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 6px 8px 10px 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #FFFFFF;
+  border: 1px solid #E4E4E7;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
+}
+
+[data-theme="dark"] .hero-next-class-card {
+  background: #18181B;
+  border-color: #27272A;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.hero-card-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.hero-card-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.hero-status-pill {
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #18181B;
+  color: #FFFFFF;
+  border: 1px solid #18181B;
+}
+
+.hero-status-pill.is-live {
+  background: #111111;
+  color: #FFFFFF;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hero-status-pill.is-live::before {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #22C55E;
+}
+
+[data-theme="dark"] .hero-status-pill {
+  background: #FAFAFA;
+  color: #111111;
+  border-color: #FAFAFA;
+}
+
+.hero-course-code {
+  font-family: var(--font-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #18181B;
+  letter-spacing: 0.2px;
+}
+
+[data-theme="dark"] .hero-course-code {
+  color: #FAFAFA;
+}
+
+.hero-course-type {
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+  font-weight: 700;
+  color: #71717A;
+  background: #F4F4F5;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid #E4E4E7;
+}
+
+[data-theme="dark"] .hero-course-type {
+  background: #27272A;
+  color: #A1A1AA;
+  border-color: #3F3F46;
+}
+
+.hero-course-name {
+  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, sans-serif);
+  font-size: 13px;
+  font-weight: 700;
+  color: #18181B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.2px;
+}
+
+[data-theme="dark"] .hero-course-name {
+  color: #FFFFFF;
+}
+
+.hero-course-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  color: #71717A;
+}
+
+[data-theme="dark"] .hero-course-meta {
+  color: #A1A1AA;
+}
+
+.hero-meta-sep {
+  opacity: 0.5;
+}
+
+.hero-countdown {
+  font-weight: 600;
+}
+
+.hero-card-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* High Contrast Minimalist Fallback Take Attendance Button */
+.btn-hero-take-attendance {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-family: var(--font-sans, sans-serif);
+  font-size: 11.5px;
+  font-weight: 700;
+  background: #18181B;
+  color: #FFFFFF;
+  border: 1px solid #18181B;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-hero-take-attendance:hover {
+  background: #27272A;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .btn-hero-take-attendance {
+  background: #FFFFFF !important;
+  color: #111111 !important;
+  border-color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .btn-hero-take-attendance:hover {
+  background: #E4E4E7 !important;
+  color: #000000 !important;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15);
+}
+
+.btn-hero-take-attendance .icon-svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Subject Code Display on Monogram Buttons */
+.matrix-btn-code {
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}

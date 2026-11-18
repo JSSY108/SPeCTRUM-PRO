@@ -299,6 +299,31 @@
 
             <button type="button" id="btn-reset-date-filter" style="display:none;"></button>
 
+            <!-- Hero Next / Ongoing Class Card & Quick Attendance Fallback -->
+            <div id="hero-next-class-card" class="hero-next-class-card" style="display:none;">
+              <div class="hero-card-left">
+                <div class="hero-card-badge-row">
+                  <span class="hero-status-pill" id="hero-status-pill">HAPPENING NOW</span>
+                  <span class="hero-course-code" id="hero-course-code">--</span>
+                  <span class="hero-course-type" id="hero-course-type">LEC</span>
+                </div>
+                <div class="hero-course-name" id="hero-course-name">Loading class schedule...</div>
+                <div class="hero-course-meta">
+                  <span class="hero-time" id="hero-course-time">--:-- - --:--</span>
+                  <span class="hero-meta-sep" id="hero-meta-sep1">·</span>
+                  <span class="hero-venue" id="hero-course-venue">Campus</span>
+                  <span class="hero-meta-sep" id="hero-meta-sep2">·</span>
+                  <span class="hero-countdown" id="hero-course-countdown">Checking...</span>
+                </div>
+              </div>
+              <div class="hero-card-right">
+                <button type="button" id="btn-hero-attendance" class="btn-hero-take-attendance" title="Take attendance now or open session">
+                  <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span id="btn-hero-attendance-text">Take Attendance</span>
+                </button>
+              </div>
+            </div>
+
             <!-- Deduplicated Course Feed for By Course mode -->
             <div id="bycourse-activities-feed" class="activities-list bycourse-feed" style="display:none;flex-direction:column;gap:10px;"></div>
 
@@ -463,6 +488,13 @@
                 <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 <span id="btn-add-tt-session-label">Add Class</span>
               </button>
+
+              <!-- Import .ics Calendar File Button -->
+              <button type="button" id="btn-import-timetable-ics" class="btn-timetable-export" title="Import classes from .ics calendar file (Google Calendar, Maya, Apple Calendar)">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span id="btn-import-timetable-ics-label">Import .ics</span>
+              </button>
+              <input type="file" id="input-import-timetable-ics" accept=".ics,text/calendar" style="display:none;">
 
               <div class="timetable-toolbar-divider"></div>
 
@@ -785,10 +817,10 @@
           <div class="pref-interval-row">
             <span class="pref-interval-label">Safety re-scan:</span>
             <select id="sel-attendance-interval" class="pref-select">
+              <option value="30">Every 30 minutes</option>
               <option value="60">Every 1 hour</option>
               <option value="120">Every 2 hours</option>
               <option value="240" selected>Every 4 hours (Recommended)</option>
-              <option value="360">Every 6 hours</option>
               <option value="720">Every 12 hours</option>
             </select>
           </div>

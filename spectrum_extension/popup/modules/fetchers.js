@@ -435,6 +435,62 @@ async function fetchCourseMaterialsDirectly(courseId, allowedExts, materialsOnly
       extractFromContainer(doc.body, 'General');
     }
 
+    // Multi-Section & Occurrence Deep Discovery:
+    // If the course is configured with "One section per page" (e.g. GIG1003) or sections are linked via course index / navigation,
+    // crawl the remaining sections so materials behind occurrences and sub-sections are not missed.
+    const subSectionUrls = new Map();
+    const navLinks = Array.from(doc.querySelectorAll('a[href*="/course/view.php"]'));
+    navLinks.forEach(a => {
+      const rawHref = a.getAttribute('href') || a.href || '';
+      if (!rawHref.includes(`id=${courseId}`)) return;
+      const secMatch = rawHref.match(/[?&](section=(\d+)|sectionid=(\d+))/i);
+      if (secMatch) {
+        const secParam = secMatch[1];
+        if (secParam.toLowerCase() === 'section=0') return; // already parsed above
+
+        if (!subSectionUrls.has(secParam)) {
+          let sTitle = (a.innerText || a.textContent || '').trim();
+          if (!sTitle || /^\d+$/.test(sTitle)) {
+            sTitle = a.getAttribute('aria-label') || a.getAttribute('title') || `Section ${secMatch[2] || secMatch[3]}`;
+          }
+          const absUrl = new URL(rawHref, origin).href;
+          subSectionUrls.set(secParam, { url: absUrl, title: cleanSectionTitle(sTitle) });
+        }
+      }
+    });
+
+    if (subSectionUrls.size > 0) {
+      const secEntries = Array.from(subSectionUrls.values()).slice(0, 30);
+      const batchSize = 4;
+      for (let i = 0; i < secEntries.length; i += batchSize) {
+        const batch = secEntries.slice(i, i + batchSize);
+        await Promise.all(batch.map(async (secInfo) => {
+          try {
+            const secRes = await fetchWithTimeout(secInfo.url, { credentials: 'include' }, 10000);
+            if (!secRes || !secRes.ok || secRes.url.includes('/login/')) return;
+            const secHtml = await secRes.text();
+            const secDoc = parser.parseFromString(`<base href="${origin}/">${secHtml}`, 'text/html');
+
+            const pageSecTitleEl = secDoc.querySelector('.sectionname, .page-header-headings h1, h2.sectionname, [data-for="section_title"]');
+            const pageTitle = pageSecTitleEl ? cleanSectionTitle(pageSecTitleEl.innerText || pageSecTitleEl.textContent) : '';
+            const finalTitle = pageTitle || secInfo.title;
+
+            const subCandidateSections = Array.from(secDoc.querySelectorAll('li.section, section.course-section, .course-content ul.topics > li, .course-content ul.weeks > li, .section.main'));
+            if (subCandidateSections.length > 0) {
+              subCandidateSections.forEach(sSec => {
+                extractFromContainer(sSec, finalTitle);
+              });
+            } else {
+              const mainSecContainer = secDoc.querySelector('#region-main, [role="main"]') || secDoc.body;
+              extractFromContainer(mainSecContainer, finalTitle);
+            }
+          } catch (secErr) {
+            console.warn(`[SPeCTRUM Pro] Failed to crawl sub-section ${secInfo.url}:`, secErr);
+          }
+        }));
+      }
+    }
+
     return materials;
   } catch (err) {
     console.log(`Course materials error for ${courseId}:`, err?.message || err);

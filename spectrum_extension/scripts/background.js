@@ -16,7 +16,7 @@ const ALARM_NAME = 'spectrum_auto_attendance_check';
 // sessions the cache does not know about yet (newly created sessions, timetable
 // changes, a freshly installed extension, ...).
 const DEFAULT_RESYNC_MINUTES = 240;     // fallback cadence when nothing is scheduled
-const MIN_RESYNC_MINUTES = 60;          // never re-scan more often than this
+const MIN_RESYNC_MINUTES = 30;          // allow responsive 30-min re-scan cadences
 const WAKE_BEFORE_START_MINUTES = 4;    // check-in window opens at start-5, wake just inside it
 const RETRY_GAP_MINUTES = 2;            // re-check while a session is still open
 const MAX_ATTEMPTS_PER_SESSION = 8;
@@ -182,6 +182,25 @@ async function computeNextCheckPlan(nowMs = Date.now()) {
   if (when > cap) {
     when = cap;
     reason = 'resync';   // capped sleeps are plain re-evaluations, not class checks
+  }
+
+  // Nighttime quiet hours protection: students at UM do not have classes between 23:00 (11 PM) and 07:30 AM.
+  // If the scheduled check is a safety re-scan (no active class) and lands in the middle of the night (e.g. 04:18 AM),
+  // advance the wake time to 07:45 AM of that morning so alarms and battery are not wasted.
+  if (reason === 'resync') {
+    const dWhen = new Date(when);
+    const h = dWhen.getHours();
+    const m = dWhen.getMinutes();
+    if (h >= 23 || h < 7 || (h === 7 && m < 30)) {
+      const morningTarget = new Date(when);
+      if (h >= 23) {
+        morningTarget.setDate(morningTarget.getDate() + 1);
+      }
+      morningTarget.setHours(7, 45, 0, 0);
+      if (morningTarget.getTime() > nowMs) {
+        when = morningTarget.getTime();
+      }
+    }
   }
 
   return { when, reason };

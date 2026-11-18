@@ -286,6 +286,163 @@
     return str.trim() || name;
   }
 
+  // RFC 5545 iCalendar (.ics) Parser for Recurring University Timetables
+  function parseICSCalendarData(icsText) {
+    if (!icsText || typeof icsText !== 'string') return [];
+
+    // Unfold multi-line iCal properties (lines starting with space or tab continue previous line)
+    const unfolded = icsText.replace(/\r\n[ \t]|\r[ \t]|\n[ \t]/g, '');
+    const lines = unfolded.split(/\r\n|\r|\n/);
+
+    const events = [];
+    let inEvent = false;
+    let current = {};
+
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      if (trimmed === 'BEGIN:VEVENT') {
+        inEvent = true;
+        current = {};
+        return;
+      }
+      if (trimmed === 'END:VEVENT') {
+        if (inEvent && (current.dtstart || current.summary)) {
+          events.push(current);
+        }
+        inEvent = false;
+        current = {};
+        return;
+      }
+      if (!inEvent) return;
+
+      const colonIdx = trimmed.indexOf(':');
+      if (colonIdx === -1) return;
+      const keyPart = trimmed.slice(0, colonIdx).toUpperCase();
+      const val = trimmed.slice(colonIdx + 1).trim();
+
+      const mainKey = keyPart.split(';')[0];
+      if (mainKey === 'SUMMARY') current.summary = val;
+      else if (mainKey === 'LOCATION') current.location = val;
+      else if (mainKey === 'DESCRIPTION') current.description = val;
+      else if (mainKey === 'DTSTART') current.dtstart = val;
+      else if (mainKey === 'DTEND') current.dtend = val;
+      else if (mainKey === 'RRULE') current.rrule = val;
+    });
+
+    const DAY_MAP = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 };
+    const parsedSlots = [];
+    const seenSlotKeys = new Set();
+
+    events.forEach((ev, idx) => {
+      const rawSummary = ev.summary || 'Class';
+      // Extract course code e.g. "KIE1003", "GIG1003", "WIA2001"
+      const codeMatch = rawSummary.match(/\b([A-Z]{2,4}\s*\d{4}[A-Z]?)\b/i);
+      const courseCode = codeMatch ? cleanSingleCourseCode(codeMatch[1].replace(/\s+/g, '')) : rawSummary.slice(0, 8).toUpperCase();
+      let courseName = rawSummary;
+      if (codeMatch) {
+        courseName = rawSummary.replace(codeMatch[0], '').replace(/^[-–—:\s/]+|[-–—:\s/]+$/g, '').trim() || courseCode;
+      }
+
+      // Type label
+      let typeLabel = 'LEC';
+      const descAll = `${rawSummary} ${ev.description || ''}`.toLowerCase();
+      if (descAll.includes('tut') || descAll.includes('tuto')) typeLabel = 'TUT';
+      else if (descAll.includes('lab')) typeLabel = 'LAB';
+      else if (descAll.includes('sem')) typeLabel = 'SEM';
+      else if (descAll.includes('wrk') || descAll.includes('workshop')) typeLabel = 'WRK';
+
+      // Occurrence
+      let occ = 'OCC 1';
+      const occMatch = descAll.match(/occ[- ]*(\d+)/i);
+      if (occMatch) occ = `OCC ${parseInt(occMatch[1], 10)}`;
+
+      const venue = ev.location || '';
+
+      const parseICSTime = (dtStr) => {
+        if (!dtStr) return null;
+        const clean = dtStr.replace(/[^\dTZ]/g, '');
+        const m = clean.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?(Z)?)?/);
+        if (!m) return null;
+        const year = parseInt(m[1], 10);
+        const month = parseInt(m[2], 10) - 1;
+        const day = parseInt(m[3], 10);
+        const isUtc = Boolean(m[7]);
+
+        if (m[4] && m[5]) {
+          let h = parseInt(m[4], 10);
+          let min = parseInt(m[5], 10);
+          if (isUtc) {
+            const dateObj = new Date(Date.UTC(year, month, day, h, min));
+            return {
+              date: dateObj,
+              dayIndex: dateObj.getDay(),
+              hour: dateObj.getHours(),
+              min: dateObj.getMinutes()
+            };
+          } else {
+            const dateObj = new Date(year, month, day, h, min);
+            return {
+              date: dateObj,
+              dayIndex: dateObj.getDay(),
+              hour: h,
+              min
+            };
+          }
+        }
+        const dateObj = new Date(year, month, day);
+        return {
+          date: dateObj,
+          dayIndex: dateObj.getDay(),
+          hour: 9,
+          min: 0
+        };
+      };
+
+      const start = parseICSTime(ev.dtstart);
+      const end = parseICSTime(ev.dtend);
+      if (!start) return;
+
+      let dayIndex = start.dayIndex;
+      if (ev.rrule) {
+        const byDayMatch = ev.rrule.match(/BYDAY=([A-Z,]+)/i);
+        if (byDayMatch) {
+          const firstDay = byDayMatch[1].split(',')[0].trim().toUpperCase();
+          if (DAY_MAP[firstDay] !== undefined) {
+            dayIndex = DAY_MAP[firstDay];
+          }
+        }
+      }
+
+      const startHour = start.hour;
+      const startMin = start.min;
+      const endHour = end ? end.hour : (startHour + 2);
+      const endMin = end ? end.min : startMin;
+
+      const dedupeKey = `${dayIndex}_${startHour}_${startMin}_${endHour}_${endMin}_${courseCode}_${typeLabel}`;
+      if (seenSlotKeys.has(dedupeKey)) return;
+      seenSlotKeys.add(dedupeKey);
+
+      parsedSlots.push({
+        id: `ics_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 6)}`,
+        courseCode,
+        courseName,
+        typeLabel,
+        occ,
+        dayIndex,
+        startHour,
+        startMin,
+        endHour,
+        endMin,
+        venue,
+        isManual: true,
+        source: 'ics'
+      });
+    });
+
+    return parsedSlots;
+  }
+
   function buildFormattedSessionSlot(opts) {
     const pad = n => String(n).padStart(2, '0');
     const venue = String(opts.venue || '').trim();
@@ -499,18 +656,89 @@
       });
     }
 
-    const uniqueMap = new Map();
-    rawSlots.forEach(s => {
-      if (!uniqueMap.has(s.key)) {
-        uniqueMap.set(s.key, s);
-      }
-    });
-
     function getDaySortOrder(d) {
       return d === 0 ? 7 : d;
     }
 
-    const timetable = Array.from(uniqueMap.values()).sort((a, b) => {
+    // Sort all raw slots by day, start time, and duration (longer sessions first)
+    const sortedSlots = [...rawSlots].sort((a, b) => {
+      const dayDiff = getDaySortOrder(a.dayIndex) - getDaySortOrder(b.dayIndex);
+      if (dayDiff !== 0) return dayDiff;
+      const aStart = a.startHour * 60 + a.startMin;
+      const bStart = b.startHour * 60 + b.startMin;
+      if (aStart !== bStart) return aStart - bStart;
+      const aEnd = a.endHour * 60 + a.endMin;
+      const bEnd = b.endHour * 60 + b.endMin;
+      return (bEnd - bStart) - (aEnd - aStart);
+    });
+
+    // Coalesce identical, overlapping, or contiguous sessions for the same course on the same day
+    const coalesced = [];
+    sortedSlots.forEach(curr => {
+      const currCode = cleanSingleCourseCode(curr.courseCode).toUpperCase();
+      const currStart = curr.startHour * 60 + curr.startMin;
+      const currEnd = curr.endHour * 60 + curr.endMin;
+
+      // Find an existing session on the same day with matching course code that overlaps or touches
+      const matchIdx = coalesced.findIndex(prev => {
+        if (prev.dayIndex !== curr.dayIndex) return false;
+        const prevCode = cleanSingleCourseCode(prev.courseCode).toUpperCase();
+        if (prevCode !== currCode) return false;
+
+        const prevStart = prev.startHour * 60 + prev.startMin;
+        const prevEnd = prev.endHour * 60 + prev.endMin;
+
+        // Exact match or subset (one completely within the other)
+        if ((currStart >= prevStart && currEnd <= prevEnd) || (prevStart >= currStart && prevEnd <= currEnd)) {
+          return true;
+        }
+
+        // Overlapping or contiguous (e.g. 09:00-09:30 and 09:30-10:00)
+        // Allow a small 5-minute gap tolerance for classes split by break/roll-call
+        const maxGap = 5;
+        const overlaps = Math.max(prevStart, currStart) <= Math.min(prevEnd, currEnd);
+        const contiguous = Math.abs(currStart - prevEnd) <= maxGap || Math.abs(prevStart - currEnd) <= maxGap;
+
+        return overlaps || contiguous;
+      });
+
+      if (matchIdx >= 0) {
+        // Merge with existing session
+        const prev = coalesced[matchIdx];
+        const prevStart = prev.startHour * 60 + prev.startMin;
+        const prevEnd = prev.endHour * 60 + prev.endMin;
+
+        const mergedStart = Math.min(prevStart, currStart);
+        const mergedEnd = Math.max(prevEnd, currEnd);
+
+        // Update bounds
+        prev.startHour = Math.floor(mergedStart / 60);
+        prev.startMin = mergedStart % 60;
+        prev.endHour = Math.floor(mergedEnd / 60);
+        prev.endMin = mergedEnd % 60;
+        prev.durHours = Math.max(0.5, (mergedEnd - mergedStart) / 60);
+        prev.durText = `${prev.durHours.toFixed(prev.durHours % 1 === 0 ? 0 : 1)}h`;
+
+        const pad = n => String(n).padStart(2, '0');
+        prev.timeStr = `${pad(prev.startHour)}:${pad(prev.startMin)} - ${pad(prev.endHour)}:${pad(prev.endMin)}`;
+
+        // Combine type labels if different (e.g., LEC / TUT)
+        if (curr.typeLabel && prev.typeLabel && curr.typeLabel !== prev.typeLabel && !prev.typeLabel.includes(curr.typeLabel)) {
+          prev.typeLabel = `${prev.typeLabel} / ${curr.typeLabel}`;
+        }
+        // Retain venue if missing
+        if (!prev.venue && curr.venue) {
+          prev.venue = curr.venue;
+          const isOnline = /online|zoom|teams|google meet|meet|webex/i.test(curr.venue);
+          const venueIcon = isOnline ? '🌐' : '📍';
+          prev.venueDisplay = `${venueIcon} ${curr.venue} · ${prev.durText}`;
+        }
+      } else {
+        coalesced.push(curr);
+      }
+    });
+
+    const timetable = coalesced.sort((a, b) => {
       const dayDiff = getDaySortOrder(a.dayIndex) - getDaySortOrder(b.dayIndex);
       if (dayDiff !== 0) return dayDiff;
       if (a.startHour !== b.startHour) return a.startHour - b.startHour;
@@ -3071,6 +3299,37 @@
     if (btnAddClass && !btnAddClass._hasAddManualListener) {
       btnAddClass._hasAddManualListener = true;
       btnAddClass.addEventListener('click', () => openManualSessionModal(null));
+    }
+
+    // Import .ics Calendar File button & handler
+    const btnImportIcs = document.getElementById('btn-import-timetable-ics');
+    const inputImportIcs = document.getElementById('input-import-timetable-ics');
+    if (btnImportIcs && inputImportIcs && !btnImportIcs._hasImportListener) {
+      btnImportIcs._hasImportListener = true;
+      btnImportIcs.addEventListener('click', () => {
+        inputImportIcs.value = '';
+        inputImportIcs.click();
+      });
+
+      inputImportIcs.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const parsed = parseICSCalendarData(text);
+          if (parsed.length === 0) {
+            alert('No valid class schedule events found in the selected .ics file. Please verify that the file contains VEVENT records.');
+            return;
+          }
+          manualTimetableSessions.push(...parsed);
+          await chrome.storage.local.set({ manualTimetableSessions });
+          renderTimetableMode();
+          alert(`✔ Successfully imported ${parsed.length} class session(s) from "${file.name}" into your timetable!`);
+        } catch (err) {
+          console.error('[SPeCTRUM Pro] .ics import error:', err);
+          alert('Failed to parse .ics file: ' + (err?.message || err));
+        }
+      });
     }
 
     const addModal = document.getElementById('tt-add-session-modal');

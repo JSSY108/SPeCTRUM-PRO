@@ -186,10 +186,11 @@ const I18N = {
       attAutoCheckTitle: 'Enable auto-attendance check',
       attAutoCheckSub: 'Runs periodically in background and marks attendance',
       cadenceLabel: 'Validation Cadence:',
-      every10m: 'Every 10 minutes',
-      every15m: 'Every 15 minutes (Standard)',
       every30m: 'Every 30 minutes',
       every1h: 'Every 1 hour',
+      every2h: 'Every 2 hours',
+      every4h: 'Every 4 hours (Recommended)',
+      every12h: 'Every 12 hours',
       hiddenAttTitle: 'HIDDEN DUPLICATE ATTENDANCES',
       hiddenAttDesc: 'Redundant slots filtered from daily timeline view.',
       restoreAll: 'Restore All',
@@ -402,10 +403,11 @@ const I18N = {
       attAutoCheckTitle: 'Dayakan semakan automatik',
       attAutoCheckSub: 'Semak dan tanda kehadiran secara berkala di latar belakang',
       cadenceLabel: 'Kekerapan Semakan:',
-      every10m: 'Setiap 10 minit',
-      every15m: 'Setiap 15 minit (Disyorkan)',
       every30m: 'Setiap 30 minit',
       every1h: 'Setiap 1 jam',
+      every2h: 'Setiap 2 jam',
+      every4h: 'Setiap 4 jam (Disyorkan)',
+      every12h: 'Setiap 12 jam',
       hiddenAttTitle: 'SESI PENDUA TERSEMBUNYI',
       hiddenAttDesc: 'Sesi berlebihan yang disembunyikan daripada garis masa.',
       restoreAll: 'Pulihkan Semua',
@@ -618,10 +620,11 @@ const I18N = {
       attAutoCheckTitle: '启用自动签到',
       attAutoCheckSub: '后台定期检测并在开放时自动打卡',
       cadenceLabel: '检测频率：',
-      every10m: '每 10 分钟',
-      every15m: '每 15 分钟 (推荐)',
       every30m: '每 30 分钟',
       every1h: '每 1 小时',
+      every2h: '每 2 小时',
+      every4h: '每 4 小时 (推荐)',
+      every12h: '每 12 小时',
       hiddenAttTitle: '已隐藏重复签到',
       hiddenAttDesc: '已从日常时间轴中过滤的冗余考勤项。',
       restoreAll: '全部恢复',
@@ -929,10 +932,11 @@ function updatePreferencesTranslations() {
     if (cadence) cadence.textContent = t('settings', 'cadenceLabel');
     const selInterval = document.getElementById('sel-attendance-interval');
     if (selInterval && selInterval.options) {
-      if (selInterval.options[0]) selInterval.options[0].textContent = t('settings', 'every10m');
-      if (selInterval.options[1]) selInterval.options[1].textContent = t('settings', 'every15m');
-      if (selInterval.options[2]) selInterval.options[2].textContent = t('settings', 'every30m');
-      if (selInterval.options[3]) selInterval.options[3].textContent = t('settings', 'every1h');
+      if (selInterval.options[0]) selInterval.options[0].textContent = t('settings', 'every30m');
+      if (selInterval.options[1]) selInterval.options[1].textContent = t('settings', 'every1h');
+      if (selInterval.options[2]) selInterval.options[2].textContent = t('settings', 'every2h');
+      if (selInterval.options[3]) selInterval.options[3].textContent = t('settings', 'every4h');
+      if (selInterval.options[4]) selInterval.options[4].textContent = t('settings', 'every12h');
     }
   }
 
@@ -6114,6 +6118,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const isSel = (selectedCourseFilterId && String(selectedCourseFilterId) === String(c.courseId)) ||
                     (selectedCourseFilterCode && c.courseCode === selectedCourseFilterCode);
       const acronym = generateCourseAcronym(c.courseName, c.courseCode);
+      const cleanCode = cleanSingleCourseCode(c.courseCode);
+      const btnDisplayText = cleanCode || acronym;
       const cTotal = courseCounts.get(String(c.courseId)) || 0;
       const hasUrgent = courseUrgent.get(String(c.courseId)) || false;
       const dotClass = hasUrgent ? 'has-urgent' : (cTotal > 0 ? 'has-normal' : '');
@@ -6124,8 +6130,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           data-course-id="${escapeHtml(c.courseId)}" 
           data-course-code="${escapeHtml(c.courseCode)}" 
           data-acronym="${escapeHtml(acronym)}"
+          title="${escapeHtml(c.courseCode ? c.courseCode + ' · ' + c.courseName : c.courseName)}"
           aria-label="${escapeHtml(c.courseName)}">
-          <span class="matrix-btn-text">${escapeHtml(acronym)}</span>
+          <span class="matrix-btn-code">${escapeHtml(btnDisplayText)}</span>
           ${dotHtml}
         </button>
       `;
@@ -6284,6 +6291,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     syncRailCounts();
     renderCourseFilterMatrix();
     if (popupSidebarMode === 'calendar') renderMiniCalendar();
+    if (typeof renderHeroNextClassCard === 'function') renderHeroNextClassCard();
   }
 
   function initSidebarRail() {
@@ -7753,14 +7761,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // The safety re-scan select only offers a fixed set of cadences; map any
-  // legacy value (10/15/30/60 minutes) onto the closest supported option.
+  // The safety re-scan select offers supported cadences: 30m, 1h, 2h, 4h, 12h
   function normalizeResyncOption(value) {
-    const options = [60, 120, 240, 360, 720];
+    const options = [30, 60, 120, 240, 720];
     const n = parseInt(value, 10);
     if (!Number.isFinite(n) || n <= 0) return '240';
-    const match = options.find(opt => opt >= n);
-    return String(match || options[options.length - 1]);
+    if (options.includes(n)) return String(n);
+    let closest = options[0];
+    let minDiff = Math.abs(n - closest);
+    for (const opt of options) {
+      const diff = Math.abs(n - opt);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closest = opt;
+      }
+    }
+    return String(closest);
   }
 
   function formatResyncLabel(minutes) {
@@ -7769,8 +7785,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function formatClock(ts) {
+    if (!ts) return '';
     const d = new Date(ts);
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const now = new Date();
+    const isTomorrow = d.getDate() !== now.getDate() || d.getMonth() !== now.getMonth();
+    const hours = d.getHours();
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const h12 = hours % 12 || 12;
+    const timeStr = `${String(h12).padStart(2, '0')}:${minutes} ${ampm}`;
+    return isTomorrow ? `${timeStr} (Tomorrow)` : timeStr;
   }
 
   function renderNextCheckLabel() {
@@ -14210,6 +14234,164 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnFulltabQuickAutoTake = document.getElementById('btn-fulltab-quick-auto-take');
   if (btnFulltabQuickAutoTake) {
     btnFulltabQuickAutoTake.addEventListener('click', () => executeQuickAutoTake(btnFulltabQuickAutoTake));
+  }
+
+  // Hero Next / Ongoing Class Card & Quick Attendance Fallback
+  function renderHeroNextClassCard() {
+    const card = document.getElementById('hero-next-class-card');
+    if (!card) return;
+
+    let sessions = [];
+    if (typeof extractWeeklyTimetableSessions === 'function') {
+      sessions = extractWeeklyTimetableSessions();
+    } else if (typeof window !== 'undefined' && typeof window.extractWeeklyTimetableSessions === 'function') {
+      sessions = window.extractWeeklyTimetableSessions();
+    }
+
+    if (!Array.isArray(sessions) || sessions.length === 0) {
+      card.style.display = 'none';
+      return;
+    }
+
+    const now = new Date();
+    const todayIndex = now.getDay();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+
+    // 1. Check for classes happening right now (within 10 min before start up to end time)
+    const ongoing = sessions.find(s => s.dayIndex === todayIndex && nowMin >= (s.startMin - 10) && nowMin <= s.endMin);
+
+    // 2. Check for upcoming classes today
+    const upcomingToday = sessions
+      .filter(s => s.dayIndex === todayIndex && s.startMin > nowMin)
+      .sort((a, b) => a.startMin - b.startMin)[0];
+
+    // 3. Check for upcoming classes tomorrow
+    const tomorrowIndex = (todayIndex + 1) % 7;
+    const upcomingTomorrow = sessions
+      .filter(s => s.dayIndex === tomorrowIndex)
+      .sort((a, b) => a.startMin - b.startMin)[0];
+
+    const targetSession = ongoing || upcomingToday || upcomingTomorrow;
+    if (!targetSession) {
+      card.style.display = 'none';
+      return;
+    }
+
+    const isOngoing = Boolean(ongoing);
+    const isToday = isOngoing || Boolean(upcomingToday);
+
+    const pill = document.getElementById('hero-status-pill');
+    const codeEl = document.getElementById('hero-course-code');
+    const typeEl = document.getElementById('hero-course-type');
+    const nameEl = document.getElementById('hero-course-name');
+    const timeEl = document.getElementById('hero-course-time');
+    const venueEl = document.getElementById('hero-course-venue');
+    const countEl = document.getElementById('hero-course-countdown');
+    const btn = document.getElementById('btn-hero-attendance');
+    const btnText = document.getElementById('btn-hero-attendance-text');
+
+    if (pill) {
+      if (isOngoing) {
+        pill.textContent = 'HAPPENING NOW';
+        pill.className = 'hero-status-pill is-live';
+      } else if (isToday) {
+        pill.textContent = 'UP NEXT TODAY';
+        pill.className = 'hero-status-pill';
+      } else {
+        pill.textContent = 'UP NEXT TOMORROW';
+        pill.className = 'hero-status-pill';
+      }
+    }
+
+    const cleanCode = (typeof cleanSingleCourseCode === 'function' ? cleanSingleCourseCode(targetSession.courseCode) : targetSession.courseCode) || targetSession.courseCode || '--';
+    if (codeEl) codeEl.textContent = cleanCode;
+    if (typeEl) typeEl.textContent = targetSession.typeLabel || 'LEC';
+    if (nameEl) nameEl.textContent = targetSession.courseName || cleanCode;
+    if (timeEl) timeEl.textContent = targetSession.timeStr || '--:--';
+    if (venueEl) venueEl.textContent = targetSession.venue || targetSession.occ || 'Campus';
+
+    if (countEl) {
+      if (isOngoing) {
+        const remaining = Math.max(1, targetSession.endMin - nowMin);
+        countEl.textContent = `${remaining}m left`;
+      } else if (isToday) {
+        const delta = targetSession.startMin - nowMin;
+        countEl.textContent = delta <= 60 ? `Starts in ${delta}m` : `Starts in ${Math.round(delta / 60)}h`;
+      } else {
+        countEl.textContent = 'Tomorrow';
+      }
+    }
+
+    // Match with attendancesData to check if attendance is open or available
+    const matchingAtt = (attendancesData || []).find(a => {
+      const aCode = typeof cleanSingleCourseCode === 'function' ? cleanSingleCourseCode(a.courseCode || '') : (a.courseCode || '');
+      return aCode && cleanCode && aCode.toLowerCase() === cleanCode.toLowerCase();
+    });
+
+    const hasActiveSession = Boolean(matchingAtt && matchingAtt.activeSession);
+
+    if (btnText) {
+      if (hasActiveSession) {
+        btnText.textContent = '⚡ Take Attendance (Open)';
+      } else if (isOngoing) {
+        btnText.textContent = '⚡ Take Attendance (Fallback)';
+      } else {
+        btnText.textContent = 'Open Attendance';
+      }
+    }
+
+    if (btn) {
+      btn._targetSession = targetSession;
+      btn._matchingAtt = matchingAtt || null;
+    }
+
+    card.style.display = 'flex';
+  }
+
+  // Hook Hero attendance button click
+  const btnHeroAttendance = document.getElementById('btn-hero-attendance');
+  if (btnHeroAttendance && !btnHeroAttendance._hasHeroClickListener) {
+    btnHeroAttendance._hasHeroClickListener = true;
+    btnHeroAttendance.addEventListener('click', async () => {
+      const att = btnHeroAttendance._matchingAtt;
+      const sess = btnHeroAttendance._targetSession;
+      const btnText = document.getElementById('btn-hero-attendance-text');
+      const origText = btnText ? btnText.textContent : 'Take Attendance';
+
+      if (att && att.activeSession) {
+        if (att.activeSession.requiresPassword) {
+          openPinModal(att);
+          return;
+        }
+        if (btnText) btnText.textContent = 'Submitting...';
+        btnHeroAttendance.disabled = true;
+        try {
+          await submitCourseAttendance(att, '', btnHeroAttendance);
+          if (btnText) btnText.textContent = '✔ Marked!';
+        } catch (e) {
+          if (btnText) btnText.textContent = 'Check SPeCTRUM';
+          window.open(att.url || 'https://spectrum.um.edu.my', '_blank');
+        } finally {
+          setTimeout(() => {
+            btnHeroAttendance.disabled = false;
+            renderHeroNextClassCard();
+          }, 2000);
+        }
+      } else if (att && att.url) {
+        window.open(att.url, '_blank');
+      } else if (sess && sess.courseCode) {
+        // Open Moodle course view or attendance index
+        const matchCourse = (coursesData || []).find(c => {
+          const cCode = typeof cleanSingleCourseCode === 'function' ? cleanSingleCourseCode(c.code) : c.code;
+          return cCode === cleanSingleCourseCode(sess.courseCode);
+        });
+        if (matchCourse && matchCourse.id) {
+          window.open(`https://spectrum.um.edu.my/course/view.php?id=${matchCourse.id}`, '_blank');
+        } else {
+          window.open('https://spectrum.um.edu.my/my/', '_blank');
+        }
+      }
+    });
   }
 
   // Submit Attendance Action
