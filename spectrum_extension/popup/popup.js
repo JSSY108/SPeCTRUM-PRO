@@ -15583,7 +15583,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isEdge) {
       if (aboutStoreTitle) aboutStoreTitle.textContent = 'Review on Edge Add-ons';
       if (aboutStoreSub) aboutStoreSub.textContent = 'Help fellow Edge coursemates discover SPeCTRUM PRO';
-      if (btnAboutStoreReview) btnAboutStoreReview.href = 'https://microsoftedge.microsoft.com/addons/search/SPeCTRUM%20PRO';
+      if (btnAboutStoreReview) btnAboutStoreReview.href = 'https://microsoftedge.microsoft.com/addons/detail/spectrum-pro-um-academi/kpbmlllpkalieokkmlmjdoaelhcijoil';
     } else {
       if (aboutStoreTitle) aboutStoreTitle.textContent = 'Review on Chrome Web Store';
       if (aboutStoreSub) aboutStoreSub.textContent = 'Help fellow UM students discover this extension';
