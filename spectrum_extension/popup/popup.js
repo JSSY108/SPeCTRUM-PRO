@@ -54,6 +54,7 @@ let defaultOcc = '';
 let forceShowOccBanner = false;
 let isSyncingActivities = false;
 let customSem1StartDate = '';
+let courseFilterLabelStyle = 'code';
 let isSyncOverlayDismissed = false;
 let isScanningMaterials = false;
 let currentSyncAbortController = null;
@@ -204,6 +205,14 @@ const I18N = {
       presetUpper: 'Upper (30%)',
       presetMiddle: 'Middle (50% Default)',
       presetLower: 'Lower (70%)',
+      capsuleStyleTitle: 'COURSE FILTER CAPSULE DISPLAY',
+      capsuleStyleBadgeCode: 'CODE',
+      capsuleStyleBadgeAcronym: 'ACRONYM',
+      capsuleStyleDesc: 'Choose whether calendar course filter capsules display subject course codes or name acronyms (initials).',
+      capsuleStyleRowTitle: 'Capsule Label Format',
+      capsuleStyleRowDesc: 'Select between Course Code (WIA2001) or Course Acronym (DB, SAD)',
+      optCapsuleCode: 'Subject Code (WIA2001)',
+      optCapsuleAcronym: 'Acronym / Initials (DB)',
       clearCache: 'Clear Cache',
       savePreferences: 'Save Preferences',
       savedToast: 'Preferences Saved'
@@ -422,6 +431,14 @@ const I18N = {
       presetUpper: 'Atas (30%)',
       presetMiddle: 'Tengah (50% Lalai)',
       presetLower: 'Bawah (70%)',
+      capsuleStyleTitle: 'PAPARAN KAPSUL PENAPIS KURSUS',
+      capsuleStyleBadgeCode: 'KOD',
+      capsuleStyleBadgeAcronym: 'AKRONIM',
+      capsuleStyleDesc: 'Pilih sama ada kapsul penapis kursus kalendar memaparkan kod kursus atau akronim nama kursus.',
+      capsuleStyleRowTitle: 'Format Label Kapsul',
+      capsuleStyleRowDesc: 'Pilih antara Kod Kursus (WIA2001) atau Akronim Kursus (DB, SAD)',
+      optCapsuleCode: 'Kod Kursus (WIA2001)',
+      optCapsuleAcronym: 'Akronim / Huruf Pertama (DB)',
       clearCache: 'Kosongkan Cache',
       savePreferences: 'Simpan Tetapan',
       savedToast: 'Tetapan Disimpan'
@@ -640,6 +657,14 @@ const I18N = {
       presetUpper: '偏上 (30%)',
       presetMiddle: '居中 (50% 默认)',
       presetLower: '偏下 (70%)',
+      capsuleStyleTitle: '课程筛选胶囊显示样式',
+      capsuleStyleBadgeCode: '代码',
+      capsuleStyleBadgeAcronym: '缩写',
+      capsuleStyleDesc: '选择日历下方的课程筛选胶囊显示课程代码还是首字母缩写。',
+      capsuleStyleRowTitle: '胶囊标签格式',
+      capsuleStyleRowDesc: '在课程代码（如 WIA2001）与名称缩写（如 DB、SAD）之间切换',
+      optCapsuleCode: '课程代码 (WIA2001)',
+      optCapsuleAcronym: '首字母缩写 (DB)',
       clearCache: '清除缓存',
       savePreferences: '保存设置',
       savedToast: '设置已保存'
@@ -967,6 +992,29 @@ function updatePreferencesTranslations() {
     if (p50) p50.textContent = t('settings', 'presetMiddle');
     const p70 = focalCard.querySelector('.btn-focal-preset[data-val="70"]');
     if (p70) p70.textContent = t('settings', 'presetLower');
+  }
+
+  const capsuleCard = document.getElementById('group-course-capsules');
+  if (capsuleCard) {
+    const title = capsuleCard.querySelector('.pref-card-title');
+    if (title) title.textContent = t('settings', 'capsuleStyleTitle');
+    const badge = document.getElementById('pref-capsule-style-badge');
+    if (badge) {
+      badge.textContent = (courseFilterLabelStyle === 'acronym') 
+        ? t('settings', 'capsuleStyleBadgeAcronym') 
+        : t('settings', 'capsuleStyleBadgeCode');
+    }
+    const desc = capsuleCard.querySelector('.pref-card-desc');
+    if (desc) desc.textContent = t('settings', 'capsuleStyleDesc');
+    const rowTitle = capsuleCard.querySelector('.pref-row-title');
+    if (rowTitle) rowTitle.textContent = t('settings', 'capsuleStyleRowTitle');
+    const rowSub = document.getElementById('pref-capsule-style-desc');
+    if (rowSub) rowSub.textContent = t('settings', 'capsuleStyleRowDesc');
+    const sel = document.getElementById('sel-course-capsule-style');
+    if (sel && sel.options) {
+      if (sel.options[0]) sel.options[0].textContent = t('settings', 'optCapsuleCode');
+      if (sel.options[1]) sel.options[1].textContent = t('settings', 'optCapsuleAcronym');
+    }
   }
 
   const btnClearCache = document.getElementById('btn-clear-cache');
@@ -6144,7 +6192,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           (selectedCourseFilterCode && c.courseCode === selectedCourseFilterCode)
         );
         if (activeCourse) {
-          activeAcronym = generateCourseAcronym(activeCourse.courseName, activeCourse.courseCode);
+          const isAcr = (courseFilterLabelStyle === 'acronym');
+          const clean = cleanSingleCourseCode(activeCourse.courseCode);
+          const acr = generateCourseAcronym(activeCourse.courseName, activeCourse.courseCode);
+          activeAcronym = isAcr ? (acr || clean) : (clean || acr);
           activeDeliverablesCount = courseCounts.get(String(activeCourse.courseId)) || 0;
         }
       } else {
@@ -6179,7 +6230,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           (selectedCourseFilterCode && c.courseCode === selectedCourseFilterCode)
         );
         if (activeCourse) {
-          activeAcronym = generateCourseAcronym(activeCourse.courseName, activeCourse.courseCode);
+          const isAcr = (courseFilterLabelStyle === 'acronym');
+          const clean = cleanSingleCourseCode(activeCourse.courseCode);
+          const acr = generateCourseAcronym(activeCourse.courseName, activeCourse.courseCode);
+          activeAcronym = isAcr ? (acr || clean) : (clean || acr);
           activeDeliverablesCount = courseCounts.get(String(activeCourse.courseId)) || 0;
         }
       } else {
@@ -6219,7 +6273,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     (selectedCourseFilterCode && c.courseCode === selectedCourseFilterCode);
       const acronym = generateCourseAcronym(c.courseName, c.courseCode);
       const cleanCode = cleanSingleCourseCode(c.courseCode);
-      const btnDisplayText = cleanCode || acronym;
+      const isAcronymMode = (courseFilterLabelStyle === 'acronym');
+      const btnDisplayText = isAcronymMode ? (acronym || cleanCode) : (cleanCode || acronym);
+      const spanClass = isAcronymMode ? 'matrix-btn-text' : 'matrix-btn-code';
       const cTotal = courseCounts.get(String(c.courseId)) || 0;
       const hasUrgent = courseUrgent.get(String(c.courseId)) || false;
       const dotClass = hasUrgent ? 'has-urgent' : (cTotal > 0 ? 'has-normal' : '');
@@ -6232,7 +6288,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           data-acronym="${escapeHtml(acronym)}"
           title="${escapeHtml(c.courseCode ? c.courseCode + ' · ' + c.courseName : c.courseName)}"
           aria-label="${escapeHtml(c.courseName)}">
-          <span class="matrix-btn-code">${escapeHtml(btnDisplayText)}</span>
+          <span class="${spanClass}">${escapeHtml(btnDisplayText)}</span>
           ${dotHtml}
         </button>
       `;
@@ -7819,7 +7875,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     hiddenAssignmentIds: [],
     hiddenAssignmentDetails: {},
     spineFocalRatio: 0.50,
-    customSem1StartDate: ''
+    customSem1StartDate: '',
+    courseFilterLabelStyle: 'code'
   };
 
   const stored = await chrome.storage.local.get(defaultSettings);
@@ -7878,6 +7935,28 @@ document.addEventListener('DOMContentLoaded', async () => {
       infoBox.style.display = 'none';
     });
   }
+  const selCapsuleStyle = document.getElementById('sel-course-capsule-style');
+  const badgeCapsuleStyle = document.getElementById('pref-capsule-style-badge');
+  courseFilterLabelStyle = stored.courseFilterLabelStyle || 'code';
+  if (selCapsuleStyle) {
+    selCapsuleStyle.value = courseFilterLabelStyle;
+    if (badgeCapsuleStyle) {
+      badgeCapsuleStyle.textContent = (courseFilterLabelStyle === 'acronym') 
+        ? t('settings', 'capsuleStyleBadgeAcronym') 
+        : t('settings', 'capsuleStyleBadgeCode');
+    }
+    selCapsuleStyle.addEventListener('change', async () => {
+      courseFilterLabelStyle = selCapsuleStyle.value;
+      if (badgeCapsuleStyle) {
+        badgeCapsuleStyle.textContent = (courseFilterLabelStyle === 'acronym') 
+          ? t('settings', 'capsuleStyleBadgeAcronym') 
+          : t('settings', 'capsuleStyleBadgeCode');
+      }
+      await chrome.storage.local.set({ courseFilterLabelStyle: courseFilterLabelStyle });
+      renderPopupMonograms();
+    });
+  }
+
   hiddenAttendanceIds = stored.hiddenAttendanceIds || [];
   hiddenAttendanceDetails = stored.hiddenAttendanceDetails || {};
   hiddenAssignmentIds = stored.hiddenAssignmentIds || [];
@@ -8099,8 +8178,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       autoAttendanceInterval: autoInt,
       hiddenAttendanceIds: hiddenAttendanceIds,
       hiddenAttendanceDetails: hiddenAttendanceDetails,
-      spineFocalRatio: spineFocalRatio
+      spineFocalRatio: spineFocalRatio,
+      courseFilterLabelStyle: (selCapsuleStyle ? selCapsuleStyle.value : courseFilterLabelStyle)
     });
+    courseFilterLabelStyle = selCapsuleStyle ? selCapsuleStyle.value : courseFilterLabelStyle;
+    renderPopupMonograms();
 
     chrome.runtime.sendMessage({ type: 'UPDATE_ALARM_SETTINGS' });
     try {
@@ -8167,6 +8249,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       hiddenAssignmentIds = stored.hiddenAssignmentIds || [];
       hiddenAssignmentDetails = stored.hiddenAssignmentDetails || {};
       customSem1StartDate = stored.customSem1StartDate || '';
+      courseFilterLabelStyle = stored.courseFilterLabelStyle || 'code';
+      if (selCapsuleStyle) selCapsuleStyle.value = courseFilterLabelStyle;
+      if (badgeCapsuleStyle) {
+        badgeCapsuleStyle.textContent = (courseFilterLabelStyle === 'acronym') 
+          ? t('settings', 'capsuleStyleBadgeAcronym') 
+          : t('settings', 'capsuleStyleBadgeCode');
+      }
+      renderPopupMonograms();
       const prefSemStartInput = document.getElementById('pref-sem-start-input');
       if (prefSemStartInput) prefSemStartInput.value = customSem1StartDate;
       renderOccPreferencesTable();

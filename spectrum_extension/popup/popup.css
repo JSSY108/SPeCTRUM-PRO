@@ -2215,7 +2215,8 @@ body:not(.is-full-tab) .is-collapsed .dock-badge,
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.matrix-monogram-btn.active .matrix-btn-text {
+.matrix-monogram-btn.active .matrix-btn-text,
+.matrix-monogram-btn.active .matrix-btn-code {
   color: #FFFFFF !important;
 }
 
