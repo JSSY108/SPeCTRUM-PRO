@@ -16143,3 +16143,658 @@ body.has-custom-bg .fulllist-course-nav-item.active {
   background: rgba(255, 255, 255, 0.25) !important;
   color: #FFFFFF !important;
 }
+
+
+/* ==========================================================================
+   4. GLASS THEME SIDEBAR & HEADER: STRICT "WHITE NO CAPSULE" & HOVER STATES
+   - Header: SP Logo, Info Icon, Month Navigator, Status Bar, Quick Take, Sync, Logs
+   - Sidebar: Settings, Materials, Language Switcher, Activity Filters, View Mode Switcher
+   - Rule: Strictly pure white typography & icons (#FFFFFF), NO solid capsules,
+           clean frosted hover highlights with glowing micro-interactions.
+   ========================================================================== */
+
+/* 4.1 FULL-TAB & POPUP HEADERS (Frosted Glass Slab, Pure White Logo & Nav) */
+[data-theme="glass"] header.fulltab-top-header,
+[data-theme="glass"] header.popup-header,
+[data-theme="glass"] header.fulltab-header,
+body.has-custom-bg header.fulltab-top-header,
+body.has-custom-bg header.popup-header,
+body.has-custom-bg header.fulltab-header {
+  background: rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
+  backdrop-filter: blur(var(--glass-blur, 18px)) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur, 18px)) saturate(160%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* SPeCTRUM PRO Logo & App Title */
+[data-theme="glass"] .fulltab-header-logo,
+[data-theme="glass"] .popup-logo,
+[data-theme="glass"] .header-left-group,
+[data-theme="glass"] .header-app-title,
+[data-theme="glass"] .popup-logo h1,
+body.has-custom-bg .fulltab-header-logo,
+body.has-custom-bg .popup-logo,
+body.has-custom-bg .header-left-group,
+body.has-custom-bg .header-app-title,
+body.has-custom-bg .popup-logo h1 {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+[data-theme="glass"] .version-tag,
+body.has-custom-bg .version-tag {
+  color: rgba(255, 255, 255, 0.7) !important;
+  background: transparent !important;
+  border: none !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Prism Logo Vectors (Pure White Laser Geometry) */
+[data-theme="glass"] .header-brand-logo-svg .art-tri,
+body.has-custom-bg .header-brand-logo-svg .art-tri {
+  stroke: #FFFFFF !important;
+  fill: none !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85)) !important;
+}
+
+[data-theme="glass"] .header-brand-logo-svg .art-beam-incident,
+[data-theme="glass"] .header-brand-logo-svg .flash-spark,
+body.has-custom-bg .header-brand-logo-svg .art-beam-incident,
+body.has-custom-bg .header-brand-logo-svg .flash-spark {
+  fill: #FFFFFF !important;
+}
+
+[data-theme="glass"] .header-brand-logo-svg .art-score-track,
+[data-theme="glass"] .header-brand-logo-svg .art-score-cap,
+[data-theme="glass"] .header-brand-logo-svg .cap-score-exit,
+body.has-custom-bg .header-brand-logo-svg .art-score-track,
+body.has-custom-bg .header-brand-logo-svg .art-score-cap,
+body.has-custom-bg .header-brand-logo-svg .cap-score-exit {
+  stroke: #FFFFFF !important;
+}
+
+[data-theme="glass"] .header-brand-logo-svg .art-poly,
+body.has-custom-bg .header-brand-logo-svg .art-poly {
+  stroke: #FFFFFF !important;
+}
+
+[data-theme="glass"] .header-brand-logo-svg .art-beam,
+body.has-custom-bg .header-brand-logo-svg .art-beam {
+  opacity: 0.95 !important;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8)) !important;
+}
+
+/* About / Info Button (i) */
+[data-theme="glass"] .header-info-btn,
+[data-theme="glass"] #btn-about-app,
+[data-theme="glass"] #btn-about-app-popup,
+body.has-custom-bg .header-info-btn,
+body.has-custom-bg #btn-about-app,
+body.has-custom-bg #btn-about-app-popup {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #FFFFFF !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] .header-info-btn .icon-svg,
+[data-theme="glass"] #btn-about-app .icon-svg,
+[data-theme="glass"] #btn-about-app-popup .icon-svg,
+body.has-custom-bg .header-info-btn .icon-svg,
+body.has-custom-bg #btn-about-app .icon-svg,
+body.has-custom-bg #btn-about-app-popup .icon-svg {
+  stroke: #FFFFFF !important;
+  color: #FFFFFF !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85)) !important;
+}
+
+[data-theme="glass"] .header-info-btn:hover,
+[data-theme="glass"] #btn-about-app:hover,
+[data-theme="glass"] #btn-about-app-popup:hover,
+body.has-custom-bg .header-info-btn:hover,
+body.has-custom-bg #btn-about-app:hover,
+body.has-custom-bg #btn-about-app-popup:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-radius: 50% !important;
+  transform: scale(1.15) !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Center Calendar Month Navigation (NO CAPSULE: Pure White Typography) */
+[data-theme="glass"] .header-month-heading,
+[data-theme="glass"] #fulltab-month-heading,
+body.has-custom-bg .header-month-heading,
+body.has-custom-bg #fulltab-month-heading {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.6px !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* SEM I · WK 08 Week Pill (NO CAPSULE) */
+[data-theme="glass"] .header-week-pill,
+[data-theme="glass"] #fulltab-week-pill,
+body.has-custom-bg .header-week-pill,
+body.has-custom-bg #fulltab-week-pill {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* Wireframe Action Buttons (Today, Month Nav, Sync, Diagnostics / Logs, Pin, Tab) */
+[data-theme="glass"] .btn-wireframe,
+[data-theme="glass"] #btn-cal-prev,
+[data-theme="glass"] #btn-cal-next,
+[data-theme="glass"] #btn-cal-today,
+[data-theme="glass"] #btn-fulltab-sync,
+[data-theme="glass"] #btn-fulltab-diag,
+[data-theme="glass"] #btn-refresh-activities,
+[data-theme="glass"] #btn-detach-popup,
+[data-theme="glass"] #btn-open-tab,
+body.has-custom-bg .btn-wireframe,
+body.has-custom-bg #btn-cal-prev,
+body.has-custom-bg #btn-cal-next,
+body.has-custom-bg #btn-cal-today,
+body.has-custom-bg #btn-fulltab-sync,
+body.has-custom-bg #btn-fulltab-diag,
+body.has-custom-bg #btn-refresh-activities,
+body.has-custom-bg #btn-detach-popup,
+body.has-custom-bg #btn-open-tab {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-radius: 6px !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] .btn-wireframe span,
+[data-theme="glass"] .btn-wireframe .icon-svg,
+[data-theme="glass"] #btn-cal-prev .icon-svg,
+[data-theme="glass"] #btn-cal-next .icon-svg,
+[data-theme="glass"] #btn-fulltab-sync .icon-svg,
+[data-theme="glass"] #btn-refresh-activities .icon-svg,
+[data-theme="glass"] #btn-detach-popup .icon-svg,
+[data-theme="glass"] #btn-open-tab .icon-svg,
+body.has-custom-bg .btn-wireframe span,
+body.has-custom-bg .btn-wireframe .icon-svg,
+body.has-custom-bg #btn-cal-prev .icon-svg,
+body.has-custom-bg #btn-cal-next .icon-svg,
+body.has-custom-bg #btn-fulltab-sync .icon-svg,
+body.has-custom-bg #btn-refresh-activities .icon-svg,
+body.has-custom-bg #btn-detach-popup .icon-svg,
+body.has-custom-bg #btn-open-tab .icon-svg {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .btn-wireframe:hover,
+[data-theme="glass"] #btn-cal-prev:hover,
+[data-theme="glass"] #btn-cal-next:hover,
+[data-theme="glass"] #btn-cal-today:hover,
+[data-theme="glass"] #btn-fulltab-sync:hover,
+[data-theme="glass"] #btn-fulltab-diag:hover,
+[data-theme="glass"] #btn-refresh-activities:hover,
+[data-theme="glass"] #btn-detach-popup:hover,
+[data-theme="glass"] #btn-open-tab:hover,
+body.has-custom-bg .btn-wireframe:hover,
+body.has-custom-bg #btn-cal-prev:hover,
+body.has-custom-bg #btn-cal-next:hover,
+body.has-custom-bg #btn-cal-today:hover,
+body.has-custom-bg #btn-fulltab-sync:hover,
+body.has-custom-bg #btn-fulltab-diag:hover,
+body.has-custom-bg #btn-refresh-activities:hover,
+body.has-custom-bg #btn-detach-popup:hover,
+body.has-custom-bg #btn-open-tab:hover {
+  background: rgba(255, 255, 255, 0.28) !important;
+  border-color: rgba(255, 255, 255, 0.55) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px) scale(1.02) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Close Clean Button in Popup Header */
+[data-theme="glass"] .btn-close-clean,
+body.has-custom-bg .btn-close-clean {
+  color: #FFFFFF !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  opacity: 0.8 !important;
+  transition: all 0.18s ease !important;
+}
+
+[data-theme="glass"] .btn-close-clean:hover,
+body.has-custom-bg .btn-close-clean:hover {
+  opacity: 1 !important;
+  transform: scale(1.15) !important;
+}
+
+/* Auto-Attendance Daemon Status Widget (NO CAPSULE) */
+[data-theme="glass"] .fulltab-daemon-widget,
+[data-theme="glass"] .fulltab-daemon-info,
+body.has-custom-bg .fulltab-daemon-widget,
+body.has-custom-bg .fulltab-daemon-info {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+[data-theme="glass"] .fulltab-daemon-label,
+[data-theme="glass"] .fulltab-daemon-time,
+body.has-custom-bg .fulltab-daemon-label,
+body.has-custom-bg .fulltab-daemon-time {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .fulltab-daemon-dot,
+body.has-custom-bg .fulltab-daemon-dot {
+  color: #34D399 !important;
+  filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.9)) !important;
+}
+
+/* Auto-Take Quick Button (Frosted Glass Button) */
+[data-theme="glass"] #btn-fulltab-quick-auto-take,
+[data-theme="glass"] .btn-fulltab-quick-take,
+body.has-custom-bg #btn-fulltab-quick-auto-take,
+body.has-custom-bg .btn-fulltab-quick-take {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-radius: 6px !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] #btn-fulltab-quick-auto-take .icon-svg,
+[data-theme="glass"] .btn-fulltab-quick-take .icon-svg,
+body.has-custom-bg #btn-fulltab-quick-auto-take .icon-svg,
+body.has-custom-bg .btn-fulltab-quick-take .icon-svg {
+  stroke: #FFFFFF !important;
+  color: #FFFFFF !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85)) !important;
+}
+
+[data-theme="glass"] #btn-fulltab-quick-auto-take:hover,
+[data-theme="glass"] .btn-fulltab-quick-take:hover,
+body.has-custom-bg #btn-fulltab-quick-auto-take:hover,
+body.has-custom-bg .btn-fulltab-quick-take:hover {
+  background: rgba(255, 255, 255, 0.28) !important;
+  border-color: rgba(255, 255, 255, 0.55) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px) scale(1.02) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* 4.2 SIDEBAR / LEFT RAIL (NO CAPSULE, PURE WHITE ICONS, GLOWING HOVER) */
+[data-theme="glass"] aside.left-rail,
+[data-theme="glass"] nav.popup-sidebar,
+[data-theme="glass"] aside.popup-sidebar-rail,
+body.has-custom-bg aside.left-rail,
+body.has-custom-bg nav.popup-sidebar,
+body.has-custom-bg aside.popup-sidebar-rail {
+  background: rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
+  backdrop-filter: blur(var(--glass-blur, 18px)) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur, 18px)) saturate(160%) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.28) !important;
+}
+
+/* Sidebar Top Utility Icons (Preferences gear, Materials folder) */
+[data-theme="glass"] .rail-btn-icon,
+[data-theme="glass"] #rail-btn-pref,
+[data-theme="glass"] #rail-btn-mat,
+[data-theme="glass"] #btn-popup-open-pref,
+[data-theme="glass"] #btn-popup-open-mat,
+[data-theme="glass"] #btn-popup-open-fulltab,
+body.has-custom-bg .rail-btn-icon,
+body.has-custom-bg #rail-btn-pref,
+body.has-custom-bg #rail-btn-mat,
+body.has-custom-bg #btn-popup-open-pref,
+body.has-custom-bg #btn-popup-open-mat,
+body.has-custom-bg #btn-popup-open-fulltab {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #FFFFFF !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] .rail-btn-icon .icon-svg,
+[data-theme="glass"] #btn-popup-open-pref .icon-svg,
+[data-theme="glass"] #btn-popup-open-mat .icon-svg,
+[data-theme="glass"] #btn-popup-open-fulltab .icon-svg,
+body.has-custom-bg .rail-btn-icon .icon-svg,
+body.has-custom-bg #btn-popup-open-pref .icon-svg,
+body.has-custom-bg #btn-popup-open-mat .icon-svg,
+body.has-custom-bg #btn-popup-open-fulltab .icon-svg {
+  stroke: #FFFFFF !important;
+  color: #FFFFFF !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85)) !important;
+}
+
+[data-theme="glass"] .rail-btn-icon:hover,
+[data-theme="glass"] #btn-popup-open-pref:hover,
+[data-theme="glass"] #btn-popup-open-mat:hover,
+[data-theme="glass"] #btn-popup-open-fulltab:hover,
+body.has-custom-bg .rail-btn-icon:hover,
+body.has-custom-bg #btn-popup-open-pref:hover,
+body.has-custom-bg #btn-popup-open-mat:hover,
+body.has-custom-bg #btn-popup-open-fulltab:hover {
+  background: rgba(255, 255, 255, 0.20) !important;
+  border-radius: 8px !important;
+  transform: scale(1.12) !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Language Switcher (En, BM, 中) (STRICT NO CAPSULE) */
+[data-theme="glass"] .rail-lang-switcher,
+[data-theme="glass"] .popup-lang-switcher,
+body.has-custom-bg .rail-lang-switcher,
+body.has-custom-bg .popup-lang-switcher {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+[data-theme="glass"] .rail-lang-btn,
+[data-theme="glass"] .popup-lang-btn,
+body.has-custom-bg .rail-lang-btn,
+body.has-custom-bg .popup-lang-btn {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] .rail-lang-btn:hover,
+[data-theme="glass"] .popup-lang-btn:hover,
+body.has-custom-bg .rail-lang-btn:hover,
+body.has-custom-bg .popup-lang-btn:hover {
+  background: rgba(255, 255, 255, 0.20) !important;
+  color: #FFFFFF !important;
+  border-radius: 6px !important;
+  transform: scale(1.08) !important;
+}
+
+[data-theme="glass"] .rail-lang-btn.active,
+[data-theme="glass"] .popup-lang-btn.active,
+body.has-custom-bg .rail-lang-btn.active,
+body.has-custom-bg .popup-lang-btn.active {
+  background: rgba(255, 255, 255, 0.28) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  border-radius: 6px !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25) !important;
+  transform: scale(1.04) !important;
+}
+
+/* Middle Multi-Select Activity Filter Stadium (STRICT NO CAPSULE) */
+[data-theme="glass"] .rail-checklist-stadium,
+body.has-custom-bg .rail-checklist-stadium {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 4px 0 !important;
+}
+
+[data-theme="glass"] .rail-toggle-pill,
+body.has-custom-bg .rail-toggle-pill {
+  background: transparent !important;
+  border: 1.5px solid transparent !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  opacity: 0.55 !important;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] .rail-toggle-pill .icon-svg,
+body.has-custom-bg .rail-toggle-pill .icon-svg {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85)) !important;
+}
+
+[data-theme="glass"] .rail-toggle-pill:hover,
+body.has-custom-bg .rail-toggle-pill:hover {
+  background: rgba(255, 255, 255, 0.20) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.35) !important;
+  border-radius: 10px !important;
+  opacity: 1 !important;
+  transform: scale(1.15) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Active Activity Filters (Frosted Translucent Chip with Signature Glow, Pure White Icon) */
+[data-theme="glass"] #rail-toggle-assign.active,
+body.has-custom-bg #rail-toggle-assign.active {
+  background: rgba(249, 115, 22, 0.28) !important;
+  border: 1.5px solid rgba(251, 146, 60, 0.75) !important;
+  border-radius: 10px !important;
+  opacity: 1 !important;
+  box-shadow: 0 0 14px rgba(249, 115, 22, 0.45) !important;
+}
+
+[data-theme="glass"] #rail-toggle-assign.active .icon-svg,
+body.has-custom-bg #rail-toggle-assign.active .icon-svg {
+  stroke: #FFFFFF !important;
+  fill: none !important;
+  filter: drop-shadow(0 0 5px rgba(251, 146, 60, 0.9)) !important;
+}
+
+[data-theme="glass"] #rail-toggle-test.active,
+body.has-custom-bg #rail-toggle-test.active {
+  background: rgba(139, 92, 246, 0.28) !important;
+  border: 1.5px solid rgba(192, 132, 252, 0.75) !important;
+  border-radius: 10px !important;
+  opacity: 1 !important;
+  box-shadow: 0 0 14px rgba(139, 92, 246, 0.45) !important;
+}
+
+[data-theme="glass"] #rail-toggle-test.active .icon-svg,
+body.has-custom-bg #rail-toggle-test.active .icon-svg {
+  stroke: #FFFFFF !important;
+  fill: none !important;
+  filter: drop-shadow(0 0 5px rgba(192, 132, 252, 0.9)) !important;
+}
+
+[data-theme="glass"] #rail-toggle-test.active .icon-svg text,
+[data-theme="glass"] #rail-toggle-test.active .icon-svg rect,
+body.has-custom-bg #rail-toggle-test.active .icon-svg text,
+body.has-custom-bg #rail-toggle-test.active .icon-svg rect {
+  fill: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+[data-theme="glass"] #rail-toggle-att.active,
+body.has-custom-bg #rail-toggle-att.active {
+  background: rgba(16, 185, 129, 0.28) !important;
+  border: 1.5px solid rgba(52, 211, 153, 0.75) !important;
+  border-radius: 10px !important;
+  opacity: 1 !important;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.45) !important;
+}
+
+[data-theme="glass"] #rail-toggle-att.active .icon-svg,
+body.has-custom-bg #rail-toggle-att.active .icon-svg {
+  fill: #FFFFFF !important;
+  stroke: none !important;
+  filter: drop-shadow(0 0 5px rgba(52, 211, 153, 0.9)) !important;
+}
+
+[data-theme="glass"] #rail-toggle-notice.active,
+body.has-custom-bg #rail-toggle-notice.active {
+  background: rgba(14, 165, 233, 0.28) !important;
+  border: 1.5px solid rgba(56, 189, 248, 0.75) !important;
+  border-radius: 10px !important;
+  opacity: 1 !important;
+  box-shadow: 0 0 14px rgba(14, 165, 233, 0.45) !important;
+}
+
+[data-theme="glass"] #rail-toggle-notice.active .icon-svg,
+body.has-custom-bg #rail-toggle-notice.active .icon-svg {
+  stroke: #FFFFFF !important;
+  fill: none !important;
+  filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.9)) !important;
+}
+
+/* Bottom View Mode Switcher Stadium (STRICT NO CAPSULE) */
+[data-theme="glass"] .rail-mode-switcher,
+[data-theme="glass"] .rail-mode-menu,
+[data-theme="glass"] .sidebar-mode-toggle,
+body.has-custom-bg .rail-mode-switcher,
+body.has-custom-bg .rail-mode-menu,
+body.has-custom-bg .sidebar-mode-toggle {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 4px 0 !important;
+}
+
+[data-theme="glass"] .rail-mode-item,
+[data-theme="glass"] .sidebar-mode-btn,
+body.has-custom-bg .rail-mode-item,
+body.has-custom-bg .sidebar-mode-btn {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] .rail-mode-item .icon-svg,
+[data-theme="glass"] .sidebar-mode-btn .icon-svg,
+body.has-custom-bg .rail-mode-item .icon-svg,
+body.has-custom-bg .sidebar-mode-btn .icon-svg {
+  stroke: #FFFFFF !important;
+  color: #FFFFFF !important;
+  opacity: 0.6 !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85)) !important;
+  transition: all 0.18s ease !important;
+}
+
+[data-theme="glass"] .sidebar-mode-btn span,
+body.has-custom-bg .sidebar-mode-btn span {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+}
+
+/* View Mode Hover State */
+[data-theme="glass"] .rail-mode-item:hover,
+[data-theme="glass"] .sidebar-mode-btn:hover,
+body.has-custom-bg .rail-mode-item:hover,
+body.has-custom-bg .sidebar-mode-btn:hover {
+  background: rgba(255, 255, 255, 0.20) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-radius: 8px !important;
+  transform: scale(1.15) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="glass"] .rail-mode-item:hover .icon-svg,
+[data-theme="glass"] .sidebar-mode-btn:hover .icon-svg,
+body.has-custom-bg .rail-mode-item:hover .icon-svg,
+body.has-custom-bg .sidebar-mode-btn:hover .icon-svg {
+  opacity: 1 !important;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.85)) !important;
+}
+
+/* View Mode Active State (Frosted Glass Highlight, Pure White Icon) */
+[data-theme="glass"] .rail-mode-item.active,
+[data-theme="glass"] .sidebar-mode-btn.active,
+body.has-custom-bg .rail-mode-item.active,
+body.has-custom-bg .sidebar-mode-btn.active {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  border-radius: 8px !important;
+  color: #FFFFFF !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  transform: scale(1.06) !important;
+}
+
+[data-theme="glass"] .rail-mode-item.active .icon-svg,
+[data-theme="glass"] .sidebar-mode-btn.active .icon-svg,
+body.has-custom-bg .rail-mode-item.active .icon-svg,
+body.has-custom-bg .sidebar-mode-btn.active .icon-svg {
+  opacity: 1 !important;
+  stroke: #FFFFFF !important;
+  color: #FFFFFF !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85)) !important;
+}
+
+/* Expand Tooltip Labels on Hover (Frosted Glass Floating Capsule) */
+[data-theme="glass"] .rail-expand-label,
+body.has-custom-bg .rail-expand-label {
+  background: rgba(15, 23, 42, 0.92) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 4.3 POPUP PRIMARY TABS NAV */
+[data-theme="glass"] .primary-tabs-nav,
+body.has-custom-bg .primary-tabs-nav {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+[data-theme="glass"] .primary-tab-btn,
+body.has-custom-bg .primary-tab-btn {
+  color: rgba(255, 255, 255, 0.65) !important;
+  background: transparent !important;
+  border: none !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  transition: all 0.18s ease !important;
+}
+
+[data-theme="glass"] .primary-tab-btn:hover,
+body.has-custom-bg .primary-tab-btn:hover {
+  color: #FFFFFF !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-radius: 6px !important;
+}
+
+[data-theme="glass"] .primary-tab-btn.active,
+body.has-custom-bg .primary-tab-btn.active {
+  color: #FFFFFF !important;
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-radius: 6px !important;
+  font-weight: 800 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25) !important;
+}
