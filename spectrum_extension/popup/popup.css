@@ -10066,10 +10066,15 @@ body:not(.is-full-tab) .att-card-aside {
   border: 1px solid var(--border-hairline) !important;
 }
 
-.att-status-pill.pill-recorded {
-  background: var(--signal-attendance-bg, #ECFDF5) !important;
-  color: #047857 !important;
-  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+/* Redundant status pills (ENDED / RECORDED) removed across ALL themes per user request */
+.att-status-pill.pill-recorded,
+.card-attendance.state-recorded .att-status-pill,
+.card-attendance.state-ended .att-status-pill,
+.scoped-card-attendance.state-recorded .att-status-pill,
+.scoped-card-attendance.state-ended .att-status-pill,
+.attendance-card.state-recorded .att-status-pill,
+.attendance-card.state-ended .att-status-pill {
+  display: none !important;
 }
 
 .att-status-pill.pill-active {
@@ -15224,12 +15229,12 @@ body.has-custom-bg .tt-session-card:hover {
 body.has-custom-bg .spectrum-card.card-attendance,
 body.has-custom-bg .scoped-card.scoped-card-attendance,
 body.has-custom-bg .attendance-card {
-  background: radial-gradient(ellipse var(--glass-backlight-size, 340px) 220px at 0% 0%, rgba(16, 185, 129, var(--glass-backlight-op, 0.18)) 0%, rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.18) * 0.35)) 50%, transparent 100%),
-              rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
-  border-left: var(--glass-edge-width, 0px) solid rgba(52, 211, 153, var(--glass-edge-op, 0.85)) !important;
+  background: radial-gradient(ellipse var(--glass-backlight-size, 330px) 230px at 0% 0%, rgba(16, 185, 129, var(--glass-backlight-op, 0.24)) 0%, rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.24) * 0.35)) 50%, transparent 100%),
+              rgba(15, 23, 42, var(--glass-tint-op, 0.44)) !important;
+  border-left: var(--glass-edge-width, 0.5px) solid rgba(52, 211, 153, var(--glass-edge-op, 0.2)) !important;
   box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.55),
               0 8px 32px rgba(0, 0, 0, 0.28),
-              0 0 20px -4px rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.18) * 1.1)) !important;
+              0 0 20px -4px rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.24) * 1.1)) !important;
 }
 
 [data-theme="glass"] .spectrum-card.card-attendance:hover,
@@ -15238,11 +15243,263 @@ body.has-custom-bg .attendance-card {
 body.has-custom-bg .spectrum-card.card-attendance:hover,
 body.has-custom-bg .scoped-card.scoped-card-attendance:hover,
 body.has-custom-bg .attendance-card:hover {
-  background: radial-gradient(ellipse calc(var(--glass-backlight-size, 340px) + 20px) 240px at 0% 0%, rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.18) + 0.10)) 0%, rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.18) * 0.5)) 55%, transparent 100%),
-              rgba(15, 23, 42, calc(var(--glass-tint-op, 0.28) + 0.08)) !important;
+  background: radial-gradient(ellipse calc(var(--glass-backlight-size, 330px) + 30px) 250px at 0% 0%, rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.24) + 0.10)) 0%, rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.24) * 0.5)) 55%, transparent 100%),
+              rgba(15, 23, 42, calc(var(--glass-tint-op, 0.44) + 0.08)) !important;
   box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.75),
               0 12px 36px rgba(0, 0, 0, 0.35),
-              0 0 26px -2px rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.18) * 1.5)) !important;
+              0 0 26px -2px rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.24) * 1.5)) !important;
+}
+
+/* Enhanced Backlight Spread on Active / Recorded Attendance Cards */
+[data-theme="glass"] .spectrum-card.card-attendance.state-recorded,
+[data-theme="glass"] .spectrum-card.card-attendance.state-open,
+[data-theme="glass"] .scoped-card.scoped-card-attendance.state-recorded,
+[data-theme="glass"] .scoped-card.scoped-card-attendance.state-open,
+[data-theme="glass"] .attendance-card.state-recorded,
+[data-theme="glass"] .attendance-card.state-open,
+body.has-custom-bg .spectrum-card.card-attendance.state-recorded,
+body.has-custom-bg .spectrum-card.card-attendance.state-open,
+body.has-custom-bg .scoped-card.scoped-card-attendance.state-recorded,
+body.has-custom-bg .scoped-card.scoped-card-attendance.state-open,
+body.has-custom-bg .attendance-card.state-recorded,
+body.has-custom-bg .attendance-card.state-open {
+  background: radial-gradient(ellipse calc(var(--glass-backlight-size, 330px) + 40px) 260px at 0% 0%, rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.24) + 0.06)) 0%, rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.24) * 0.4)) 50%, transparent 100%),
+              radial-gradient(ellipse 260px 100px at 30% 100%, rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.24) * 0.8)) 0%, transparent 75%),
+              rgba(15, 23, 42, var(--glass-tint-op, 0.44)) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.65),
+              0 8px 32px rgba(0, 0, 0, 0.32),
+              0 0 28px -2px rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.24) * 1.5)) !important;
+}
+
+/* ==========================================================================
+   GLASS CYLINDER PROGRESS BAR (OPTICAL ROD WITH BACKLIGHT SPREAD)
+   ========================================================================== */
+
+/* 3D Glass Cylinder Progress Track */
+[data-theme="glass"] .att-progress-track,
+body.has-custom-bg .att-progress-track {
+  width: 100% !important;
+  height: 5px !important;
+  background: rgba(255, 255, 255, 0.10) !important;
+  border-radius: 999px !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.28) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.45),
+              inset 0 -1px 1px rgba(0, 0, 0, 0.4),
+              0 1px 4px rgba(0, 0, 0, 0.25) !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* Luminous Optical Progress Fill Inside Glass Cylinder */
+[data-theme="glass"] .att-progress-fill,
+body.has-custom-bg .att-progress-fill {
+  height: 100% !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, rgba(52, 211, 153, 0.9), rgba(16, 185, 129, 0.98)) !important;
+  box-shadow: 0 0 16px 2px rgba(16, 185, 129, 0.75),
+              0 0 32px 6px rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.24) * 1.6)),
+              inset 0 1px 1.5px rgba(255, 255, 255, 0.8) !important;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Attended / Recorded: Full Glowing Emerald Glass Cylinder */
+[data-theme="glass"] .card-attendance.state-recorded .att-progress-fill,
+[data-theme="glass"] .scoped-card-attendance.state-recorded .att-progress-fill,
+[data-theme="glass"] .attendance-card.state-recorded .att-progress-fill,
+body.has-custom-bg .card-attendance.state-recorded .att-progress-fill,
+body.has-custom-bg .scoped-card-attendance.state-recorded .att-progress-fill,
+body.has-custom-bg .attendance-card.state-recorded .att-progress-fill {
+  background: linear-gradient(90deg, rgba(52, 211, 153, 0.95), rgba(16, 185, 129, 1)) !important;
+  box-shadow: 0 0 18px 3px rgba(16, 185, 129, 0.85),
+              0 0 36px 8px rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.24) * 2)),
+              inset 0 1px 1.5px rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Active / Live Open State: High Backlight Spread */
+[data-theme="glass"] .card-attendance.state-open .att-progress-fill,
+[data-theme="glass"] .scoped-card-attendance.state-open .att-progress-fill,
+[data-theme="glass"] .attendance-card.state-open .att-progress-fill,
+body.has-custom-bg .card-attendance.state-open .att-progress-fill,
+body.has-custom-bg .scoped-card-attendance.state-open .att-progress-fill,
+body.has-custom-bg .attendance-card.state-open .att-progress-fill {
+  background: linear-gradient(90deg, rgba(52, 211, 153, 1), rgba(16, 185, 129, 1)) !important;
+  box-shadow: 0 0 20px 4px rgba(16, 185, 129, 0.95),
+              0 0 40px 10px rgba(16, 185, 129, 0.6),
+              inset 0 1px 1.5px rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Ended State: Frosted Glass Cylinder */
+[data-theme="glass"] .card-attendance.state-ended .att-progress-fill,
+[data-theme="glass"] .scoped-card-attendance.state-ended .att-progress-fill,
+[data-theme="glass"] .attendance-card.state-ended .att-progress-fill,
+body.has-custom-bg .card-attendance.state-ended .att-progress-fill,
+body.has-custom-bg .scoped-card-attendance.state-ended .att-progress-fill,
+body.has-custom-bg .attendance-card.state-ended .att-progress-fill {
+  background: rgba(255, 255, 255, 0.28) !important;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.22),
+              inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;
+}
+
+/* ==========================================================================
+   ATTENDANCE CARD ACTION BUTTONS: GLASS MATERIAL & GREEN BACKLIGHT
+   ========================================================================== */
+
+/* Base Glass Action Button on Attendance Cards */
+[data-theme="glass"] .card-attendance .btn-att-action,
+[data-theme="glass"] .scoped-card-attendance .btn-att-action,
+[data-theme="glass"] .attendance-card .btn-att-action,
+body.has-custom-bg .card-attendance .btn-att-action,
+body.has-custom-bg .scoped-card-attendance .btn-att-action,
+body.has-custom-bg .attendance-card .btn-att-action {
+  backdrop-filter: blur(12px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(180%) !important;
+  border-radius: 6px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.2px !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* 1. Recorded / Attended State: "✓ Present" */
+[data-theme="glass"] .card-attendance .btn-att-present,
+[data-theme="glass"] .scoped-card-attendance .btn-att-present,
+[data-theme="glass"] .attendance-card .btn-att-present,
+body.has-custom-bg .card-attendance .btn-att-present,
+body.has-custom-bg .scoped-card-attendance .btn-att-present,
+body.has-custom-bg .attendance-card .btn-att-present {
+  background: rgba(16, 185, 129, 0.16) !important;
+  border: 1px solid rgba(52, 211, 153, 0.55) !important;
+  color: #34D399 !important;
+  box-shadow: 0 0 16px -2px rgba(16, 185, 129, 0.45),
+              inset 0 1px 1.5px rgba(255, 255, 255, 0.5) !important;
+  text-shadow: 0 0 8px rgba(16, 185, 129, 0.6) !important;
+}
+
+[data-theme="glass"] .card-attendance .btn-att-present:hover,
+[data-theme="glass"] .scoped-card-attendance .btn-att-present:hover,
+[data-theme="glass"] .attendance-card .btn-att-present:hover,
+body.has-custom-bg .card-attendance .btn-att-present:hover,
+body.has-custom-bg .scoped-card-attendance .btn-att-present:hover,
+body.has-custom-bg .attendance-card .btn-att-present:hover {
+  background: rgba(16, 185, 129, 0.28) !important;
+  border-color: rgba(52, 211, 153, 0.85) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.7),
+              inset 0 1px 2px rgba(255, 255, 255, 0.75) !important;
+  transform: translateY(-1px) scale(1.02) !important;
+}
+
+/* 2. Ended State: "Check Portal ↗" */
+[data-theme="glass"] .card-attendance .btn-att-faint,
+[data-theme="glass"] .scoped-card-attendance .btn-att-faint,
+[data-theme="glass"] .attendance-card .btn-att-faint,
+body.has-custom-bg .card-attendance .btn-att-faint,
+body.has-custom-bg .scoped-card-attendance .btn-att-faint,
+body.has-custom-bg .attendance-card .btn-att-faint {
+  background: rgba(255, 255, 255, 0.10) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 14px -2px rgba(16, 185, 129, 0.35),
+              inset 0 1px 1.5px rgba(255, 255, 255, 0.45) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7) !important;
+}
+
+[data-theme="glass"] .card-attendance .btn-att-faint:hover,
+[data-theme="glass"] .scoped-card-attendance .btn-att-faint:hover,
+[data-theme="glass"] .attendance-card .btn-att-faint:hover,
+body.has-custom-bg .card-attendance .btn-att-faint:hover,
+body.has-custom-bg .scoped-card-attendance .btn-att-faint:hover,
+body.has-custom-bg .attendance-card .btn-att-faint:hover {
+  background: rgba(16, 185, 129, 0.22) !important;
+  border-color: rgba(52, 211, 153, 0.65) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 22px rgba(16, 185, 129, 0.55),
+              inset 0 1px 2px rgba(255, 255, 255, 0.7) !important;
+  transform: translateY(-1px) scale(1.02) !important;
+}
+
+/* 3. Upcoming State: "Open SPeCTRUM ↗" */
+[data-theme="glass"] .card-attendance .btn-att-wireframe,
+[data-theme="glass"] .scoped-card-attendance .btn-att-wireframe,
+[data-theme="glass"] .attendance-card .btn-att-wireframe,
+body.has-custom-bg .card-attendance .btn-att-wireframe,
+body.has-custom-bg .scoped-card-attendance .btn-att-wireframe,
+body.has-custom-bg .attendance-card .btn-att-wireframe {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 14px -2px rgba(16, 185, 129, 0.35),
+              inset 0 1px 1.5px rgba(255, 255, 255, 0.45) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7) !important;
+}
+
+[data-theme="glass"] .card-attendance .btn-att-wireframe:hover,
+[data-theme="glass"] .scoped-card-attendance .btn-att-wireframe:hover,
+[data-theme="glass"] .attendance-card .btn-att-wireframe:hover,
+body.has-custom-bg .card-attendance .btn-att-wireframe:hover,
+body.has-custom-bg .scoped-card-attendance .btn-att-wireframe:hover,
+body.has-custom-bg .attendance-card .btn-att-wireframe:hover {
+  background: rgba(16, 185, 129, 0.22) !important;
+  border-color: rgba(52, 211, 153, 0.65) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 22px rgba(16, 185, 129, 0.55),
+              inset 0 1px 2px rgba(255, 255, 255, 0.7) !important;
+  transform: translateY(-1px) scale(1.02) !important;
+}
+
+/* 4. Instant Taking / Open State: "⚡ Take Attendance" or PIN */
+[data-theme="glass"] .card-attendance .btn-att-black,
+[data-theme="glass"] .card-attendance .att-btn-direct-take,
+[data-theme="glass"] .card-attendance .att-btn-pin,
+[data-theme="glass"] .scoped-card-attendance .btn-att-black,
+[data-theme="glass"] .scoped-card-attendance .att-btn-direct-take,
+[data-theme="glass"] .scoped-card-attendance .att-btn-pin,
+[data-theme="glass"] .attendance-card .btn-att-black,
+[data-theme="glass"] .attendance-card .att-btn-direct-take,
+[data-theme="glass"] .attendance-card .att-btn-pin,
+body.has-custom-bg .card-attendance .btn-att-black,
+body.has-custom-bg .card-attendance .att-btn-direct-take,
+body.has-custom-bg .card-attendance .att-btn-pin,
+body.has-custom-bg .scoped-card-attendance .btn-att-black,
+body.has-custom-bg .scoped-card-attendance .att-btn-direct-take,
+body.has-custom-bg .scoped-card-attendance .att-btn-pin,
+body.has-custom-bg .attendance-card .btn-att-black,
+body.has-custom-bg .attendance-card .att-btn-direct-take,
+body.has-custom-bg .attendance-card .att-btn-pin {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.45), rgba(5, 150, 105, 0.55)) !important;
+  border: 1px solid rgba(52, 211, 153, 0.75) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.65),
+              inset 0 1px 1.5px rgba(255, 255, 255, 0.65) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+}
+
+[data-theme="glass"] .card-attendance .btn-att-black:hover,
+[data-theme="glass"] .card-attendance .att-btn-direct-take:hover,
+[data-theme="glass"] .card-attendance .att-btn-pin:hover,
+[data-theme="glass"] .scoped-card-attendance .btn-att-black:hover,
+[data-theme="glass"] .scoped-card-attendance .att-btn-direct-take:hover,
+[data-theme="glass"] .scoped-card-attendance .att-btn-pin:hover,
+[data-theme="glass"] .attendance-card .btn-att-black:hover,
+[data-theme="glass"] .attendance-card .att-btn-direct-take:hover,
+[data-theme="glass"] .attendance-card .att-btn-pin:hover,
+body.has-custom-bg .card-attendance .btn-att-black:hover,
+body.has-custom-bg .card-attendance .att-btn-direct-take:hover,
+body.has-custom-bg .card-attendance .att-btn-pin:hover,
+body.has-custom-bg .scoped-card-attendance .btn-att-black:hover,
+body.has-custom-bg .scoped-card-attendance .att-btn-direct-take:hover,
+body.has-custom-bg .scoped-card-attendance .att-btn-pin:hover,
+body.has-custom-bg .attendance-card .btn-att-black:hover,
+body.has-custom-bg .attendance-card .att-btn-direct-take:hover,
+body.has-custom-bg .attendance-card .att-btn-pin:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.65), rgba(5, 150, 105, 0.75)) !important;
+  border-color: rgba(52, 211, 153, 0.95) !important;
+  box-shadow: 0 0 28px rgba(16, 185, 129, 0.85),
+              inset 0 1px 2px rgba(255, 255, 255, 0.85) !important;
+  transform: translateY(-1px) scale(1.03) !important;
 }
 
 /* Assignment / Tutorial Cards: Sunset Orange Light Source from Behind */

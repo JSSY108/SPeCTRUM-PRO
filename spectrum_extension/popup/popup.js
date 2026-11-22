@@ -5225,13 +5225,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     } else if (isVerified) {
       stateClass = 'state-recorded';
-      statusPillHtml = `<span class="att-status-pill pill-recorded">${t('cards', 'recorded')}</span>`;
+      statusPillHtml = ''; // Redundant small word "RECORDED" removed per user request
       stateBadgeHtml = '';
       windowSubHtml = `<span class="att-window-sub">${t('cards', 'attended')}</span>`;
       actionBtnHtml = `<a href="${escapeHtml(attPageUrl)}" target="_blank" class="btn-att-action btn-att-present" data-att-url="${escapeHtml(attPageUrl)}" title="Open attendance in SPeCTRUM for manual checking">${t('cards', 'present')}</a>`;
     } else if (isEnded) {
       stateClass = 'state-ended';
-      statusPillHtml = `<span class="att-status-pill">${t('cards', 'ended')}</span>`;
+      statusPillHtml = ''; // Redundant small word "ENDED" removed per user request
       stateBadgeHtml = '';
       windowSubHtml = `<span class="att-window-sub">${t('cards', 'sessionEnded')}</span>`;
       actionBtnHtml = `<a href="${escapeHtml(takeUrl)}" target="_blank" class="btn-att-action btn-att-faint" title="Open attendance in SPeCTRUM">${t('cards', 'checkPortal')}</a>`;
