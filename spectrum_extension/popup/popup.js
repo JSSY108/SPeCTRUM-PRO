@@ -2098,6 +2098,34 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Expose controller handlers onto window for cross-module invocations
   window.populateAttendanceCourseFilterOptions = populateAttendanceCourseFilterOptions;
+    // ── Global Glass Slider Fill Percentage Tracker ──
+  function updateSliderFillPct(slider) {
+    if (!slider) return;
+    const min = parseFloat(slider.min) || 0;
+    const max = parseFloat(slider.max) || 100;
+    const val = parseFloat(slider.value) || 0;
+    const pct = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
+    slider.style.setProperty('--fill-pct', `${pct}%`);
+  }
+
+  function initAllGlassSliders() {
+    if (typeof document === 'undefined') return;
+    document.querySelectorAll('input[type="range"]').forEach(updateSliderFillPct);
+  }
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('input', (e) => {
+      if (e.target && e.target.type === 'range') {
+        updateSliderFillPct(e.target);
+      }
+    }, true);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initAllGlassSliders);
+    } else {
+      setTimeout(initAllGlassSliders, 50);
+    }
+  }
+
   window.renderOccPreferencesTable = renderOccPreferencesTable;
   window.debounceSaveCache = debounceSaveCache;
 
