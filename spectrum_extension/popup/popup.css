@@ -16193,21 +16193,72 @@ body.has-custom-bg .version-tag {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
 }
 
-/* Prism Logo Vectors (Pure White Laser Geometry) */
-[data-theme="glass"] .header-brand-logo-svg .art-tri,
-body.has-custom-bg .header-brand-logo-svg .art-tri {
-  stroke: #FFFFFF !important;
-  fill: none !important;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85)) !important;
+/* ==========================================================================
+   PRISM LOGO VECTORS: OPTICAL CRYSTAL GLASS MATERIAL WITH SPECULAR REFRACTION
+   ========================================================================== */
+
+/* Refractive Glass Badge Container Tile */
+[data-theme="glass"] .brand-logo-container,
+[data-theme="glass"] .timetable-brand-icon,
+body.has-custom-bg .brand-logo-container,
+body.has-custom-bg .timetable-brand-icon {
+  background: rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(14px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.36) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), inset 0 1px 1.5px rgba(255, 255, 255, 0.5) !important;
+  border-radius: 8px !important;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
 
+[data-theme="glass"] .brand-logo-container:hover,
+[data-theme="glass"] .timetable-brand-icon:hover,
+body.has-custom-bg .brand-logo-container:hover,
+body.has-custom-bg .timetable-brand-icon:hover {
+  background: rgba(255, 255, 255, 0.20) !important;
+  border-color: rgba(255, 255, 255, 0.55) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3), 0 0 12px rgba(255, 255, 255, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.65) !important;
+  transform: scale(1.06) !important;
+}
+
+/* Translucent Optical Crystal Prism Body */
+[data-theme="glass"] .header-brand-logo-svg .art-tri,
+[data-theme="glass"] .tt-prism-svg .art-tri,
+[data-theme="glass"] .tt-prism-svg polygon:first-of-type,
+body.has-custom-bg .header-brand-logo-svg .art-tri,
+body.has-custom-bg .tt-prism-svg .art-tri,
+body.has-custom-bg .tt-prism-svg polygon:first-of-type {
+  fill: rgba(255, 255, 255, 0.22) !important;
+  stroke: rgba(255, 255, 255, 0.95) !important;
+  stroke-width: 2.2px !important;
+  stroke-linejoin: round !important;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.35)) drop-shadow(0 0 6px rgba(255, 255, 255, 0.7)) !important;
+}
+
+/* Internal Baseline Reflection Facet */
+[data-theme="glass"] .header-brand-logo-svg .art-subline,
+[data-theme="glass"] .tt-prism-svg .art-subline,
+[data-theme="glass"] .tt-prism-svg line,
+body.has-custom-bg .header-brand-logo-svg .art-subline,
+body.has-custom-bg .tt-prism-svg .art-subline,
+body.has-custom-bg .tt-prism-svg line {
+  stroke: rgba(255, 255, 255, 0.75) !important;
+  stroke-width: 1.8px !important;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5)) !important;
+}
+
+/* Incident Laser Beam & Spark */
 [data-theme="glass"] .header-brand-logo-svg .art-beam-incident,
 [data-theme="glass"] .header-brand-logo-svg .flash-spark,
+[data-theme="glass"] .tt-prism-svg .art-beam-incident,
 body.has-custom-bg .header-brand-logo-svg .art-beam-incident,
-body.has-custom-bg .header-brand-logo-svg .flash-spark {
-  fill: #FFFFFF !important;
+body.has-custom-bg .header-brand-logo-svg .flash-spark,
+body.has-custom-bg .tt-prism-svg .art-beam-incident {
+  fill: rgba(255, 255, 255, 0.96) !important;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.85)) !important;
 }
 
+/* Internal Laser Score Track (Animated / Fetching States) */
 [data-theme="glass"] .header-brand-logo-svg .art-score-track,
 [data-theme="glass"] .header-brand-logo-svg .art-score-cap,
 [data-theme="glass"] .header-brand-logo-svg .cap-score-exit,
@@ -16215,17 +16266,47 @@ body.has-custom-bg .header-brand-logo-svg .art-score-track,
 body.has-custom-bg .header-brand-logo-svg .art-score-cap,
 body.has-custom-bg .header-brand-logo-svg .cap-score-exit {
   stroke: #FFFFFF !important;
+  stroke-width: 2.3px !important;
+  fill: none !important;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.85)) !important;
 }
 
+/* Internal Refraction Channel */
 [data-theme="glass"] .header-brand-logo-svg .art-poly,
-body.has-custom-bg .header-brand-logo-svg .art-poly {
-  stroke: #FFFFFF !important;
+[data-theme="glass"] .header-brand-logo-svg .art-score-poly,
+[data-theme="glass"] .tt-prism-svg .art-poly,
+[data-theme="glass"] .tt-prism-svg .art-score-poly,
+body.has-custom-bg .header-brand-logo-svg .art-poly,
+body.has-custom-bg .header-brand-logo-svg .art-score-poly,
+body.has-custom-bg .tt-prism-svg .art-poly,
+body.has-custom-bg .tt-prism-svg .art-score-poly {
+  fill: rgba(255, 255, 255, 0.36) !important;
+  stroke: rgba(255, 255, 255, 0.95) !important;
+  stroke-width: 1.8px !important;
+  stroke-linejoin: round !important;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.85)) !important;
 }
 
+/* Output Spectral Dispersion Rays */
 [data-theme="glass"] .header-brand-logo-svg .art-beam,
-body.has-custom-bg .header-brand-logo-svg .art-beam {
+[data-theme="glass"] .header-brand-logo-svg .art-beam-ray1,
+[data-theme="glass"] .header-brand-logo-svg .art-beam-ray2,
+[data-theme="glass"] .header-brand-logo-svg .art-beam-ray3,
+[data-theme="glass"] .tt-prism-svg .art-beam,
+[data-theme="glass"] .tt-prism-svg .art-beam-ray1,
+[data-theme="glass"] .tt-prism-svg .art-beam-ray2,
+[data-theme="glass"] .tt-prism-svg .art-beam-ray3,
+body.has-custom-bg .header-brand-logo-svg .art-beam,
+body.has-custom-bg .header-brand-logo-svg .art-beam-ray1,
+body.has-custom-bg .header-brand-logo-svg .art-beam-ray2,
+body.has-custom-bg .header-brand-logo-svg .art-beam-ray3,
+body.has-custom-bg .tt-prism-svg .art-beam,
+body.has-custom-bg .tt-prism-svg .art-beam-ray1,
+body.has-custom-bg .tt-prism-svg .art-beam-ray2,
+body.has-custom-bg .tt-prism-svg .art-beam-ray3 {
+  fill: rgba(255, 255, 255, 0.92) !important;
   opacity: 0.95 !important;
-  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8)) !important;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.85)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)) !important;
 }
 
 /* About / Info Button (i) */
@@ -17451,15 +17532,7 @@ body.has-custom-bg .timetable-export-toolbar {
 [data-theme="glass"] .tt-prism-svg rect,
 body.has-custom-bg .tt-prism-svg rect {
   fill: transparent !important;
-}
-
-[data-theme="glass"] .tt-prism-svg polygon,
-[data-theme="glass"] .tt-prism-svg line,
-body.has-custom-bg .tt-prism-svg polygon,
-body.has-custom-bg .tt-prism-svg line {
-  stroke: #FFFFFF !important;
-  fill: #FFFFFF !important;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85)) !important;
+  stroke: none !important;
 }
 
 /* Brand Kicker & Main Title */
