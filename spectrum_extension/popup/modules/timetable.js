@@ -221,6 +221,13 @@
     renderTimetableMode();
   }
 
+  function getVenueIconSvg(isOnline) {
+    if (isOnline) {
+      return `<svg class="icon-svg tt-venue-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
+    }
+    return `<svg class="icon-svg tt-venue-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`;
+  }
+
   function getSessionAcronym(courseName, courseCode) {
     if (typeof generateCourseAcronym === 'function') {
       return generateCourseAcronym(courseName, courseCode);
@@ -1321,8 +1328,10 @@
           const venuePlaceholder = getTimetableText('timetable', 'venuePlaceholder', '+ Add Location');
           const acronym = getSessionAcronym(s.courseName, s.courseCode);
           const acronymHtml = acronym ? `<span class="tt-code-dot">·</span><span class="tt-code-acronym">${esc(acronym)}</span>` : '';
+          const isOnlineH = /online|zoom|teams|google meet|meet|webex/i.test(s.venue || '');
+          const venueIconSvgH = getVenueIconSvg(isOnlineH);
           const venueHtml = hasVenue
-            ? `<span class="tt-venue" title="${esc(s.venue)}">${s.venueIcon || '📍'} ${esc(s.venue)}</span>`
+            ? `<span class="tt-venue" title="${esc(s.venue)}">${venueIconSvgH} ${esc(s.venue)}</span>`
             : `<span class="tt-venue tt-venue-empty"></span>`;
 
           const startTimeVal = `${pad(s.startHour)}:${pad(s.startMin)}`;
@@ -1587,8 +1596,10 @@
           const acronymHtml = acronym ? `<span class="tt-code-dot">·</span><span class="tt-code-acronym">${esc(acronym)}</span>` : '';
           const subtitleText = esc(s.occ);
           const venuePlaceholder = getTimetableText('timetable', 'venuePlaceholder', '+ Add Location');
+          const isOnlineV = /online|zoom|teams|google meet|meet|webex/i.test(s.venue || '');
+          const venueIconSvgV = getVenueIconSvg(isOnlineV);
           const venueHtml = hasVenue
-            ? `<span class="tt-venue" title="${esc(s.venue)}">${s.venueIcon || '📍'} ${esc(s.venue)}</span>`
+            ? `<span class="tt-venue" title="${esc(s.venue)}">${venueIconSvgV} ${esc(s.venue)}</span>`
             : `<span class="tt-venue tt-venue-empty"></span>`;
 
           const startTimeVal = `${pad(s.startHour)}:${pad(s.startMin)}`;
@@ -2185,8 +2196,8 @@
     const lang = getTimetableLang();
     const expText = (lang === 'zh') ? '已导出' : ((lang === 'bm') ? 'Telah Dieksport' : 'Exported');
     btn.innerHTML = `
-      <svg class="icon-svg" viewBox="0 0 24 24" style="stroke:#10B981;width:14px;height:14px;"><polyline points="20 6 9 17 4 12"/></svg>
-      <span style="color:#10B981;">${expText}</span>
+      <svg class="icon-svg" viewBox="0 0 24 24" style="stroke:#FFFFFF;width:14px;height:14px;"><polyline points="20 6 9 17 4 12"/></svg>
+      <span style="color:#FFFFFF;font-weight:700;">${expText}</span>
     `;
     btn.disabled = true;
     setTimeout(() => {
@@ -2712,7 +2723,7 @@
           ctx.fillStyle = '#71717A';
           ctx.font = `600 ${exportConfig.venueFontSize}px "JetBrains Mono", monospace`;
           if (s.venue && s.venue.trim().length > 0) {
-            let vText = `${s.venueIcon || '📍'} ${s.venue}`;
+            let vText = `${s.venue}`;
             const durW = s.durText ? ctx.measureText(s.durText).width + 16 : 0;
             const maxVenueW = cardW - durW - 32;
             if (ctx.measureText(vText).width > maxVenueW) {
@@ -3177,7 +3188,7 @@
             if (s.venue) {
               ctx.fillStyle = '#71717A';
               ctx.font = '600 15px "JetBrains Mono", monospace';
-              const vText = `${s.venueIcon || '📍'} ${s.venue}`;
+              const vText = `${s.venue}`;
               const timeW = ctx.measureText(s.timeStr).width;
               const maxVenueW = cardW - 32 - timeW - 14;
               let displayVenue = vText;
