@@ -19052,12 +19052,85 @@ body.has-custom-bg .btn-download-pack:hover {
   transform: translateY(-1px) scale(1.02) !important;
 }
 
-/* Section Tree Headers & Children */
+/* Sticky header of an expanded course card in Glass Mode */
+[data-theme="glass"] .course-tree-item.expanded > .course-tree-header,
+body.has-custom-bg .course-tree-item.expanded > .course-tree-header {
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Children container of expanded course - ELIMINATES SOLID #F8FAFC WHITE BOX */
+[data-theme="glass"] .course-tree-children,
+body.has-custom-bg .course-tree-children {
+  background: rgba(15, 23, 42, 0.18) !important;
+  backdrop-filter: blur(8px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(140%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.14) !important;
+  padding: 10px 4px 16px !important;
+}
+
+[data-theme="glass"] .course-tree-children .settings-desc,
+body.has-custom-bg .course-tree-children .settings-desc {
+  color: rgba(255, 255, 255, 0.82) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Section Tree Items (Frosted Glass Folder Capsules) - ELIMINATES SOLID GREY CAPSULES */
+[data-theme="glass"] .section-tree-item,
+body.has-custom-bg .section-tree-item {
+  background: rgba(255, 255, 255, 0.11) !important;
+  backdrop-filter: blur(14px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  border-radius: 9px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.35) !important;
+  margin: 6px 14px !important;
+  overflow: hidden !important;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] .section-tree-item:hover,
+body.has-custom-bg .section-tree-item:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28), inset 0 1px 1.5px rgba(255, 255, 255, 0.5) !important;
+  transform: translateY(-1px) !important;
+}
+
+[data-theme="glass"] .section-tree-item.expanded,
+body.has-custom-bg .section-tree-item.expanded {
+  background: rgba(15, 23, 42, 0.52) !important;
+  border-color: rgba(255, 255, 255, 0.34) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Section Tree Header */
 [data-theme="glass"] .section-tree-header,
 body.has-custom-bg .section-tree-header {
-  background: rgba(15, 23, 42, 0.35) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: transparent !important;
+  border-top: none !important;
+  border-bottom: none !important;
   color: #FFFFFF !important;
+  padding: 10px 14px !important;
+  transition: background 0.15s ease !important;
+}
+
+[data-theme="glass"] .section-tree-header:hover,
+body.has-custom-bg .section-tree-header:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="glass"] .section-tree-item.expanded > .section-tree-header,
+body.has-custom-bg .section-tree-item.expanded > .section-tree-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+
+[data-theme="glass"] .section-icon,
+body.has-custom-bg .section-icon {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)) !important;
 }
 
 [data-theme="glass"] .section-title,
@@ -19069,25 +19142,47 @@ body.has-custom-bg .section-title {
 
 [data-theme="glass"] .section-count-badge,
 body.has-custom-bg .section-count-badge {
-  background: rgba(255, 255, 255, 0.2) !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
   color: #FFFFFF !important;
   border-radius: 9999px !important;
   font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
 }
 
-/* File Rows inside Sections */
+/* Expanded Section Children & File Rows (Supports both .file-tree-item and .file-row) */
+[data-theme="glass"] .section-tree-children,
+body.has-custom-bg .section-tree-children {
+  background: rgba(0, 0, 0, 0.18) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+[data-theme="glass"] .file-tree-item,
+body.has-custom-bg .file-tree-item,
 [data-theme="glass"] .file-row,
 body.has-custom-bg .file-row {
-  background: rgba(255, 255, 255, 0.07) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   color: #FFFFFF !important;
-  transition: background 0.15s ease !important;
+  transition: all 0.15s ease !important;
 }
 
+[data-theme="glass"] .file-tree-item:hover,
+body.has-custom-bg .file-tree-item:hover,
 [data-theme="glass"] .file-row:hover,
 body.has-custom-bg .file-row:hover {
   background: rgba(255, 255, 255, 0.16) !important;
+}
+
+[data-theme="glass"] .file-tree-item.selected,
+body.has-custom-bg .file-tree-item.selected {
+  background: rgba(99, 102, 241, 0.22) !important;
+  border-bottom: 1px solid rgba(129, 140, 248, 0.25) !important;
+}
+
+[data-theme="glass"] .file-tree-item:last-child,
+body.has-custom-bg .file-tree-item:last-child {
+  border-bottom: none !important;
 }
 
 [data-theme="glass"] .file-title-text,
@@ -19106,6 +19201,37 @@ body.has-custom-bg .file-format-badge {
   font-weight: 800 !important;
 }
 
+[data-theme="glass"] .file-new-badge,
+body.has-custom-bg .file-new-badge {
+  background: rgba(245, 158, 11, 0.35) !important;
+  border: 1px solid rgba(245, 158, 11, 0.7) !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+}
+
+[data-theme="glass"] .status-synced-pill,
+body.has-custom-bg .status-synced-pill {
+  color: #34D399 !important;
+  font-weight: 700 !important;
+  text-shadow: 0 0 8px rgba(52, 211, 153, 0.5) !important;
+}
+
+[data-theme="glass"] .btn-sync-now,
+body.has-custom-bg .btn-sync-now {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 6px !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  transition: all 0.15s ease !important;
+}
+
+[data-theme="glass"] .btn-sync-now:hover,
+body.has-custom-bg .btn-sync-now:hover {
+  background: rgba(255, 255, 255, 0.26) !important;
+  border-color: rgba(255, 255, 255, 0.55) !important;
+}
+
 [data-theme="glass"] .btn-mat-action,
 [data-theme="glass"] .btn-inspect-file,
 [data-theme="glass"] .btn-single-download,
@@ -19116,12 +19242,32 @@ body.has-custom-bg .btn-single-download {
   border: 1px solid rgba(255, 255, 255, 0.32) !important;
   color: #FFFFFF !important;
   border-radius: 6px !important;
+  transition: all 0.15s ease !important;
 }
 
 [data-theme="glass"] .btn-mat-action:hover,
-body.has-custom-bg .btn-mat-action:hover {
+[data-theme="glass"] .btn-inspect-file:hover,
+[data-theme="glass"] .btn-single-download:hover,
+body.has-custom-bg .btn-mat-action:hover,
+body.has-custom-bg .btn-inspect-file:hover,
+body.has-custom-bg .btn-single-download:hover {
   background: rgba(255, 255, 255, 0.28) !important;
   border-color: rgba(255, 255, 255, 0.6) !important;
+}
+
+[data-theme="glass"] .btn-mat-action svg,
+[data-theme="glass"] .btn-inspect-file svg,
+[data-theme="glass"] .btn-single-download svg,
+body.has-custom-bg .btn-mat-action svg,
+body.has-custom-bg .btn-inspect-file svg,
+body.has-custom-bg .btn-single-download svg {
+  stroke: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="glass"] .mat-chk-wrap input[type="checkbox"],
+body.has-custom-bg .mat-chk-wrap input[type="checkbox"] {
+  accent-color: #38BDF8 !important;
 }
 
 /* Sticky Bottom Action Bar in Materials */
@@ -19205,4 +19351,237 @@ body.has-custom-bg .insp-slide-heading {
   color: #FFFFFF !important;
   font-weight: 800 !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+
+/* ==========================================================================
+   ABOUT / INFO MODAL & UNIVERSAL MODAL SUITE (LIQUID GLASS MATERIAL)
+   ========================================================================== */
+
+/* Universal modal backdrop overlay in Glass Mode */
+[data-theme="glass"] .modal-overlay,
+body.has-custom-bg .modal-overlay {
+  background: rgba(0, 0, 0, 0.55) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+/* Universal modal card container */
+[data-theme="glass"] .modal-card,
+body.has-custom-bg .modal-card {
+  background: rgba(15, 23, 42, 0.72) !important;
+  backdrop-filter: blur(var(--glass-blur, 20px)) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur, 20px)) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45), inset 0 1px 1.5px rgba(255, 255, 255, 0.35) !important;
+  color: #FFFFFF !important;
+}
+
+/* Specific About / Info Modal Card (Overrides .about-modal-card !important) */
+[data-theme="glass"] .about-modal-card,
+body.has-custom-bg .about-modal-card {
+  background: rgba(15, 23, 42, 0.72) !important;
+  backdrop-filter: blur(var(--glass-blur, 20px)) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur, 20px)) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45), inset 0 1px 1.5px rgba(255, 255, 255, 0.4) !important;
+  color: #FFFFFF !important;
+}
+
+/* About Modal Header */
+[data-theme="glass"] .about-modal-header,
+body.has-custom-bg .about-modal-header {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+[data-theme="glass"] .about-logo-wrap,
+body.has-custom-bg .about-logo-wrap {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+}
+
+[data-theme="glass"] .about-title,
+body.has-custom-bg .about-title {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .about-version-badge,
+body.has-custom-bg .about-version-badge {
+  color: rgba(255, 255, 255, 0.75) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] #btn-close-about-modal,
+body.has-custom-bg #btn-close-about-modal,
+[data-theme="glass"] .about-modal-card .modal-close-btn,
+body.has-custom-bg .about-modal-card .modal-close-btn,
+[data-theme="glass"] .modal-card .modal-close-btn,
+body.has-custom-bg .modal-card .modal-close-btn {
+  color: rgba(255, 255, 255, 0.8) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 6px !important;
+  transition: all 0.15s ease !important;
+}
+
+[data-theme="glass"] #btn-close-about-modal:hover,
+body.has-custom-bg #btn-close-about-modal:hover,
+[data-theme="glass"] .about-modal-card .modal-close-btn:hover,
+body.has-custom-bg .about-modal-card .modal-close-btn:hover,
+[data-theme="glass"] .modal-card .modal-close-btn:hover,
+body.has-custom-bg .modal-card .modal-close-btn:hover {
+  color: #FFFFFF !important;
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Developer Profile Banner */
+[data-theme="glass"] .about-dev-box,
+body.has-custom-bg .about-dev-box {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.20) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.25) !important;
+}
+
+[data-theme="glass"] .about-dev-avatar,
+body.has-custom-bg .about-dev-avatar {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="glass"] .about-dev-role,
+body.has-custom-bg .about-dev-role {
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="glass"] .about-dev-name,
+body.has-custom-bg .about-dev-name {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .about-dev-desc,
+body.has-custom-bg .about-dev-desc {
+  color: rgba(255, 255, 255, 0.88) !important;
+  line-height: 1.5 !important;
+}
+
+/* Action Rows Group (Store, GitHub, Privacy, Tip Jar) */
+[data-theme="glass"] .about-action-row,
+body.has-custom-bg .about-action-row {
+  background: rgba(255, 255, 255, 0.10) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 9px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.25) !important;
+  color: #FFFFFF !important;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] .about-action-row:hover,
+body.has-custom-bg .about-action-row:hover {
+  background: rgba(255, 255, 255, 0.20) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), inset 0 1px 1.5px rgba(255, 255, 255, 0.45) !important;
+  transform: translateY(-1px) scale(1.01) !important;
+}
+
+[data-theme="glass"] .about-action-icon,
+body.has-custom-bg .about-action-icon {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  color: #FFFFFF !important;
+  border-radius: 7px !important;
+}
+
+[data-theme="glass"] .about-action-icon svg,
+body.has-custom-bg .about-action-icon svg {
+  stroke: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="glass"] .about-action-title,
+body.has-custom-bg .about-action-title {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .about-action-subtitle,
+body.has-custom-bg .about-action-subtitle {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+[data-theme="glass"] .about-action-arrow,
+body.has-custom-bg .about-action-arrow {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="glass"] .about-action-row:hover .about-action-arrow,
+body.has-custom-bg .about-action-row:hover .about-action-arrow {
+  color: #FFFFFF !important;
+  transform: translateX(2px) !important;
+}
+
+/* Tip Jar DuitNow Box */
+[data-theme="glass"] .about-duitnow-section,
+body.has-custom-bg .about-duitnow-section {
+  border-top: 1px dashed rgba(255, 255, 255, 0.20) !important;
+}
+
+[data-theme="glass"] .about-duitnow-box,
+body.has-custom-bg .about-duitnow-box {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 10px !important;
+}
+
+[data-theme="glass"] .about-qr-note,
+body.has-custom-bg .about-qr-note {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* About Modal Footer */
+[data-theme="glass"] .about-modal-footer,
+body.has-custom-bg .about-modal-footer {
+  background: rgba(15, 23, 42, 0.4) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+[data-theme="glass"] .about-footer-legal,
+body.has-custom-bg .about-footer-legal {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+[data-theme="glass"] #btn-dismiss-about-modal,
+body.has-custom-bg #btn-dismiss-about-modal {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  border-radius: 8px !important;
+  padding: 6px 18px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.35) !important;
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] #btn-dismiss-about-modal:hover,
+body.has-custom-bg #btn-dismiss-about-modal:hover {
+  background: rgba(255, 255, 255, 0.35) !important;
+  border-color: rgba(255, 255, 255, 0.7) !important;
+  transform: scale(1.02) !important;
 }
