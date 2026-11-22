@@ -4054,7 +4054,7 @@ body.has-custom-bg .theme-mode-btn:hover {
   transform: scale(1.1);
 }
 
-/* Glass Button (Pure physical glass lens, no outer frame, no square icons) */
+/* Glass Button (Crystal Clear Liquid Glass Lens: 晶莹透亮, High Reflection, High Transparency) */
 .theme-mode-glass-btn {
   position: relative;
   border: none !important;
@@ -4069,6 +4069,7 @@ body.has-custom-bg .theme-mode-btn:hover {
               opacity 0.22s ease;
 }
 
+/* 1. Crystal Transparency: Crisp, unblurred magnified background */
 .glass-btn-thumb-bg {
   position: absolute;
   inset: 0;
@@ -4076,53 +4077,59 @@ body.has-custom-bg .theme-mode-btn:hover {
   background-image: var(--glass-thumb-bg, linear-gradient(135deg, #090d16 0%, #1e1b4b 35%, #064e3b 70%, #090d16 100%));
   background-size: cover;
   background-position: center;
-  opacity: 0.86;
-  transition: opacity 0.22s ease, transform 0.25s ease;
+  opacity: 1 !important;
+  filter: contrast(110%) saturate(130%);
+  transform: scale(1.14);
+  transition: opacity 0.22s ease, transform 0.25s ease, filter 0.22s ease;
 }
 
+/* 2. Glass Body Depth (Transparent, NO cloudy blur or milky wash) */
 .glass-btn-surface {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(2px) saturate(140%);
-  -webkit-backdrop-filter: blur(2px) saturate(140%);
+  background: radial-gradient(circle at 40% 28%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.0) 60%, rgba(0, 0, 0, 0.18) 100%);
   pointer-events: none;
   transition: background 0.22s ease;
 }
 
+/* 3. High Reflection: Intense curved specular glint & diagonal glass luster */
 .glass-btn-specular {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.22) 30%, rgba(255, 255, 255, 0.0) 58%, rgba(255, 255, 255, 0.26) 100%);
+  background: radial-gradient(ellipse 65% 35% at 42% 14%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.65) 35%, rgba(255, 255, 255, 0.0) 75%),
+              linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, transparent 42%, transparent 70%, rgba(255, 255, 255, 0.25) 100%);
   pointer-events: none;
   transition: opacity 0.22s ease;
 }
 
+/* 4. Prismatic Refractive Bevel Rim */
 .glass-btn-rim {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.88), inset 0 -1.5px 2px rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.95),
+              inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.38),
+              inset 0 0 0 1px rgba(255, 255, 255, 0.45);
   pointer-events: none;
   transition: box-shadow 0.22s ease;
 }
 
-/* Glass Active State - NO outer blue frame, pure elevated glass lens */
+/* Glass Active State: Luminous Crystal Clarity & Elevation */
 .theme-mode-btn.active[data-theme-mode="glass"] {
   border: none !important;
-  box-shadow: 0 1.5px 5px rgba(0, 0, 0, 0.35) !important;
-  transform: scale(1.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 8px rgba(255, 255, 255, 0.35) !important;
+  transform: scale(1.1);
 }
 
 .theme-mode-btn.active[data-theme-mode="glass"] .glass-btn-thumb-bg {
-  opacity: 1;
-  transform: scale(1.05);
+  transform: scale(1.2);
+  filter: contrast(115%) saturate(140%);
 }
 
 .theme-mode-btn.active[data-theme-mode="glass"] .glass-btn-surface {
-  background: rgba(255, 255, 255, 0.18);
+  background: radial-gradient(circle at 40% 28%, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.0) 65%, rgba(0, 0, 0, 0.22) 100%);
 }
 
 .theme-mode-btn.active[data-theme-mode="glass"] .glass-btn-specular {
@@ -4130,7 +4137,9 @@ body.has-custom-bg .theme-mode-btn:hover {
 }
 
 .theme-mode-btn.active[data-theme-mode="glass"] .glass-btn-rim {
-  box-shadow: inset 0 1.2px 1.8px rgba(255, 255, 255, 0.95), inset 0 -1.5px 2px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 1.8px 2.2px 0 rgba(255, 255, 255, 1),
+              inset 0 -1.8px 2.2px 0 rgba(0, 0, 0, 0.45),
+              inset 0 0 0 1px rgba(255, 255, 255, 0.6);
 }
 
 
