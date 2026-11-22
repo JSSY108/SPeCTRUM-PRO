@@ -14380,13 +14380,13 @@ body.has-custom-bg .custom-bg-layer {
 
 body.has-custom-bg {
   --glass-blur: 18px;
-  --glass-tint-op: 0.75;
-  --glass-tint-dark: rgba(18, 18, 24, var(--glass-tint-op, 0.75));
-  --glass-tint-light: rgba(255, 255, 255, 0.82);
-  --glass-border-dark: rgba(255, 255, 255, 0.14);
-  --glass-border-light: rgba(255, 255, 255, 0.55);
-  --glass-shadow-dark: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
-  --glass-shadow-light: 0 8px 24px 0 rgba(0, 0, 0, 0.10);
+  --glass-tint-op: 0.28;
+  --glass-tint-dark: rgba(15, 23, 42, var(--glass-tint-op, 0.28));
+  --glass-tint-light: rgba(255, 255, 255, var(--glass-tint-op, 0.35));
+  --glass-border-dark: rgba(255, 255, 255, 0.18);
+  --glass-border-light: rgba(255, 255, 255, 0.65);
+  --glass-shadow-dark: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px 0 rgba(255, 255, 255, 0.25);
+  --glass-shadow-light: 0 8px 32px 0 rgba(0, 0, 0, 0.08), inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.85);
   background: transparent !important;
 }
 
@@ -14394,66 +14394,405 @@ html.has-custom-bg {
   background: transparent !important;
 }
 
+/* All Outer Containers Must Be 100% Transparent to Reveal Custom Wallpaper */
+body.has-custom-bg,
+html.has-custom-bg,
 body.has-custom-bg .popup-container,
 body.has-custom-bg .fulltab-container,
+body.has-custom-bg .fulltab-only,
+body.has-custom-bg .fulltab-workspace,
+body.has-custom-bg .fulltab-main-viewport,
+body.has-custom-bg .fulltab-content-area,
+body.has-custom-bg .timeline-kanban-wrapper,
+body.has-custom-bg .timeline-kanban-track,
+body.has-custom-bg #timeline-track,
+body.has-custom-bg .fulllist-wrapper,
+body.has-custom-bg .fulllist-centered-container,
+body.has-custom-bg .fulllist-sticky-date-col,
+body.has-custom-bg .fulllist-side-date-pane,
+body.has-custom-bg .fulllist-side-course-pane,
+body.has-custom-bg .fulllist-card-feed,
+body.has-custom-bg .calendar-view-wrapper,
+body.has-custom-bg .cal-main-pane,
+body.has-custom-bg .tab-content,
+body.has-custom-bg .timetable-pane,
+body.has-custom-bg .timetable-workspace-layout,
+body.has-custom-bg .timetable-scroll-frame,
+body.has-custom-bg .timetable-scaler,
+body.has-custom-bg .split-date-container,
+body.has-custom-bg .popup-sidebar-rail,
+body.has-custom-bg .split-cards-stream,
 body.has-custom-bg .app-container {
   background: transparent !important;
 }
 
-/* Glass Reframing for Cards & Panels */
-body.has-custom-bg .pref-card,
-body.has-custom-bg .calendar-card,
-body.has-custom-bg .hero-card,
-body.has-custom-bg .unified-card,
-body.has-custom-bg .fulllist-card,
-body.has-custom-bg .session-card,
-body.has-custom-bg .attendance-card,
-body.has-custom-bg .modal-box,
-body.has-custom-bg .timetable-edit-modal-box {
-  background: var(--glass-tint-dark) !important;
-  backdrop-filter: blur(var(--glass-blur, 18px)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur, 18px)) saturate(180%);
-  border: 1px solid var(--glass-border-dark) !important;
-  box-shadow: var(--glass-shadow-dark) !important;
+/* Kanban Day Columns (Timeline Mode) */
+body.has-custom-bg .kanban-day-column {
+  background: rgba(255, 255, 255, 0.04) !important;
+  backdrop-filter: blur(12px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(150%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: var(--radius-md, 8px) !important;
+  box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.20) !important;
 }
 
-[data-theme="light"] body.has-custom-bg .pref-card,
-[data-theme="light"] body.has-custom-bg .calendar-card,
+[data-theme="light"] body.has-custom-bg .kanban-day-column {
+  background: rgba(255, 255, 255, 0.20) !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.06) !important;
+}
+
+body.has-custom-bg .kanban-day-column.is-today {
+  border: 1.5px solid rgba(99, 102, 241, 0.65) !important;
+  box-shadow: 0 0 24px rgba(99, 102, 241, 0.25) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .kanban-day-column.is-today {
+  border: 1.5px solid rgba(79, 70, 229, 0.55) !important;
+  box-shadow: 0 0 20px rgba(79, 70, 229, 0.15) !important;
+}
+
+body.has-custom-bg .kanban-col-header,
+body.has-custom-bg .timeline-kanban-header {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .kanban-col-header,
+[data-theme="light"] body.has-custom-bg .timeline-kanban-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Floating Frosted Glass Cards Across ALL Views (Kanban, List, Popup, Timetable, Preferences) */
+body.has-custom-bg .spectrum-card,
+body.has-custom-bg .scoped-card,
+body.has-custom-bg .hero-card,
+body.has-custom-bg .hero-next-class-card,
+body.has-custom-bg .unified-card,
+body.has-custom-bg .fulllist-card,
+body.has-custom-bg .calendar-card,
+body.has-custom-bg .session-card,
+body.has-custom-bg .tt-session-card,
+body.has-custom-bg .attendance-card,
+body.has-custom-bg .pref-card,
+body.has-custom-bg .sticky-date-card,
+body.has-custom-bg .fulllist-main-date-card,
+body.has-custom-bg .fulllist-top-toolbar,
+body.has-custom-bg .fulllist-empty-day-card,
+body.has-custom-bg .mini-cal-card,
+body.has-custom-bg .rail-course-matrix-card,
+body.has-custom-bg .modal-box,
+body.has-custom-bg .timetable-edit-modal-box,
+body.has-custom-bg .timetable-bulk-modal-box,
+body.has-custom-bg .cal-detail-sidebar {
+  background: var(--glass-tint-dark) !important;
+  backdrop-filter: blur(var(--glass-blur, 18px)) saturate(180%) contrast(95%);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 18px)) saturate(180%) contrast(95%);
+  border: 1px solid var(--glass-border-dark) !important;
+  box-shadow: var(--glass-shadow-dark) !important;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-theme="light"] body.has-custom-bg .spectrum-card,
+[data-theme="light"] body.has-custom-bg .scoped-card,
 [data-theme="light"] body.has-custom-bg .hero-card,
+[data-theme="light"] body.has-custom-bg .hero-next-class-card,
 [data-theme="light"] body.has-custom-bg .unified-card,
 [data-theme="light"] body.has-custom-bg .fulllist-card,
+[data-theme="light"] body.has-custom-bg .calendar-card,
 [data-theme="light"] body.has-custom-bg .session-card,
+[data-theme="light"] body.has-custom-bg .tt-session-card,
 [data-theme="light"] body.has-custom-bg .attendance-card,
+[data-theme="light"] body.has-custom-bg .pref-card,
+[data-theme="light"] body.has-custom-bg .sticky-date-card,
+[data-theme="light"] body.has-custom-bg .fulllist-main-date-card,
+[data-theme="light"] body.has-custom-bg .fulllist-top-toolbar,
+[data-theme="light"] body.has-custom-bg .fulllist-empty-day-card,
+[data-theme="light"] body.has-custom-bg .mini-cal-card,
+[data-theme="light"] body.has-custom-bg .rail-course-matrix-card,
 [data-theme="light"] body.has-custom-bg .modal-box,
-[data-theme="light"] body.has-custom-bg .timetable-edit-modal-box {
+[data-theme="light"] body.has-custom-bg .timetable-edit-modal-box,
+[data-theme="light"] body.has-custom-bg .timetable-bulk-modal-box,
+[data-theme="light"] body.has-custom-bg .cal-detail-sidebar {
   background: var(--glass-tint-light) !important;
   border: 1px solid var(--glass-border-light) !important;
   box-shadow: var(--glass-shadow-light) !important;
 }
 
-/* Chromium Liquid Glass Bezel Refraction on Hero Card */
-body.has-custom-bg.is-liquid-glass .hero-card {
+/* Card Hover Elevation */
+body.has-custom-bg .spectrum-card:hover,
+body.has-custom-bg .scoped-card:hover,
+body.has-custom-bg .fulllist-card:hover,
+body.has-custom-bg .session-card:hover,
+body.has-custom-bg .tt-session-card:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.42), inset 0 1px 1px 0 rgba(255, 255, 255, 0.30) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .spectrum-card:hover,
+[data-theme="light"] body.has-custom-bg .scoped-card:hover,
+[data-theme="light"] body.has-custom-bg .fulllist-card:hover,
+[data-theme="light"] body.has-custom-bg .session-card:hover,
+[data-theme="light"] body.has-custom-bg .tt-session-card:hover {
+  background: rgba(255, 255, 255, 0.52) !important;
+  border-color: rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.12), inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.90) !important;
+}
+
+/* Fulltab List View Course Nav Items & Sidebar Buttons */
+body.has-custom-bg .fulllist-course-jump-item,
+body.has-custom-bg .fulllist-course-nav-item {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+body.has-custom-bg .fulllist-course-nav-item.active,
+body.has-custom-bg .fulllist-course-jump-item:hover,
+body.has-custom-bg .fulllist-course-nav-item:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .fulllist-course-jump-item,
+[data-theme="light"] body.has-custom-bg .fulllist-course-nav-item {
+  background: rgba(255, 255, 255, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.50) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .fulllist-course-nav-item.active,
+[data-theme="light"] body.has-custom-bg .fulllist-course-jump-item:hover,
+[data-theme="light"] body.has-custom-bg .fulllist-course-nav-item:hover {
+  background: rgba(255, 255, 255, 0.70) !important;
+  border-color: rgba(0, 0, 0, 0.30) !important;
+}
+
+body.has-custom-bg .fulllist-side-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .fulllist-side-btn {
+  background: rgba(255, 255, 255, 0.40) !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+}
+
+body.has-custom-bg .fulllist-day-header-bar {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .fulllist-day-header-bar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.40) !important;
+}
+
+/* Popup Course Capsules & Monogram Buttons */
+body.has-custom-bg .matrix-monogram-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+}
+
+body.has-custom-bg .matrix-monogram-btn:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-color: rgba(255, 255, 255, 0.30) !important;
+}
+
+body.has-custom-bg .matrix-monogram-btn.active {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+body.has-custom-bg .matrix-monogram-btn.active .matrix-btn-text,
+body.has-custom-bg .matrix-monogram-btn.active .matrix-btn-code {
+  color: #000000 !important;
+}
+
+[data-theme="light"] body.has-custom-bg .matrix-monogram-btn {
+  background: rgba(255, 255, 255, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.65) !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] body.has-custom-bg .matrix-monogram-btn:hover {
+  background: rgba(255, 255, 255, 0.70) !important;
+  border-color: rgba(255, 255, 255, 0.90) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .matrix-monogram-btn.active {
+  background: #0f172a !important;
+  color: #ffffff !important;
+}
+
+[data-theme="light"] body.has-custom-bg .matrix-monogram-btn.active .matrix-btn-text,
+[data-theme="light"] body.has-custom-bg .matrix-monogram-btn.active .matrix-btn-code {
+  color: #ffffff !important;
+}
+
+body.has-custom-bg .dock-filter-btn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .dock-filter-btn {
+  background: rgba(255, 255, 255, 0.40) !important;
+  border: 1px solid rgba(255, 255, 255, 0.60) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* OCC Badges on Glass */
+body.has-custom-bg .assign-occ-pill,
+body.has-custom-bg .att-occ-tag,
+body.has-custom-bg .scope-crumb-occ {
+  background: rgba(255, 255, 255, 0.10) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: inherit !important;
+}
+
+[data-theme="light"] body.has-custom-bg .assign-occ-pill,
+[data-theme="light"] body.has-custom-bg .att-occ-tag,
+[data-theme="light"] body.has-custom-bg .scope-crumb-occ {
+  background: rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  color: inherit !important;
+}
+
+/* Fulltab Headers & Rails */
+body.has-custom-bg .fulltab-top-header {
+  background: rgba(15, 23, 42, 0.40) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .fulltab-top-header {
+  background: rgba(255, 255, 255, 0.50) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.45) !important;
+}
+
+body.has-custom-bg .left-rail {
+  background: rgba(15, 23, 42, 0.35) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .left-rail {
+  background: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-right: 1px solid rgba(255, 255, 255, 0.45) !important;
+}
+
+body.has-custom-bg .fulltab-daemon-widget {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .fulltab-daemon-widget {
+  background: rgba(255, 255, 255, 0.40) !important;
+  border: 1px solid rgba(255, 255, 255, 0.50) !important;
+}
+
+/* Floating Navigation Arrows */
+body.has-custom-bg .timeline-floating-nav-btn {
+  background: rgba(15, 23, 42, 0.50) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.20) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="light"] body.has-custom-bg .timeline-floating-nav-btn {
+  background: rgba(255, 255, 255, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.70) !important;
+  color: #0f172a !important;
+}
+
+/* Month Calendar Cells */
+body.has-custom-bg .cal-cells-grid,
+body.has-custom-bg .cal-weekday-cell {
+  background: transparent !important;
+}
+
+body.has-custom-bg .cal-cell {
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .cal-cell {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.40) !important;
+}
+
+body.has-custom-bg .cal-cell.is-selected {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .cal-cell.is-selected {
+  background: rgba(255, 255, 255, 0.65) !important;
+  border-color: #0f172a !important;
+}
+
+/* Timetable Toolbar */
+body.has-custom-bg .timetable-export-toolbar {
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .timetable-export-toolbar {
+  background: rgba(255, 255, 255, 0.55) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.45) !important;
+}
+
+/* Preferences Row Box */
+body.has-custom-bg .pref-row-box {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .pref-row-box {
+  background: rgba(255, 255, 255, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.50) !important;
+}
+
+/* Chromium Liquid Glass Bezel Refraction on Cards */
+body.has-custom-bg.is-liquid-glass .spectrum-card,
+body.has-custom-bg.is-liquid-glass .scoped-card,
+body.has-custom-bg.is-liquid-glass .hero-card,
+body.has-custom-bg.is-liquid-glass .fulllist-card {
   backdrop-filter: blur(var(--glass-blur, 18px)) saturate(180%) url(#liquid-glass-filter);
   -webkit-backdrop-filter: blur(var(--glass-blur, 18px)) saturate(180%) url(#liquid-glass-filter);
 }
 
-/* Glass Reframing for Headers & Footers */
+/* Popup Headers & Footers */
 body.has-custom-bg .popup-header,
 body.has-custom-bg .header-container,
 body.has-custom-bg .pref-sticky-footer,
 body.has-custom-bg .popup-tab-bar {
-  background: rgba(18, 18, 24, 0.70) !important;
+  background: rgba(15, 23, 42, 0.45) !important;
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid var(--glass-border-dark) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
 [data-theme="light"] body.has-custom-bg .popup-header,
 [data-theme="light"] body.has-custom-bg .header-container,
 [data-theme="light"] body.has-custom-bg .pref-sticky-footer,
 [data-theme="light"] body.has-custom-bg .popup-tab-bar {
-  background: rgba(255, 255, 255, 0.78) !important;
-  border-bottom: 1px solid var(--glass-border-light) !important;
+  background: rgba(255, 255, 255, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
 }
 
 .pref-bg-preset-btn {

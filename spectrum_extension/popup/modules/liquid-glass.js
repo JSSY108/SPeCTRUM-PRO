@@ -209,7 +209,7 @@
 
     // Set custom CSS variables
     const blur = options.blur !== undefined ? options.blur : 18;
-    const tint = options.tint !== undefined ? options.tint : 75;
+    const tint = options.tint !== undefined ? options.tint : 28;
     document.documentElement.style.setProperty('--glass-blur', `${blur}px`);
     document.documentElement.style.setProperty('--glass-tint-op', `${tint / 100}`);
 
@@ -333,7 +333,7 @@
         try {
           const dataUrl = await compressUploadedImage(file);
           const blur = parseInt(document.getElementById('slider-glass-blur')?.value, 10) || 18;
-          const tint = parseInt(document.getElementById('slider-glass-tint')?.value, 10) || 75;
+          const tint = parseInt(document.getElementById('slider-glass-tint')?.value, 10) || 28;
           const style = document.getElementById('sel-glass-effect-style')?.value || 'liquid';
           applyCustomWallpaper(dataUrl, { blur, tint, style });
         } catch (err) {
@@ -353,7 +353,7 @@
         const url = inputUrl.value.trim();
         if (!url) return;
         const blur = parseInt(document.getElementById('slider-glass-blur')?.value, 10) || 18;
-        const tint = parseInt(document.getElementById('slider-glass-tint')?.value, 10) || 75;
+        const tint = parseInt(document.getElementById('slider-glass-tint')?.value, 10) || 28;
         const style = document.getElementById('sel-glass-effect-style')?.value || 'liquid';
         applyCustomWallpaper(url, { blur, tint, style });
       });
@@ -377,7 +377,7 @@
         const grad = WALLPAPER_PRESETS[key];
         if (grad) {
           const blur = parseInt(document.getElementById('slider-glass-blur')?.value, 10) || 18;
-          const tint = parseInt(document.getElementById('slider-glass-tint')?.value, 10) || 75;
+          const tint = parseInt(document.getElementById('slider-glass-tint')?.value, 10) || 28;
           const style = document.getElementById('sel-glass-effect-style')?.value || 'liquid';
           applyCustomWallpaper(grad, { blur, tint, style });
         }
@@ -438,9 +438,15 @@
         ['customBgImage', 'customBgBlur', 'customBgTint', 'customBgStyle'],
         (res) => {
           if (res && res.customBgImage) {
+            let savedTint = res.customBgTint !== undefined ? res.customBgTint : 28;
+            // Auto-migrate legacy high opacity (>= 70%) to realistic translucent glass range
+            if (savedTint >= 70) {
+              savedTint = 28;
+              chrome.storage.local.set({ customBgTint: 28 });
+            }
             applyCustomWallpaper(res.customBgImage, {
               blur: res.customBgBlur || 18,
-              tint: res.customBgTint || 75,
+              tint: savedTint,
               style: res.customBgStyle || 'liquid',
               save: false
             });
