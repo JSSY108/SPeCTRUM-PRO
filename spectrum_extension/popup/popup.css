@@ -17187,3 +17187,465 @@ body.has-custom-bg #btn-fulllist-sort-oldest.active {
   text-decoration: underline !important;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.95) !important;
 }
+
+
+/* ==========================================================================
+   6. GLASS THEME: ENTIRE ACADEMIC TIMETABLE & FOOTER (PRESERVE CAPSULES)
+   - 6.1 Timetable Workspace, Scroll Frame & Grid Container (Translucent Glass Slab)
+   - 6.2 Timetable Header Cells, Corner Cells, Time Cols & Day Labels (Pure White Typography)
+   - 6.3 Timetable Session Cards (Floating Translucent Frosted Glass Cards with Sheen)
+   - 6.4 Timetable Footer Toolbar: Brand, Title, Term Badge Capsule, Session Count Pill,
+         Orientation Switch Capsule, Action & Export Button Capsules (Preserve Capsules)
+   ========================================================================== */
+
+/* 6.1 TIMETABLE WORKSPACE, SCROLL FRAME & GRID (TRANSLUCENT GLASS SLAB) */
+[data-theme="glass"] #tab-timetable.timetable-pane,
+[data-theme="glass"] .timetable-workspace-layout,
+[data-theme="glass"] .timetable-scroll-frame,
+[data-theme="glass"] .timetable-scaler,
+body.has-custom-bg #tab-timetable.timetable-pane,
+body.has-custom-bg .timetable-workspace-layout,
+body.has-custom-bg .timetable-scroll-frame,
+body.has-custom-bg .timetable-scaler {
+  background: transparent !important;
+}
+
+[data-theme="glass"] .timetable-grid,
+[data-theme="glass"] .timetable-vertical-grid,
+[data-theme="glass"] .timetable-horizontal-grid,
+body.has-custom-bg .timetable-grid,
+body.has-custom-bg .timetable-vertical-grid,
+body.has-custom-bg .timetable-horizontal-grid {
+  background: rgba(15, 23, 42, var(--glass-card-op, 0.28)) !important;
+  backdrop-filter: blur(var(--glass-blur, 18px)) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur, 18px)) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 1.5px rgba(255, 255, 255, 0.3) !important;
+  overflow: hidden !important;
+}
+
+/* 6.2 TIMETABLE HEADER CELLS, CORNER CELLS & DAY LABELS */
+[data-theme="glass"] .tt-header-cell,
+[data-theme="glass"] .tt-corner-cell,
+[data-theme="glass"] .tt-time-col-header,
+[data-theme="glass"] .tt-day-label-cell,
+[data-theme="glass"] .tt-day-header-cell,
+[data-theme="glass"] .tt-time-cell,
+[data-theme="glass"] .tt-time-track,
+body.has-custom-bg .tt-header-cell,
+body.has-custom-bg .tt-corner-cell,
+body.has-custom-bg .tt-time-col-header,
+body.has-custom-bg .tt-day-label-cell,
+body.has-custom-bg .tt-day-header-cell,
+body.has-custom-bg .tt-time-cell,
+body.has-custom-bg .tt-time-track {
+  background: rgba(15, 23, 42, 0.32) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* Corner Cell Typography (ACADEMIC WK / TIME MYT / UTC+8) */
+[data-theme="glass"] .tt-corner-cell,
+[data-theme="glass"] .tt-corner-tz,
+[data-theme="glass"] .tt-corner-label,
+body.has-custom-bg .tt-corner-cell,
+body.has-custom-bg .tt-corner-tz,
+body.has-custom-bg .tt-corner-label {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Time Headers (08:00, 09:00, 10:00, etc.) */
+[data-theme="glass"] .tt-time-top,
+[data-theme="glass"] .tt-time-bot,
+[data-theme="glass"] .tt-time-text,
+body.has-custom-bg .tt-time-top,
+body.has-custom-bg .tt-time-bot,
+body.has-custom-bg .tt-time-text {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .tt-time-bot,
+body.has-custom-bg .tt-time-bot {
+  opacity: 0.8 !important;
+}
+
+/* Day Row & Column Headers (MONDAY, TUESDAY, WEDNESDAY, etc.) */
+[data-theme="glass"] .tt-day-name,
+[data-theme="glass"] .tt-day-header-cell,
+body.has-custom-bg .tt-day-name,
+body.has-custom-bg .tt-day-header-cell {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.6px !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
+}
+
+/* Today Day Header / Row Highlight */
+[data-theme="glass"] .tt-day-label-cell.is-today,
+[data-theme="glass"] .tt-day-header-cell.is-today,
+body.has-custom-bg .tt-day-label-cell.is-today,
+body.has-custom-bg .tt-day-header-cell.is-today {
+  background: rgba(99, 102, 241, 0.32) !important;
+  border-color: rgba(129, 140, 248, 0.65) !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="glass"] .tt-today-indicator,
+body.has-custom-bg .tt-today-indicator {
+  color: #38BDF8 !important;
+  filter: drop-shadow(0 0 6px #38BDF8) !important;
+}
+
+/* Empty Day Banner & Gap Grid Cells */
+[data-theme="glass"] .tt-empty-day-banner,
+[data-theme="glass"] .tt-gap-cell,
+[data-theme="glass"] .tt-grid-hour-line,
+body.has-custom-bg .tt-empty-day-banner,
+body.has-custom-bg .tt-gap-cell,
+body.has-custom-bg .tt-grid-hour-line {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 6.3 TIMETABLE SESSION CARDS (FLOATING TRANSLUCENT FROSTED GLASS CARDS) */
+[data-theme="glass"] .tt-session-card,
+body.has-custom-bg .tt-session-card {
+  background: rgba(255, 255, 255, 0.14) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), inset 0 1px 1.5px rgba(255, 255, 255, 0.4) !important;
+  color: #FFFFFF !important;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] .tt-session-card:hover,
+body.has-custom-bg .tt-session-card:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 1.5px rgba(255, 255, 255, 0.6) !important;
+  z-index: 10 !important;
+}
+
+/* Typography inside Timetable Session Card */
+[data-theme="glass"] .tt-code,
+[data-theme="glass"] .tt-code-acronym,
+body.has-custom-bg .tt-code,
+body.has-custom-bg .tt-code-acronym {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .tt-code-dot,
+body.has-custom-bg .tt-code-dot {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Session Type Tag (LEC, TUT, LAB) inside Card */
+[data-theme="glass"] .tt-type-tag,
+body.has-custom-bg .tt-type-tag {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border: 1px solid rgba(255, 255, 255, 0.38) !important;
+  border-radius: 4px !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .tt-time-range,
+body.has-custom-bg .tt-time-range {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .tt-card-subtitle,
+[data-theme="glass"] .tt-card-occ-inline,
+body.has-custom-bg .tt-card-subtitle,
+body.has-custom-bg .tt-card-occ-inline {
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-weight: 600 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .tt-card-title,
+body.has-custom-bg .tt-card-title {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .tt-venue,
+body.has-custom-bg .tt-venue {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 600 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .tt-card-dur,
+body.has-custom-bg .tt-card-dur {
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-weight: 600 !important;
+}
+
+/* Live Class Highlight */
+[data-theme="glass"] .tt-session-card.is-live-session,
+body.has-custom-bg .tt-session-card.is-live-session {
+  border: 1.5px solid rgba(52, 211, 153, 0.85) !important;
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.5), inset 0 1px 1.5px rgba(255, 255, 255, 0.5) !important;
+}
+
+[data-theme="glass"] .tt-live-pill,
+body.has-custom-bg .tt-live-pill {
+  background: rgba(16, 185, 129, 0.35) !important;
+  border: 1px solid rgba(52, 211, 153, 0.75) !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Live Tracker Line & Pulse Dot */
+[data-theme="glass"] .tt-tracker-line,
+body.has-custom-bg .tt-tracker-line {
+  background: #38BDF8 !important;
+  box-shadow: 0 0 10px #38BDF8 !important;
+}
+
+[data-theme="glass"] .tt-tracker-pulse-dot,
+body.has-custom-bg .tt-tracker-pulse-dot {
+  background: #38BDF8 !important;
+  box-shadow: 0 0 12px #38BDF8 !important;
+}
+
+[data-theme="glass"] .tt-tracker-badge,
+body.has-custom-bg .tt-tracker-badge {
+  background: rgba(15, 23, 42, 0.88) !important;
+  border: 1px solid rgba(56, 189, 248, 0.7) !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 6.4 TIMETABLE FOOTER TOOLBAR: (PRESERVE CAPSULE SHAPES) */
+[data-theme="glass"] .timetable-footer-toolbar,
+[data-theme="glass"] .timetable-export-toolbar,
+body.has-custom-bg .timetable-footer-toolbar,
+body.has-custom-bg .timetable-export-toolbar {
+  background: rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
+  backdrop-filter: blur(var(--glass-blur, 18px)) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur, 18px)) saturate(160%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* SPeCTRUM PRO Prism Vector in Footer */
+[data-theme="glass"] .tt-prism-svg rect,
+body.has-custom-bg .tt-prism-svg rect {
+  fill: transparent !important;
+}
+
+[data-theme="glass"] .tt-prism-svg polygon,
+[data-theme="glass"] .tt-prism-svg line,
+body.has-custom-bg .tt-prism-svg polygon,
+body.has-custom-bg .tt-prism-svg line {
+  stroke: #FFFFFF !important;
+  fill: #FFFFFF !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85)) !important;
+}
+
+/* Brand Kicker & Main Title */
+[data-theme="glass"] .timetable-brand-kicker,
+body.has-custom-bg .timetable-brand-kicker {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .timetable-main-title,
+body.has-custom-bg .timetable-main-title {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
+}
+
+/* Term Badge Capsule (PRESERVE CAPSULE) */
+[data-theme="glass"] .timetable-term-badge,
+body.has-custom-bg .timetable-term-badge {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 9999px !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+}
+
+[data-theme="glass"] .tt-term-label,
+body.has-custom-bg .tt-term-label {
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="glass"] .tt-term-year,
+[data-theme="glass"] .tt-term-sem,
+body.has-custom-bg .tt-term-year,
+body.has-custom-bg .tt-term-sem {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Session Count Capsule (PRESERVE CAPSULE) */
+[data-theme="glass"] .timetable-badge-pill,
+[data-theme="glass"] #timetable-session-count,
+body.has-custom-bg .timetable-badge-pill,
+body.has-custom-bg #timetable-session-count {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 9999px !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Orientation Mode Switcher Capsule (Vertical | Horizontal) (PRESERVE CAPSULE) */
+[data-theme="glass"] .timetable-view-switch,
+body.has-custom-bg .timetable-view-switch {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 9999px !important;
+  padding: 3px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.25) !important;
+}
+
+[data-theme="glass"] .btn-tt-switch,
+body.has-custom-bg .btn-tt-switch {
+  border-radius: 9999px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  transition: all 0.18s ease !important;
+}
+
+[data-theme="glass"] .btn-tt-switch .icon-svg,
+body.has-custom-bg .btn-tt-switch .icon-svg {
+  stroke: currentColor !important;
+}
+
+[data-theme="glass"] .btn-tt-switch:hover,
+body.has-custom-bg .btn-tt-switch:hover {
+  color: #FFFFFF !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+}
+
+[data-theme="glass"] .btn-tt-switch.active,
+body.has-custom-bg .btn-tt-switch.active {
+  color: #FFFFFF !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  font-weight: 800 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Action & Export Button Capsules (1 Page, Add Class, Import .ics, CSV, PNG, PDF) (PRESERVE CAPSULE) */
+[data-theme="glass"] .btn-timetable-export,
+body.has-custom-bg .btn-timetable-export {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 9999px !important; /* PRESERVE CAPSULE */
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22), inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] .btn-timetable-export svg,
+body.has-custom-bg .btn-timetable-export svg {
+  stroke: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="glass"] .btn-timetable-export:hover,
+body.has-custom-bg .btn-timetable-export:hover {
+  background: rgba(255, 255, 255, 0.26) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px) scale(1.02) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.32), inset 0 1px 1.5px rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Primary Export PDF Button (Highlighted Indigo Frosted Capsule) */
+[data-theme="glass"] .btn-timetable-export.btn-export-primary,
+body.has-custom-bg .btn-timetable-export.btn-export-primary {
+  background: rgba(99, 102, 241, 0.35) !important;
+  border-color: rgba(129, 140, 248, 0.7) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.4), inset 0 1px 1.5px rgba(255, 255, 255, 0.5) !important;
+}
+
+[data-theme="glass"] .btn-timetable-export.btn-export-primary:hover,
+body.has-custom-bg .btn-timetable-export.btn-export-primary:hover {
+  background: rgba(99, 102, 241, 0.5) !important;
+  border-color: rgba(165, 180, 252, 0.85) !important;
+  box-shadow: 0 0 18px rgba(99, 102, 241, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Active Imported ICS Capsule (PRESERVE CAPSULE) */
+[data-theme="glass"] .ics-active-capsule,
+body.has-custom-bg .ics-active-capsule {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 9999px !important;
+  color: #FFFFFF !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22), inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+}
+
+[data-theme="glass"] .ics-capsule-filename,
+[data-theme="glass"] .ics-capsule-file-icon,
+body.has-custom-bg .ics-capsule-filename,
+body.has-custom-bg .ics-capsule-file-icon {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .ics-capsule-divider,
+body.has-custom-bg .ics-capsule-divider {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+[data-theme="glass"] .ics-capsule-btn,
+body.has-custom-bg .ics-capsule-btn {
+  color: #FFFFFF !important;
+}
+
+[data-theme="glass"] .ics-capsule-btn:hover,
+body.has-custom-bg .ics-capsule-btn:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #FFFFFF !important;
+}
+
+/* Timetable Toolbar Divider Line */
+[data-theme="glass"] .timetable-toolbar-divider,
+body.has-custom-bg .timetable-toolbar-divider {
+  background: rgba(255, 255, 255, 0.22) !important;
+}
