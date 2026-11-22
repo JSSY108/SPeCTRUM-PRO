@@ -15461,52 +15461,82 @@ body.has-custom-bg .att-time-hero {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
 }
 
-/* 3.8 Due Dates & Notices (DUE IN 4D · Wed 25 Nov, 18:00) (Pure White, No Grey) */
+/* 3.8 Due Dates, Notices & Author Footers (Pure White, No Grey) */
 [data-theme="glass"] .assign-due-text,
 [data-theme="glass"] .assign-due-tag,
 [data-theme="glass"] .assign-token,
 [data-theme="glass"] .assign-timestamp,
 [data-theme="glass"] .assign-footer-left,
 [data-theme="glass"] .notice-date-text,
+[data-theme="glass"] .notice-type-tag,
+[data-theme="glass"] .notice-author,
+[data-theme="glass"] .notice-sep,
+[data-theme="glass"] .notice-dot,
+[data-theme="glass"] .notice-footer-left,
 body.has-custom-bg .assign-due-text,
 body.has-custom-bg .assign-due-tag,
 body.has-custom-bg .assign-token,
 body.has-custom-bg .assign-timestamp,
 body.has-custom-bg .assign-footer-left,
-body.has-custom-bg .notice-date-text {
+body.has-custom-bg .notice-date-text,
+body.has-custom-bg .notice-type-tag,
+body.has-custom-bg .notice-author,
+body.has-custom-bg .notice-sep,
+body.has-custom-bg .notice-dot,
+body.has-custom-bg .notice-footer-left {
   color: #FFFFFF !important;
   font-weight: 700 !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
-/* 3.9 Action Buttons (Open SPeCTRUM ↗, Submit ↗) - Translucent Frosted Glass with Pure White Text (NO BLACK TEXT, NO SOLID WHITE CAPSULE) */
+/* 3.9 Action Buttons (Open Full →, Open SPeCTRUM ↗, Submit ↗, Details →) - Beautiful Frosted Glass Buttons */
 [data-theme="glass"] .btn-assign-action,
 [data-theme="glass"] .btn-notice-open,
+[data-theme="glass"] .btn-open-notice,
 [data-theme="glass"] .btn-card-action,
 body.has-custom-bg .btn-assign-action,
 body.has-custom-bg .btn-notice-open,
+body.has-custom-bg .btn-open-notice,
 body.has-custom-bg .btn-card-action {
+  height: 28px !important;
+  padding: 0 12px !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  font-family: inherit !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
   background: rgba(255, 255, 255, 0.16) !important;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
   color: #FFFFFF !important;
-  font-weight: 700 !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 [data-theme="glass"] .btn-assign-action:hover,
 [data-theme="glass"] .btn-notice-open:hover,
+[data-theme="glass"] .btn-open-notice:hover,
 [data-theme="glass"] .btn-card-action:hover,
 body.has-custom-bg .btn-assign-action:hover,
 body.has-custom-bg .btn-notice-open:hover,
+body.has-custom-bg .btn-open-notice:hover,
 body.has-custom-bg .btn-card-action:hover {
   background: rgba(255, 255, 255, 0.28) !important;
   border-color: rgba(255, 255, 255, 0.55) !important;
   color: #FFFFFF !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
-  transform: translateY(-1px);
+  transform: translateY(-1px) !important;
 }
 
 [data-theme="glass"] .btn-assign-action.btn-assign-submitted,
