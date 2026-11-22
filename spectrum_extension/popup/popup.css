@@ -14715,32 +14715,150 @@ body.has-custom-bg .timeline-floating-nav-btn {
   color: #0f172a !important;
 }
 
-/* Month Calendar Cells */
-body.has-custom-bg .cal-cells-grid,
+/* Month Calendar Grid & Weekday Headers */
+body.has-custom-bg .cal-cells-grid {
+  background: rgba(255, 255, 255, 0.08) !important;
+  gap: 1px !important;
+}
+
+[data-theme="light"] body.has-custom-bg .cal-cells-grid {
+  background: rgba(0, 0, 0, 0.08) !important;
+  gap: 1px !important;
+}
+
+body.has-custom-bg .cal-weekdays-row {
+  background: rgba(15, 23, 42, 0.35) !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .cal-weekdays-row {
+  background: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.50) !important;
+}
+
 body.has-custom-bg .cal-weekday-cell {
+  background: transparent !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .cal-weekday-cell {
+  border-right: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Calendar Cells: Current Month (Translucent Frosted Glass Panes) */
+body.has-custom-bg .cal-grid-cell {
+  background: rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
+  backdrop-filter: blur(var(--glass-blur, 16px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 16px)) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  transition: background 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
+}
+
+[data-theme="light"] body.has-custom-bg .cal-grid-cell {
+  background: rgba(255, 255, 255, var(--glass-tint-op, 0.35)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.50) !important;
+}
+
+body.has-custom-bg .cal-grid-cell:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .cal-grid-cell:hover {
+  background: rgba(255, 255, 255, 0.60) !important;
+  border-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Calendar Cells: Other Month (Differentiated by Higher Transparency & Dimmed Tone) */
+body.has-custom-bg .cal-grid-cell.other-month {
+  background: rgba(15, 23, 42, 0.08) !important;
+  opacity: 0.38 !important;
+  border-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .cal-grid-cell.other-month {
+  background: rgba(255, 255, 255, 0.12) !important;
+  opacity: 0.45 !important;
+  border-color: rgba(255, 255, 255, 0.20) !important;
+}
+
+body.has-custom-bg .cal-grid-cell.other-month:hover {
+  opacity: 0.75 !important;
+  background: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Selected Calendar Day Cell */
+body.has-custom-bg .cal-grid-cell.is-selected {
+  background: rgba(255, 255, 255, 0.18) !important;
+  outline: 2px solid rgba(255, 255, 255, 0.65) !important;
+  outline-offset: -2px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.35) !important;
+  z-index: 5;
+}
+
+[data-theme="light"] body.has-custom-bg .cal-grid-cell.is-selected {
+  background: rgba(255, 255, 255, 0.70) !important;
+  outline: 2px solid #0f172a !important;
+  outline-offset: -2px;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Calendar Right Detail Sidebar & Header */
+body.has-custom-bg .cal-sidebar-header {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .cal-sidebar-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.45) !important;
+}
+
+body.has-custom-bg .cal-sidebar-content {
   background: transparent !important;
 }
 
-body.has-custom-bg .cal-cell {
-  background: rgba(255, 255, 255, 0.03) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+body.has-custom-bg .cal-sidebar-count-pill {
+  background: rgba(255, 255, 255, 0.10) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: inherit !important;
 }
 
-[data-theme="light"] body.has-custom-bg .cal-cell {
-  background: rgba(255, 255, 255, 0.25) !important;
-  border: 1px solid rgba(255, 255, 255, 0.40) !important;
+[data-theme="light"] body.has-custom-bg .cal-sidebar-count-pill {
+  background: rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  color: inherit !important;
 }
 
-body.has-custom-bg .cal-cell.is-selected {
-  background: rgba(255, 255, 255, 0.15) !important;
-  border-color: rgba(255, 255, 255, 0.45) !important;
+/* Header Week Pill (SEM I · WK 07) */
+body.has-custom-bg .header-week-pill {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: inherit !important;
 }
 
-[data-theme="light"] body.has-custom-bg .cal-cell.is-selected {
-  background: rgba(255, 255, 255, 0.65) !important;
-  border-color: #0f172a !important;
+[data-theme="light"] body.has-custom-bg .header-week-pill {
+  background: rgba(255, 255, 255, 0.50) !important;
+  border: 1px solid rgba(255, 255, 255, 0.70) !important;
+  color: #0f172a !important;
+}
+
+/* Header Quick Auto-Take Attendance Button */
+body.has-custom-bg .btn-fulltab-quick-take.has-open {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid #ffffff !important;
+  color: #0f172a !important;
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.40) !important;
+}
+
+[data-theme="dark"] body.has-custom-bg .btn-fulltab-quick-take.has-open {
+  background: #ffffff !important;
+  color: #000000 !important;
 }
 
 /* Timetable Toolbar */
