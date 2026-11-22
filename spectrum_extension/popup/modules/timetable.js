@@ -2248,14 +2248,235 @@
     flashExportButtonSuccess(document.getElementById('btn-export-timetable-csv'));
   }
 
+  // ── Canvas Theme Palettes for Adaptive Mode Export ──
+  const CANVAS_THEMES = {
+    light: {
+      mode: 'light',
+      canvasBg: '#FFFFFF',
+      gridBg: '#FFFFFF',
+      gridBorder: '#E4E4E7',
+      headerBg: '#FBFBFC',
+      headerBorder: '#D4D4D8',
+      headerTextPrimary: '#18181B',
+      headerTextSecondary: '#71717A',
+      dayLabelText: '#18181B',
+      emptyBannerBg: '#FAFAFB',
+      gapCellBg: 'rgba(0, 0, 0, 0.012)',
+      gapCellBorder: '#F0F0F2',
+      gapCellText: '#A1A1AA',
+      badgeBg: '#F4F4F5',
+      badgeBorder: '#E4E4E7',
+      badgeLabel: '#71717A',
+      badgeVal: '#18181B',
+      cardBg: '#FFFFFF',
+      cardBorder: '#E4E4E7',
+      cardAccent: '#18181B',
+      codeText: '#18181B',
+      occText: '#71717A',
+      titleText: '#18181B',
+      venueText: '#71717A',
+      durText: '#71717A',
+      tagBg: '#F4F4F5',
+      tagBorder: '#E4E4E7',
+      tagText: '#71717A',
+      watermarkText: '#A1A1AA',
+      logoBg: '#18181B',
+      logoBorder: null,
+      logoStroke: '#FFFFFF'
+    },
+    dark: {
+      mode: 'dark',
+      canvasBg: '#09090B',
+      gridBg: '#12141A',
+      gridBorder: 'rgba(255, 255, 255, 0.12)',
+      headerBg: '#181C24',
+      headerBorder: 'rgba(255, 255, 255, 0.14)',
+      headerTextPrimary: '#F4F4F5',
+      headerTextSecondary: '#94A3B8',
+      dayLabelText: '#F4F4F5',
+      emptyBannerBg: 'rgba(255, 255, 255, 0.02)',
+      gapCellBg: 'rgba(255, 255, 255, 0.02)',
+      gapCellBorder: 'rgba(255, 255, 255, 0.08)',
+      gapCellText: '#71717A',
+      badgeBg: '#181C24',
+      badgeBorder: 'rgba(255, 255, 255, 0.14)',
+      badgeLabel: '#94A3B8',
+      badgeVal: '#F4F4F5',
+      cardBg: '#181C22',
+      cardBorder: 'rgba(255, 255, 255, 0.12)',
+      cardAccent: '#38BDF8',
+      codeText: '#F4F4F5',
+      occText: '#A1A1AA',
+      titleText: '#FFFFFF',
+      venueText: '#CBD5E1',
+      durText: '#94A3B8',
+      tagBg: 'rgba(255, 255, 255, 0.08)',
+      tagBorder: 'rgba(255, 255, 255, 0.14)',
+      tagText: '#E2E8F0',
+      watermarkText: '#71717A',
+      logoBg: '#18181B',
+      logoBorder: 'rgba(255, 255, 255, 0.18)',
+      logoStroke: '#FFFFFF'
+    },
+    glass: {
+      mode: 'glass',
+      canvasBg: 'transparent',
+      gridBg: 'rgba(15, 23, 42, 0.42)',
+      gridBorder: 'rgba(255, 255, 255, 0.22)',
+      headerBg: 'rgba(15, 23, 42, 0.50)',
+      headerBorder: 'rgba(255, 255, 255, 0.18)',
+      headerTextPrimary: '#FFFFFF',
+      headerTextSecondary: 'rgba(255, 255, 255, 0.82)',
+      dayLabelText: '#FFFFFF',
+      emptyBannerBg: 'rgba(255, 255, 255, 0.03)',
+      gapCellBg: 'rgba(255, 255, 255, 0.03)',
+      gapCellBorder: 'rgba(255, 255, 255, 0.12)',
+      gapCellText: 'rgba(255, 255, 255, 0.65)',
+      badgeBg: 'rgba(255, 255, 255, 0.12)',
+      badgeBorder: 'rgba(255, 255, 255, 0.28)',
+      badgeLabel: 'rgba(255, 255, 255, 0.75)',
+      badgeVal: '#FFFFFF',
+      cardBg: 'rgba(15, 23, 42, 0.62)',
+      cardBorder: 'rgba(255, 255, 255, 0.30)',
+      cardAccent: '#34D399',
+      codeText: '#FFFFFF',
+      occText: 'rgba(255, 255, 255, 0.88)',
+      titleText: '#FFFFFF',
+      venueText: 'rgba(255, 255, 255, 0.92)',
+      durText: 'rgba(255, 255, 255, 0.78)',
+      tagBg: 'rgba(255, 255, 255, 0.22)',
+      tagBorder: 'rgba(255, 255, 255, 0.40)',
+      tagText: '#FFFFFF',
+      watermarkText: 'rgba(255, 255, 255, 0.75)',
+      logoBg: 'rgba(255, 255, 255, 0.14)',
+      logoBorder: 'rgba(255, 255, 255, 0.40)',
+      logoStroke: '#FFFFFF'
+    }
+  };
+
+  /**
+   * Detect currently active theme mode for timetable canvas export.
+   */
+  function getActiveTimetableExportTheme() {
+    const hasCustomBg = (typeof document !== 'undefined') &&
+      (document.body?.classList.contains('has-custom-bg') || document.documentElement?.classList.contains('has-custom-bg'));
+    const mode = (typeof document !== 'undefined')
+      ? (document.documentElement.getAttribute('data-theme') || (document.body && document.body.getAttribute('data-theme')) || 'light')
+      : 'light';
+    if (mode === 'glass' || hasCustomBg) return 'glass';
+    if (mode === 'dark') return 'dark';
+    return 'light';
+  }
+
+  /**
+   * Draw linear gradient background for canvas.
+   */
+  function drawCanvasGradient(ctx, width, height, gradStr) {
+    const grad = ctx.createLinearGradient(0, 0, width, height);
+    if (!gradStr || typeof gradStr !== 'string' || gradStr === 'aurora') {
+      grad.addColorStop(0, '#090d16');
+      grad.addColorStop(0.35, '#1e1b4b');
+      grad.addColorStop(0.70, '#064e3b');
+      grad.addColorStop(1, '#090d16');
+    } else if (gradStr.includes('#451a03') || gradStr.includes('sunset')) {
+      grad.addColorStop(0, '#18181b');
+      grad.addColorStop(0.35, '#451a03');
+      grad.addColorStop(0.70, '#701a75');
+      grad.addColorStop(1, '#18181b');
+    } else if (gradStr.includes('#172554') || gradStr.includes('cyber')) {
+      grad.addColorStop(0, '#030712');
+      grad.addColorStop(0.40, '#172554');
+      grad.addColorStop(0.75, '#581c87');
+      grad.addColorStop(1, '#030712');
+    } else if (gradStr.includes('#334155') || gradStr.includes('minimal')) {
+      grad.addColorStop(0, '#1e293b');
+      grad.addColorStop(0.50, '#334155');
+      grad.addColorStop(1, '#0f172a');
+    } else {
+      const stopMatches = Array.from(gradStr.matchAll(/(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\))\s*(\d+)%/g));
+      if (stopMatches.length > 0) {
+        stopMatches.forEach(m => {
+          const color = m[1];
+          const stop = Math.max(0, Math.min(1, parseInt(m[2], 10) / 100));
+          grad.addColorStop(stop, color);
+        });
+      } else {
+        grad.addColorStop(0, '#090d16');
+        grad.addColorStop(0.35, '#1e1b4b');
+        grad.addColorStop(0.70, '#064e3b');
+        grad.addColorStop(1, '#090d16');
+      }
+    }
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, width, height);
+  }
+
+  /**
+   * Asynchronously retrieves active wallpaper image/gradient for glass export.
+   */
+  async function loadActiveWallpaperData() {
+    let bgVal = '';
+    try {
+      if (typeof localStorage !== 'undefined') {
+        bgVal = localStorage.getItem('spectrum_custom_bg') || '';
+      }
+    } catch (e) {}
+
+    if (!bgVal && typeof document !== 'undefined') {
+      const bgLayer = document.getElementById('custom-bg-layer');
+      if (bgLayer && bgLayer.style.backgroundImage) {
+        bgVal = bgLayer.style.backgroundImage;
+      } else {
+        bgVal = document.documentElement.style.getPropertyValue('--glass-thumb-bg') || '';
+      }
+    }
+
+    if (!bgVal && typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      try {
+        const res = await new Promise(r => chrome.storage.local.get(['customBgImage'], r));
+        if (res && res.customBgImage) bgVal = res.customBgImage;
+      } catch (e) {}
+    }
+
+    bgVal = (bgVal || '').trim();
+    if (bgVal.startsWith('url(')) {
+      bgVal = bgVal.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+    }
+
+    if (!bgVal) {
+      return { type: 'gradient', value: 'aurora' };
+    }
+
+    if (bgVal.startsWith('linear-gradient') || bgVal.startsWith('radial-gradient')) {
+      return { type: 'gradient', value: bgVal };
+    }
+
+    const img = await new Promise(resolve => {
+      const el = new Image();
+      el.crossOrigin = 'anonymous';
+      el.onload = () => resolve(el);
+      el.onerror = () => {
+        console.warn('[SPeCTRUM Timetable] Could not load wallpaper image for canvas, using fallback gradient');
+        resolve(null);
+      };
+      el.src = bgVal;
+    });
+
+    if (img) {
+      return { type: 'image', img };
+    }
+
+    return { type: 'gradient', value: 'aurora' };
+  }
+
   /**
    * Draws the official SPeCTRUM PRO prism brand mark onto an HTML5 Canvas.
    * Rendered with pure mathematical vector paths for pin-sharp export at any DPI.
    */
-  function drawCanvasPrismLogo(ctx, x, y, size) {
+  function drawCanvasPrismLogo(ctx, x, y, size, themeConfig) {
     ctx.save();
     const radius = 10;
-    ctx.fillStyle = '#18181B';
+    ctx.fillStyle = (themeConfig && themeConfig.logoBg) ? themeConfig.logoBg : '#18181B';
     ctx.beginPath();
     if (typeof ctx.roundRect === 'function') {
       ctx.roundRect(x, y, size, size, radius);
@@ -2268,12 +2489,19 @@
     }
     ctx.fill();
 
+    if (themeConfig && themeConfig.logoBorder) {
+      ctx.strokeStyle = themeConfig.logoBorder;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
     const s = size / 200;
     const toX = vx => x + vx * s;
     const toY = vy => y + vy * s;
+    const strokeColor = (themeConfig && themeConfig.logoStroke) ? themeConfig.logoStroke : '#FFFFFF';
 
     // 1. Triangular Prism Outline
-    ctx.strokeStyle = '#FFFFFF';
+    ctx.strokeStyle = strokeColor;
     ctx.lineWidth = Math.max(1.8, 2.2 * s);
     ctx.lineJoin = 'miter';
     ctx.beginPath();
@@ -2290,7 +2518,7 @@
     ctx.stroke();
 
     // 2. Incident Beam (entering from left)
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = strokeColor;
     ctx.beginPath();
     ctx.moveTo(toX(0.2), toY(141.4));
     ctx.lineTo(toX(50.9), toY(124.6));
@@ -2316,7 +2544,6 @@
     ctx.stroke();
 
     // 4. Refracted Spectral Rays (exiting right)
-    // Ray 1
     ctx.beginPath();
     ctx.moveTo(toX(122.8), toY(72.1));
     ctx.lineTo(toX(200.1), toY(39.8));
@@ -2325,7 +2552,6 @@
     ctx.closePath();
     ctx.fill();
 
-    // Ray 2
     ctx.beginPath();
     ctx.moveTo(toX(123.1), toY(75.9));
     ctx.lineTo(toX(200.1), toY(51.7));
@@ -2334,7 +2560,6 @@
     ctx.closePath();
     ctx.fill();
 
-    // Ray 3
     ctx.beginPath();
     ctx.moveTo(toX(124.1), toY(79.9));
     ctx.lineTo(toX(200.1), toY(64.4));
@@ -2346,7 +2571,12 @@
     ctx.restore();
   }
 
-  function renderHorizontalTimetableToCanvas() {
+  function renderHorizontalTimetableToCanvas(theme, bgData) {
+    if (!theme) {
+      const mode = getActiveTimetableExportTheme();
+      theme = CANVAS_THEMES[mode] || CANVAS_THEMES.light;
+    }
+
     const sessions = extractWeeklyTimetableSessions();
     const DAY_NAMES = getTimetableDayNames();
     // Always include Monday to Saturday (days 1..6)
@@ -2428,7 +2658,7 @@
     });
 
     const gridH = curRowY - gridY;
-    const height = curRowY + 55; // Fitted canvas height (no giant white bottom dead space!)
+    const height = curRowY + 55; // Fitted canvas height
 
     const canvas = document.createElement('canvas');
     canvas.width = width;
@@ -2436,19 +2666,40 @@
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
-    // Fill Canvas White Background
-    ctx.fillStyle = '#FFFFFF';
+    // Fill Canvas Background matching active theme
+    ctx.fillStyle = (theme.mode === 'glass') ? '#090D16' : theme.canvasBg;
     ctx.fillRect(0, 0, width, height);
+
+    if (theme.mode === 'glass') {
+      if (bgData && bgData.type === 'image' && bgData.img) {
+        const img = bgData.img;
+        const imgW = img.naturalWidth || img.width || 1920;
+        const imgH = img.naturalHeight || img.height || 1080;
+        const scale = Math.max(width / imgW, height / imgH);
+        const drawW = imgW * scale;
+        const drawH = imgH * scale;
+        const drawX = (width - drawW) / 2;
+        const drawY = (height - drawH) / 2;
+        ctx.drawImage(img, drawX, drawY, drawW, drawH);
+        // Ambient glass tint overlay
+        ctx.fillStyle = 'rgba(10, 15, 26, 0.42)';
+        ctx.fillRect(0, 0, width, height);
+      } else if (bgData && bgData.type === 'gradient') {
+        drawCanvasGradient(ctx, width, height, bgData.value);
+      } else {
+        drawCanvasGradient(ctx, width, height, 'aurora');
+      }
+    }
 
     // ── 1. SPeCTRUM PRO Brand Mark (Icon Square) ──
     const iconSize = 74;
     const iconX = 60;
     const iconY = 46;
-    drawCanvasPrismLogo(ctx, iconX, iconY, iconSize);
+    drawCanvasPrismLogo(ctx, iconX, iconY, iconSize, theme);
 
     // ── 2. Elevated Brand & Title Typography ──
     const titleLeftX = iconX + iconSize + 20; // 154px
-    ctx.fillStyle = '#18181B';
+    ctx.fillStyle = theme.headerTextPrimary;
     ctx.font = '800 17px "JetBrains Mono", monospace';
     if ('letterSpacing' in ctx) ctx.letterSpacing = '1.5px';
     ctx.fillText('SPECTRUM PRO', titleLeftX, 70);
@@ -2474,7 +2725,7 @@
     const badgeX = width - 60 - badgeW;
     const badgeY = 46;
 
-    ctx.fillStyle = '#F4F4F5';
+    ctx.fillStyle = theme.badgeBg;
     ctx.beginPath();
     if (typeof ctx.roundRect === 'function') {
       ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 8);
@@ -2482,12 +2733,17 @@
       ctx.rect(badgeX, badgeY, badgeW, badgeH);
     }
     ctx.fill();
+    if (theme.badgeBorder) {
+      ctx.strokeStyle = theme.badgeBorder;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
 
-    ctx.fillStyle = '#71717A';
+    ctx.fillStyle = theme.badgeLabel;
     ctx.font = '700 18px "JetBrains Mono", monospace';
     ctx.fillText('TERM:', badgeX + 24, badgeY + 44);
 
-    ctx.fillStyle = '#18181B';
+    ctx.fillStyle = theme.badgeVal;
     ctx.font = '800 21px "JetBrains Mono", monospace';
     ctx.fillText(academicYear, badgeX + 96, badgeY + 35);
     ctx.fillText(semType, badgeX + 96, badgeY + 61);
@@ -2517,36 +2773,36 @@
     }
 
     // Outer Grid Border & Background
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = theme.gridBg;
     ctx.fillRect(gridX, gridY, gridW, gridH);
-    ctx.strokeStyle = '#E4E4E7';
+    ctx.strokeStyle = theme.gridBorder;
     ctx.lineWidth = 2;
     ctx.strokeRect(gridX, gridY, gridW, gridH);
 
     // Header Row Background
-    ctx.fillStyle = '#FBFBFC';
+    ctx.fillStyle = theme.headerBg;
     ctx.fillRect(gridX, gridY, gridW, headerH);
     ctx.beginPath();
     ctx.moveTo(gridX, gridY + headerH);
     ctx.lineTo(gridX + gridW, gridY + headerH);
-    ctx.strokeStyle = '#D4D4D8';
+    ctx.strokeStyle = theme.headerBorder;
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Corner Header Cell (matches Image 1: ACADEMIC WK / TIME (MYT))
-    ctx.fillStyle = '#18181B';
+    // Corner Header Cell (ACADEMIC WK / TIME (MYT))
+    ctx.fillStyle = theme.headerTextPrimary;
     ctx.font = '800 13px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
     const acadWkText = (mainTitleH === 'JADUAL WAKTU AKADEMIK') ? 'MINGGU AKADEMIK' : 'ACADEMIC WK';
     ctx.fillText(acadWkText, gridX + cornerW / 2, gridY + 22);
-    ctx.fillStyle = '#71717A';
+    ctx.fillStyle = theme.headerTextSecondary;
     ctx.font = '600 11px "JetBrains Mono", monospace';
     ctx.fillText('TIME (MYT)', gridX + cornerW / 2, gridY + 38);
 
     ctx.beginPath();
     ctx.moveTo(gridX + cornerW, gridY);
     ctx.lineTo(gridX + cornerW, gridY + gridH);
-    ctx.strokeStyle = '#D4D4D8';
+    ctx.strokeStyle = theme.headerBorder;
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
@@ -2563,16 +2819,16 @@
       ctx.beginPath();
       ctx.moveTo(colX, gridY);
       ctx.lineTo(colX, gridY + gridH);
-      ctx.strokeStyle = '#E4E4E7';
+      ctx.strokeStyle = theme.gridBorder;
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      ctx.fillStyle = '#18181B';
+      ctx.fillStyle = theme.headerTextPrimary;
       ctx.font = `800 ${isHalf ? 12 : 15}px "JetBrains Mono", monospace`;
       ctx.textAlign = 'center';
       ctx.fillText(`${pad(h)}:00`, colX + colW / 2, gridY + 22);
 
-      ctx.fillStyle = '#71717A';
+      ctx.fillStyle = theme.headerTextSecondary;
       ctx.font = `600 ${isHalf ? 9.5 : 11}px "JetBrains Mono", monospace`;
       ctx.fillText(`${pad(h + 1)}:00`, colX + colW / 2, gridY + 38);
     }
@@ -2588,19 +2844,19 @@
       ctx.beginPath();
       ctx.moveTo(gridX, y);
       ctx.lineTo(gridX + gridW, y);
-      ctx.strokeStyle = '#E4E4E7';
+      ctx.strokeStyle = theme.gridBorder;
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
       // Day Label Cell (Col 1)
-      ctx.fillStyle = '#18181B';
+      ctx.fillStyle = theme.dayLabelText;
       const dFontSz = isHalf ? 12.5 : 15;
       ctx.font = `800 ${dFontSz}px "Hanken Grotesk", sans-serif`;
       ctx.fillText(dayName, gridX + 18, y + rowH / 2 + 5);
 
       if (daySess.length === 0) {
         // Empty Day Banner
-        ctx.fillStyle = '#FAFAFB';
+        ctx.fillStyle = theme.emptyBannerBg;
         ctx.fillRect(gridX + cornerW + 2, y + 2, gridW - cornerW - 4, rowH - 4);
       } else {
         const occupied = new Array(totalCols).fill(false);
@@ -2613,7 +2869,7 @@
           const startX = getCanvasHorizontalX(s.startHour, s.startMin);
           const endX = getCanvasHorizontalX(s.endHour, s.endMin);
 
-          // Card Geometry configured via Tuner Studio
+          // Card Geometry
           const cardMarginX = exportConfig.cardMarginX;
           const cardMarginY = exportConfig.cardMarginY;
           const cardX = startX + cardMarginX;
@@ -2622,20 +2878,49 @@
           const cardH = rowH - cardMarginY * 2;
 
           // Card Background & Border
-          ctx.fillStyle = '#FFFFFF';
-          ctx.beginPath();
-          if (typeof ctx.roundRect === 'function') {
-            ctx.roundRect(cardX, cardY, cardW, cardH, exportConfig.cardRadius);
+          if (theme.mode === 'glass') {
+            ctx.save();
+            ctx.beginPath();
+            if (typeof ctx.roundRect === 'function') {
+              ctx.roundRect(cardX, cardY, cardW, cardH, exportConfig.cardRadius);
+            } else {
+              ctx.rect(cardX, cardY, cardW, cardH);
+            }
+            ctx.fillStyle = theme.cardBg;
+            ctx.fill();
+            const cardGrad = ctx.createLinearGradient(cardX, cardY, cardX, cardY + cardH);
+            cardGrad.addColorStop(0, 'rgba(255, 255, 255, 0.16)');
+            cardGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.05)');
+            cardGrad.addColorStop(1, 'rgba(255, 255, 255, 0.02)');
+            ctx.fillStyle = cardGrad;
+            ctx.fill();
+            ctx.strokeStyle = theme.cardBorder;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
           } else {
-            ctx.rect(cardX, cardY, cardW, cardH);
+            ctx.fillStyle = theme.cardBg;
+            ctx.beginPath();
+            if (typeof ctx.roundRect === 'function') {
+              ctx.roundRect(cardX, cardY, cardW, cardH, exportConfig.cardRadius);
+            } else {
+              ctx.rect(cardX, cardY, cardW, cardH);
+            }
+            ctx.fill();
+            ctx.strokeStyle = theme.cardBorder;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
           }
-          ctx.fill();
-          ctx.strokeStyle = '#E4E4E7';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
 
-          // Left Black Accent Stripe (Visual Anchor)
-          ctx.fillStyle = '#18181B';
+          // Left Accent Stripe
+          let accentColor = theme.cardAccent;
+          if (theme.mode !== 'light') {
+            if (s.typeLabel === 'LEC') accentColor = '#34D399';
+            else if (s.typeLabel === 'TUT') accentColor = '#FBBF24';
+            else if (s.typeLabel === 'LAB') accentColor = '#C084FC';
+            else accentColor = '#38BDF8';
+          }
+          ctx.fillStyle = accentColor;
           ctx.fillRect(cardX, cardY, 5, cardH);
 
           // 1. Header Line: Code + Acronym + Type Tag
@@ -2667,12 +2952,12 @@
           }
 
           const headerY = cardY + exportConfig.headerYOffset;
-          ctx.fillStyle = '#18181B';
+          ctx.fillStyle = theme.codeText;
           ctx.fillText(displayCodeText, cardX + 14, headerY);
 
           // Type Tag Pill
           const tagY = cardY + exportConfig.tagYOffset;
-          ctx.fillStyle = '#F4F4F5';
+          ctx.fillStyle = theme.tagBg;
           ctx.beginPath();
           if (typeof ctx.roundRect === 'function') {
             ctx.roundRect(tagX, tagY, tagW, tagH, 3);
@@ -2680,11 +2965,11 @@
             ctx.rect(tagX, tagY, tagW, tagH);
           }
           ctx.fill();
-          ctx.strokeStyle = '#E4E4E7';
+          ctx.strokeStyle = theme.tagBorder;
           ctx.lineWidth = 1;
           ctx.stroke();
 
-          ctx.fillStyle = '#71717A';
+          ctx.fillStyle = theme.tagText;
           ctx.font = `700 ${exportConfig.tagFontSize}px "JetBrains Mono", monospace`;
           ctx.textAlign = 'center';
           const tagTextY = tagY + Math.round(tagH * 0.72);
@@ -2692,7 +2977,7 @@
           ctx.textAlign = 'left';
 
           // 2. Subtitle: OCC
-          ctx.fillStyle = '#71717A';
+          ctx.fillStyle = theme.occText;
           ctx.font = `700 ${exportConfig.occFontSize}px "JetBrains Mono", monospace`;
           const occY = cardY + exportConfig.occYOffset;
           ctx.fillText(s.occ, cardX + 14, occY);
@@ -2701,7 +2986,7 @@
           const footerY = cardY + cardH - exportConfig.footerBottomInset;
 
           // 3. Course Title (Multi-line wrap, dynamically fitted so it never collides with footer)
-          ctx.fillStyle = '#18181B';
+          ctx.fillStyle = theme.titleText;
           ctx.font = `800 ${exportConfig.titleFontSize}px "Hanken Grotesk", sans-serif`;
           const maxTitleW = cardW - 28;
           const titleLineH = exportConfig.titleLineH;
@@ -2720,7 +3005,7 @@
           });
 
           // Venue (Left) & Duration (Right)
-          ctx.fillStyle = '#71717A';
+          ctx.fillStyle = theme.venueText;
           ctx.font = `600 ${exportConfig.venueFontSize}px "JetBrains Mono", monospace`;
           if (s.venue && s.venue.trim().length > 0) {
             let vText = `${s.venue}`;
@@ -2736,6 +3021,7 @@
           }
 
           if (s.durText) {
+            ctx.fillStyle = theme.durText;
             ctx.textAlign = 'right';
             ctx.fillText(s.durText, cardX + cardW - 14, footerY);
             ctx.textAlign = 'left';
@@ -2755,9 +3041,9 @@
               const gapW = Math.max(16, (gapEndColX - gapX) - 6);
               const gapH = rowH - 8;
 
-              ctx.fillStyle = 'rgba(0, 0, 0, 0.012)';
+              ctx.fillStyle = theme.gapCellBg;
               ctx.fillRect(gapX, gapY, gapW, gapH);
-              ctx.strokeStyle = '#F0F0F2';
+              ctx.strokeStyle = theme.gapCellBorder;
               ctx.lineWidth = 1;
               ctx.strokeRect(gapX, gapY, gapW, gapH);
 
@@ -2765,7 +3051,7 @@
               const gEndH = i + minHour;
               const label = getEditorialGapLabel(gStartH, gEndH);
 
-              ctx.fillStyle = '#A1A1AA';
+              ctx.fillStyle = theme.gapCellText;
               ctx.font = '600 11px "JetBrains Mono", monospace';
               ctx.textAlign = 'center';
               if (gapW > 100) {
@@ -2781,21 +3067,32 @@
     });
 
     // Bottom Watermark
-    ctx.fillStyle = '#A1A1AA';
+    ctx.fillStyle = theme.watermarkText;
     ctx.font = '600 13px "JetBrains Mono", monospace';
     ctx.fillText('SPeCTRUM PRO · ACADEMIC SUITE · UNIVERSITI MALAYA', 60, height - 20);
 
     return canvas;
   }
 
-  function renderTimetableToCanvas() {
-    if (currentTimetableLayout === 'horizontal') {
-      return renderHorizontalTimetableToCanvas();
+  async function renderTimetableToCanvas() {
+    const themeMode = getActiveTimetableExportTheme();
+    const theme = CANVAS_THEMES[themeMode] || CANVAS_THEMES.light;
+    let bgData = null;
+    if (theme.mode === 'glass') {
+      bgData = await loadActiveWallpaperData();
     }
-    return renderVerticalTimetableToCanvas();
+    if (currentTimetableLayout === 'horizontal') {
+      return renderHorizontalTimetableToCanvas(theme, bgData);
+    }
+    return renderVerticalTimetableToCanvas(theme, bgData);
   }
 
-  function renderVerticalTimetableToCanvas() {
+  function renderVerticalTimetableToCanvas(theme, bgData) {
+    if (!theme) {
+      const mode = getActiveTimetableExportTheme();
+      theme = CANVAS_THEMES[mode] || CANVAS_THEMES.light;
+    }
+
     const sessions = extractWeeklyTimetableSessions();
     const DAY_NAMES = getTimetableDayNames();
     // Always include Monday to Saturday (days 1..6)
@@ -2825,19 +3122,40 @@
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
-    // Fill Canvas Background
-    ctx.fillStyle = '#FFFFFF';
+    // Fill Canvas Background matching active theme
+    ctx.fillStyle = (theme.mode === 'glass') ? '#090D16' : theme.canvasBg;
     ctx.fillRect(0, 0, width, height);
+
+    if (theme.mode === 'glass') {
+      if (bgData && bgData.type === 'image' && bgData.img) {
+        const img = bgData.img;
+        const imgW = img.naturalWidth || img.width || 1920;
+        const imgH = img.naturalHeight || img.height || 1080;
+        const scale = Math.max(width / imgW, height / imgH);
+        const drawW = imgW * scale;
+        const drawH = imgH * scale;
+        const drawX = (width - drawW) / 2;
+        const drawY = (height - drawH) / 2;
+        ctx.drawImage(img, drawX, drawY, drawW, drawH);
+        // Ambient glass tint overlay
+        ctx.fillStyle = 'rgba(10, 15, 26, 0.42)';
+        ctx.fillRect(0, 0, width, height);
+      } else if (bgData && bgData.type === 'gradient') {
+        drawCanvasGradient(ctx, width, height, bgData.value);
+      } else {
+        drawCanvasGradient(ctx, width, height, 'aurora');
+      }
+    }
 
     // ── 1. SPeCTRUM PRO Brand Mark (Icon Square) ──
     const iconSize = 74;
     const iconX = 60;
     const iconY = 46;
-    drawCanvasPrismLogo(ctx, iconX, iconY, iconSize);
+    drawCanvasPrismLogo(ctx, iconX, iconY, iconSize, theme);
 
     // ── 2. Elevated Brand & Title Typography ──
     const titleLeftX = iconX + iconSize + 20; // 154px
-    ctx.fillStyle = '#18181B';
+    ctx.fillStyle = theme.headerTextPrimary;
     ctx.font = '800 17px "JetBrains Mono", monospace';
     if ('letterSpacing' in ctx) ctx.letterSpacing = '1.5px';
     ctx.fillText('SPECTRUM PRO', titleLeftX, 70);
@@ -2865,7 +3183,7 @@
     const badgeR = 10;
 
     // Pill background container
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = theme.badgeBg;
     ctx.beginPath();
     if (typeof ctx.roundRect === 'function') {
       ctx.roundRect(badgeX, badgeY, badgeW, badgeH, badgeR);
@@ -2873,34 +3191,35 @@
       ctx.rect(badgeX, badgeY, badgeW, badgeH);
     }
     ctx.fill();
-    ctx.strokeStyle = '#E4E4E7';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    if (theme.badgeBorder) {
+      ctx.strokeStyle = theme.badgeBorder;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
 
     // "TERM:" label on left of badge
-    ctx.fillStyle = '#71717A';
+    ctx.fillStyle = theme.badgeLabel;
     ctx.font = '700 18px "JetBrains Mono", monospace';
     ctx.textAlign = 'left';
     ctx.fillText('TERM:', badgeX + 22, badgeY + 44);
 
     // Year & Sem right-aligned on badge
-    ctx.fillStyle = '#18181B';
+    ctx.fillStyle = theme.badgeVal;
     ctx.font = '800 19px "JetBrains Mono", monospace';
     ctx.textAlign = 'right';
     ctx.fillText(academicYear, badgeX + badgeW - 22, badgeY + 33);
     ctx.fillText(semType, badgeX + badgeW - 22, badgeY + 59);
     ctx.textAlign = 'left';
 
-    // ── 4. Grid Coordinates (Gained 30px vertical height from eliminated subheads) ──
+    // ── 4. Grid Coordinates ──
     const gridX = 60;
     const gridY = 145;
     const gridW = width - 120; // 2080px
-    const gridH = height - gridY - 55; // 1250px (was 1215px, +35px extra space)
+    const gridH = height - gridY - 55; // 1250px
     const headerH = 65;
     const timeColW = 115;
     const availableW = gridW - timeColW;
 
-    // Any day without a single course scheduled (e.g. Friday, Saturday) takes half a cell (weight 0.5)!
     const hasDaySession = dIdx => sessions.some(s => s.dayIndex === dIdx);
     const isDayHalf = dIdx => !hasDaySession(dIdx);
     const dayWeights = activeDayIndices.map(dIdx => isDayHalf(dIdx) ? 0.5 : 1.0);
@@ -2916,27 +3235,27 @@
       curColX += colW;
     });
 
-    // Any hour without a single course across the week takes half cell height (weight 0.45)!
     const isHourHalf = h => !sessions.some(s => {
       if (!s) return false;
       const sStart = (typeof s.startHour === 'number') ? s.startHour + (s.startMin || 0) / 60 : 0;
       const sEnd = (typeof s.endHour === 'number') ? s.endHour + (s.endMin || 0) / 60 : 0;
       return sStart < (h + 1) && sEnd > h;
     });
-    const hourRowWeights = [];
+
+    const hourWeights = [];
     for (let h = minHour; h < maxHour; h++) {
-      hourRowWeights.push(isHourHalf(h) ? 0.45 : 1.0);
+      hourWeights.push(isHourHalf(h) ? 0.45 : 1.0);
     }
-    const totalHourRowWeight = hourRowWeights.reduce((a, b) => a + b, 0);
-    const availableHourH = gridH - headerH;
-    const unitHourH = availableHourH / totalHourRowWeight;
+    const totalHourWeight = hourWeights.reduce((a, b) => a + b, 0);
+    const availableH = gridH - headerH;
+    const unitH = availableH / totalHourWeight;
 
     const hourRows = [];
     let curRowY = gridY + headerH;
     for (let i = 0; i < totalHours; i++) {
       const h = minHour + i;
-      const rH = hourRowWeights[i] * unitHourH;
-      hourRows.push({ hour: h, y: curRowY, rowH: rH, isHalf: hourRowWeights[i] === 0.45 });
+      const rH = hourWeights[i] * unitH;
+      hourRows.push({ hour: h, y: curRowY, rowH: rH, isHalf: hourWeights[i] === 0.45 });
       curRowY += rH;
     }
 
@@ -2955,19 +3274,19 @@
     }
 
     // Grid outer border & fill
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = theme.gridBg;
     ctx.fillRect(gridX, gridY, gridW, gridH);
-    ctx.strokeStyle = '#E4E4E7';
+    ctx.strokeStyle = theme.gridBorder;
     ctx.lineWidth = 2;
     ctx.strokeRect(gridX, gridY, gridW, gridH);
 
     // Header Row background
-    ctx.fillStyle = '#FBFBFC';
+    ctx.fillStyle = theme.headerBg;
     ctx.fillRect(gridX, gridY, gridW, headerH);
     ctx.beginPath();
     ctx.moveTo(gridX, gridY + headerH);
     ctx.lineTo(gridX + gridW, gridY + headerH);
-    ctx.strokeStyle = '#D4D4D8';
+    ctx.strokeStyle = theme.headerBorder;
     ctx.lineWidth = 2;
     ctx.stroke();
 
@@ -2975,15 +3294,15 @@
     ctx.beginPath();
     ctx.moveTo(gridX + timeColW, gridY);
     ctx.lineTo(gridX + timeColW, gridY + gridH);
-    ctx.strokeStyle = '#D4D4D8';
+    ctx.strokeStyle = theme.headerBorder;
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    ctx.fillStyle = '#71717A';
+    ctx.fillStyle = theme.headerTextPrimary;
     ctx.font = '800 17px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
     ctx.fillText('UTC+8', gridX + timeColW / 2, gridY + 36);
-    ctx.fillStyle = '#A1A1AA';
+    ctx.fillStyle = theme.headerTextSecondary;
     ctx.font = '600 13px "JetBrains Mono", monospace';
     ctx.fillText('TIME (MYT)', gridX + timeColW / 2, gridY + 54);
 
@@ -2993,13 +3312,12 @@
     dayCols.forEach((colInfo, colOffset) => {
       const { dIdx, x: colX, w: dayColW, isHalf } = colInfo;
       const dayName = DAY_NAMES[dIdx];
-      const isToday = (dIdx === todayDayIndex);
 
       if (colOffset > 0) {
         ctx.beginPath();
         ctx.moveTo(colX, gridY);
         ctx.lineTo(colX, gridY + gridH);
-        ctx.strokeStyle = '#E4E4E7';
+        ctx.strokeStyle = theme.gridBorder;
         ctx.lineWidth = 1;
         ctx.stroke();
       }
@@ -3007,9 +3325,7 @@
       const fontSz = isHalf ? 16 : 20;
       ctx.font = `800 ${fontSz}px "Hanken Grotesk", sans-serif`;
       ctx.textAlign = 'center';
-
-      // Clean timeless day column headers without today indicator in export
-      ctx.fillStyle = '#18181B';
+      ctx.fillStyle = theme.dayLabelText;
       ctx.fillText(dayName, colX + dayColW / 2, gridY + 41);
     });
 
@@ -3023,11 +3339,11 @@
       ctx.beginPath();
       ctx.moveTo(gridX, rowY);
       ctx.lineTo(gridX + gridW, rowY);
-      ctx.strokeStyle = '#E4E4E7';
+      ctx.strokeStyle = theme.gridBorder;
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      ctx.fillStyle = '#71717A';
+      ctx.fillStyle = theme.headerTextSecondary;
       ctx.font = `700 ${isHalf ? 14 : 18}px "JetBrains Mono", monospace`;
       ctx.textAlign = 'center';
       ctx.fillText(`${pad(h)}:00`, gridX + timeColW / 2, rowY + (isHalf ? 18 : 24));
@@ -3036,18 +3352,17 @@
 
     // Day Columns Content
     dayCols.forEach(colInfo => {
-      const { dIdx, x: colX, w: dayColW, isHalf } = colInfo;
+      const { dIdx, x: colX, w: dayColW } = colInfo;
       const daySess = sessions.filter(s => s.dayIndex === dIdx);
 
       if (daySess.length === 0) {
-        // Empty day column: keep clean without watermark text
+        // Empty day column
       } else {
         const packed = computeSessionColumns(daySess);
 
         packed.forEach(s => {
           const startY = getCanvasVerticalY(s.startHour, s.startMin);
           const endY = getCanvasVerticalY(s.endHour, s.endMin);
-          // Generous card margin (16px vertical gap between consecutive sessions, 20px horizontal gap)
           const cardY = startY + 8;
           const cardH = Math.max(40, endY - startY - 16);
           const isTall = cardH >= 140;
@@ -3060,15 +3375,44 @@
             cardW = singleW - 8;
           }
 
-          // Card white background and border
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(cardX, cardY, cardW, cardH);
-          ctx.strokeStyle = '#E4E4E7';
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(cardX, cardY, cardW, cardH);
+          // Card Background & Border
+          if (theme.mode === 'glass') {
+            ctx.save();
+            ctx.beginPath();
+            if (typeof ctx.roundRect === 'function') {
+              ctx.roundRect(cardX, cardY, cardW, cardH, 8);
+            } else {
+              ctx.rect(cardX, cardY, cardW, cardH);
+            }
+            ctx.fillStyle = theme.cardBg;
+            ctx.fill();
+            const cardGrad = ctx.createLinearGradient(cardX, cardY, cardX, cardY + cardH);
+            cardGrad.addColorStop(0, 'rgba(255, 255, 255, 0.16)');
+            cardGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.05)');
+            cardGrad.addColorStop(1, 'rgba(255, 255, 255, 0.02)');
+            ctx.fillStyle = cardGrad;
+            ctx.fill();
+            ctx.strokeStyle = theme.cardBorder;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
+          } else {
+            ctx.fillStyle = theme.cardBg;
+            ctx.fillRect(cardX, cardY, cardW, cardH);
+            ctx.strokeStyle = theme.cardBorder;
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(cardX, cardY, cardW, cardH);
+          }
 
-          // Bold left black accent stripe
-          ctx.fillStyle = '#18181B';
+          // Bold left accent stripe
+          let accentColor = theme.cardAccent;
+          if (theme.mode !== 'light') {
+            if (s.typeLabel === 'LEC') accentColor = '#34D399';
+            else if (s.typeLabel === 'TUT') accentColor = '#FBBF24';
+            else if (s.typeLabel === 'LAB') accentColor = '#C084FC';
+            else accentColor = '#38BDF8';
+          }
+          ctx.fillStyle = accentColor;
           ctx.fillRect(cardX, cardY, 6, cardH);
 
           const isCompactCard = (s.durHours && s.durHours < 1.5) || cardH < 95;
@@ -3084,7 +3428,6 @@
             ? `${cleanSingleCourseCode(s.courseCode)} · ${sessAcronym}`
             : cleanSingleCourseCode(s.courseCode);
 
-          // For 1-hour compact cards, display OCC inline on Line 1
           if (isCompactCard && s.occ) {
             rawDisplayCode += ` · ${s.occ}`;
           }
@@ -3113,17 +3456,24 @@
           }
 
           const headerY = isTall ? (cardY + 30) : (cardY + 26);
-          ctx.fillStyle = '#18181B';
+          ctx.fillStyle = theme.codeText;
           ctx.fillText(displayCodeText, cardX + 16, headerY);
 
           // Type Tag Pill
           const tagY = isTall ? (cardY + 14) : (cardY + 11);
-          ctx.fillStyle = '#F4F4F5';
-          ctx.fillRect(tagX, tagY, tagW, 22);
-          ctx.strokeStyle = '#E4E4E7';
+          ctx.fillStyle = theme.tagBg;
+          ctx.beginPath();
+          if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(tagX, tagY, tagW, 22, 3);
+          } else {
+            ctx.rect(tagX, tagY, tagW, 22);
+          }
+          ctx.fill();
+          ctx.strokeStyle = theme.tagBorder;
           ctx.lineWidth = 1;
-          ctx.strokeRect(tagX, tagY, tagW, 22);
-          ctx.fillStyle = '#71717A';
+          ctx.stroke();
+
+          ctx.fillStyle = theme.tagText;
           ctx.font = '700 12.5px "JetBrains Mono", monospace';
           ctx.textAlign = 'center';
           ctx.fillText(s.typeLabel, tagX + tagW / 2, tagY + 15.5);
@@ -3133,8 +3483,7 @@
 
           // If NOT compact card (>= 2 hours), draw Title and OCC
           if (!isCompactCard) {
-            // Course Title (Multi-line wrap, up to 2 lines with comfortable line spacing)
-            ctx.fillStyle = '#18181B';
+            ctx.fillStyle = theme.titleText;
             ctx.font = '800 18px "Hanken Grotesk", sans-serif';
             const maxTitleW = cardW - 28;
             let maxTitleLines = (cardH >= 120) ? 2 : 1;
@@ -3144,7 +3493,6 @@
               ? (titleLines.length > 1 ? cardY + 62 : cardY + 68)
               : (titleLines.length > 1 ? cardY + 50 : cardY + 54);
 
-            // Safety clamp: ensure title bottom never overlaps with OCC or footer
             if (startTitleY + (titleLines.length - 1) * titleLineH > footerY - 45) {
               startTitleY = Math.min(startTitleY, footerY - 50);
             }
@@ -3153,9 +3501,9 @@
               ctx.fillText(tLine, cardX + 16, startTitleY + tIdx * titleLineH);
             });
 
-            // Subtitle: OCC with proportional spacing
+            // Subtitle: OCC
             if (cardH >= 95) {
-              ctx.fillStyle = '#71717A';
+              ctx.fillStyle = theme.occText;
               ctx.font = '600 15px "JetBrains Mono", monospace';
               let sub = s.occ || '';
               if (ctx.measureText(sub).width > cardW - 28) {
@@ -3172,8 +3520,8 @@
               }
             }
           } else {
-            // Compact 1-hour Card: 1 line of title comfortably placed between header and footer
-            ctx.fillStyle = '#18181B';
+            // Compact 1-hour Card
+            ctx.fillStyle = theme.titleText;
             ctx.font = '800 15px "Hanken Grotesk", sans-serif';
             const maxTitleW = cardW - 28;
             const titleLines = wrapCanvasTitle(str => ctx.measureText(str).width, s.courseName, maxTitleW, 1);
@@ -3183,10 +3531,10 @@
             }
           }
 
-          // Footer (Venue left with pin, Time right)
+          // Footer (Venue left, Time right)
           if (cardH >= 55) {
             if (s.venue) {
-              ctx.fillStyle = '#71717A';
+              ctx.fillStyle = theme.venueText;
               ctx.font = '600 15px "JetBrains Mono", monospace';
               const vText = `${s.venue}`;
               const timeW = ctx.measureText(s.timeStr).width;
@@ -3201,7 +3549,7 @@
               ctx.fillText(displayVenue, cardX + 16, footerY);
             }
 
-            ctx.fillStyle = '#71717A';
+            ctx.fillStyle = theme.durText;
             ctx.font = '600 15px "JetBrains Mono", monospace';
             ctx.textAlign = 'right';
             ctx.fillText(s.timeStr, cardX + cardW - 14, footerY);
@@ -3212,15 +3560,16 @@
     });
 
     // Bottom Watermark
-    ctx.fillStyle = '#A1A1AA';
+    ctx.fillStyle = theme.watermarkText;
     ctx.font = '600 14px "JetBrains Mono", monospace';
     ctx.fillText('SPeCTRUM PRO · ACADEMIC SUITE · UNIVERSITI MALAYA', 60, height - 25);
 
     return canvas;
   }
 
-  function exportTimetablePNG() {
-    const canvas = renderTimetableToCanvas();
+  async function exportTimetablePNG() {
+    const btn = document.getElementById('btn-export-timetable-png');
+    const canvas = await renderTimetableToCanvas();
     if (!canvas) {
       alert('Unable to render timetable graphic. Please ensure attendance data is loaded.');
       return;
@@ -3229,7 +3578,7 @@
     canvas.toBlob(blob => {
       if (blob) {
         downloadBlobFile(blob, 'SPeCTRUM_Academic_Timetable.png');
-        flashExportButtonSuccess(document.getElementById('btn-export-timetable-png'));
+        flashExportButtonSuccess(btn);
       }
     }, 'image/png');
   }
@@ -3298,8 +3647,9 @@
     return out;
   }
 
-  function exportTimetablePDF() {
-    const canvas = renderTimetableToCanvas();
+  async function exportTimetablePDF() {
+    const btn = document.getElementById('btn-export-timetable-pdf');
+    const canvas = await renderTimetableToCanvas();
     if (!canvas) {
       alert('Unable to render timetable graphic. Please ensure attendance data is loaded.');
       return;
@@ -3319,7 +3669,7 @@
       const pdfBytes = buildPdfFromJpegBytes(bytes, canvas.width, canvas.height, 842, 595);
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       downloadBlobFile(blob, 'SPeCTRUM_Academic_Timetable.pdf');
-      flashExportButtonSuccess(document.getElementById('btn-export-timetable-pdf'));
+      flashExportButtonSuccess(btn);
     } catch (err) {
       console.warn('[SPeCTRUM Timetable] Direct PDF build fallback to print dialog:', err);
       window.print();
