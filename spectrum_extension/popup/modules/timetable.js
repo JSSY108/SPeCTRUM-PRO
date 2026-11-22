@@ -1264,8 +1264,8 @@
     const timeMytText = getTimetableText('timetable', 'timeMyt', 'TIME (MYT)');
     html += `
       <div class="tt-header-cell tt-corner-cell" style="grid-column: 1; grid-row: 1;">
-        <div style="font-size: 8.5px; font-weight: 800; letter-spacing: 0.8px; color: var(--text-primary);">${esc(acadWkText)}</div>
-        <div style="font-size: 8px; font-weight: 600; color: var(--text-muted); margin-top: 1px;">${esc(timeMytText)}</div>
+        <div class="tt-corner-acad-wk" style="font-size: 8.5px; font-weight: 800; letter-spacing: 0.8px;">${esc(acadWkText)}</div>
+        <div class="tt-corner-time-myt" style="font-size: 8px; font-weight: 600; margin-top: 1px;">${esc(timeMytText)}</div>
       </div>
     `;
 
