@@ -15197,7 +15197,155 @@ body.has-custom-bg .tt-session-card:hover {
   box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.65), 0 12px 36px rgba(0, 0, 0, 0.35) !important;
 }
 
-/* 2. NO CAPSULE BEHIND TEXT: Floating Text on Frosted Glass */
+/* ==========================================================================
+   GLASS THEME OPTICAL DIFFERENTIATION: ACTIVITY BACKLIGHTS & 3-LAYER GEMS
+   ========================================================================== */
+
+/* 1.1 Activity Card Optical Backlights & Edge Rims: Colored light shines from behind without blocking wallpaper */
+
+/* Attendance Cards: Emerald Light Source from Behind + Left Rim */
+[data-theme="glass"] .spectrum-card.card-attendance,
+[data-theme="glass"] .scoped-card.scoped-card-attendance,
+[data-theme="glass"] .attendance-card,
+body.has-custom-bg .spectrum-card.card-attendance,
+body.has-custom-bg .scoped-card.scoped-card-attendance,
+body.has-custom-bg .attendance-card {
+  background: radial-gradient(ellipse 340px 220px at 0% 0%, rgba(16, 185, 129, 0.26) 0%, rgba(16, 185, 129, 0.08) 50%, transparent 100%),
+              rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
+  border-left: 3.5px solid rgba(52, 211, 153, 0.9) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.55),
+              0 8px 32px rgba(0, 0, 0, 0.28),
+              0 0 20px -4px rgba(16, 185, 129, 0.25) !important;
+}
+
+[data-theme="glass"] .spectrum-card.card-attendance:hover,
+[data-theme="glass"] .scoped-card.scoped-card-attendance:hover,
+[data-theme="glass"] .attendance-card:hover,
+body.has-custom-bg .spectrum-card.card-attendance:hover,
+body.has-custom-bg .scoped-card.scoped-card-attendance:hover,
+body.has-custom-bg .attendance-card:hover {
+  background: radial-gradient(ellipse 360px 240px at 0% 0%, rgba(16, 185, 129, 0.36) 0%, rgba(16, 185, 129, 0.12) 55%, transparent 100%),
+              rgba(15, 23, 42, calc(var(--glass-tint-op, 0.28) + 0.08)) !important;
+  border-left-color: rgba(52, 211, 153, 1) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.75),
+              0 12px 36px rgba(0, 0, 0, 0.35),
+              0 0 26px -2px rgba(16, 185, 129, 0.38) !important;
+}
+
+/* Assignment / Tutorial Cards: Sunset Orange Light Source from Behind + Left Rim */
+[data-theme="glass"] .spectrum-card.card-assignment,
+[data-theme="glass"] .scoped-card.scoped-card-assignment,
+[data-theme="glass"] .assignment-card,
+body.has-custom-bg .spectrum-card.card-assignment,
+body.has-custom-bg .scoped-card.scoped-card-assignment,
+body.has-custom-bg .assignment-card {
+  background: radial-gradient(ellipse 340px 220px at 0% 0%, rgba(249, 115, 22, 0.24) 0%, rgba(249, 115, 22, 0.07) 50%, transparent 100%),
+              rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
+  border-left: 3.5px solid rgba(251, 146, 60, 0.9) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.55),
+              0 8px 32px rgba(0, 0, 0, 0.28),
+              0 0 20px -4px rgba(249, 115, 22, 0.25) !important;
+}
+
+[data-theme="glass"] .spectrum-card.card-assignment:hover,
+[data-theme="glass"] .scoped-card.scoped-card-assignment:hover,
+[data-theme="glass"] .assignment-card:hover,
+body.has-custom-bg .spectrum-card.card-assignment:hover,
+body.has-custom-bg .scoped-card.scoped-card-assignment:hover,
+body.has-custom-bg .assignment-card:hover {
+  background: radial-gradient(ellipse 360px 240px at 0% 0%, rgba(249, 115, 22, 0.34) 0%, rgba(249, 115, 22, 0.12) 55%, transparent 100%),
+              rgba(15, 23, 42, calc(var(--glass-tint-op, 0.28) + 0.08)) !important;
+  border-left-color: rgba(251, 146, 60, 1) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.75),
+              0 12px 36px rgba(0, 0, 0, 0.35),
+              0 0 26px -2px rgba(249, 115, 22, 0.38) !important;
+}
+
+[data-theme="glass"] .spectrum-card.card-assignment.is-overdue,
+[data-theme="glass"] .scoped-card.scoped-card-assignment.is-overdue,
+body.has-custom-bg .spectrum-card.card-assignment.is-overdue,
+body.has-custom-bg .scoped-card.scoped-card-assignment.is-overdue {
+  background: radial-gradient(ellipse 340px 220px at 0% 0%, rgba(239, 68, 68, 0.28) 0%, rgba(239, 68, 68, 0.08) 50%, transparent 100%),
+              rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
+  border-left: 3.5px solid rgba(248, 113, 113, 0.95) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.55),
+              0 8px 32px rgba(0, 0, 0, 0.28),
+              0 0 20px -4px rgba(239, 68, 68, 0.28) !important;
+}
+
+[data-theme="glass"] .spectrum-card.card-assignment.is-submitted,
+[data-theme="glass"] .scoped-card.scoped-card-assignment.is-submitted,
+body.has-custom-bg .spectrum-card.card-assignment.is-submitted,
+body.has-custom-bg .scoped-card.scoped-card-assignment.is-submitted {
+  background: radial-gradient(ellipse 340px 220px at 0% 0%, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0.06) 50%, transparent 100%),
+              rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
+  border-left: 3.5px solid rgba(52, 211, 153, 0.9) !important;
+}
+
+/* Test / Quiz / Exam Cards: Royal Violet Light Source from Behind + Left Rim */
+[data-theme="glass"] .spectrum-card.card-test,
+[data-theme="glass"] .scoped-card.scoped-card-test,
+body.has-custom-bg .spectrum-card.card-test,
+body.has-custom-bg .scoped-card.scoped-card-test {
+  background: radial-gradient(ellipse 340px 220px at 0% 0%, rgba(139, 92, 246, 0.26) 0%, rgba(139, 92, 246, 0.08) 50%, transparent 100%),
+              rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
+  border-left: 3.5px solid rgba(192, 132, 252, 0.9) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.55),
+              0 8px 32px rgba(0, 0, 0, 0.28),
+              0 0 20px -4px rgba(139, 92, 246, 0.25) !important;
+}
+
+[data-theme="glass"] .spectrum-card.card-test:hover,
+[data-theme="glass"] .scoped-card.scoped-card-test:hover,
+body.has-custom-bg .spectrum-card.card-test:hover,
+body.has-custom-bg .scoped-card.scoped-card-test:hover {
+  background: radial-gradient(ellipse 360px 240px at 0% 0%, rgba(139, 92, 246, 0.36) 0%, rgba(139, 92, 246, 0.12) 55%, transparent 100%),
+              rgba(15, 23, 42, calc(var(--glass-tint-op, 0.28) + 0.08)) !important;
+  border-left-color: rgba(192, 132, 252, 1) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.75),
+              0 12px 36px rgba(0, 0, 0, 0.35),
+              0 0 26px -2px rgba(139, 92, 246, 0.38) !important;
+}
+
+[data-theme="glass"] .spectrum-card.card-test.is-overdue,
+[data-theme="glass"] .scoped-card.scoped-card-test.is-overdue,
+body.has-custom-bg .spectrum-card.card-test.is-overdue,
+body.has-custom-bg .scoped-card.scoped-card-test.is-overdue {
+  background: radial-gradient(ellipse 340px 220px at 0% 0%, rgba(239, 68, 68, 0.28) 0%, rgba(239, 68, 68, 0.08) 50%, transparent 100%),
+              rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
+  border-left: 3.5px solid rgba(248, 113, 113, 0.95) !important;
+}
+
+/* Notice / Announcement Cards: Sky Blue Light Source from Behind + Left Rim */
+[data-theme="glass"] .spectrum-card.card-notice,
+[data-theme="glass"] .scoped-card.scoped-card-notice,
+[data-theme="glass"] .announcement-card,
+body.has-custom-bg .spectrum-card.card-notice,
+body.has-custom-bg .scoped-card.scoped-card-notice,
+body.has-custom-bg .announcement-card {
+  background: radial-gradient(ellipse 340px 220px at 0% 0%, rgba(14, 165, 233, 0.24) 0%, rgba(14, 165, 233, 0.07) 50%, transparent 100%),
+              rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
+  border-left: 3.5px solid rgba(56, 189, 248, 0.9) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.55),
+              0 8px 32px rgba(0, 0, 0, 0.28),
+              0 0 20px -4px rgba(14, 165, 233, 0.25) !important;
+}
+
+[data-theme="glass"] .spectrum-card.card-notice:hover,
+[data-theme="glass"] .scoped-card.scoped-card-notice:hover,
+[data-theme="glass"] .announcement-card:hover,
+body.has-custom-bg .spectrum-card.card-notice:hover,
+body.has-custom-bg .scoped-card.scoped-card-notice:hover,
+body.has-custom-bg .announcement-card:hover {
+  background: radial-gradient(ellipse 360px 240px at 0% 0%, rgba(14, 165, 233, 0.34) 0%, rgba(14, 165, 233, 0.12) 55%, transparent 100%),
+              rgba(15, 23, 42, calc(var(--glass-tint-op, 0.28) + 0.08)) !important;
+  border-left-color: rgba(56, 189, 248, 1) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.75),
+              0 12px 36px rgba(0, 0, 0, 0.35),
+              0 0 26px -2px rgba(14, 165, 233, 0.38) !important;
+}
+
+/* 2. NO CAPSULE BEHIND TEXT: Floating Pure White Text on Frosted Glass */
 
 /* 2.1 Attendance Rate Badge (NO CAPSULE) */
 [data-theme="glass"] .att-rate-badge,
@@ -15284,12 +15432,24 @@ body.has-custom-bg .assign-code-pill {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
 }
 
-/* 2.5 Type Badges (TUT, LEC) (NO CAPSULE) */
-[data-theme="glass"] .att-badge-type,
+/* 2.5 Type Badges (TUT, LEC) - Translucent Frosted Mini Capsule */
 [data-theme="glass"] .type-sub-badge,
+body.has-custom-bg .type-sub-badge {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-radius: 4px !important;
+  padding: 1px 5px !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  font-size: 9.5px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+}
+
+[data-theme="glass"] .att-badge-type,
 [data-theme="glass"] .card-type-tag,
 body.has-custom-bg .att-badge-type,
-body.has-custom-bg .type-sub-badge,
 body.has-custom-bg .card-type-tag {
   background: transparent !important;
   border: none !important;
@@ -15300,39 +15460,143 @@ body.has-custom-bg .card-type-tag {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
 }
 
-/* 2.6 Card Bounded Icon Containers (NO SOLID OPAQUE SQUARE BOX) */
+/* ==========================================================================
+   2.6 3-LAYER OPTICAL GLASS ICON GEMS (晶莹透亮有色玻璃方胶囊)
+   Layer 1 (Bottom): Colored Filter / Backlight Glow
+   Layer 2 (Middle): Frosted Glass Lens with Specular Glint & Bevel Edge
+   Layer 3 (Top): Pure White Crisp Icon (#FFFFFF) with Drop Shadow
+   ========================================================================== */
+
+/* Base 3-Layer Gem Lens Structure */
 [data-theme="glass"] .card-bounded-icon,
-[data-theme="glass"] .icon-box-attendance,
-[data-theme="glass"] .icon-box-assignment,
-[data-theme="glass"] .icon-box-test,
-[data-theme="glass"] .icon-box-notice,
-body.has-custom-bg .card-bounded-icon,
-body.has-custom-bg .icon-box-attendance,
-body.has-custom-bg .icon-box-assignment,
-body.has-custom-bg .icon-box-test,
-body.has-custom-bg .icon-box-notice {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  color: #FFFFFF !important;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85));
+body.has-custom-bg .card-bounded-icon {
+  width: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
+  height: 36px !important;
+  border-radius: 9px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  backdrop-filter: blur(10px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 
-/* 2.7 Calendar Grid Count Pills (NO CAPSULE: clean text and icons floating on glass cell) */
+[data-theme="glass"] .card-bounded-icon .icon-svg,
+body.has-custom-bg .card-bounded-icon .icon-svg {
+  width: 19px !important;
+  height: 19px !important;
+  color: #FFFFFF !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85)) !important;
+}
+
+/* Layer 3: Ensure SVG strokes and fills are pure white */
+[data-theme="glass"] .icon-box-attendance .icon-svg,
+body.has-custom-bg .icon-box-attendance .icon-svg {
+  fill: #FFFFFF !important;
+  stroke: none !important;
+}
+
+[data-theme="glass"] .icon-box-assignment .icon-svg,
+[data-theme="glass"] .icon-box-notice .icon-svg,
+[data-theme="glass"] .icon-box-test .icon-svg,
+body.has-custom-bg .icon-box-assignment .icon-svg,
+body.has-custom-bg .icon-box-notice .icon-svg,
+body.has-custom-bg .icon-box-test .icon-svg {
+  stroke: #FFFFFF !important;
+  fill: none !important;
+}
+
+[data-theme="glass"] .icon-box-test .icon-svg text,
+[data-theme="glass"] .icon-box-test .icon-svg rect,
+body.has-custom-bg .icon-box-test .icon-svg text,
+body.has-custom-bg .icon-box-test .icon-svg rect {
+  fill: #FFFFFF !important;
+}
+
+/* 1. ATTENDANCE GEM: Emerald Colored Filter + Glass Lens + White Check Icon */
+[data-theme="glass"] .icon-box-attendance,
+body.has-custom-bg .icon-box-attendance {
+  background: radial-gradient(circle at 35% 30%, rgba(16, 185, 129, 0.58) 0%, rgba(5, 150, 105, 0.35) 70%, rgba(6, 78, 59, 0.28) 100%) !important;
+  border: 1px solid rgba(52, 211, 153, 0.65) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.8),
+              inset 0 -1px 2px rgba(0, 0, 0, 0.3),
+              0 2px 10px rgba(16, 185, 129, 0.35) !important;
+}
+
+/* 2. ASSIGNMENT / TUTORIAL GEM: Sunset Orange Colored Filter + Glass Lens + White Task Icon */
+[data-theme="glass"] .icon-box-assignment,
+body.has-custom-bg .icon-box-assignment {
+  background: radial-gradient(circle at 35% 30%, rgba(249, 115, 22, 0.58) 0%, rgba(234, 88, 12, 0.35) 70%, rgba(124, 45, 18, 0.28) 100%) !important;
+  border: 1px solid rgba(251, 146, 60, 0.65) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.8),
+              inset 0 -1px 2px rgba(0, 0, 0, 0.3),
+              0 2px 10px rgba(249, 115, 22, 0.35) !important;
+}
+
+[data-theme="glass"] .icon-box-assignment.is-overdue,
+body.has-custom-bg .icon-box-assignment.is-overdue {
+  background: radial-gradient(circle at 35% 30%, rgba(239, 68, 68, 0.62) 0%, rgba(185, 28, 28, 0.38) 70%, rgba(127, 29, 29, 0.3) 100%) !important;
+  border: 1px solid rgba(248, 113, 113, 0.7) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.8),
+              inset 0 -1px 2px rgba(0, 0, 0, 0.3),
+              0 2px 10px rgba(239, 68, 68, 0.4) !important;
+}
+
+[data-theme="glass"] .icon-box-assignment.is-submitted,
+body.has-custom-bg .icon-box-assignment.is-submitted {
+  background: radial-gradient(circle at 35% 30%, rgba(16, 185, 129, 0.58) 0%, rgba(5, 150, 105, 0.35) 70%, rgba(6, 78, 59, 0.28) 100%) !important;
+  border: 1px solid rgba(52, 211, 153, 0.65) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.8),
+              inset 0 -1px 2px rgba(0, 0, 0, 0.3),
+              0 2px 10px rgba(16, 185, 129, 0.35) !important;
+}
+
+/* 3. TEST / QUIZ / EXAM GEM: Royal Violet Colored Filter + Glass Lens + White Sheet Icon */
+[data-theme="glass"] .icon-box-test,
+body.has-custom-bg .icon-box-test {
+  background: radial-gradient(circle at 35% 30%, rgba(139, 92, 246, 0.58) 0%, rgba(109, 40, 217, 0.35) 70%, rgba(76, 29, 149, 0.28) 100%) !important;
+  border: 1px solid rgba(192, 132, 252, 0.65) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.8),
+              inset 0 -1px 2px rgba(0, 0, 0, 0.3),
+              0 2px 10px rgba(139, 92, 246, 0.35) !important;
+}
+
+[data-theme="glass"] .icon-box-test.is-overdue,
+body.has-custom-bg .icon-box-test.is-overdue {
+  background: radial-gradient(circle at 35% 30%, rgba(239, 68, 68, 0.62) 0%, rgba(185, 28, 28, 0.38) 70%, rgba(127, 29, 29, 0.3) 100%) !important;
+  border: 1px solid rgba(248, 113, 113, 0.7) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.8),
+              inset 0 -1px 2px rgba(0, 0, 0, 0.3),
+              0 2px 10px rgba(239, 68, 68, 0.4) !important;
+}
+
+/* 4. NOTICE / ANNOUNCEMENT GEM: Sky Blue Colored Filter + Glass Lens + White Megaphone Icon */
+[data-theme="glass"] .icon-box-notice,
+body.has-custom-bg .icon-box-notice {
+  background: radial-gradient(circle at 35% 30%, rgba(14, 165, 233, 0.58) 0%, rgba(2, 132, 199, 0.35) 70%, rgba(12, 74, 110, 0.28) 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.65) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.8),
+              inset 0 -1px 2px rgba(0, 0, 0, 0.3),
+              0 2px 10px rgba(14, 165, 233, 0.35) !important;
+}
+
+/* Hover micro-animation on gems */
+[data-theme="glass"] .card-bounded-icon:hover,
+body.has-custom-bg .card-bounded-icon:hover {
+  transform: scale(1.08) !important;
+}
+
+/* 2.7 Calendar Grid Count Pills: Frosted Colored Glass Gems Floating on Cells */
 [data-theme="glass"] .cal-count-pill,
-[data-theme="glass"] .cal-count-pill.pill-notice,
-[data-theme="glass"] .cal-count-pill.pill-assignment,
-[data-theme="glass"] .cal-count-pill.pill-test,
-[data-theme="glass"] .cal-count-pill.pill-attendance,
-body.has-custom-bg .cal-count-pill,
-body.has-custom-bg .cal-count-pill.pill-notice,
-body.has-custom-bg .cal-count-pill.pill-assignment,
-body.has-custom-bg .cal-count-pill.pill-test,
-body.has-custom-bg .cal-count-pill.pill-attendance {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 1px 0 !important;
+body.has-custom-bg .cal-count-pill {
+  border-radius: 6px !important;
+  padding: 2px 6px !important;
+  font-weight: 700 !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  transition: all 0.15s ease !important;
 }
 
 [data-theme="glass"] .cal-count-pill .pill-left,
@@ -15344,6 +15608,40 @@ body.has-custom-bg .cal-count-pill .icon-svg {
   color: #FFFFFF !important;
   font-weight: 700 !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .cal-count-pill.pill-attendance,
+body.has-custom-bg .cal-count-pill.pill-attendance {
+  background: rgba(16, 185, 129, 0.24) !important;
+  border: 1px solid rgba(52, 211, 153, 0.55) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 2px 6px rgba(16, 185, 129, 0.25) !important;
+}
+
+[data-theme="glass"] .cal-count-pill.pill-assignment,
+body.has-custom-bg .cal-count-pill.pill-assignment {
+  background: rgba(249, 115, 22, 0.24) !important;
+  border: 1px solid rgba(251, 146, 60, 0.55) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 2px 6px rgba(249, 115, 22, 0.25) !important;
+}
+
+[data-theme="glass"] .cal-count-pill.pill-test,
+body.has-custom-bg .cal-count-pill.pill-test {
+  background: rgba(139, 92, 246, 0.26) !important;
+  border: 1px solid rgba(192, 132, 252, 0.55) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 2px 6px rgba(139, 92, 246, 0.25) !important;
+}
+
+[data-theme="glass"] .cal-count-pill.pill-notice,
+body.has-custom-bg .cal-count-pill.pill-notice {
+  background: rgba(14, 165, 233, 0.24) !important;
+  border: 1px solid rgba(56, 189, 248, 0.55) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 2px 6px rgba(14, 165, 233, 0.25) !important;
+}
+
+[data-theme="glass"] .cal-count-pill:hover,
+body.has-custom-bg .cal-count-pill:hover {
+  transform: translateY(-1px) scale(1.02) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.6), 0 4px 10px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* 2.8 Sidebar and Header Count Pills (3 items, etc.) (NO CAPSULE) */
