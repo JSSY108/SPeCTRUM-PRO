@@ -898,7 +898,7 @@
             </div>
 
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-              <span style="font-size:11px;color:var(--text-muted);font-weight:600;white-space:nowrap;">Presets:</span>
+              <span class="pref-label-muted" style="font-size:11px;font-weight:600;white-space:nowrap;">Presets:</span>
               <button type="button" class="pref-wireframe-btn pref-bg-preset-btn" data-preset="aurora">🌌 Aurora</button>
               <button type="button" class="pref-wireframe-btn pref-bg-preset-btn" data-preset="sunset">🌅 Sunset</button>
               <button type="button" class="pref-wireframe-btn pref-bg-preset-btn" data-preset="cyber">🌃 Cyber</button>
@@ -916,12 +916,12 @@
             </div>
 
             <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:11.5px;color:var(--text-muted);font-weight:600;">Blur Intensity: <b id="val-glass-blur-label">18px</b></span>
+              <span class="pref-label-muted" style="font-size:11.5px;font-weight:600;">Blur Intensity: <b id="val-glass-blur-label">18px</b></span>
               <input type="range" id="slider-glass-blur" min="4" max="36" value="18" step="2" class="pref-slider" style="width:160px;">
             </div>
 
             <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:11.5px;color:var(--text-muted);font-weight:600;">Glass Shading / Darkness: <b id="val-glass-tint-label">28%</b></span>
+              <span class="pref-label-muted" style="font-size:11.5px;font-weight:600;">Glass Shading / Darkness: <b id="val-glass-tint-label">28%</b></span>
               <input type="range" id="slider-glass-tint" min="10" max="80" value="28" step="2" class="pref-slider" style="width:160px;">
             </div>
           </div>
@@ -1073,13 +1073,13 @@
           <p class="pref-card-desc">Adjust the vertical screen position where timeline date dots animate and light up solid black as activities scroll past.</p>
           <div class="pref-row-box" style="flex-direction:column;gap:12px;align-items:stretch;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:12px;font-weight:700;color:var(--text-primary);">Focal Trigger Height</span>
-              <span id="pref-spine-focal-label" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:800;color:var(--text-primary);">50% (Middle of Screen)</span>
+              <span class="pref-label-primary" style="font-size:12px;font-weight:700;">Focal Trigger Height</span>
+              <span id="pref-spine-focal-label" class="pref-mono-title" style="font-size:12px;font-weight:800;">50% (Middle of Screen)</span>
             </div>
             <div style="display:flex;align-items:center;gap:12px;">
-              <span style="font-size:10px;font-weight:700;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">TOP (15%)</span>
+              <span class="pref-label-muted" style="font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;">TOP (15%)</span>
               <input type="range" id="pref-spine-focal-slider" min="15" max="85" value="50" step="5" class="pref-slider" style="flex:1;cursor:pointer;">
-              <span style="font-size:10px;font-weight:700;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">BOTTOM (85%)</span>
+              <span class="pref-label-muted" style="font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;">BOTTOM (85%)</span>
             </div>
             <div style="display:flex;gap:8px;margin-top:2px;">
               <button type="button" class="pref-wireframe-btn btn-focal-preset" data-val="30">Upper (30%)</button>

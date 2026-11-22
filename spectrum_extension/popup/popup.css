@@ -18245,10 +18245,13 @@ body.has-custom-bg .timetable-toolbar-divider {
          Frosted Course Tree Accordions, Monograms, Files Rows & Bottom Action Bar
    ========================================================================== */
 
-/* 7.1 PREFERENCES TAB (PURE WHITE TYPOGRAPHY, FROSTED ROWS & CONTROLS) */
+/* 7.1 PREFERENCES TAB (ABSOLUTE ALL-WHITE TYPOGRAPHY, ZERO GREY, ZERO BLACK) */
 [data-theme="glass"] #tab-filters.preferences-pane,
-body.has-custom-bg #tab-filters.preferences-pane {
+[data-theme="glass"] .preferences-pane,
+body.has-custom-bg #tab-filters.preferences-pane,
+body.has-custom-bg .preferences-pane {
   background: transparent !important;
+  color: #FFFFFF !important;
 }
 
 /* Preference Cards (Sleek Frosted Glass Slabs) */
@@ -18263,9 +18266,11 @@ body.has-custom-bg .pref-card {
   color: #FFFFFF !important;
 }
 
-/* Card Titles, Headers & Bullet Dots */
+/* Card Titles, Headers, Subheads & Bullet Dots */
 [data-theme="glass"] .pref-card-title,
-body.has-custom-bg .pref-card-title {
+[data-theme="glass"] .pref-subhead-title,
+body.has-custom-bg .pref-card-title,
+body.has-custom-bg .pref-subhead-title {
   color: #FFFFFF !important;
   font-weight: 800 !important;
   letter-spacing: 0.6px !important;
@@ -18280,32 +18285,54 @@ body.has-custom-bg .pref-bullet-black {
   filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8)) !important;
 }
 
-/* Card Subtitle Descriptions & Subheads */
+/* Card Subtitle Descriptions & Explanatory Prose */
 [data-theme="glass"] .pref-card-desc,
-[data-theme="glass"] .pref-subhead-title,
 [data-theme="glass"] .pref-row-subtitle,
 [data-theme="glass"] .pref-row-desc,
+[data-theme="glass"] #pref-sem-start-desc,
+[data-theme="glass"] #pref-capsule-style-desc,
+[data-theme="glass"] #pref-auto-att-sub,
 body.has-custom-bg .pref-card-desc,
-body.has-custom-bg .pref-subhead-title,
 body.has-custom-bg .pref-row-subtitle,
-body.has-custom-bg .pref-row-desc {
-  color: rgba(255, 255, 255, 0.88) !important;
+body.has-custom-bg .pref-row-desc,
+body.has-custom-bg #pref-sem-start-desc,
+body.has-custom-bg #pref-capsule-style-desc,
+body.has-custom-bg #pref-auto-att-sub {
+  color: rgba(255, 255, 255, 0.92) !important;
   font-weight: 600 !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
 }
 
+/* Preference Row Titles, Labels, Spans & Strong/Bold Values */
 [data-theme="glass"] .pref-row-title,
-body.has-custom-bg .pref-row-title {
+[data-theme="glass"] .pref-label-primary,
+[data-theme="glass"] .pref-label-muted,
+[data-theme="glass"] .pref-row-box span,
+[data-theme="glass"] .pref-row-box b,
+[data-theme="glass"] #val-glass-blur-label,
+[data-theme="glass"] #val-glass-tint-label,
+[data-theme="glass"] #pref-spine-focal-label,
+body.has-custom-bg .pref-row-title,
+body.has-custom-bg .pref-label-primary,
+body.has-custom-bg .pref-label-muted,
+body.has-custom-bg .pref-row-box span,
+body.has-custom-bg .pref-row-box b,
+body.has-custom-bg #val-glass-blur-label,
+body.has-custom-bg #val-glass-tint-label,
+body.has-custom-bg #pref-spine-focal-label {
   color: #FFFFFF !important;
-  font-weight: 700 !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
 }
 
-/* Preference Micro Badges (CALIBRATION, CODE, ACTIVE, etc.) */
+/* Preference Micro Badges (CALIBRATION, CODE, ACTIVE, REDUNDANCY, CUSTOM OCC, etc.) */
 [data-theme="glass"] .pref-badge,
 [data-theme="glass"] .pref-badge-subtle,
+[data-theme="glass"] .pref-badge-active,
+[data-theme="glass"] .pref-badge-ok,
 body.has-custom-bg .pref-badge,
-body.has-custom-bg .pref-badge-subtle {
+body.has-custom-bg .pref-badge-subtle,
+body.has-custom-bg .pref-badge-active,
+body.has-custom-bg .pref-badge-ok {
   background: rgba(255, 255, 255, 0.16) !important;
   border: 1px solid rgba(255, 255, 255, 0.32) !important;
   border-radius: 6px !important;
@@ -18323,7 +18350,7 @@ body.has-custom-bg .pref-row-box {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
 }
 
-/* Enrolled Course OCC Rows in Preferences (ELIMINATE SOLID WHITE CAPSULES) */
+/* Enrolled Course OCC Rows in Preferences */
 [data-theme="glass"] .pref-course-card,
 body.has-custom-bg .pref-course-card {
   background: rgba(255, 255, 255, 0.12) !important;
@@ -18353,14 +18380,14 @@ body.has-custom-bg .pref-course-code {
 
 [data-theme="glass"] .pref-course-title,
 body.has-custom-bg .pref-course-title {
-  color: rgba(255, 255, 255, 0.88) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
   font-weight: 600 !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
 }
 
 [data-theme="glass"] .pref-occ-label,
 body.has-custom-bg .pref-occ-label {
-  color: rgba(255, 255, 255, 0.82) !important;
+  color: #FFFFFF !important;
   font-weight: 700 !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
 }
@@ -18403,18 +18430,28 @@ body.has-custom-bg .occ-table-input {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
 }
 
-/* Preference Select Dropdowns & Inputs */
+/* Preference Select Dropdowns & All Text/Date/URL Inputs */
 [data-theme="glass"] .pref-select,
 [data-theme="glass"] select.pref-select,
+[data-theme="glass"] input.pref-select,
 [data-theme="glass"] input[type="date"].pref-select,
 [data-theme="glass"] input[type="text"].pref-select,
+[data-theme="glass"] input[type="url"].pref-select,
+[data-theme="glass"] #input-custom-bg-url,
 [data-theme="glass"] #sel-course-capsule-style,
+[data-theme="glass"] #sel-glass-effect-style,
+[data-theme="glass"] #sel-attendance-interval,
 [data-theme="glass"] #pref-sem-start-input,
 body.has-custom-bg .pref-select,
 body.has-custom-bg select.pref-select,
+body.has-custom-bg input.pref-select,
 body.has-custom-bg input[type="date"].pref-select,
 body.has-custom-bg input[type="text"].pref-select,
+body.has-custom-bg input[type="url"].pref-select,
+body.has-custom-bg #input-custom-bg-url,
 body.has-custom-bg #sel-course-capsule-style,
+body.has-custom-bg #sel-glass-effect-style,
+body.has-custom-bg #sel-attendance-interval,
 body.has-custom-bg #pref-sem-start-input {
   background: rgba(15, 23, 42, 0.6) !important;
   border: 1px solid rgba(255, 255, 255, 0.32) !important;
@@ -18422,7 +18459,20 @@ body.has-custom-bg #pref-sem-start-input {
   color: #FFFFFF !important;
   font-weight: 700 !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
-  backdrop-filter: blur(8px) !important;
+  backdrop-filter: blur(8px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(180%) !important;
+}
+
+/* Placeholders inside preferences inputs (Crisp Light White, Never Muddy Grey) */
+[data-theme="glass"] .preferences-pane input::placeholder,
+[data-theme="glass"] #input-custom-bg-url::placeholder,
+[data-theme="glass"] .occ-table-input::placeholder,
+body.has-custom-bg .preferences-pane input::placeholder,
+body.has-custom-bg #input-custom-bg-url::placeholder,
+body.has-custom-bg .occ-table-input::placeholder {
+  color: rgba(255, 255, 255, 0.72) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.72) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
 }
 
 [data-theme="glass"] .pref-select option,
@@ -18431,19 +18481,27 @@ body.has-custom-bg .pref-select option {
   color: #FFFFFF !important;
 }
 
-/* Preference Action Buttons (Auto-Detect, Reset All, Upload Photo, Remove, Apply) */
+/* Preference Action Buttons (Auto-Detect, Reset All, Upload Photo, Remove, Apply, Presets) */
 [data-theme="glass"] .pref-wireframe-btn,
 [data-theme="glass"] .btn-pref-reset,
 [data-theme="glass"] #btn-reset-all-occ,
 [data-theme="glass"] #btn-reset-sem-start,
-[data-theme="glass"] #btn-remove-custom-bg,
+[data-theme="glass"] #btn-apply-bg-url,
 [data-theme="glass"] #btn-apply-custom-bg-url,
+[data-theme="glass"] .pref-bg-preset-btn,
+[data-theme="glass"] .btn-focal-preset,
+[data-theme="glass"] #btn-restore-all-att,
+[data-theme="glass"] #btn-restore-all-assign,
 body.has-custom-bg .pref-wireframe-btn,
 body.has-custom-bg .btn-pref-reset,
 body.has-custom-bg #btn-reset-all-occ,
 body.has-custom-bg #btn-reset-sem-start,
-body.has-custom-bg #btn-remove-custom-bg,
-body.has-custom-bg #btn-apply-custom-bg-url {
+body.has-custom-bg #btn-apply-bg-url,
+body.has-custom-bg #btn-apply-custom-bg-url,
+body.has-custom-bg .pref-bg-preset-btn,
+body.has-custom-bg .btn-focal-preset,
+body.has-custom-bg #btn-restore-all-att,
+body.has-custom-bg #btn-restore-all-assign {
   background: rgba(255, 255, 255, 0.14) !important;
   border: 1px solid rgba(255, 255, 255, 0.32) !important;
   border-radius: 6px !important;
@@ -18457,20 +18515,46 @@ body.has-custom-bg #btn-apply-custom-bg-url {
 [data-theme="glass"] .btn-pref-reset:hover,
 [data-theme="glass"] #btn-reset-all-occ:hover,
 [data-theme="glass"] #btn-reset-sem-start:hover,
-[data-theme="glass"] #btn-remove-custom-bg:hover,
+[data-theme="glass"] #btn-apply-bg-url:hover,
 [data-theme="glass"] #btn-apply-custom-bg-url:hover,
+[data-theme="glass"] .pref-bg-preset-btn:hover,
+[data-theme="glass"] .btn-focal-preset:hover,
+[data-theme="glass"] #btn-restore-all-att:hover,
+[data-theme="glass"] #btn-restore-all-assign:hover,
 body.has-custom-bg .pref-wireframe-btn:hover,
 body.has-custom-bg .btn-pref-reset:hover,
 body.has-custom-bg #btn-reset-all-occ:hover,
 body.has-custom-bg #btn-reset-sem-start:hover,
-body.has-custom-bg #btn-remove-custom-bg:hover,
-body.has-custom-bg #btn-apply-custom-bg-url:hover {
+body.has-custom-bg #btn-apply-bg-url:hover,
+body.has-custom-bg #btn-apply-custom-bg-url:hover,
+body.has-custom-bg .pref-bg-preset-btn:hover,
+body.has-custom-bg .btn-focal-preset:hover,
+body.has-custom-bg #btn-restore-all-att:hover,
+body.has-custom-bg #btn-restore-all-assign:hover {
   background: rgba(255, 255, 255, 0.26) !important;
   border-color: rgba(255, 255, 255, 0.6) !important;
   color: #FFFFFF !important;
   transform: translateY(-1px) scale(1.02) !important;
 }
 
+/* Remove Photo Button (Luminous Coral Glass) */
+[data-theme="glass"] #btn-remove-custom-bg,
+body.has-custom-bg #btn-remove-custom-bg {
+  background: rgba(239, 68, 68, 0.16) !important;
+  border: 1px solid rgba(248, 113, 113, 0.45) !important;
+  color: #F87171 !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] #btn-remove-custom-bg:hover,
+body.has-custom-bg #btn-remove-custom-bg:hover {
+  background: rgba(239, 68, 68, 0.32) !important;
+  border-color: rgba(248, 113, 113, 0.8) !important;
+  color: #FFFFFF !important;
+}
+
+/* Auto-Detect Occurrences Button */
 [data-theme="glass"] .btn-pref-autodetect,
 [data-theme="glass"] #btn-autodetect-all-occ,
 body.has-custom-bg .btn-pref-autodetect,
@@ -18492,6 +18576,165 @@ body.has-custom-bg #btn-autodetect-all-occ:hover {
   background: rgba(249, 115, 22, 0.48) !important;
   border-color: rgba(251, 146, 60, 0.9) !important;
   box-shadow: 0 0 16px rgba(249, 115, 22, 0.55) !important;
+}
+
+/* Attendance Automation Interval & Next Check Note */
+[data-theme="glass"] .pref-interval-label,
+body.has-custom-bg .pref-interval-label {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .pref-interval-note,
+[data-theme="glass"] #pref-next-check-label,
+body.has-custom-bg .pref-interval-note,
+body.has-custom-bg #pref-next-check-label {
+  color: #34D399 !important;
+  font-weight: 800 !important;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.6) !important;
+}
+
+/* Hidden Activities & Excluded Assignments Lists */
+[data-theme="glass"] .pref-mono-title,
+[data-theme="glass"] #pref-hidden-count,
+[data-theme="glass"] #pref-hidden-assign-count,
+body.has-custom-bg .pref-mono-title,
+body.has-custom-bg #pref-hidden-count,
+body.has-custom-bg #pref-hidden-assign-count {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .pref-hidden-empty,
+[data-theme="glass"] .pref-hidden-empty span,
+body.has-custom-bg .pref-hidden-empty,
+body.has-custom-bg .pref-hidden-empty span {
+  color: rgba(255, 255, 255, 0.9) !important;
+  border: 1px dashed rgba(255, 255, 255, 0.3) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .pref-hidden-card,
+body.has-custom-bg .pref-hidden-card {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  border-radius: 8px !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+[data-theme="glass"] .pref-hidden-title-mono,
+body.has-custom-bg .pref-hidden-title-mono {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .pref-hidden-time-mono,
+body.has-custom-bg .pref-hidden-time-mono {
+  color: rgba(255, 255, 255, 0.85) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Info Guide Box */
+[data-theme="glass"] .pref-info-btn,
+body.has-custom-bg .pref-info-btn {
+  color: #FFFFFF !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="glass"] .pref-info-box,
+body.has-custom-bg .pref-info-box {
+  background: rgba(15, 23, 42, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+[data-theme="glass"] .pref-info-header,
+body.has-custom-bg .pref-info-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-theme="glass"] .pref-info-title,
+[data-theme="glass"] .pref-info-close,
+body.has-custom-bg .pref-info-title,
+body.has-custom-bg .pref-info-close {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .pref-info-step-text,
+body.has-custom-bg .pref-info-step-text {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .pref-info-step-text strong,
+body.has-custom-bg .pref-info-step-text strong {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+}
+
+/* Range Sliders inside Preferences */
+[data-theme="glass"] .pref-slider,
+body.has-custom-bg .pref-slider {
+  accent-color: #38BDF8 !important;
+}
+
+/* Sticky Action Footer Bar */
+[data-theme="glass"] .pref-sticky-footer,
+body.has-custom-bg .pref-sticky-footer {
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.22) !important;
+}
+
+[data-theme="glass"] .pref-storage-size,
+body.has-custom-bg .pref-storage-size {
+  color: rgba(255, 255, 255, 0.88) !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .pref-btn-clear,
+body.has-custom-bg .pref-btn-clear {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border: 1px solid rgba(248, 113, 113, 0.5) !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+[data-theme="glass"] .pref-btn-clear:hover,
+body.has-custom-bg .pref-btn-clear:hover {
+  background: rgba(239, 68, 68, 0.32) !important;
+  border-color: rgba(248, 113, 113, 0.8) !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="glass"] .pref-btn-save,
+body.has-custom-bg .pref-btn-save {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.45), rgba(5, 150, 105, 0.55)) !important;
+  border: 1px solid rgba(52, 211, 153, 0.7) !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;
+}
+
+[data-theme="glass"] .pref-btn-save:hover,
+body.has-custom-bg .pref-btn-save:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.65), rgba(5, 150, 105, 0.75)) !important;
+  border-color: rgba(52, 211, 153, 0.95) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.75), inset 0 1px 1.5px rgba(255, 255, 255, 0.7) !important;
 }
 
 
