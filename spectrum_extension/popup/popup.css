@@ -17649,3 +17649,629 @@ body.has-custom-bg .ics-capsule-btn:hover {
 body.has-custom-bg .timetable-toolbar-divider {
   background: rgba(255, 255, 255, 0.22) !important;
 }
+
+
+/* ==========================================================================
+   7. GLASS THEME: PREFERENCES TAB & COURSE MATERIALS TAB
+   - 7.1 Preferences Pane: Pure White Typography, Frosted OCC Course Rows,
+         No Solid Capsules, Frosted Dropdowns, Steppers & Settings Boxes
+   - 7.2 Course Materials Pane: Frosted Canvas, Glass Filter Toolbar,
+         Frosted Course Tree Accordions, Monograms, Files Rows & Bottom Action Bar
+   ========================================================================== */
+
+/* 7.1 PREFERENCES TAB (PURE WHITE TYPOGRAPHY, FROSTED ROWS & CONTROLS) */
+[data-theme="glass"] #tab-filters.preferences-pane,
+body.has-custom-bg #tab-filters.preferences-pane {
+  background: transparent !important;
+}
+
+/* Preference Cards (Sleek Frosted Glass Slabs) */
+[data-theme="glass"] .pref-card,
+body.has-custom-bg .pref-card {
+  background: rgba(15, 23, 42, var(--glass-card-op, 0.28)) !important;
+  backdrop-filter: blur(var(--glass-blur, 18px)) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur, 18px)) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28), inset 0 1px 1.5px rgba(255, 255, 255, 0.3) !important;
+  color: #FFFFFF !important;
+}
+
+/* Card Titles, Headers & Bullet Dots */
+[data-theme="glass"] .pref-card-title,
+body.has-custom-bg .pref-card-title {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.6px !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
+}
+
+[data-theme="glass"] .pref-bullet,
+[data-theme="glass"] .pref-bullet-black,
+body.has-custom-bg .pref-bullet,
+body.has-custom-bg .pref-bullet-black {
+  color: #FFFFFF !important;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8)) !important;
+}
+
+/* Card Subtitle Descriptions & Subheads */
+[data-theme="glass"] .pref-card-desc,
+[data-theme="glass"] .pref-subhead-title,
+[data-theme="glass"] .pref-row-subtitle,
+[data-theme="glass"] .pref-row-desc,
+body.has-custom-bg .pref-card-desc,
+body.has-custom-bg .pref-subhead-title,
+body.has-custom-bg .pref-row-subtitle,
+body.has-custom-bg .pref-row-desc {
+  color: rgba(255, 255, 255, 0.88) !important;
+  font-weight: 600 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .pref-row-title,
+body.has-custom-bg .pref-row-title {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Preference Micro Badges (CALIBRATION, CODE, ACTIVE, etc.) */
+[data-theme="glass"] .pref-badge,
+[data-theme="glass"] .pref-badge-subtle,
+body.has-custom-bg .pref-badge,
+body.has-custom-bg .pref-badge-subtle {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 6px !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Preference Row Boxes (Inner settings containers) */
+[data-theme="glass"] .pref-row-box,
+body.has-custom-bg .pref-row-box {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Enrolled Course OCC Rows in Preferences (ELIMINATE SOLID WHITE CAPSULES) */
+[data-theme="glass"] .pref-course-card,
+body.has-custom-bg .pref-course-card {
+  background: rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.25) !important;
+  color: #FFFFFF !important;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] .pref-course-card:hover,
+body.has-custom-bg .pref-course-card:hover {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  transform: translateY(-1px) scale(1.01) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28), inset 0 1px 1.5px rgba(255, 255, 255, 0.4) !important;
+}
+
+[data-theme="glass"] .pref-course-code,
+body.has-custom-bg .pref-course-code {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .pref-course-title,
+body.has-custom-bg .pref-course-title {
+  color: rgba(255, 255, 255, 0.88) !important;
+  font-weight: 600 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .pref-occ-label,
+body.has-custom-bg .pref-occ-label {
+  color: rgba(255, 255, 255, 0.82) !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Stepper Controls inside OCC Rows */
+[data-theme="glass"] .pref-stepper,
+body.has-custom-bg .pref-stepper {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+}
+
+[data-theme="glass"] .pref-stepper .stepper-btn,
+body.has-custom-bg .pref-stepper .stepper-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  transition: all 0.15s ease !important;
+}
+
+[data-theme="glass"] .pref-stepper .stepper-btn:hover,
+body.has-custom-bg .pref-stepper .stepper-btn:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="glass"] .pref-stepper .stepper-input,
+[data-theme="glass"] .occ-table-input,
+body.has-custom-bg .pref-stepper .stepper-input,
+body.has-custom-bg .occ-table-input {
+  background: transparent !important;
+  border: none !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Preference Select Dropdowns & Inputs */
+[data-theme="glass"] .pref-select,
+[data-theme="glass"] select.pref-select,
+[data-theme="glass"] input[type="date"].pref-select,
+[data-theme="glass"] input[type="text"].pref-select,
+[data-theme="glass"] #sel-course-capsule-style,
+[data-theme="glass"] #pref-sem-start-input,
+body.has-custom-bg .pref-select,
+body.has-custom-bg select.pref-select,
+body.has-custom-bg input[type="date"].pref-select,
+body.has-custom-bg input[type="text"].pref-select,
+body.has-custom-bg #sel-course-capsule-style,
+body.has-custom-bg #pref-sem-start-input {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 6px !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+[data-theme="glass"] .pref-select option,
+body.has-custom-bg .pref-select option {
+  background: #0F172A !important;
+  color: #FFFFFF !important;
+}
+
+/* Preference Action Buttons (Auto-Detect, Reset All, Upload Photo, Remove, Apply) */
+[data-theme="glass"] .pref-wireframe-btn,
+[data-theme="glass"] .btn-pref-reset,
+[data-theme="glass"] #btn-reset-all-occ,
+[data-theme="glass"] #btn-reset-sem-start,
+[data-theme="glass"] #btn-remove-custom-bg,
+[data-theme="glass"] #btn-apply-custom-bg-url,
+body.has-custom-bg .pref-wireframe-btn,
+body.has-custom-bg .btn-pref-reset,
+body.has-custom-bg #btn-reset-all-occ,
+body.has-custom-bg #btn-reset-sem-start,
+body.has-custom-bg #btn-remove-custom-bg,
+body.has-custom-bg #btn-apply-custom-bg-url {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 6px !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] .pref-wireframe-btn:hover,
+[data-theme="glass"] .btn-pref-reset:hover,
+[data-theme="glass"] #btn-reset-all-occ:hover,
+[data-theme="glass"] #btn-reset-sem-start:hover,
+[data-theme="glass"] #btn-remove-custom-bg:hover,
+[data-theme="glass"] #btn-apply-custom-bg-url:hover,
+body.has-custom-bg .pref-wireframe-btn:hover,
+body.has-custom-bg .btn-pref-reset:hover,
+body.has-custom-bg #btn-reset-all-occ:hover,
+body.has-custom-bg #btn-reset-sem-start:hover,
+body.has-custom-bg #btn-remove-custom-bg:hover,
+body.has-custom-bg #btn-apply-custom-bg-url:hover {
+  background: rgba(255, 255, 255, 0.26) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px) scale(1.02) !important;
+}
+
+[data-theme="glass"] .btn-pref-autodetect,
+[data-theme="glass"] #btn-autodetect-all-occ,
+body.has-custom-bg .btn-pref-autodetect,
+body.has-custom-bg #btn-autodetect-all-occ {
+  background: rgba(249, 115, 22, 0.32) !important;
+  border: 1px solid rgba(251, 146, 60, 0.7) !important;
+  border-radius: 6px !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.35) !important;
+  transition: all 0.18s ease !important;
+}
+
+[data-theme="glass"] .btn-pref-autodetect:hover,
+[data-theme="glass"] #btn-autodetect-all-occ:hover,
+body.has-custom-bg .btn-pref-autodetect:hover,
+body.has-custom-bg #btn-autodetect-all-occ:hover {
+  background: rgba(249, 115, 22, 0.48) !important;
+  border-color: rgba(251, 146, 60, 0.9) !important;
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.55) !important;
+}
+
+
+/* 7.2 ENTIRE COURSE MATERIALS PAGE */
+[data-theme="glass"] #tab-materials.materials-pane,
+[data-theme="glass"] .materials-workspace-layout,
+[data-theme="glass"] .materials-explorer-pane,
+[data-theme="glass"] .course-tree-container,
+body.has-custom-bg #tab-materials.materials-pane,
+body.has-custom-bg .materials-workspace-layout,
+body.has-custom-bg .materials-explorer-pane,
+body.has-custom-bg .course-tree-container {
+  background: transparent !important;
+}
+
+/* Materials Top Filter Toolbar (Frosted Glass Slab) */
+[data-theme="glass"] .mat-filter-toolbar,
+body.has-custom-bg .mat-filter-toolbar {
+  background: rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
+  backdrop-filter: blur(var(--glass-blur, 18px)) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur, 18px)) saturate(160%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Search Bar in Materials Toolbar */
+[data-theme="glass"] .mat-search-input,
+[data-theme="glass"] #filter-search-input,
+body.has-custom-bg .mat-search-input,
+body.has-custom-bg #filter-search-input {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 6px !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+[data-theme="glass"] .mat-search-icon,
+body.has-custom-bg .mat-search-icon {
+  stroke: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+/* Extension Filter Pills (.PDF, .PPTX, .ZIP, etc.) */
+[data-theme="glass"] .mat-ext-pill,
+body.has-custom-bg .mat-ext-pill {
+  background: rgba(255, 255, 255, 0.13) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 9999px !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  transition: all 0.18s ease !important;
+}
+
+[data-theme="glass"] .mat-ext-pill:hover,
+body.has-custom-bg .mat-ext-pill:hover {
+  background: rgba(255, 255, 255, 0.24) !important;
+  color: #FFFFFF !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+[data-theme="glass"] .mat-ext-pill.active,
+body.has-custom-bg .mat-ext-pill.active {
+  background: rgba(255, 255, 255, 0.32) !important;
+  border: 1px solid rgba(255, 255, 255, 0.65) !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Order Dropdown in Materials Toolbar */
+[data-theme="glass"] #mat-sort-select,
+[data-theme="glass"] .mat-sort-select,
+body.has-custom-bg #mat-sort-select,
+body.has-custom-bg .mat-sort-select {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 6px !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+[data-theme="glass"] .mat-sort-select option,
+body.has-custom-bg .mat-sort-select option {
+  background: #0F172A !important;
+  color: #FFFFFF !important;
+}
+
+/* Materials Action Buttons (Select All, Expand All, Rescan) */
+[data-theme="glass"] .mat-select-all-btn,
+[data-theme="glass"] .mat-expand-btn,
+[data-theme="glass"] .mat-rescan-btn,
+body.has-custom-bg .mat-select-all-btn,
+body.has-custom-bg .mat-expand-btn,
+body.has-custom-bg .mat-rescan-btn {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 6px !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] .mat-select-all-btn .icon-svg,
+[data-theme="glass"] .mat-expand-btn .icon-svg,
+[data-theme="glass"] .mat-rescan-btn .icon-svg,
+body.has-custom-bg .mat-select-all-btn .icon-svg,
+body.has-custom-bg .mat-expand-btn .icon-svg,
+body.has-custom-bg .mat-rescan-btn .icon-svg {
+  stroke: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="glass"] .mat-select-all-btn:hover,
+[data-theme="glass"] .mat-expand-btn:hover,
+[data-theme="glass"] .mat-rescan-btn:hover,
+body.has-custom-bg .mat-select-all-btn:hover,
+body.has-custom-bg .mat-expand-btn:hover,
+body.has-custom-bg .mat-rescan-btn:hover {
+  background: rgba(255, 255, 255, 0.26) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px) scale(1.02) !important;
+}
+
+/* Course Accordion Item (Frosted Glass Card in Course Tree) */
+[data-theme="glass"] .course-tree-item,
+body.has-custom-bg .course-tree-item {
+  background: rgba(15, 23, 42, var(--glass-card-op, 0.28)) !important;
+  backdrop-filter: blur(var(--glass-blur, 16px)) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur, 16px)) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.20) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24), inset 0 1px 1px rgba(255, 255, 255, 0.25) !important;
+  margin: 0 16px 12px 16px !important;
+  overflow: hidden !important;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] .course-tree-header,
+body.has-custom-bg .course-tree-header {
+  background: transparent !important;
+  padding: 12px 18px !important;
+  color: #FFFFFF !important;
+  transition: background 0.15s ease !important;
+}
+
+[data-theme="glass"] .course-tree-header:hover,
+body.has-custom-bg .course-tree-header:hover {
+  background: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* Chevron & Monogram Badge */
+[data-theme="glass"] .tree-chevron,
+body.has-custom-bg .tree-chevron {
+  stroke: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="glass"] .course-dept-badge,
+body.has-custom-bg .course-dept-badge {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border: 1px solid rgba(255, 255, 255, 0.38) !important;
+  border-radius: 6px !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Course Code, Title & Sub-meta */
+[data-theme="glass"] .course-code-txt,
+[data-theme="glass"] .course-sep,
+[data-theme="glass"] .course-title-txt,
+body.has-custom-bg .course-code-txt,
+body.has-custom-bg .course-sep,
+body.has-custom-bg .course-title-txt {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .course-sub-meta,
+body.has-custom-bg .course-sub-meta {
+  color: rgba(255, 255, 255, 0.82) !important;
+  font-weight: 600 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Download Course Pack Button */
+[data-theme="glass"] .btn-download-pack,
+body.has-custom-bg .btn-download-pack {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 8px !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] .btn-download-pack:hover,
+body.has-custom-bg .btn-download-pack:hover {
+  background: rgba(255, 255, 255, 0.26) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px) scale(1.02) !important;
+}
+
+/* Section Tree Headers & Children */
+[data-theme="glass"] .section-tree-header,
+body.has-custom-bg .section-tree-header {
+  background: rgba(15, 23, 42, 0.35) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="glass"] .section-title,
+body.has-custom-bg .section-title {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .section-count-badge,
+body.has-custom-bg .section-count-badge {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: #FFFFFF !important;
+  border-radius: 9999px !important;
+  font-weight: 700 !important;
+}
+
+/* File Rows inside Sections */
+[data-theme="glass"] .file-row,
+body.has-custom-bg .file-row {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #FFFFFF !important;
+  transition: background 0.15s ease !important;
+}
+
+[data-theme="glass"] .file-row:hover,
+body.has-custom-bg .file-row:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+
+[data-theme="glass"] .file-title-text,
+body.has-custom-bg .file-title-text {
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .file-format-badge,
+body.has-custom-bg .file-format-badge {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border: 1px solid rgba(255, 255, 255, 0.38) !important;
+  color: #FFFFFF !important;
+  border-radius: 4px !important;
+  font-weight: 800 !important;
+}
+
+[data-theme="glass"] .btn-mat-action,
+[data-theme="glass"] .btn-inspect-file,
+[data-theme="glass"] .btn-single-download,
+body.has-custom-bg .btn-mat-action,
+body.has-custom-bg .btn-inspect-file,
+body.has-custom-bg .btn-single-download {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  color: #FFFFFF !important;
+  border-radius: 6px !important;
+}
+
+[data-theme="glass"] .btn-mat-action:hover,
+body.has-custom-bg .btn-mat-action:hover {
+  background: rgba(255, 255, 255, 0.28) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Sticky Bottom Action Bar in Materials */
+[data-theme="glass"] .mat-bottom-action-bar,
+body.has-custom-bg .mat-bottom-action-bar {
+  background: rgba(15, 23, 42, var(--glass-tint-op, 0.35)) !important;
+  backdrop-filter: blur(var(--glass-blur, 18px)) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur, 18px)) saturate(160%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="glass"] .mat-selection-label,
+[data-theme="glass"] #selected-count,
+body.has-custom-bg .mat-selection-label,
+body.has-custom-bg #selected-count {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Download Selected (.zip) Button */
+[data-theme="glass"] #btn-download-zip,
+body.has-custom-bg #btn-download-zip {
+  background: rgba(99, 102, 241, 0.38) !important;
+  border: 1px solid rgba(129, 140, 248, 0.75) !important;
+  border-radius: 9999px !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  box-shadow: 0 0 14px rgba(99, 102, 241, 0.45) !important;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="glass"] #btn-download-zip:hover,
+body.has-custom-bg #btn-download-zip:hover {
+  background: rgba(99, 102, 241, 0.55) !important;
+  border-color: rgba(165, 180, 252, 0.85) !important;
+  transform: translateY(-1px) scale(1.02) !important;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.65) !important;
+}
+
+/* Materials Subfooter Line */
+[data-theme="glass"] .mat-subfooter-line,
+body.has-custom-bg .mat-subfooter-line {
+  background: rgba(15, 23, 42, 0.5) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="glass"] .mat-subfooter-text,
+[data-theme="glass"] .mat-subfooter-integrity,
+body.has-custom-bg .mat-subfooter-text,
+body.has-custom-bg .mat-subfooter-integrity {
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-weight: 600 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* File Inspector Drawer (Right Side) */
+[data-theme="glass"] .file-inspector-pane,
+body.has-custom-bg .file-inspector-pane {
+  background: rgba(15, 23, 42, 0.85) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="glass"] .insp-preview-card,
+body.has-custom-bg .insp-preview-card {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-radius: 10px !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="glass"] .insp-slide-subject,
+[data-theme="glass"] .insp-slide-heading,
+body.has-custom-bg .insp-slide-subject,
+body.has-custom-bg .insp-slide-heading {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
