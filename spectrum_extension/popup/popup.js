@@ -928,8 +928,9 @@ function updateSidebarLabels() {
       const label = el.querySelector('.rail-expand-label');
       if (label) label.textContent = text;
       el.setAttribute('aria-label', text);
-      el.setAttribute('title', text);
-      el.dataset.tooltip = text;
+      el.removeAttribute('title');
+      el.removeAttribute('data-tooltip');
+      delete el.dataset.tooltip;
     }
   }
 
@@ -16505,6 +16506,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     let tooltipTimer = null;
 
     document.addEventListener('mouseover', (e) => {
+      // 0. Exclude all sidebar rail items: they have built-in .rail-expand-label attached to the icon
+      if (e.target.closest('.left-rail, .rail-btn-icon, .rail-toggle-pill, .rail-mode-item, .rail-lang-btn')) {
+        const railOverlay = document.getElementById('rail-tooltip-overlay');
+        if (railOverlay) railOverlay.classList.remove('visible');
+        return;
+      }
+
       // 1. Dedicated Rich Attendance Stats Popover
       const attBadge = e.target.closest('.att-rate-badge, .course-att-rate-badge');
       if (attBadge) {
