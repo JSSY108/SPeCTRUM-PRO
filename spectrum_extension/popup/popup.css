@@ -14356,3 +14356,108 @@ body.is-detached-window #btn-detach-popup .icon-pin {
   text-overflow: ellipsis;
   max-width: 100%;
 }
+
+
+/* ==========================================================================
+   Liquid Glass & Custom Wallpaper Engine
+   ========================================================================== */
+
+.custom-bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease, filter 0.35s ease;
+}
+
+body.has-custom-bg .custom-bg-layer {
+  opacity: 1;
+}
+
+body.has-custom-bg {
+  --glass-blur: 18px;
+  --glass-tint-op: 0.75;
+  --glass-tint-dark: rgba(18, 18, 24, var(--glass-tint-op, 0.75));
+  --glass-tint-light: rgba(255, 255, 255, 0.82);
+  --glass-border-dark: rgba(255, 255, 255, 0.14);
+  --glass-border-light: rgba(255, 255, 255, 0.55);
+  --glass-shadow-dark: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+  --glass-shadow-light: 0 8px 24px 0 rgba(0, 0, 0, 0.10);
+  background: transparent !important;
+}
+
+html.has-custom-bg {
+  background: transparent !important;
+}
+
+body.has-custom-bg .popup-container,
+body.has-custom-bg .fulltab-container,
+body.has-custom-bg .app-container {
+  background: transparent !important;
+}
+
+/* Glass Reframing for Cards & Panels */
+body.has-custom-bg .pref-card,
+body.has-custom-bg .calendar-card,
+body.has-custom-bg .hero-card,
+body.has-custom-bg .unified-card,
+body.has-custom-bg .fulllist-card,
+body.has-custom-bg .session-card,
+body.has-custom-bg .attendance-card,
+body.has-custom-bg .modal-box,
+body.has-custom-bg .timetable-edit-modal-box {
+  background: var(--glass-tint-dark) !important;
+  backdrop-filter: blur(var(--glass-blur, 18px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 18px)) saturate(180%);
+  border: 1px solid var(--glass-border-dark) !important;
+  box-shadow: var(--glass-shadow-dark) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .pref-card,
+[data-theme="light"] body.has-custom-bg .calendar-card,
+[data-theme="light"] body.has-custom-bg .hero-card,
+[data-theme="light"] body.has-custom-bg .unified-card,
+[data-theme="light"] body.has-custom-bg .fulllist-card,
+[data-theme="light"] body.has-custom-bg .session-card,
+[data-theme="light"] body.has-custom-bg .attendance-card,
+[data-theme="light"] body.has-custom-bg .modal-box,
+[data-theme="light"] body.has-custom-bg .timetable-edit-modal-box {
+  background: var(--glass-tint-light) !important;
+  border: 1px solid var(--glass-border-light) !important;
+  box-shadow: var(--glass-shadow-light) !important;
+}
+
+/* Chromium Liquid Glass Bezel Refraction on Hero Card */
+body.has-custom-bg.is-liquid-glass .hero-card {
+  backdrop-filter: blur(var(--glass-blur, 18px)) saturate(180%) url(#liquid-glass-filter);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 18px)) saturate(180%) url(#liquid-glass-filter);
+}
+
+/* Glass Reframing for Headers & Footers */
+body.has-custom-bg .popup-header,
+body.has-custom-bg .header-container,
+body.has-custom-bg .pref-sticky-footer,
+body.has-custom-bg .popup-tab-bar {
+  background: rgba(18, 18, 24, 0.70) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--glass-border-dark) !important;
+}
+
+[data-theme="light"] body.has-custom-bg .popup-header,
+[data-theme="light"] body.has-custom-bg .header-container,
+[data-theme="light"] body.has-custom-bg .pref-sticky-footer,
+[data-theme="light"] body.has-custom-bg .popup-tab-bar {
+  background: rgba(255, 255, 255, 0.78) !important;
+  border-bottom: 1px solid var(--glass-border-light) !important;
+}
+
+.pref-bg-preset-btn {
+  font-size: 11px !important;
+  padding: 3px 8px !important;
+  cursor: pointer;
+}

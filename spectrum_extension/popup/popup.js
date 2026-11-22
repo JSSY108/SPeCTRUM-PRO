@@ -213,6 +213,20 @@ const I18N = {
       capsuleStyleRowDesc: 'Select between Course Code (WIA2001) or Course Acronym (DB, SAD)',
       optCapsuleCode: 'Subject Code (WIA2001)',
       optCapsuleAcronym: 'Acronym / Initials (DB)',
+      wallpaperTitle: 'CUSTOM WALLPAPER & LIQUID GLASS',
+      wallpaperDesc: 'Personalize your academic companion with a custom wallpaper and refractive liquid glass surfaces.',
+      wallpaperRowTitle: 'Background Image',
+      wallpaperBadgeActive: 'ACTIVE',
+      wallpaperBadgeOff: 'SOLID (OFF)',
+      btnUploadPhoto: '📁 Upload Photo',
+      btnRemoveWallpaper: '✕ Remove',
+      btnApplyUrl: 'Apply',
+      urlPlaceholder: 'Or paste image URL (https://...)',
+      glassStyleTitle: 'Glass Effect Style',
+      optLiquidGlass: 'Liquid Glass (Refractive)',
+      optFrostedAcrylic: 'Frosted Acrylic (Smooth)',
+      blurIntensity: 'Blur Intensity:',
+      tintOpacity: 'Glass Tint Opacity:',
       clearCache: 'Clear Cache',
       savePreferences: 'Save Preferences',
       savedToast: 'Preferences Saved'
@@ -439,6 +453,20 @@ const I18N = {
       capsuleStyleRowDesc: 'Pilih antara Kod Kursus (WIA2001) atau Akronim Kursus (DB, SAD)',
       optCapsuleCode: 'Kod Kursus (WIA2001)',
       optCapsuleAcronym: 'Akronim / Huruf Pertama (DB)',
+      wallpaperTitle: 'KERTAS DINDING & KACA CECAIR',
+      wallpaperDesc: 'Peribadikan teman akademik anda dengan kertas dinding pilihan dan permukaan kaca biasan.',
+      wallpaperRowTitle: 'Imej Latar Belakang',
+      wallpaperBadgeActive: 'AKTIF',
+      wallpaperBadgeOff: 'PEJAL (PADAM)',
+      btnUploadPhoto: '📁 Muat Naik Foto',
+      btnRemoveWallpaper: '✕ Padam',
+      btnApplyUrl: 'Guna',
+      urlPlaceholder: 'Atau tampal URL imej (https://...)',
+      glassStyleTitle: 'Gaya Kesan Kaca',
+      optLiquidGlass: 'Kaca Cecair (Biasan)',
+      optFrostedAcrylic: 'Akrilik Kabur (Licin)',
+      blurIntensity: 'Keamatan Kabur:',
+      tintOpacity: 'Kelegapan Warna Kaca:',
       clearCache: 'Kosongkan Cache',
       savePreferences: 'Simpan Tetapan',
       savedToast: 'Tetapan Disimpan'
@@ -665,6 +693,20 @@ const I18N = {
       capsuleStyleRowDesc: '在课程代码（如 WIA2001）与名称缩写（如 DB、SAD）之间切换',
       optCapsuleCode: '课程代码 (WIA2001)',
       optCapsuleAcronym: '首字母缩写 (DB)',
+      wallpaperTitle: '自定义壁纸与流体玻璃质感',
+      wallpaperDesc: '自定义你的学习助手背景壁纸，并启用折射物理流体毛玻璃效果。',
+      wallpaperRowTitle: '背景图片',
+      wallpaperBadgeActive: '已启用',
+      wallpaperBadgeOff: '默认纯色',
+      btnUploadPhoto: '📁 上传本地壁纸',
+      btnRemoveWallpaper: '✕ 移除壁纸',
+      btnApplyUrl: '应用',
+      urlPlaceholder: '或粘贴图片链接 (https://...)',
+      glassStyleTitle: '玻璃质感风格',
+      optLiquidGlass: '物理流体玻璃 (边缘折射)',
+      optFrostedAcrylic: '磨砂亚克力 (平滑柔和)',
+      blurIntensity: '模糊强度：',
+      tintOpacity: '玻璃遮罩透明度：',
       clearCache: '清除缓存',
       savePreferences: '保存设置',
       savedToast: '设置已保存'
@@ -1014,6 +1056,36 @@ function updatePreferencesTranslations() {
     if (sel && sel.options) {
       if (sel.options[0]) sel.options[0].textContent = t('settings', 'optCapsuleCode');
       if (sel.options[1]) sel.options[1].textContent = t('settings', 'optCapsuleAcronym');
+    }
+  }
+
+  const wallpaperCard = document.getElementById('group-custom-wallpaper');
+  if (wallpaperCard) {
+    const title = wallpaperCard.querySelector('.pref-card-title');
+    if (title) title.textContent = t('settings', 'wallpaperTitle');
+    const desc = wallpaperCard.querySelector('.pref-card-desc');
+    if (desc) desc.textContent = t('settings', 'wallpaperDesc');
+    const rowTitle = wallpaperCard.querySelector('.pref-row-title');
+    if (rowTitle) rowTitle.textContent = t('settings', 'wallpaperRowTitle');
+    const badge = document.getElementById('pref-wallpaper-badge');
+    if (badge) {
+      const hasBg = document.body.classList.contains('has-custom-bg');
+      badge.textContent = hasBg ? t('settings', 'wallpaperBadgeActive') : t('settings', 'wallpaperBadgeOff');
+    }
+    const btnUpload = wallpaperCard.querySelector('label[for="input-custom-bg-file"]');
+    if (btnUpload) btnUpload.textContent = t('settings', 'btnUploadPhoto');
+    const btnRemove = document.getElementById('btn-remove-custom-bg');
+    if (btnRemove) btnRemove.textContent = t('settings', 'btnRemoveWallpaper');
+    const btnApply = document.getElementById('btn-apply-bg-url');
+    if (btnApply) btnApply.textContent = t('settings', 'btnApplyUrl');
+    const urlInput = document.getElementById('input-custom-bg-url');
+    if (urlInput) urlInput.placeholder = t('settings', 'urlPlaceholder');
+    const glassStyleTitle = wallpaperCard.querySelector('#pref-glass-tuner-row .pref-row-title');
+    if (glassStyleTitle) glassStyleTitle.textContent = t('settings', 'glassStyleTitle');
+    const selStyle = document.getElementById('sel-glass-effect-style');
+    if (selStyle && selStyle.options) {
+      if (selStyle.options[0]) selStyle.options[0].textContent = t('settings', 'optLiquidGlass');
+      if (selStyle.options[1]) selStyle.options[1].textContent = t('settings', 'optFrostedAcrylic');
     }
   }
 

@@ -1,6 +1,21 @@
 // Immediate early theme & surface mode application to eliminate light-flash and layout flash (FOUC)
 (function() {
   try {
+    var customBg = localStorage.getItem('spectrum_custom_bg');
+    if (customBg) {
+      document.documentElement.classList.add('has-custom-bg');
+      var applyBgToBody = function() {
+        if (!document.body) return false;
+        document.body.classList.add('has-custom-bg');
+        return true;
+      };
+      if (!applyBgToBody()) {
+        document.addEventListener('DOMContentLoaded', applyBgToBody);
+      }
+    }
+  } catch (e) {}
+
+  try {
     var savedTheme = localStorage.getItem('spectrum_theme');
     if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.setAttribute('data-theme', 'dark');

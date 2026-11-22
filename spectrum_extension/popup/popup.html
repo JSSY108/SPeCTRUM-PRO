@@ -8,6 +8,20 @@
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
+  <!-- Fixed Custom Wallpaper Layer -->
+  <div id="custom-bg-layer" class="custom-bg-layer" aria-hidden="true"></div>
+
+  <!-- Liquid Glass SVG Filter Engine (Chromium Native) -->
+  <svg id="liquid-glass-svg-defs" xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;overflow:hidden;pointer-events:none;" color-interpolation-filters="sRGB" aria-hidden="true">
+    <defs id="liquid-glass-defs">
+      <filter id="liquid-glass-filter" x="-10%" y="-10%" width="120%" height="120%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="blurred_source" />
+        <feColorMatrix in="blurred_source" type="saturate" values="1.6" result="displaced_sat" />
+        <feBlend in="displaced_sat" in2="SourceGraphic" mode="normal" />
+      </filter>
+    </defs>
+  </svg>
+
   <!-- Global Shared Floating Tooltip & Popover Overlays (Active in both Popup and Full-Tab) -->
   <div id="rail-tooltip-overlay"></div>
   <div id="matrix-course-popover" class="matrix-course-popover"></div>
@@ -823,6 +837,72 @@
                 <option value="code">Subject Code (WIA2001)</option>
                 <option value="acronym">Acronym / Initials (DB)</option>
               </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 2C: CUSTOM WALLPAPER & LIQUID GLASS -->
+        <div class="pref-card" id="group-custom-wallpaper">
+          <div class="pref-card-header">
+            <div class="pref-card-title-wrap">
+              <span class="pref-bullet pref-bullet-black">●</span>
+              <h3 class="pref-card-title">CUSTOM WALLPAPER & LIQUID GLASS</h3>
+            </div>
+            <span class="pref-badge pref-badge-subtle" id="pref-wallpaper-badge">SOLID (OFF)</span>
+          </div>
+          <p class="pref-card-desc">Personalize your academic companion with a custom wallpaper and refractive liquid glass surfaces.</p>
+
+          <div class="pref-row-box" style="flex-direction:column;gap:12px;align-items:stretch;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span class="pref-row-title">Background Image</span>
+              <div style="display:flex;gap:8px;">
+                <label for="input-custom-bg-file" class="pref-wireframe-btn" style="cursor:pointer;margin:0;">
+                  📁 Upload Photo
+                </label>
+                <input type="file" id="input-custom-bg-file" accept="image/*" style="display:none;">
+                <button type="button" id="btn-remove-custom-bg" class="pref-wireframe-btn" style="display:none;color:#EF4444;">✕ Remove</button>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="url" id="input-custom-bg-url" class="pref-select" placeholder="Or paste image URL (https://...)" style="flex:1;">
+              <button type="button" id="btn-apply-bg-url" class="pref-wireframe-btn">Apply</button>
+            </div>
+
+            <div id="wallpaper-preview-wrap" style="display:none;position:relative;height:70px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.15);background-size:cover;background-position:center;">
+              <div style="position:absolute;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">
+                <div style="background:rgba(255,255,255,0.2);backdrop-filter:blur(8px);padding:4px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.3);font-size:11px;font-weight:700;color:#fff;">
+                  Liquid Glass Preview
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span style="font-size:11px;color:var(--text-muted);font-weight:600;white-space:nowrap;">Presets:</span>
+              <button type="button" class="pref-wireframe-btn pref-bg-preset-btn" data-preset="aurora">🌌 Aurora</button>
+              <button type="button" class="pref-wireframe-btn pref-bg-preset-btn" data-preset="sunset">🌅 Sunset</button>
+              <button type="button" class="pref-wireframe-btn pref-bg-preset-btn" data-preset="cyber">🌃 Cyber</button>
+              <button type="button" class="pref-wireframe-btn pref-bg-preset-btn" data-preset="minimal">🏔️ Minimal</button>
+            </div>
+          </div>
+
+          <div class="pref-row-box" id="pref-glass-tuner-row" style="flex-direction:column;gap:12px;align-items:stretch;margin-top:10px;display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span class="pref-row-title">Glass Effect Style</span>
+              <select id="sel-glass-effect-style" class="pref-select" style="min-width:160px;cursor:pointer;">
+                <option value="liquid">Liquid Glass (Refractive)</option>
+                <option value="frosted">Frosted Acrylic (Smooth)</option>
+              </select>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:11.5px;color:var(--text-muted);font-weight:600;">Blur Intensity: <b id="val-glass-blur-label">18px</b></span>
+              <input type="range" id="slider-glass-blur" min="4" max="36" value="18" step="2" class="pref-slider" style="width:160px;">
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:11.5px;color:var(--text-muted);font-weight:600;">Glass Tint Opacity: <b id="val-glass-tint-label">75%</b></span>
+              <input type="range" id="slider-glass-tint" min="40" max="95" value="75" step="5" class="pref-slider" style="width:160px;">
             </div>
           </div>
         </div>
@@ -1916,6 +1996,7 @@
   <script src="modules/timetable.js"></script>
   <script src="modules/fetchers.js"></script>
   <script src="modules/materials.js"></script>
+  <script src="modules/liquid-glass.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
