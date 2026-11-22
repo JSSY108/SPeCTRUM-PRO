@@ -1407,6 +1407,9 @@ function setAppLanguage(lang, broadcast = true) {
   updateHeaderTranslations();
   updatePreferencesTranslations();
   updateMaterialsTranslations();
+  if (typeof updateGlassTunerTranslations === 'function') {
+    updateGlassTunerTranslations();
+  }
 
   if (typeof window.onLanguageChange === 'function') {
     try {
@@ -16740,77 +16743,159 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 // ==========================================================================
-// GLASS STUDIO LIVE TUNER (实时拟态调参系统)
+// GLASS STUDIO LIVE TUNER (拟态调参系统)
 // ==========================================================================
+const GLASS_TUNER_I18N = {
+  en: {
+    title: 'Glass Tuner',
+    groupActivities: 'Activity Cards',
+    sec1Title: '1. Side Accent Rim',
+    showRim: 'Show Rim',
+    edgeWidth: 'Rim Width',
+    edgeOp: 'Rim Opacity',
+    sec2Title: '2. Icon Capsule',
+    iconOp: 'Tint Opacity',
+    iconBorderOp: 'Border Glint',
+    iconGlow: 'Halo Glow',
+    sec3Title: '3. Card Backlight',
+    backlightOp: 'Backlight Glow',
+    backlightSize: 'Spread Size',
+    groupGlobal: 'Glass Surface',
+    sec4Title: '4. Base Tint & Blur',
+    tintOp: 'Tint Darkness',
+    blur: 'Frosted Blur',
+    btnReset: 'Reset to Default'
+  },
+  zh: {
+    title: '拟态调参台',
+    groupActivities: '活动卡片视觉效果',
+    sec1Title: '1. 侧边线条',
+    showRim: '显示线条',
+    edgeWidth: '线条宽度',
+    edgeOp: '线条不透明度',
+    sec2Title: '2. 图标胶囊',
+    iconOp: '底色浓度',
+    iconBorderOp: '高光边缘',
+    iconGlow: '彩色光晕',
+    sec3Title: '3. 背面透射光源',
+    backlightOp: '光源亮度',
+    backlightSize: '扩散范围',
+    groupGlobal: '全局毛玻璃基底',
+    sec4Title: '4. 基底暗度与模糊',
+    tintOp: '底色暗度',
+    blur: '磨砂模糊度',
+    btnReset: '恢复默认'
+  },
+  bm: {
+    title: 'Pelaras Kaca',
+    groupActivities: 'Kad Aktiviti',
+    sec1Title: '1. Garis Tepi Aksen',
+    showRim: 'Papar Garis',
+    edgeWidth: 'Lebar Garis',
+    edgeOp: 'Kelegapan Garis',
+    sec2Title: '2. Kapsul Ikon',
+    iconOp: 'Warna Kapsul',
+    iconBorderOp: 'Kilauan Sisi',
+    iconGlow: 'Cahaya Halo',
+    sec3Title: '3. Lampu Latar Kad',
+    backlightOp: 'Kecerahan Latar',
+    backlightSize: 'Saiz Sebaran',
+    groupGlobal: 'Permukaan Kaca Global',
+    sec4Title: '4. Asas Kaca & Kabur',
+    tintOp: 'Kegelapan Kaca',
+    blur: 'Kabur Kaca',
+    btnReset: 'Pulihkan Lalai'
+  }
+};
+
+function updateGlassTunerTranslations() {
+  const lang = (['en', 'zh', 'bm'].includes(currentLang)) ? currentLang : 'en';
+  const dict = GLASS_TUNER_I18N[lang] || GLASS_TUNER_I18N.en;
+
+  const setTxt = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+
+  setTxt('txt-glass-studio-title', dict.title);
+  setTxt('txt-glass-group-activities', dict.groupActivities);
+  setTxt('txt-glass-sec1-title', dict.sec1Title);
+  setTxt('txt-glass-chk-edge', dict.showRim);
+  setTxt('txt-glass-edge-width', dict.edgeWidth);
+  setTxt('txt-glass-edge-op', dict.edgeOp);
+  setTxt('txt-glass-sec2-title', dict.sec2Title);
+  setTxt('txt-glass-icon-op', dict.iconOp);
+  setTxt('txt-glass-icon-border-op', dict.iconBorderOp);
+  setTxt('txt-glass-icon-glow', dict.iconGlow);
+  setTxt('txt-glass-sec3-title', dict.sec3Title);
+  setTxt('txt-glass-backlight-op', dict.backlightOp);
+  setTxt('txt-glass-backlight-size', dict.backlightSize);
+  setTxt('txt-glass-group-global', dict.groupGlobal);
+  setTxt('txt-glass-sec4-title', dict.sec4Title);
+  setTxt('txt-glass-tint-op', dict.tintOp);
+  setTxt('txt-glass-blur', dict.blur);
+  setTxt('txt-glass-btn-reset', dict.btnReset);
+
+  // Update tune trigger buttons
+  const tuneLabel = lang === 'zh' ? '调参' : (lang === 'bm' ? 'Laras' : 'Tune');
+  const tuneTitle = lang === 'zh' ? '实时拟态调参' : (lang === 'bm' ? 'Pelaras Kaca' : 'Tune Glassmorphism');
+  ['btn-glass-tuner-popup', 'btn-glass-tuner-fulltab'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) {
+      btn.title = tuneTitle;
+      const s = btn.querySelector('span');
+      if (s) s.textContent = tuneLabel;
+    }
+  });
+}
+
 function initGlassTuner() {
   const root = document.documentElement;
   const panel = document.getElementById('glass-studio-panel');
   if (!panel) return;
 
   const DEFAULT_GLASS_VALS = {
-    edgeWidth: 0,
-    edgeOp: 0.85,
-    iconOp: 0.16,
-    iconBorderOp: 0.45,
-    iconGlow: 0.20,
-    backlightOp: 0.18,
-    backlightSize: 340,
-    tintOp: 0.28,
-    blur: 18
-  };
-
-  const PRESETS = {
-    crystal: {
-      edgeWidth: 0,
-      edgeOp: 0.85,
-      iconOp: 0.12,
-      iconBorderOp: 0.35,
-      iconGlow: 0.15,
-      backlightOp: 0.14,
-      backlightSize: 300,
-      tintOp: 0.24,
-      blur: 16
-    },
-    neon: {
-      edgeWidth: 2,
-      edgeOp: 0.95,
-      iconOp: 0.22,
-      iconBorderOp: 0.65,
-      iconGlow: 0.35,
-      backlightOp: 0.28,
-      backlightSize: 360,
-      tintOp: 0.28,
-      blur: 18
-    },
-    minimal: {
-      edgeWidth: 0,
-      edgeOp: 0,
-      iconOp: 0,
-      iconBorderOp: 0,
-      iconGlow: 0,
-      backlightOp: 0.10,
-      backlightSize: 260,
-      tintOp: 0.22,
-      blur: 14
-    },
-    default: { ...DEFAULT_GLASS_VALS }
+    edgeWidth: 0.5,
+    edgeOp: 0.2,
+    iconOp: 0.24,
+    iconBorderOp: 0.3,
+    iconGlow: 0.22,
+    backlightOp: 0.24,
+    backlightSize: 330,
+    tintOp: 0.44,
+    blur: 8
   };
 
   let currentVals = { ...DEFAULT_GLASS_VALS };
 
   // Load saved values if present
   try {
-    const local = localStorage.getItem('spectrum_glass_tune');
+    const local = localStorage.getItem('spectrum_glass_tune_v2');
     if (local) {
       currentVals = Object.assign({}, DEFAULT_GLASS_VALS, JSON.parse(local));
+    } else {
+      const oldLocal = localStorage.getItem('spectrum_glass_tune');
+      if (oldLocal) {
+        const parsed = JSON.parse(oldLocal);
+        if (parsed.blur === 18 && parsed.edgeWidth === 0) {
+          currentVals = { ...DEFAULT_GLASS_VALS };
+        } else {
+          currentVals = Object.assign({}, DEFAULT_GLASS_VALS, parsed);
+        }
+      }
     }
   } catch(e) {}
 
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-    chrome.storage.local.get(['glassTuneSettings'], (res) => {
-      if (res && res.glassTuneSettings) {
-        currentVals = Object.assign({}, DEFAULT_GLASS_VALS, res.glassTuneSettings);
+    chrome.storage.local.get(['glassTuneSettings_v2', 'glassTuneSettings'], (res) => {
+      if (res && res.glassTuneSettings_v2) {
+        currentVals = Object.assign({}, DEFAULT_GLASS_VALS, res.glassTuneSettings_v2);
         applyGlassValues(currentVals, false);
+      } else if (res && res.glassTuneSettings) {
+        if (res.glassTuneSettings.blur !== 18 || res.glassTuneSettings.edgeWidth !== 0) {
+          currentVals = Object.assign({}, DEFAULT_GLASS_VALS, res.glassTuneSettings);
+          applyGlassValues(currentVals, false);
+        }
       }
     });
   }
@@ -16889,15 +16974,17 @@ function initGlassTuner() {
     if (save) {
       try {
         localStorage.setItem('spectrum_glass_tune', JSON.stringify(vals));
+        localStorage.setItem('spectrum_glass_tune_v2', JSON.stringify(vals));
         if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-          chrome.storage.local.set({ glassTuneSettings: vals });
+          chrome.storage.local.set({ glassTuneSettings: vals, glassTuneSettings_v2: vals });
         }
       } catch(e) {}
     }
   }
 
-  // Initial apply
+  // Initial apply and translations
   applyGlassValues(currentVals, false);
+  updateGlassTunerTranslations();
 
   // Toggle button handlers
   function toggleStudio() {
@@ -16920,7 +17007,7 @@ function initGlassTuner() {
   const chkEdge = document.getElementById('chk-glass-show-edge');
   if (chkEdge) {
     chkEdge.addEventListener('change', () => {
-      currentVals.edgeWidth = chkEdge.checked ? 2 : 0;
+      currentVals.edgeWidth = chkEdge.checked ? (currentVals.edgeWidth > 0 ? currentVals.edgeWidth : 0.5) : 0;
       applyGlassValues(currentVals);
     });
   }
@@ -16929,6 +17016,7 @@ function initGlassTuner() {
   if (slEdgeWidth) {
     slEdgeWidth.addEventListener('input', () => {
       currentVals.edgeWidth = parseFloat(slEdgeWidth.value);
+      if (chkEdge) chkEdge.checked = currentVals.edgeWidth > 0;
       applyGlassValues(currentVals);
     });
   }
@@ -16997,44 +17085,11 @@ function initGlassTuner() {
     });
   }
 
-  // Presets
-  panel.querySelectorAll('.glass-studio-preset-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const pName = btn.dataset.preset;
-      if (PRESETS[pName]) {
-        applyGlassValues(PRESETS[pName]);
-      }
-    });
-  });
-
-  // Reset
+  // Reset to default
   const btnReset = document.getElementById('btn-glass-studio-reset');
   if (btnReset) {
     btnReset.addEventListener('click', () => {
       applyGlassValues(DEFAULT_GLASS_VALS);
-    });
-  }
-
-  // Copy CSS
-  const btnCopy = document.getElementById('btn-glass-studio-copy');
-  if (btnCopy) {
-    btnCopy.addEventListener('click', () => {
-      const cssText = `:root, [data-theme="glass"] {
-  --glass-edge-width: ${currentVals.edgeWidth}px;
-  --glass-edge-op: ${currentVals.edgeOp};
-  --glass-icon-op: ${currentVals.iconOp};
-  --glass-icon-border-op: ${currentVals.iconBorderOp};
-  --glass-icon-glow: ${currentVals.iconGlow};
-  --glass-backlight-op: ${currentVals.backlightOp};
-  --glass-backlight-size: ${currentVals.backlightSize}px;
-  --glass-tint-op: ${currentVals.tintOp};
-  --glass-blur: ${currentVals.blur}px;
-}`;
-      navigator.clipboard.writeText(cssText).then(() => {
-        const orig = btnCopy.textContent;
-        btnCopy.textContent = '✓ Copied!';
-        setTimeout(() => { btnCopy.textContent = orig; }, 1500);
-      }).catch(() => {});
     });
   }
 }

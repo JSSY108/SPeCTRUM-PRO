@@ -15203,16 +15203,16 @@ body.has-custom-bg .tt-session-card:hover {
 
 /* Glass Theme Tuning Variables (Tunable via Live Glass Studio Tuner) */
 :root, [data-theme="glass"], body.has-custom-bg {
-  --glass-edge-width: 0px;       /* 0px by default: no harsh side line per user request! */
-  --glass-edge-op: 0.85;         /* Edge rim line opacity when width > 0 */
-  --glass-icon-op: 0.16;         /* Crystalline see-through liquid tint (see wallpaper behind) */
-  --glass-icon-border-op: 0.45;  /* Delicate specular rim highlight */
-  --glass-icon-glow: 0.20;       /* Soft colored halo glow */
+  --glass-edge-width: 0.5px;
+  --glass-edge-op: 0.2;
+  --glass-icon-op: 0.24;
+  --glass-icon-border-op: 0.3;
+  --glass-icon-glow: 0.22;
   --glass-icon-radius: 9px;
-  --glass-backlight-op: 0.18;    /* Soft optical light source from behind */
-  --glass-backlight-size: 340px; /* Spread cone size */
-  --glass-blur: 18px;            /* Card frosted glass blur */
-  --glass-tint-op: 0.28;         /* Card slate tint darkness */
+  --glass-backlight-op: 0.24;
+  --glass-backlight-size: 330px;
+  --glass-tint-op: 0.44;
+  --glass-blur: 8px;
 }
 
 /* 1.1 Activity Card Optical Backlights & Optional Edge Rims: Colored light shines from behind without blocking wallpaper */
@@ -15722,19 +15722,27 @@ body.has-custom-bg .btn-glass-tune-trigger {
   width: 320px;
   max-height: calc(100vh - 72px);
   overflow-y: auto;
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(28px) saturate(190%);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 14px;
-  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.6), inset 0 1px 1.5px rgba(255, 255, 255, 0.5);
-  padding: 16px 18px;
+  background: rgba(15, 23, 42, calc(var(--glass-tint-op, 0.44) + 0.16)) !important;
+  backdrop-filter: blur(var(--glass-blur, 8px)) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur, 8px)) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.5), inset 0 1px 1.5px rgba(255, 255, 255, 0.5) !important;
+  padding: 14px 16px;
   z-index: 999999;
   color: #FFFFFF;
   font-family: inherit;
   display: none;
   animation: glassStudioFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
+}
+
+.glass-studio-panel::-webkit-scrollbar {
+  width: 4px;
+}
+.glass-studio-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
 }
 
 .glass-studio-panel.is-open {
@@ -15756,9 +15764,9 @@ body.has-custom-bg .btn-glass-tune-trigger {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 12px;
+  padding-bottom: 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .glass-studio-title {
@@ -15768,11 +15776,13 @@ body.has-custom-bg .btn-glass-tune-trigger {
   align-items: center;
   gap: 7px;
   letter-spacing: -0.2px;
+  color: #FFFFFF;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 .glass-studio-close-btn {
   background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   color: #FFFFFF;
   width: 24px;
   height: 24px;
@@ -15781,7 +15791,7 @@ body.has-custom-bg .btn-glass-tune-trigger {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   transition: all 0.15s ease;
 }
 
@@ -15790,43 +15800,94 @@ body.has-custom-bg .btn-glass-tune-trigger {
   transform: scale(1.1);
 }
 
-.glass-studio-section {
-  margin-bottom: 14px;
+/* Glass Group Containers for Clear Hierarchy */
+.glass-studio-group {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  padding: 11px 13px 4px;
+  margin-bottom: 12px;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.glass-studio-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.glass-studio-group-badge {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(56, 189, 248, 0.2);
+  color: #38BDF8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+.glass-studio-group-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: #FFFFFF;
+  text-transform: uppercase;
+}
+
+.glass-studio-sub-section {
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.glass-studio-sub-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 2px;
 }
 
 .glass-studio-sec-title {
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.88);
+  margin-bottom: 5px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.glass-studio-chk-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #38BDF8;
 }
 
 .glass-studio-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 4px;
-  font-size: 11.5px;
+  margin-bottom: 2px;
+  font-size: 11px;
 }
 
 .glass-studio-label {
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 500;
 }
 
 .glass-studio-val {
   font-weight: 800;
   color: #38BDF8;
-  font-family: monospace;
-  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace, sans-serif;
+  font-size: 10.5px;
 }
 
 .glass-studio-slider {
@@ -15835,72 +15896,42 @@ body.has-custom-bg .btn-glass-tune-trigger {
   cursor: pointer;
   height: 4px;
   border-radius: 2px;
-  margin-top: 4px;
-  margin-bottom: 10px;
-}
-
-.glass-studio-presets {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
-  margin-bottom: 14px;
-}
-
-.glass-studio-preset-btn {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 7px;
-  padding: 6px 8px;
-  color: #FFFFFF;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.16s ease;
-}
-
-.glass-studio-preset-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-1px);
+  margin-top: 2px;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .glass-studio-footer {
   display: flex;
-  gap: 8px;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  margin-top: 4px;
 }
 
 .glass-studio-footer-btn {
-  flex: 1;
-  padding: 7px 10px;
-  border-radius: 7px;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
   font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
-}
-
-.glass-studio-btn-copy {
-  background: rgba(56, 189, 248, 0.25);
-  border: 1px solid rgba(56, 189, 248, 0.6);
-  color: #FFFFFF;
-}
-
-.glass-studio-btn-copy:hover {
-  background: rgba(56, 189, 248, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
 }
 
 .glass-studio-btn-reset {
   background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #FFFFFF;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35), 0 3px 10px rgba(0, 0, 0, 0.2);
 }
 
 .glass-studio-btn-reset:hover {
   background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), 0 5px 14px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
 }
 
 /* 2.8 Sidebar and Header Count Pills (3 items, etc.) (NO CAPSULE) */

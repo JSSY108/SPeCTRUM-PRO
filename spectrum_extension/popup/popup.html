@@ -2039,111 +2039,117 @@
   <script src="modules/liquid-glass.js"></script>
   <script src="popup.js"></script>
 
-  <!-- Floating Glass Studio Tuner Panel (实时拟态调参台) -->
+  <!-- Floating Glass Studio Tuner Panel (Live Tuner) -->
   <aside id="glass-studio-panel" class="glass-studio-panel" role="region" aria-label="Glassmorphism Live Tuner">
     <div class="glass-studio-header">
       <div class="glass-studio-title">
-        <span>🔮</span> Glass Tuner (拟态调参)
+        <span>🔮</span> <span id="txt-glass-studio-title">Glass Tuner</span>
       </div>
       <button type="button" id="btn-close-glass-studio" class="glass-studio-close-btn" title="Close Tuner">✕</button>
     </div>
 
-    <div class="glass-studio-section">
-      <div class="glass-studio-sec-title">
-        <span>Quick Presets (一键预设)</span>
+    <!-- HIERARCHY GROUP 1: ACTIVITIES CARD STYLING (SETTINGS 1, 2, 3) -->
+    <div class="glass-studio-group">
+      <div class="glass-studio-group-header">
+        <span class="glass-studio-group-badge">CARDS</span>
+        <span class="glass-studio-group-title" id="txt-glass-group-activities">Activity Cards</span>
       </div>
-      <div class="glass-studio-presets">
-        <button type="button" class="glass-studio-preset-btn" data-preset="crystal">💎 水晶纯透</button>
-        <button type="button" class="glass-studio-preset-btn" data-preset="neon">💡 轻度霓虹</button>
-        <button type="button" class="glass-studio-preset-btn" data-preset="minimal">🌌 极简无界</button>
-        <button type="button" class="glass-studio-preset-btn" data-preset="default">🔄 默认配置</button>
+
+      <!-- Setting 1: Side Accent Rim -->
+      <div class="glass-studio-sub-section">
+        <div class="glass-studio-sec-title">
+          <span id="txt-glass-sec1-title">1. Side Accent Rim</span>
+          <label class="glass-studio-chk-label">
+            <input type="checkbox" id="chk-glass-show-edge" checked style="cursor:pointer;">
+            <span id="txt-glass-chk-edge">Show Rim</span>
+          </label>
+        </div>
+        <div class="glass-studio-row">
+          <span class="glass-studio-label" id="txt-glass-edge-width">Rim Width</span>
+          <span class="glass-studio-val" id="val-glass-edge-width">0.5px</span>
+        </div>
+        <input type="range" id="slider-glass-edge-width" min="0" max="6" value="0.5" step="0.5" class="glass-studio-slider">
+
+        <div class="glass-studio-row">
+          <span class="glass-studio-label" id="txt-glass-edge-op">Rim Opacity</span>
+          <span class="glass-studio-val" id="val-glass-edge-op">20%</span>
+        </div>
+        <input type="range" id="slider-glass-edge-op" min="0" max="100" value="20" step="5" class="glass-studio-slider">
+      </div>
+
+      <!-- Setting 2: Icon Capsule -->
+      <div class="glass-studio-sub-section">
+        <div class="glass-studio-sec-title">
+          <span id="txt-glass-sec2-title">2. Icon Capsule</span>
+        </div>
+        <div class="glass-studio-row">
+          <span class="glass-studio-label" id="txt-glass-icon-op">Tint Opacity</span>
+          <span class="glass-studio-val" id="val-glass-icon-op">24%</span>
+        </div>
+        <input type="range" id="slider-glass-icon-op" min="0" max="50" value="24" step="2" class="glass-studio-slider">
+
+        <div class="glass-studio-row">
+          <span class="glass-studio-label" id="txt-glass-icon-border-op">Border Glint</span>
+          <span class="glass-studio-val" id="val-glass-icon-border-op">30%</span>
+        </div>
+        <input type="range" id="slider-glass-icon-border-op" min="0" max="100" value="30" step="5" class="glass-studio-slider">
+
+        <div class="glass-studio-row">
+          <span class="glass-studio-label" id="txt-glass-icon-glow">Halo Glow</span>
+          <span class="glass-studio-val" id="val-glass-icon-glow">22%</span>
+        </div>
+        <input type="range" id="slider-glass-icon-glow" min="0" max="50" value="22" step="2" class="glass-studio-slider">
+      </div>
+
+      <!-- Setting 3: Card Backlight -->
+      <div class="glass-studio-sub-section">
+        <div class="glass-studio-sec-title">
+          <span id="txt-glass-sec3-title">3. Card Backlight</span>
+        </div>
+        <div class="glass-studio-row">
+          <span class="glass-studio-label" id="txt-glass-backlight-op">Backlight Glow</span>
+          <span class="glass-studio-val" id="val-glass-backlight-op">24%</span>
+        </div>
+        <input type="range" id="slider-glass-backlight-op" min="0" max="45" value="24" step="2" class="glass-studio-slider">
+
+        <div class="glass-studio-row">
+          <span class="glass-studio-label" id="txt-glass-backlight-size">Spread Size</span>
+          <span class="glass-studio-val" id="val-glass-backlight-size">330px</span>
+        </div>
+        <input type="range" id="slider-glass-backlight-size" min="150" max="500" value="330" step="10" class="glass-studio-slider">
       </div>
     </div>
 
-    <!-- Section 1: 侧边线条 (Side Rim Line) -->
-    <div class="glass-studio-section">
-      <div class="glass-studio-sec-title">
-        <span>1. 侧边线条 (Side Rim Line)</span>
-        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:10.5px;font-weight:700;color:#38BDF8;">
-          <input type="checkbox" id="chk-glass-show-edge" style="cursor:pointer;"> 显示线条
-        </label>
+    <!-- HIERARCHY GROUP 2: GLOBAL GLASS SURFACE (SETTING 4) -->
+    <div class="glass-studio-group">
+      <div class="glass-studio-group-header">
+        <span class="glass-studio-group-badge">GLOBAL</span>
+        <span class="glass-studio-group-title" id="txt-glass-group-global">Glass Surface</span>
       </div>
-      <div class="glass-studio-row">
-        <span class="glass-studio-label">线条宽度 (Border Width)</span>
-        <span class="glass-studio-val" id="val-glass-edge-width">0px</span>
-      </div>
-      <input type="range" id="slider-glass-edge-width" min="0" max="6" value="0" step="0.5" class="glass-studio-slider">
 
-      <div class="glass-studio-row">
-        <span class="glass-studio-label">线条不透明度 (Line Opacity)</span>
-        <span class="glass-studio-val" id="val-glass-edge-op">85%</span>
-      </div>
-      <input type="range" id="slider-glass-edge-op" min="20" max="100" value="85" step="5" class="glass-studio-slider">
-    </div>
+      <!-- Setting 4: Base Tint & Blur -->
+      <div class="glass-studio-sub-section">
+        <div class="glass-studio-sec-title">
+          <span id="txt-glass-sec4-title">4. Base Tint & Blur</span>
+        </div>
+        <div class="glass-studio-row">
+          <span class="glass-studio-label" id="txt-glass-tint-op">Tint Darkness</span>
+          <span class="glass-studio-val" id="val-glass-tint-op">44%</span>
+        </div>
+        <input type="range" id="slider-glass-tint-op" min="10" max="60" value="44" step="2" class="glass-studio-slider">
 
-    <!-- Section 2: 图标透光度 (Icon Translucency & Tint) -->
-    <div class="glass-studio-section">
-      <div class="glass-studio-sec-title">
-        <span>2. 图标透光度 (Icon Translucency)</span>
+        <div class="glass-studio-row">
+          <span class="glass-studio-label" id="txt-glass-blur">Frosted Blur</span>
+          <span class="glass-studio-val" id="val-glass-blur">8px</span>
+        </div>
+        <input type="range" id="slider-glass-blur-panel" min="0" max="32" value="8" step="1" class="glass-studio-slider">
       </div>
-      <div class="glass-studio-row">
-        <span class="glass-studio-label">胶囊底色浓度 (Tint Opacity)</span>
-        <span class="glass-studio-val" id="val-glass-icon-op">16%</span>
-      </div>
-      <input type="range" id="slider-glass-icon-op" min="0" max="50" value="16" step="2" class="glass-studio-slider">
-
-      <div class="glass-studio-row">
-        <span class="glass-studio-label">高光边缘 (Border Glint)</span>
-        <span class="glass-studio-val" id="val-glass-icon-border-op">45%</span>
-      </div>
-      <input type="range" id="slider-glass-icon-border-op" min="0" max="100" value="45" step="5" class="glass-studio-slider">
-
-      <div class="glass-studio-row">
-        <span class="glass-studio-label">彩色光晕 (Halo Glow)</span>
-        <span class="glass-studio-val" id="val-glass-icon-glow">20%</span>
-      </div>
-      <input type="range" id="slider-glass-icon-glow" min="0" max="50" value="20" step="2" class="glass-studio-slider">
-    </div>
-
-    <!-- Section 3: 背面透射光源 (Backlight Glow) -->
-    <div class="glass-studio-section">
-      <div class="glass-studio-sec-title">
-        <span>3. 背面透射光源 (Card Backlight)</span>
-      </div>
-      <div class="glass-studio-row">
-        <span class="glass-studio-label">光源亮度 (Backlight Glow)</span>
-        <span class="glass-studio-val" id="val-glass-backlight-op">18%</span>
-      </div>
-      <input type="range" id="slider-glass-backlight-op" min="0" max="45" value="18" step="2" class="glass-studio-slider">
-
-      <div class="glass-studio-row">
-        <span class="glass-studio-label">扩散范围 (Spread Size)</span>
-        <span class="glass-studio-val" id="val-glass-backlight-size">340px</span>
-      </div>
-      <input type="range" id="slider-glass-backlight-size" min="150" max="500" value="340" step="20" class="glass-studio-slider">
-    </div>
-
-    <!-- Section 4: 卡片磨砂基底 (Card Glass Base) -->
-    <div class="glass-studio-section">
-      <div class="glass-studio-sec-title">
-        <span>4. 卡片毛玻璃基底 (Card Base)</span>
-      </div>
-      <div class="glass-studio-row">
-        <span class="glass-studio-label">底色暗度 (Tint Dark)</span>
-        <span class="glass-studio-val" id="val-glass-tint-op">28%</span>
-      </div>
-      <input type="range" id="slider-glass-tint-op" min="10" max="60" value="28" step="2" class="glass-studio-slider">
-
-      <div class="glass-studio-row">
-        <span class="glass-studio-label">磨砂模糊度 (Blur)</span>
-        <span class="glass-studio-val" id="val-glass-blur">18px</span>
-      </div>
-      <input type="range" id="slider-glass-blur-panel" min="0" max="32" value="18" step="2" class="glass-studio-slider">
     </div>
 
     <div class="glass-studio-footer">
-      <button type="button" id="btn-glass-studio-copy" class="glass-studio-footer-btn glass-studio-btn-copy">📋 复制 CSS</button>
-      <button type="button" id="btn-glass-studio-reset" class="glass-studio-footer-btn glass-studio-btn-reset">🔄 恢复默认</button>
+      <button type="button" id="btn-glass-studio-reset" class="glass-studio-footer-btn glass-studio-btn-reset">
+        <span>🔄</span> <span id="txt-glass-btn-reset">Reset to Default</span>
+      </button>
     </div>
   </aside>
 </body>
