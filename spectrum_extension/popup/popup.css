@@ -15280,64 +15280,72 @@ body.has-custom-bg .attendance-card.state-open {
 body.has-custom-bg .att-progress-track {
   width: 100% !important;
   height: 5px !important;
-  background: rgba(255, 255, 255, 0.10) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.20) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(0, 0, 0, 0.28) 100%) !important;
+  backdrop-filter: blur(8px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(180%) !important;
   border-radius: 999px !important;
   border: 0.5px solid rgba(255, 255, 255, 0.28) !important;
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.45),
-              inset 0 -1px 1px rgba(0, 0, 0, 0.4),
-              0 1px 4px rgba(0, 0, 0, 0.25) !important;
-  overflow: hidden !important;
+  box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.55),
+              inset 0 -1px 0.5px rgba(0, 0, 0, 0.35),
+              0 1px 3px rgba(0, 0, 0, 0.25) !important;
+  overflow: visible !important;
   position: relative !important;
 }
 
-/* Luminous Optical Progress Fill Inside Glass Cylinder */
+/* Luminous Translucent Glass Cylinder Progress Fill */
 [data-theme="glass"] .att-progress-fill,
 body.has-custom-bg .att-progress-fill {
   height: 100% !important;
   border-radius: 999px !important;
-  background: linear-gradient(90deg, rgba(52, 211, 153, 0.9), rgba(16, 185, 129, 0.98)) !important;
-  box-shadow: 0 0 16px 2px rgba(16, 185, 129, 0.75),
-              0 0 32px 6px rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.24) * 1.6)),
-              inset 0 1px 1.5px rgba(255, 255, 255, 0.8) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(52, 211, 153, 0.28) 35%, rgba(16, 185, 129, 0.38) 100%) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.85),
+              inset 0 -0.5px 0.5px rgba(0, 0, 0, 0.3),
+              0 0 14px 2px rgba(16, 185, 129, 0.70),
+              0 0 28px 6px rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.24) * 1.6)) !important;
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-/* Attended / Recorded: Full Glowing Emerald Glass Cylinder */
+/* Attended / Recorded: Translucent Glass Cylinder with Intense Emerald Backlight */
 [data-theme="glass"] .card-attendance.state-recorded .att-progress-fill,
 [data-theme="glass"] .scoped-card-attendance.state-recorded .att-progress-fill,
 [data-theme="glass"] .attendance-card.state-recorded .att-progress-fill,
 body.has-custom-bg .card-attendance.state-recorded .att-progress-fill,
 body.has-custom-bg .scoped-card-attendance.state-recorded .att-progress-fill,
 body.has-custom-bg .attendance-card.state-recorded .att-progress-fill {
-  background: linear-gradient(90deg, rgba(52, 211, 153, 0.95), rgba(16, 185, 129, 1)) !important;
-  box-shadow: 0 0 18px 3px rgba(16, 185, 129, 0.85),
-              0 0 36px 8px rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.24) * 2)),
-              inset 0 1px 1.5px rgba(255, 255, 255, 0.9) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.60) 0%, rgba(52, 211, 153, 0.32) 35%, rgba(16, 185, 129, 0.42) 100%) !important;
+  box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.90),
+              inset 0 -0.5px 0.5px rgba(0, 0, 0, 0.35),
+              0 0 16px 2px rgba(16, 185, 129, 0.80),
+              0 0 34px 8px rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.24) * 2.2)) !important;
 }
 
-/* Active / Live Open State: High Backlight Spread */
+/* Active / Live Open State: High Backlight Spread & Dynamic Refraction */
 [data-theme="glass"] .card-attendance.state-open .att-progress-fill,
 [data-theme="glass"] .scoped-card-attendance.state-open .att-progress-fill,
 [data-theme="glass"] .attendance-card.state-open .att-progress-fill,
 body.has-custom-bg .card-attendance.state-open .att-progress-fill,
 body.has-custom-bg .scoped-card-attendance.state-open .att-progress-fill,
 body.has-custom-bg .attendance-card.state-open .att-progress-fill {
-  background: linear-gradient(90deg, rgba(52, 211, 153, 1), rgba(16, 185, 129, 1)) !important;
-  box-shadow: 0 0 20px 4px rgba(16, 185, 129, 0.95),
-              0 0 40px 10px rgba(16, 185, 129, 0.6),
-              inset 0 1px 1.5px rgba(255, 255, 255, 0.95) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.70) 0%, rgba(52, 211, 153, 0.36) 35%, rgba(16, 185, 129, 0.46) 100%) !important;
+  box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.95),
+              inset 0 -0.5px 0.5px rgba(0, 0, 0, 0.35),
+              0 0 18px 3px rgba(16, 185, 129, 0.90),
+              0 0 38px 10px rgba(16, 185, 129, 0.55) !important;
 }
 
-/* Ended State: Frosted Glass Cylinder */
+/* Ended State: Frosted Neutral Glass Cylinder */
 [data-theme="glass"] .card-attendance.state-ended .att-progress-fill,
 [data-theme="glass"] .scoped-card-attendance.state-ended .att-progress-fill,
 [data-theme="glass"] .attendance-card.state-ended .att-progress-fill,
 body.has-custom-bg .card-attendance.state-ended .att-progress-fill,
 body.has-custom-bg .scoped-card-attendance.state-ended .att-progress-fill,
 body.has-custom-bg .attendance-card.state-ended .att-progress-fill {
-  background: rgba(255, 255, 255, 0.28) !important;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.22),
-              inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.30) 0%, rgba(255, 255, 255, 0.10) 50%, rgba(0, 0, 0, 0.15) 100%) !important;
+  box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.55),
+              inset 0 -0.5px 0.5px rgba(0, 0, 0, 0.25),
+              0 0 8px rgba(255, 255, 255, 0.15) !important;
 }
 
 /* ==========================================================================
