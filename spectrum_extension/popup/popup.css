@@ -15124,6 +15124,7 @@ body.has-custom-bg .popup-tab-bar {
 
 /* ==========================================================================
    GLASSMORPHISM SPECIALIZED HIGH-CLARITY COLOR SYSTEM & RESOLUTION RULES
+   Strict Rules: ALL-WHITE TYPOGRAPHY (NO GREY, NO BLACK), NO CAPSULES BEHIND TEXT
    ========================================================================== */
 
 /* 1. Universal Glass Translucency for all cards (Eliminates solid black #181c22) */
@@ -15187,57 +15188,60 @@ body.has-custom-bg .tt-session-card:hover {
   box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.65), 0 12px 36px rgba(0, 0, 0, 0.35) !important;
 }
 
-/* 2. Course Headers & Course Titles (Pure Luminous White with Text Shadow) */
-[data-theme="glass"] .att-header-left,
-[data-theme="glass"] .assign-header-left,
-[data-theme="glass"] .notice-header-left,
-[data-theme="glass"] .att-course-title,
-[data-theme="glass"] .att-course-name,
-body.has-custom-bg .att-header-left,
-body.has-custom-bg .assign-header-left,
-body.has-custom-bg .notice-header-left,
-body.has-custom-bg .att-course-title,
-body.has-custom-bg .att-course-name {
+/* 2. NO CAPSULE BEHIND TEXT: Floating Text on Frosted Glass */
+
+/* 2.1 Attendance Rate Badge (NO CAPSULE) */
+[data-theme="glass"] .att-rate-badge,
+[data-theme="glass"] .course-att-rate-badge,
+body.has-custom-bg .att-rate-badge,
+body.has-custom-bg .course-att-rate-badge {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+[data-theme="glass"] .att-rate-badge .att-rate-primary,
+[data-theme="glass"] .att-rate-badge .att-rate-secondary,
+[data-theme="glass"] .att-rate-badge .att-rate-sep,
+[data-theme="glass"] .att-rate-badge .att-rate-link-icon,
+[data-theme="glass"] .course-att-rate-badge .att-rate-primary,
+[data-theme="glass"] .course-att-rate-badge .att-rate-secondary,
+[data-theme="glass"] .course-att-rate-badge .att-rate-sep,
+[data-theme="glass"] .course-att-rate-badge .att-rate-link-icon,
+body.has-custom-bg .att-rate-badge .att-rate-primary,
+body.has-custom-bg .att-rate-badge .att-rate-secondary,
+body.has-custom-bg .att-rate-badge .att-rate-sep,
+body.has-custom-bg .att-rate-badge .att-rate-link-icon,
+body.has-custom-bg .course-att-rate-badge .att-rate-primary,
+body.has-custom-bg .course-att-rate-badge .att-rate-secondary,
+body.has-custom-bg .course-att-rate-badge .att-rate-sep,
+body.has-custom-bg .course-att-rate-badge .att-rate-link-icon {
   color: #FFFFFF !important;
   font-weight: 700 !important;
-  letter-spacing: 0.4px !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
 }
 
-/* 3. Check-In Window Row (Legibility Fix for Grey Text) */
-[data-theme="glass"] .att-window-label,
-body.has-custom-bg .att-window-label {
-  color: #F1F5F9 !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.3px !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8) !important;
-}
-
-[data-theme="glass"] .att-window-sub,
-body.has-custom-bg .att-window-sub {
-  color: #E2E8F0 !important;
-  font-weight: 700 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8) !important;
-}
-
-[data-theme="glass"] .att-window-row,
-body.has-custom-bg .att-window-row {
-  border-top: 1px solid rgba(255, 255, 255, 0.14) !important;
-}
-
-/* 4. Card Titles (Assignments, Quizzes, Notices) */
-[data-theme="glass"] .assign-title-text,
-[data-theme="glass"] .notice-title-text,
-[data-theme="glass"] .session-title,
-body.has-custom-bg .assign-title-text,
-body.has-custom-bg .notice-title-text,
-body.has-custom-bg .session-title {
+/* 2.2 Status Pills & State Badges (UPCOMING, OPEN, ENDED, RECORDED) (NO CAPSULE) */
+[data-theme="glass"] .att-state-badge,
+[data-theme="glass"] .att-status-pill,
+[data-theme="glass"] .status-pill,
+[data-theme="glass"] .att-state-badge.state-open,
+body.has-custom-bg .att-state-badge,
+body.has-custom-bg .att-status-pill,
+body.has-custom-bg .status-pill,
+body.has-custom-bg .att-state-badge.state-open {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 3px !important;
   color: #FFFFFF !important;
   font-weight: 700 !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
 }
 
-/* 5. OCC Badges & Pills */
+/* 2.3 OCC Badges & Tags (OCC 3, OCC 4) (NO CAPSULE) */
 [data-theme="glass"] .assign-occ-pill,
 [data-theme="glass"] .att-occ-tag,
 [data-theme="glass"] .notice-occ-tag,
@@ -15248,56 +15252,251 @@ body.has-custom-bg .att-occ-tag,
 body.has-custom-bg .notice-occ-tag,
 body.has-custom-bg .scope-crumb-occ,
 body.has-custom-bg .cal-occ-pill {
-  background: rgba(255, 255, 255, 0.22) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 2.4 Course Code Pills (WIX2001, etc.) (NO CAPSULE) */
+[data-theme="glass"] .att-code-pill,
+[data-theme="glass"] .assign-code-pill,
+body.has-custom-bg .att-code-pill,
+body.has-custom-bg .assign-code-pill {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 2.5 Type Badges (TUT, LEC) (NO CAPSULE) */
+[data-theme="glass"] .att-badge-type,
+[data-theme="glass"] .type-sub-badge,
+[data-theme="glass"] .card-type-tag,
+body.has-custom-bg .att-badge-type,
+body.has-custom-bg .type-sub-badge,
+body.has-custom-bg .card-type-tag {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 2.6 Card Bounded Icon Containers (NO SOLID OPAQUE SQUARE BOX) */
+[data-theme="glass"] .card-bounded-icon,
+[data-theme="glass"] .icon-box-attendance,
+[data-theme="glass"] .icon-box-assignment,
+[data-theme="glass"] .icon-box-test,
+[data-theme="glass"] .icon-box-notice,
+body.has-custom-bg .card-bounded-icon,
+body.has-custom-bg .icon-box-attendance,
+body.has-custom-bg .icon-box-assignment,
+body.has-custom-bg .icon-box-test,
+body.has-custom-bg .icon-box-notice {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #FFFFFF !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85));
+}
+
+/* 2.7 Calendar Grid Count Pills (NO CAPSULE: clean text and icons floating on glass cell) */
+[data-theme="glass"] .cal-count-pill,
+[data-theme="glass"] .cal-count-pill.pill-notice,
+[data-theme="glass"] .cal-count-pill.pill-assignment,
+[data-theme="glass"] .cal-count-pill.pill-test,
+[data-theme="glass"] .cal-count-pill.pill-attendance,
+body.has-custom-bg .cal-count-pill,
+body.has-custom-bg .cal-count-pill.pill-notice,
+body.has-custom-bg .cal-count-pill.pill-assignment,
+body.has-custom-bg .cal-count-pill.pill-test,
+body.has-custom-bg .cal-count-pill.pill-attendance {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 1px 0 !important;
+}
+
+[data-theme="glass"] .cal-count-pill .pill-left,
+[data-theme="glass"] .cal-count-pill .pill-count,
+[data-theme="glass"] .cal-count-pill .icon-svg,
+body.has-custom-bg .cal-count-pill .pill-left,
+body.has-custom-bg .cal-count-pill .pill-count,
+body.has-custom-bg .cal-count-pill .icon-svg {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 2.8 Sidebar and Header Count Pills (3 items, etc.) (NO CAPSULE) */
+[data-theme="glass"] .cal-sidebar-count-pill,
+[data-theme="glass"] .kanban-col-count,
+[data-theme="glass"] .header-week-pill,
+body.has-custom-bg .cal-sidebar-count-pill,
+body.has-custom-bg .kanban-col-count,
+body.has-custom-bg .header-week-pill {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 3. ALL WORDS IN PURE WHITE (NO GREY, NO BLACK) */
+
+/* 3.1 Date Title in Sidebar (Wed, Nov 25, 2026) */
+[data-theme="glass"] .cal-sidebar-date-title,
+[data-theme="glass"] .cal-sidebar-title,
+[data-theme="glass"] .cal-main-title,
+body.has-custom-bg .cal-sidebar-date-title,
+body.has-custom-bg .cal-sidebar-title,
+body.has-custom-bg .cal-main-title {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 3.2 Calendar Cell Day Numbers (Fix for day 15 and all days) */
+[data-theme="glass"] .cal-cell-num,
+[data-theme="glass"] .cal-grid-cell .cal-cell-num,
+[data-theme="glass"] .cal-grid-cell .cal-date-number,
+body.has-custom-bg .cal-cell-num,
+body.has-custom-bg .cal-grid-cell .cal-cell-num,
+body.has-custom-bg .cal-grid-cell .cal-date-number {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .cal-grid-cell.other-month .cal-cell-num,
+[data-theme="glass"] .cal-grid-cell.other-month .cal-date-number,
+body.has-custom-bg .cal-grid-cell.other-month .cal-cell-num,
+body.has-custom-bg .cal-grid-cell.other-month .cal-date-number {
+  color: rgba(255, 255, 255, 0.45) !important;
+  text-shadow: none !important;
+}
+
+/* 3.3 Calendar Weekday Bar */
+[data-theme="glass"] .cal-weekday-cell,
+body.has-custom-bg .cal-weekday-cell {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 3.4 Course Headers & Codes (WIX2001 / THINKING AND COMMUNICATION...) */
+[data-theme="glass"] .att-header-left,
+[data-theme="glass"] .assign-header-left,
+[data-theme="glass"] .notice-header-left,
+[data-theme="glass"] .att-course-title,
+[data-theme="glass"] .att-course-name,
+[data-theme="glass"] .att-header-sep,
+body.has-custom-bg .att-header-left,
+body.has-custom-bg .assign-header-left,
+body.has-custom-bg .notice-header-left,
+body.has-custom-bg .att-course-title,
+body.has-custom-bg .att-course-name,
+body.has-custom-bg .att-header-sep {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.4px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 3.5 Card Titles (Assignments, Quizzes, Notices) */
+[data-theme="glass"] .assign-title-text,
+[data-theme="glass"] .notice-title-text,
+[data-theme="glass"] .session-title,
+[data-theme="glass"] .att-title-text,
+body.has-custom-bg .assign-title-text,
+body.has-custom-bg .notice-title-text,
+body.has-custom-bg .session-title,
+body.has-custom-bg .att-title-text {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
+}
+
+/* 3.6 Check-In Window Row (Check-In Window  In 3d · 08:00) */
+[data-theme="glass"] .att-window-label,
+[data-theme="glass"] .att-window-sub,
+body.has-custom-bg .att-window-label,
+body.has-custom-bg .att-window-sub {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.3px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-theme="glass"] .att-window-row,
+body.has-custom-bg .att-window-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* 3.7 Time Hero (08:00 - 13:00) */
+[data-theme="glass"] .att-time-hero,
+body.has-custom-bg .att-time-hero {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 3.8 Due Dates & Notices (DUE IN 4D · Wed 25 Nov, 18:00) (Pure White, No Grey) */
+[data-theme="glass"] .assign-due-text,
+[data-theme="glass"] .assign-due-tag,
+[data-theme="glass"] .assign-token,
+[data-theme="glass"] .assign-timestamp,
+[data-theme="glass"] .assign-footer-left,
+[data-theme="glass"] .notice-date-text,
+body.has-custom-bg .assign-due-text,
+body.has-custom-bg .assign-due-tag,
+body.has-custom-bg .assign-token,
+body.has-custom-bg .assign-timestamp,
+body.has-custom-bg .assign-footer-left,
+body.has-custom-bg .notice-date-text {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 3.9 Action Buttons (Open SPeCTRUM ↗, Submit ↗) - Translucent Frosted Glass with Pure White Text (NO BLACK TEXT, NO SOLID WHITE CAPSULE) */
+[data-theme="glass"] .btn-assign-action,
+[data-theme="glass"] .btn-notice-open,
+[data-theme="glass"] .btn-card-action,
+body.has-custom-bg .btn-assign-action,
+body.has-custom-bg .btn-notice-open,
+body.has-custom-bg .btn-card-action {
+  background: rgba(255, 255, 255, 0.16) !important;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
   color: #FFFFFF !important;
   font-weight: 700 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75) !important;
-  backdrop-filter: blur(6px) !important;
-  -webkit-backdrop-filter: blur(6px) !important;
-}
-
-/* 6. Attendance Rate & Stats */
-[data-theme="glass"] .att-rate-badge .att-rate-primary,
-[data-theme="glass"] .course-att-rate-badge .att-rate-primary,
-body.has-custom-bg .att-rate-badge .att-rate-primary,
-body.has-custom-bg .course-att-rate-badge .att-rate-primary {
-  color: #FFFFFF !important;
-  font-weight: 700 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75) !important;
-}
-
-[data-theme="glass"] .att-rate-badge .att-rate-secondary,
-[data-theme="glass"] .course-att-rate-badge .att-rate-secondary,
-body.has-custom-bg .att-rate-badge .att-rate-secondary,
-body.has-custom-bg .course-att-rate-badge .att-rate-secondary {
-  color: #CBD5E1 !important;
-  font-weight: 600 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65) !important;
-}
-
-[data-theme="glass"] .att-time-hero,
-body.has-custom-bg .att-time-hero {
-  color: #34D399 !important;
-  font-weight: 800 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75) !important;
-}
-
-/* 7. Action Buttons on Cards (Submit, View, Details) */
-[data-theme="glass"] .btn-assign-action,
-body.has-custom-bg .btn-assign-action {
-  background: rgba(255, 255, 255, 0.94) !important;
-  color: #0F172A !important;
-  font-weight: 700 !important;
-  border: 1px solid rgba(255, 255, 255, 0.6) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
 }
 
 [data-theme="glass"] .btn-assign-action:hover,
-body.has-custom-bg .btn-assign-action:hover {
-  background: #FFFFFF !important;
-  color: #000000 !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35) !important;
+[data-theme="glass"] .btn-notice-open:hover,
+[data-theme="glass"] .btn-card-action:hover,
+body.has-custom-bg .btn-assign-action:hover,
+body.has-custom-bg .btn-notice-open:hover,
+body.has-custom-bg .btn-card-action:hover {
+  background: rgba(255, 255, 255, 0.28) !important;
+  border-color: rgba(255, 255, 255, 0.55) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
   transform: translateY(-1px);
 }
 
@@ -15305,47 +15504,23 @@ body.has-custom-bg .btn-assign-action:hover {
 body.has-custom-bg .btn-assign-action.btn-assign-submitted {
   background: rgba(16, 185, 129, 0.25) !important;
   border: 1px solid rgba(52, 211, 153, 0.5) !important;
-  color: #A7F3D0 !important;
-  font-weight: 700 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7) !important;
-}
-
-/* 8. Due Dates & Notices */
-[data-theme="glass"] .assign-due-text,
-[data-theme="glass"] .assign-due-tag,
-body.has-custom-bg .assign-due-text,
-body.has-custom-bg .assign-due-tag {
-  font-weight: 700 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8) !important;
-}
-
-[data-theme="glass"] .notice-date-text,
-body.has-custom-bg .notice-date-text {
-  color: #E2E8F0 !important;
-  font-weight: 600 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75) !important;
-}
-
-/* 9. Attendance State & Pill Badges */
-[data-theme="glass"] .att-state-badge.state-open,
-body.has-custom-bg .att-state-badge.state-open {
-  background: rgba(16, 185, 129, 0.25) !important;
-  border: 1px solid rgba(52, 211, 153, 0.5) !important;
-  color: #A7F3D0 !important;
-  font-weight: 700 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7) !important;
-}
-
-[data-theme="glass"] .att-badge-type,
-body.has-custom-bg .att-badge-type {
-  background: rgba(255, 255, 255, 0.16) !important;
-  border: 1px solid rgba(255, 255, 255, 0.28) !important;
   color: #FFFFFF !important;
   font-weight: 700 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
 }
 
-/* 10. Kanban Headers & Today Badges */
+/* 3.10 Take Attendance Button */
+[data-theme="glass"] .btn-take-attendance,
+body.has-custom-bg .btn-take-attendance {
+  background: rgba(16, 185, 129, 0.35) !important;
+  border: 1px solid rgba(52, 211, 153, 0.6) !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* 3.11 Kanban Headers & Day Badges */
 [data-theme="glass"] .kanban-day-header,
 [data-theme="glass"] .kanban-col-header,
 [data-theme="glass"] .kanban-col-title,
@@ -15354,52 +15529,17 @@ body.has-custom-bg .kanban-col-header,
 body.has-custom-bg .kanban-col-title {
   color: #FFFFFF !important;
   font-weight: 700 !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
 }
 
-[data-theme="glass"] .kanban-col-count,
-body.has-custom-bg .kanban-col-count {
-  background: rgba(255, 255, 255, 0.22) !important;
-  border: 1px solid rgba(255, 255, 255, 0.32) !important;
-  color: #FFFFFF !important;
-  font-weight: 700 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7) !important;
-}
-
-/* 11. Calendar Weekday Headers & Date Numbers */
-[data-theme="glass"] .cal-weekday-cell,
-body.has-custom-bg .cal-weekday-cell {
-  color: #FFFFFF !important;
-  font-weight: 700 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75) !important;
-}
-
-[data-theme="glass"] .cal-grid-cell,
-body.has-custom-bg .cal-grid-cell {
-  color: #FFFFFF !important;
-}
-
-[data-theme="glass"] .cal-grid-cell .cal-date-number,
-body.has-custom-bg .cal-grid-cell .cal-date-number {
-  color: #FFFFFF !important;
-  font-weight: 700 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8) !important;
-}
-
-[data-theme="glass"] .cal-grid-cell.other-month .cal-date-number,
-body.has-custom-bg .cal-grid-cell.other-month .cal-date-number {
-  color: rgba(255, 255, 255, 0.45) !important;
-  text-shadow: none !important;
-}
-
-/* 12. Full-List Jump Items & Navigation */
+/* 3.12 Full-List Jump Items & Navigation */
 [data-theme="glass"] .fulllist-course-jump-item,
 [data-theme="glass"] .fulllist-course-nav-item,
 body.has-custom-bg .fulllist-course-jump-item,
 body.has-custom-bg .fulllist-course-nav-item {
-  color: #F1F5F9 !important;
-  font-weight: 600 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75) !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
 }
 
 [data-theme="glass"] .fulllist-course-nav-item.active,
