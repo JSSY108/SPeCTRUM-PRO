@@ -15201,21 +15201,35 @@ body.has-custom-bg .tt-session-card:hover {
    GLASS THEME OPTICAL DIFFERENTIATION: ACTIVITY BACKLIGHTS & 3-LAYER GEMS
    ========================================================================== */
 
-/* 1.1 Activity Card Optical Backlights & Edge Rims: Colored light shines from behind without blocking wallpaper */
+/* Glass Theme Tuning Variables (Tunable via Live Glass Studio Tuner) */
+:root, [data-theme="glass"], body.has-custom-bg {
+  --glass-edge-width: 0px;       /* 0px by default: no harsh side line per user request! */
+  --glass-edge-op: 0.85;         /* Edge rim line opacity when width > 0 */
+  --glass-icon-op: 0.16;         /* Crystalline see-through liquid tint (see wallpaper behind) */
+  --glass-icon-border-op: 0.45;  /* Delicate specular rim highlight */
+  --glass-icon-glow: 0.20;       /* Soft colored halo glow */
+  --glass-icon-radius: 9px;
+  --glass-backlight-op: 0.18;    /* Soft optical light source from behind */
+  --glass-backlight-size: 340px; /* Spread cone size */
+  --glass-blur: 18px;            /* Card frosted glass blur */
+  --glass-tint-op: 0.28;         /* Card slate tint darkness */
+}
 
-/* Attendance Cards: Emerald Light Source from Behind + Left Rim */
+/* 1.1 Activity Card Optical Backlights & Optional Edge Rims: Colored light shines from behind without blocking wallpaper */
+
+/* Attendance Cards: Emerald Light Source from Behind */
 [data-theme="glass"] .spectrum-card.card-attendance,
 [data-theme="glass"] .scoped-card.scoped-card-attendance,
 [data-theme="glass"] .attendance-card,
 body.has-custom-bg .spectrum-card.card-attendance,
 body.has-custom-bg .scoped-card.scoped-card-attendance,
 body.has-custom-bg .attendance-card {
-  background: radial-gradient(ellipse 340px 220px at 0% 0%, rgba(16, 185, 129, 0.26) 0%, rgba(16, 185, 129, 0.08) 50%, transparent 100%),
+  background: radial-gradient(ellipse var(--glass-backlight-size, 340px) 220px at 0% 0%, rgba(16, 185, 129, var(--glass-backlight-op, 0.18)) 0%, rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.18) * 0.35)) 50%, transparent 100%),
               rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
-  border-left: 3.5px solid rgba(52, 211, 153, 0.9) !important;
+  border-left: var(--glass-edge-width, 0px) solid rgba(52, 211, 153, var(--glass-edge-op, 0.85)) !important;
   box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.55),
               0 8px 32px rgba(0, 0, 0, 0.28),
-              0 0 20px -4px rgba(16, 185, 129, 0.25) !important;
+              0 0 20px -4px rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.18) * 1.1)) !important;
 }
 
 [data-theme="glass"] .spectrum-card.card-attendance:hover,
@@ -15224,27 +15238,26 @@ body.has-custom-bg .attendance-card {
 body.has-custom-bg .spectrum-card.card-attendance:hover,
 body.has-custom-bg .scoped-card.scoped-card-attendance:hover,
 body.has-custom-bg .attendance-card:hover {
-  background: radial-gradient(ellipse 360px 240px at 0% 0%, rgba(16, 185, 129, 0.36) 0%, rgba(16, 185, 129, 0.12) 55%, transparent 100%),
+  background: radial-gradient(ellipse calc(var(--glass-backlight-size, 340px) + 20px) 240px at 0% 0%, rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.18) + 0.10)) 0%, rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.18) * 0.5)) 55%, transparent 100%),
               rgba(15, 23, 42, calc(var(--glass-tint-op, 0.28) + 0.08)) !important;
-  border-left-color: rgba(52, 211, 153, 1) !important;
   box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.75),
               0 12px 36px rgba(0, 0, 0, 0.35),
-              0 0 26px -2px rgba(16, 185, 129, 0.38) !important;
+              0 0 26px -2px rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.18) * 1.5)) !important;
 }
 
-/* Assignment / Tutorial Cards: Sunset Orange Light Source from Behind + Left Rim */
+/* Assignment / Tutorial Cards: Sunset Orange Light Source from Behind */
 [data-theme="glass"] .spectrum-card.card-assignment,
 [data-theme="glass"] .scoped-card.scoped-card-assignment,
 [data-theme="glass"] .assignment-card,
 body.has-custom-bg .spectrum-card.card-assignment,
 body.has-custom-bg .scoped-card.scoped-card-assignment,
 body.has-custom-bg .assignment-card {
-  background: radial-gradient(ellipse 340px 220px at 0% 0%, rgba(249, 115, 22, 0.24) 0%, rgba(249, 115, 22, 0.07) 50%, transparent 100%),
+  background: radial-gradient(ellipse var(--glass-backlight-size, 340px) 220px at 0% 0%, rgba(249, 115, 22, var(--glass-backlight-op, 0.18)) 0%, rgba(249, 115, 22, calc(var(--glass-backlight-op, 0.18) * 0.35)) 50%, transparent 100%),
               rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
-  border-left: 3.5px solid rgba(251, 146, 60, 0.9) !important;
+  border-left: var(--glass-edge-width, 0px) solid rgba(251, 146, 60, var(--glass-edge-op, 0.85)) !important;
   box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.55),
               0 8px 32px rgba(0, 0, 0, 0.28),
-              0 0 20px -4px rgba(249, 115, 22, 0.25) !important;
+              0 0 20px -4px rgba(249, 115, 22, calc(var(--glass-backlight-op, 0.18) * 1.1)) !important;
 }
 
 [data-theme="glass"] .spectrum-card.card-assignment:hover,
@@ -15253,82 +15266,80 @@ body.has-custom-bg .assignment-card {
 body.has-custom-bg .spectrum-card.card-assignment:hover,
 body.has-custom-bg .scoped-card.scoped-card-assignment:hover,
 body.has-custom-bg .assignment-card:hover {
-  background: radial-gradient(ellipse 360px 240px at 0% 0%, rgba(249, 115, 22, 0.34) 0%, rgba(249, 115, 22, 0.12) 55%, transparent 100%),
+  background: radial-gradient(ellipse calc(var(--glass-backlight-size, 340px) + 20px) 240px at 0% 0%, rgba(249, 115, 22, calc(var(--glass-backlight-op, 0.18) + 0.10)) 0%, rgba(249, 115, 22, calc(var(--glass-backlight-op, 0.18) * 0.5)) 55%, transparent 100%),
               rgba(15, 23, 42, calc(var(--glass-tint-op, 0.28) + 0.08)) !important;
-  border-left-color: rgba(251, 146, 60, 1) !important;
   box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.75),
               0 12px 36px rgba(0, 0, 0, 0.35),
-              0 0 26px -2px rgba(249, 115, 22, 0.38) !important;
+              0 0 26px -2px rgba(249, 115, 22, calc(var(--glass-backlight-op, 0.18) * 1.5)) !important;
 }
 
 [data-theme="glass"] .spectrum-card.card-assignment.is-overdue,
 [data-theme="glass"] .scoped-card.scoped-card-assignment.is-overdue,
 body.has-custom-bg .spectrum-card.card-assignment.is-overdue,
 body.has-custom-bg .scoped-card.scoped-card-assignment.is-overdue {
-  background: radial-gradient(ellipse 340px 220px at 0% 0%, rgba(239, 68, 68, 0.28) 0%, rgba(239, 68, 68, 0.08) 50%, transparent 100%),
+  background: radial-gradient(ellipse var(--glass-backlight-size, 340px) 220px at 0% 0%, rgba(239, 68, 68, calc(var(--glass-backlight-op, 0.18) + 0.08)) 0%, rgba(239, 68, 68, calc(var(--glass-backlight-op, 0.18) * 0.4)) 50%, transparent 100%),
               rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
-  border-left: 3.5px solid rgba(248, 113, 113, 0.95) !important;
+  border-left: var(--glass-edge-width, 0px) solid rgba(248, 113, 113, var(--glass-edge-op, 0.95)) !important;
   box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.55),
               0 8px 32px rgba(0, 0, 0, 0.28),
-              0 0 20px -4px rgba(239, 68, 68, 0.28) !important;
+              0 0 20px -4px rgba(239, 68, 68, calc(var(--glass-backlight-op, 0.18) * 1.2)) !important;
 }
 
 [data-theme="glass"] .spectrum-card.card-assignment.is-submitted,
 [data-theme="glass"] .scoped-card.scoped-card-assignment.is-submitted,
 body.has-custom-bg .spectrum-card.card-assignment.is-submitted,
 body.has-custom-bg .scoped-card.scoped-card-assignment.is-submitted {
-  background: radial-gradient(ellipse 340px 220px at 0% 0%, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0.06) 50%, transparent 100%),
+  background: radial-gradient(ellipse var(--glass-backlight-size, 340px) 220px at 0% 0%, rgba(16, 185, 129, var(--glass-backlight-op, 0.18)) 0%, rgba(16, 185, 129, calc(var(--glass-backlight-op, 0.18) * 0.35)) 50%, transparent 100%),
               rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
-  border-left: 3.5px solid rgba(52, 211, 153, 0.9) !important;
+  border-left: var(--glass-edge-width, 0px) solid rgba(52, 211, 153, var(--glass-edge-op, 0.85)) !important;
 }
 
-/* Test / Quiz / Exam Cards: Royal Violet Light Source from Behind + Left Rim */
+/* Test / Quiz / Exam Cards: Royal Violet Light Source from Behind */
 [data-theme="glass"] .spectrum-card.card-test,
 [data-theme="glass"] .scoped-card.scoped-card-test,
 body.has-custom-bg .spectrum-card.card-test,
 body.has-custom-bg .scoped-card.scoped-card-test {
-  background: radial-gradient(ellipse 340px 220px at 0% 0%, rgba(139, 92, 246, 0.26) 0%, rgba(139, 92, 246, 0.08) 50%, transparent 100%),
+  background: radial-gradient(ellipse var(--glass-backlight-size, 340px) 220px at 0% 0%, rgba(139, 92, 246, var(--glass-backlight-op, 0.18)) 0%, rgba(139, 92, 246, calc(var(--glass-backlight-op, 0.18) * 0.35)) 50%, transparent 100%),
               rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
-  border-left: 3.5px solid rgba(192, 132, 252, 0.9) !important;
+  border-left: var(--glass-edge-width, 0px) solid rgba(192, 132, 252, var(--glass-edge-op, 0.85)) !important;
   box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.55),
               0 8px 32px rgba(0, 0, 0, 0.28),
-              0 0 20px -4px rgba(139, 92, 246, 0.25) !important;
+              0 0 20px -4px rgba(139, 92, 246, calc(var(--glass-backlight-op, 0.18) * 1.1)) !important;
 }
 
 [data-theme="glass"] .spectrum-card.card-test:hover,
 [data-theme="glass"] .scoped-card.scoped-card-test:hover,
 body.has-custom-bg .spectrum-card.card-test:hover,
 body.has-custom-bg .scoped-card.scoped-card-test:hover {
-  background: radial-gradient(ellipse 360px 240px at 0% 0%, rgba(139, 92, 246, 0.36) 0%, rgba(139, 92, 246, 0.12) 55%, transparent 100%),
+  background: radial-gradient(ellipse calc(var(--glass-backlight-size, 340px) + 20px) 240px at 0% 0%, rgba(139, 92, 246, calc(var(--glass-backlight-op, 0.18) + 0.10)) 0%, rgba(139, 92, 246, calc(var(--glass-backlight-op, 0.18) * 0.5)) 55%, transparent 100%),
               rgba(15, 23, 42, calc(var(--glass-tint-op, 0.28) + 0.08)) !important;
-  border-left-color: rgba(192, 132, 252, 1) !important;
   box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.75),
               0 12px 36px rgba(0, 0, 0, 0.35),
-              0 0 26px -2px rgba(139, 92, 246, 0.38) !important;
+              0 0 26px -2px rgba(139, 92, 246, calc(var(--glass-backlight-op, 0.18) * 1.5)) !important;
 }
 
 [data-theme="glass"] .spectrum-card.card-test.is-overdue,
 [data-theme="glass"] .scoped-card.scoped-card-test.is-overdue,
 body.has-custom-bg .spectrum-card.card-test.is-overdue,
 body.has-custom-bg .scoped-card.scoped-card-test.is-overdue {
-  background: radial-gradient(ellipse 340px 220px at 0% 0%, rgba(239, 68, 68, 0.28) 0%, rgba(239, 68, 68, 0.08) 50%, transparent 100%),
+  background: radial-gradient(ellipse var(--glass-backlight-size, 340px) 220px at 0% 0%, rgba(239, 68, 68, calc(var(--glass-backlight-op, 0.18) + 0.08)) 0%, rgba(239, 68, 68, calc(var(--glass-backlight-op, 0.18) * 0.4)) 50%, transparent 100%),
               rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
-  border-left: 3.5px solid rgba(248, 113, 113, 0.95) !important;
+  border-left: var(--glass-edge-width, 0px) solid rgba(248, 113, 113, var(--glass-edge-op, 0.95)) !important;
 }
 
-/* Notice / Announcement Cards: Sky Blue Light Source from Behind + Left Rim */
+/* Notice / Announcement Cards: Sky Blue Light Source from Behind */
 [data-theme="glass"] .spectrum-card.card-notice,
 [data-theme="glass"] .scoped-card.scoped-card-notice,
 [data-theme="glass"] .announcement-card,
 body.has-custom-bg .spectrum-card.card-notice,
 body.has-custom-bg .scoped-card.scoped-card-notice,
 body.has-custom-bg .announcement-card {
-  background: radial-gradient(ellipse 340px 220px at 0% 0%, rgba(14, 165, 233, 0.24) 0%, rgba(14, 165, 233, 0.07) 50%, transparent 100%),
+  background: radial-gradient(ellipse var(--glass-backlight-size, 340px) 220px at 0% 0%, rgba(14, 165, 233, var(--glass-backlight-op, 0.18)) 0%, rgba(14, 165, 233, calc(var(--glass-backlight-op, 0.18) * 0.35)) 50%, transparent 100%),
               rgba(15, 23, 42, var(--glass-tint-op, 0.28)) !important;
-  border-left: 3.5px solid rgba(56, 189, 248, 0.9) !important;
+  border-left: var(--glass-edge-width, 0px) solid rgba(56, 189, 248, var(--glass-edge-op, 0.85)) !important;
   box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.55),
               0 8px 32px rgba(0, 0, 0, 0.28),
-              0 0 20px -4px rgba(14, 165, 233, 0.25) !important;
+              0 0 20px -4px rgba(14, 165, 233, calc(var(--glass-backlight-op, 0.18) * 1.1)) !important;
 }
 
 [data-theme="glass"] .spectrum-card.card-notice:hover,
@@ -15337,12 +15348,11 @@ body.has-custom-bg .announcement-card {
 body.has-custom-bg .spectrum-card.card-notice:hover,
 body.has-custom-bg .scoped-card.scoped-card-notice:hover,
 body.has-custom-bg .announcement-card:hover {
-  background: radial-gradient(ellipse 360px 240px at 0% 0%, rgba(14, 165, 233, 0.34) 0%, rgba(14, 165, 233, 0.12) 55%, transparent 100%),
+  background: radial-gradient(ellipse calc(var(--glass-backlight-size, 340px) + 20px) 240px at 0% 0%, rgba(14, 165, 233, calc(var(--glass-backlight-op, 0.18) + 0.10)) 0%, rgba(14, 165, 233, calc(var(--glass-backlight-op, 0.18) * 0.5)) 55%, transparent 100%),
               rgba(15, 23, 42, calc(var(--glass-tint-op, 0.28) + 0.08)) !important;
-  border-left-color: rgba(56, 189, 248, 1) !important;
   box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.75),
               0 12px 36px rgba(0, 0, 0, 0.35),
-              0 0 26px -2px rgba(14, 165, 233, 0.38) !important;
+              0 0 26px -2px rgba(14, 165, 233, calc(var(--glass-backlight-op, 0.18) * 1.5)) !important;
 }
 
 /* 2. NO CAPSULE BEHIND TEXT: Floating Pure White Text on Frosted Glass */
@@ -15432,9 +15442,31 @@ body.has-custom-bg .assign-code-pill {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
 }
 
-/* 2.5 Type Badges (TUT, LEC) - Translucent Frosted Mini Capsule */
+/* 2.5 Type Badges (TUT, LEC) - Translucent Frosted Mini Capsule (No Opaque White Box) */
 [data-theme="glass"] .type-sub-badge,
-body.has-custom-bg .type-sub-badge {
+[data-theme="glass"] .badge-session-type,
+[data-theme="glass"] .badge-session-sub,
+[data-theme="glass"] .badge-session-type.session-lecture,
+[data-theme="glass"] .badge-session-type.type-lecture,
+[data-theme="glass"] .badge-session-type.att-type-lecture,
+[data-theme="glass"] .badge-session-type.session-tutorial,
+[data-theme="glass"] .badge-session-type.type-tutorial,
+[data-theme="glass"] .badge-session-type.att-type-tutorial,
+[data-theme="glass"] .badge-session-type.session-lab,
+[data-theme="glass"] .badge-session-type.type-lab,
+[data-theme="glass"] .badge-session-type.att-type-lab,
+body.has-custom-bg .type-sub-badge,
+body.has-custom-bg .badge-session-type,
+body.has-custom-bg .badge-session-sub,
+body.has-custom-bg .badge-session-type.session-lecture,
+body.has-custom-bg .badge-session-type.type-lecture,
+body.has-custom-bg .badge-session-type.att-type-lecture,
+body.has-custom-bg .badge-session-type.session-tutorial,
+body.has-custom-bg .badge-session-type.type-tutorial,
+body.has-custom-bg .badge-session-type.att-type-tutorial,
+body.has-custom-bg .badge-session-type.session-lab,
+body.has-custom-bg .badge-session-type.type-lab,
+body.has-custom-bg .badge-session-type.att-type-lab {
   background: rgba(255, 255, 255, 0.12) !important;
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
   border-radius: 4px !important;
@@ -15443,8 +15475,9 @@ body.has-custom-bg .type-sub-badge {
   font-weight: 700 !important;
   font-size: 9.5px !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
-  backdrop-filter: blur(6px) !important;
-  -webkit-backdrop-filter: blur(6px) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  box-shadow: none !important;
 }
 
 [data-theme="glass"] .att-badge-type,
@@ -15461,10 +15494,9 @@ body.has-custom-bg .card-type-tag {
 }
 
 /* ==========================================================================
-   2.6 3-LAYER OPTICAL GLASS ICON GEMS (晶莹透亮有色玻璃方胶囊)
-   Layer 1 (Bottom): Colored Filter / Backlight Glow
-   Layer 2 (Middle): Frosted Glass Lens with Specular Glint & Bevel Edge
-   Layer 3 (Top): Pure White Crisp Icon (#FFFFFF) with Drop Shadow
+   2.6 CRYSTALLINE SEE-THROUGH GLASS ICON GEMS (晶莹透亮见底有色晶体)
+   - Zero double-blur: parent card is already blurred, allowing wallpaper to shine through lens!
+   - Ultra-sheer liquid tint: see the background textures directly behind icon!
    ========================================================================== */
 
 /* Base 3-Layer Gem Lens Structure */
@@ -15474,12 +15506,12 @@ body.has-custom-bg .card-bounded-icon {
   min-width: 36px !important;
   max-width: 36px !important;
   height: 36px !important;
-  border-radius: 9px !important;
+  border-radius: var(--glass-icon-radius, 9px) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  backdrop-filter: blur(10px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 
@@ -15515,77 +15547,70 @@ body.has-custom-bg .icon-box-test .icon-svg rect {
   fill: #FFFFFF !important;
 }
 
-/* 1. ATTENDANCE GEM: Emerald Colored Filter + Glass Lens + White Check Icon */
+/* 1. ATTENDANCE GEM: Crystalline Translucent Emerald Tint */
 [data-theme="glass"] .icon-box-attendance,
 body.has-custom-bg .icon-box-attendance {
-  background: radial-gradient(circle at 35% 30%, rgba(16, 185, 129, 0.58) 0%, rgba(5, 150, 105, 0.35) 70%, rgba(6, 78, 59, 0.28) 100%) !important;
-  border: 1px solid rgba(52, 211, 153, 0.65) !important;
-  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.8),
-              inset 0 -1px 2px rgba(0, 0, 0, 0.3),
-              0 2px 10px rgba(16, 185, 129, 0.35) !important;
+  background: radial-gradient(circle at 35% 30%, rgba(16, 185, 129, var(--glass-icon-op, 0.16)) 0%, rgba(16, 185, 129, calc(var(--glass-icon-op, 0.16) * 0.4)) 100%) !important;
+  border: 1px solid rgba(52, 211, 153, var(--glass-icon-border-op, 0.45)) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.65),
+              0 2px 10px rgba(16, 185, 129, var(--glass-icon-glow, 0.20)) !important;
 }
 
-/* 2. ASSIGNMENT / TUTORIAL GEM: Sunset Orange Colored Filter + Glass Lens + White Task Icon */
+/* 2. ASSIGNMENT / TUTORIAL GEM: Crystalline Translucent Orange Tint */
 [data-theme="glass"] .icon-box-assignment,
 body.has-custom-bg .icon-box-assignment {
-  background: radial-gradient(circle at 35% 30%, rgba(249, 115, 22, 0.58) 0%, rgba(234, 88, 12, 0.35) 70%, rgba(124, 45, 18, 0.28) 100%) !important;
-  border: 1px solid rgba(251, 146, 60, 0.65) !important;
-  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.8),
-              inset 0 -1px 2px rgba(0, 0, 0, 0.3),
-              0 2px 10px rgba(249, 115, 22, 0.35) !important;
+  background: radial-gradient(circle at 35% 30%, rgba(249, 115, 22, var(--glass-icon-op, 0.16)) 0%, rgba(249, 115, 22, calc(var(--glass-icon-op, 0.16) * 0.4)) 100%) !important;
+  border: 1px solid rgba(251, 146, 60, var(--glass-icon-border-op, 0.45)) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.65),
+              0 2px 10px rgba(249, 115, 22, var(--glass-icon-glow, 0.20)) !important;
 }
 
 [data-theme="glass"] .icon-box-assignment.is-overdue,
 body.has-custom-bg .icon-box-assignment.is-overdue {
-  background: radial-gradient(circle at 35% 30%, rgba(239, 68, 68, 0.62) 0%, rgba(185, 28, 28, 0.38) 70%, rgba(127, 29, 29, 0.3) 100%) !important;
-  border: 1px solid rgba(248, 113, 113, 0.7) !important;
-  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.8),
-              inset 0 -1px 2px rgba(0, 0, 0, 0.3),
-              0 2px 10px rgba(239, 68, 68, 0.4) !important;
+  background: radial-gradient(circle at 35% 30%, rgba(239, 68, 68, calc(var(--glass-icon-op, 0.16) + 0.08)) 0%, rgba(239, 68, 68, calc(var(--glass-icon-op, 0.16) * 0.5)) 100%) !important;
+  border: 1px solid rgba(248, 113, 113, var(--glass-icon-border-op, 0.55)) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.65),
+              0 2px 10px rgba(239, 68, 68, calc(var(--glass-icon-glow, 0.20) + 0.1)) !important;
 }
 
 [data-theme="glass"] .icon-box-assignment.is-submitted,
 body.has-custom-bg .icon-box-assignment.is-submitted {
-  background: radial-gradient(circle at 35% 30%, rgba(16, 185, 129, 0.58) 0%, rgba(5, 150, 105, 0.35) 70%, rgba(6, 78, 59, 0.28) 100%) !important;
-  border: 1px solid rgba(52, 211, 153, 0.65) !important;
-  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.8),
-              inset 0 -1px 2px rgba(0, 0, 0, 0.3),
-              0 2px 10px rgba(16, 185, 129, 0.35) !important;
+  background: radial-gradient(circle at 35% 30%, rgba(16, 185, 129, var(--glass-icon-op, 0.16)) 0%, rgba(16, 185, 129, calc(var(--glass-icon-op, 0.16) * 0.4)) 100%) !important;
+  border: 1px solid rgba(52, 211, 153, var(--glass-icon-border-op, 0.45)) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.65),
+              0 2px 10px rgba(16, 185, 129, var(--glass-icon-glow, 0.20)) !important;
 }
 
-/* 3. TEST / QUIZ / EXAM GEM: Royal Violet Colored Filter + Glass Lens + White Sheet Icon */
+/* 3. TEST / QUIZ / EXAM GEM: Crystalline Translucent Violet Tint */
 [data-theme="glass"] .icon-box-test,
 body.has-custom-bg .icon-box-test {
-  background: radial-gradient(circle at 35% 30%, rgba(139, 92, 246, 0.58) 0%, rgba(109, 40, 217, 0.35) 70%, rgba(76, 29, 149, 0.28) 100%) !important;
-  border: 1px solid rgba(192, 132, 252, 0.65) !important;
-  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.8),
-              inset 0 -1px 2px rgba(0, 0, 0, 0.3),
-              0 2px 10px rgba(139, 92, 246, 0.35) !important;
+  background: radial-gradient(circle at 35% 30%, rgba(139, 92, 246, var(--glass-icon-op, 0.18)) 0%, rgba(139, 92, 246, calc(var(--glass-icon-op, 0.18) * 0.4)) 100%) !important;
+  border: 1px solid rgba(192, 132, 252, var(--glass-icon-border-op, 0.45)) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.65),
+              0 2px 10px rgba(139, 92, 246, var(--glass-icon-glow, 0.20)) !important;
 }
 
 [data-theme="glass"] .icon-box-test.is-overdue,
 body.has-custom-bg .icon-box-test.is-overdue {
-  background: radial-gradient(circle at 35% 30%, rgba(239, 68, 68, 0.62) 0%, rgba(185, 28, 28, 0.38) 70%, rgba(127, 29, 29, 0.3) 100%) !important;
-  border: 1px solid rgba(248, 113, 113, 0.7) !important;
-  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.8),
-              inset 0 -1px 2px rgba(0, 0, 0, 0.3),
-              0 2px 10px rgba(239, 68, 68, 0.4) !important;
+  background: radial-gradient(circle at 35% 30%, rgba(239, 68, 68, calc(var(--glass-icon-op, 0.18) + 0.08)) 0%, rgba(239, 68, 68, calc(var(--glass-icon-op, 0.18) * 0.5)) 100%) !important;
+  border: 1px solid rgba(248, 113, 113, var(--glass-icon-border-op, 0.55)) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.65),
+              0 2px 10px rgba(239, 68, 68, calc(var(--glass-icon-glow, 0.20) + 0.1)) !important;
 }
 
-/* 4. NOTICE / ANNOUNCEMENT GEM: Sky Blue Colored Filter + Glass Lens + White Megaphone Icon */
+/* 4. NOTICE / ANNOUNCEMENT GEM: Crystalline Translucent Sky Blue Tint */
 [data-theme="glass"] .icon-box-notice,
 body.has-custom-bg .icon-box-notice {
-  background: radial-gradient(circle at 35% 30%, rgba(14, 165, 233, 0.58) 0%, rgba(2, 132, 199, 0.35) 70%, rgba(12, 74, 110, 0.28) 100%) !important;
-  border: 1px solid rgba(56, 189, 248, 0.65) !important;
-  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.8),
-              inset 0 -1px 2px rgba(0, 0, 0, 0.3),
-              0 2px 10px rgba(14, 165, 233, 0.35) !important;
+  background: radial-gradient(circle at 35% 30%, rgba(14, 165, 233, var(--glass-icon-op, 0.16)) 0%, rgba(14, 165, 233, calc(var(--glass-icon-op, 0.16) * 0.4)) 100%) !important;
+  border: 1px solid rgba(56, 189, 248, var(--glass-icon-border-op, 0.45)) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.65),
+              0 2px 10px rgba(14, 165, 233, var(--glass-icon-glow, 0.20)) !important;
 }
 
-/* Hover micro-animation on gems */
+/* Micro-hover animation on gems */
 [data-theme="glass"] .card-bounded-icon:hover,
 body.has-custom-bg .card-bounded-icon:hover {
-  transform: scale(1.08) !important;
+  transform: scale(1.06) !important;
 }
 
 /* 2.7 Calendar Grid Count Pills: Frosted Colored Glass Gems Floating on Cells */
@@ -15642,6 +15667,240 @@ body.has-custom-bg .cal-count-pill.pill-notice {
 body.has-custom-bg .cal-count-pill:hover {
   transform: translateY(-1px) scale(1.02) !important;
   box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.6), 0 4px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ==========================================================================
+   GLASS STUDIO TUNER: TRIGGER BUTTON & FLOATING HUD PANEL
+   ========================================================================== */
+
+.btn-glass-tune-trigger {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  margin-left: 6px;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+[data-theme="glass"] .btn-glass-tune-trigger,
+body.has-custom-bg .btn-glass-tune-trigger {
+  display: inline-flex !important;
+}
+
+.btn-glass-tune-trigger:hover {
+  background: rgba(255, 255, 255, 0.32);
+  border-color: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+  transform: scale(1.04);
+}
+
+.btn-glass-tune-trigger.is-active {
+  background: #FFFFFF;
+  color: #0F172A;
+  border-color: #FFFFFF;
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.6);
+}
+
+.glass-studio-panel {
+  position: fixed;
+  top: 48px;
+  right: 18px;
+  width: 320px;
+  max-height: calc(100vh - 72px);
+  overflow-y: auto;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 14px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.6), inset 0 1px 1.5px rgba(255, 255, 255, 0.5);
+  padding: 16px 18px;
+  z-index: 999999;
+  color: #FFFFFF;
+  font-family: inherit;
+  display: none;
+  animation: glassStudioFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.glass-studio-panel.is-open {
+  display: block !important;
+}
+
+@keyframes glassStudioFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.glass-studio-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  margin-bottom: 14px;
+}
+
+.glass-studio-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  letter-spacing: -0.2px;
+}
+
+.glass-studio-close-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.15s ease;
+}
+
+.glass-studio-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.glass-studio-section {
+  margin-bottom: 14px;
+}
+
+.glass-studio-sec-title {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.glass-studio-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-size: 11.5px;
+}
+
+.glass-studio-label {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.glass-studio-val {
+  font-weight: 800;
+  color: #38BDF8;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.glass-studio-slider {
+  width: 100%;
+  accent-color: #38BDF8;
+  cursor: pointer;
+  height: 4px;
+  border-radius: 2px;
+  margin-top: 4px;
+  margin-bottom: 10px;
+}
+
+.glass-studio-presets {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.glass-studio-preset-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 7px;
+  padding: 6px 8px;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.16s ease;
+}
+
+.glass-studio-preset-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.glass-studio-footer {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.glass-studio-footer-btn {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.glass-studio-btn-copy {
+  background: rgba(56, 189, 248, 0.25);
+  border: 1px solid rgba(56, 189, 248, 0.6);
+  color: #FFFFFF;
+}
+
+.glass-studio-btn-copy:hover {
+  background: rgba(56, 189, 248, 0.4);
+}
+
+.glass-studio-btn-reset {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.glass-studio-btn-reset:hover {
+  background: rgba(255, 255, 255, 0.22);
 }
 
 /* 2.8 Sidebar and Header Count Pills (3 items, etc.) (NO CAPSULE) */

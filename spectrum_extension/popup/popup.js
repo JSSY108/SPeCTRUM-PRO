@@ -1754,6 +1754,8 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 12000) {
 window.fetchWithTimeout = fetchWithTimeout;
 
 document.addEventListener('DOMContentLoaded', async () => {
+    if (typeof initGlassTuner === "function") initGlassTuner();
+
   // Bind instant reactive language refresh immediately on DOM ready
   window.onLanguageChange = applyLanguageUiRefresh;
 
@@ -16735,3 +16737,304 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Direct Extension Fetchers (Manifest V3 with Host Permissions)
 // Modularized into ./modules/fetchers.js (loaded via popup.html)
+
+
+// ==========================================================================
+// GLASS STUDIO LIVE TUNER (实时拟态调参系统)
+// ==========================================================================
+function initGlassTuner() {
+  const root = document.documentElement;
+  const panel = document.getElementById('glass-studio-panel');
+  if (!panel) return;
+
+  const DEFAULT_GLASS_VALS = {
+    edgeWidth: 0,
+    edgeOp: 0.85,
+    iconOp: 0.16,
+    iconBorderOp: 0.45,
+    iconGlow: 0.20,
+    backlightOp: 0.18,
+    backlightSize: 340,
+    tintOp: 0.28,
+    blur: 18
+  };
+
+  const PRESETS = {
+    crystal: {
+      edgeWidth: 0,
+      edgeOp: 0.85,
+      iconOp: 0.12,
+      iconBorderOp: 0.35,
+      iconGlow: 0.15,
+      backlightOp: 0.14,
+      backlightSize: 300,
+      tintOp: 0.24,
+      blur: 16
+    },
+    neon: {
+      edgeWidth: 2,
+      edgeOp: 0.95,
+      iconOp: 0.22,
+      iconBorderOp: 0.65,
+      iconGlow: 0.35,
+      backlightOp: 0.28,
+      backlightSize: 360,
+      tintOp: 0.28,
+      blur: 18
+    },
+    minimal: {
+      edgeWidth: 0,
+      edgeOp: 0,
+      iconOp: 0,
+      iconBorderOp: 0,
+      iconGlow: 0,
+      backlightOp: 0.10,
+      backlightSize: 260,
+      tintOp: 0.22,
+      blur: 14
+    },
+    default: { ...DEFAULT_GLASS_VALS }
+  };
+
+  let currentVals = { ...DEFAULT_GLASS_VALS };
+
+  // Load saved values if present
+  try {
+    const local = localStorage.getItem('spectrum_glass_tune');
+    if (local) {
+      currentVals = Object.assign({}, DEFAULT_GLASS_VALS, JSON.parse(local));
+    }
+  } catch(e) {}
+
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    chrome.storage.local.get(['glassTuneSettings'], (res) => {
+      if (res && res.glassTuneSettings) {
+        currentVals = Object.assign({}, DEFAULT_GLASS_VALS, res.glassTuneSettings);
+        applyGlassValues(currentVals, false);
+      }
+    });
+  }
+
+  function applyGlassValues(vals, save = true) {
+    currentVals = { ...vals };
+    root.style.setProperty('--glass-edge-width', vals.edgeWidth + 'px');
+    root.style.setProperty('--glass-edge-op', vals.edgeOp);
+    root.style.setProperty('--glass-icon-op', vals.iconOp);
+    root.style.setProperty('--glass-icon-border-op', vals.iconBorderOp);
+    root.style.setProperty('--glass-icon-glow', vals.iconGlow);
+    root.style.setProperty('--glass-backlight-op', vals.backlightOp);
+    root.style.setProperty('--glass-backlight-size', vals.backlightSize + 'px');
+    root.style.setProperty('--glass-tint-op', vals.tintOp);
+    root.style.setProperty('--glass-blur', vals.blur + 'px');
+
+    if (document.body) {
+      document.body.style.setProperty('--glass-edge-width', vals.edgeWidth + 'px');
+      document.body.style.setProperty('--glass-edge-op', vals.edgeOp);
+      document.body.style.setProperty('--glass-icon-op', vals.iconOp);
+      document.body.style.setProperty('--glass-icon-border-op', vals.iconBorderOp);
+      document.body.style.setProperty('--glass-icon-glow', vals.iconGlow);
+      document.body.style.setProperty('--glass-backlight-op', vals.backlightOp);
+      document.body.style.setProperty('--glass-backlight-size', vals.backlightSize + 'px');
+      document.body.style.setProperty('--glass-tint-op', vals.tintOp);
+      document.body.style.setProperty('--glass-blur', vals.blur + 'px');
+    }
+
+    // Sync UI elements in tuner panel
+    const chkEdge = document.getElementById('chk-glass-show-edge');
+    const slEdgeWidth = document.getElementById('slider-glass-edge-width');
+    const valEdgeWidth = document.getElementById('val-glass-edge-width');
+    const slEdgeOp = document.getElementById('slider-glass-edge-op');
+    const valEdgeOp = document.getElementById('val-glass-edge-op');
+
+    const slIconOp = document.getElementById('slider-glass-icon-op');
+    const valIconOp = document.getElementById('val-glass-icon-op');
+    const slIconBorder = document.getElementById('slider-glass-icon-border-op');
+    const valIconBorder = document.getElementById('val-glass-icon-border-op');
+    const slIconGlow = document.getElementById('slider-glass-icon-glow');
+    const valIconGlow = document.getElementById('val-glass-icon-glow');
+
+    const slBacklightOp = document.getElementById('slider-glass-backlight-op');
+    const valBacklightOp = document.getElementById('val-glass-backlight-op');
+    const slBacklightSize = document.getElementById('slider-glass-backlight-size');
+    const valBacklightSize = document.getElementById('val-glass-backlight-size');
+
+    const slTintOp = document.getElementById('slider-glass-tint-op');
+    const valTintOp = document.getElementById('val-glass-tint-op');
+    const slBlur = document.getElementById('slider-glass-blur-panel');
+    const valBlur = document.getElementById('val-glass-blur');
+
+    if (chkEdge) chkEdge.checked = vals.edgeWidth > 0;
+    if (slEdgeWidth) slEdgeWidth.value = vals.edgeWidth;
+    if (valEdgeWidth) valEdgeWidth.textContent = vals.edgeWidth + 'px';
+    if (slEdgeOp) slEdgeOp.value = Math.round(vals.edgeOp * 100);
+    if (valEdgeOp) valEdgeOp.textContent = Math.round(vals.edgeOp * 100) + '%';
+
+    if (slIconOp) slIconOp.value = Math.round(vals.iconOp * 100);
+    if (valIconOp) valIconOp.textContent = Math.round(vals.iconOp * 100) + '%';
+    if (slIconBorder) slIconBorder.value = Math.round(vals.iconBorderOp * 100);
+    if (valIconBorder) valIconBorder.textContent = Math.round(vals.iconBorderOp * 100) + '%';
+    if (slIconGlow) slIconGlow.value = Math.round(vals.iconGlow * 100);
+    if (valIconGlow) valIconGlow.textContent = Math.round(vals.iconGlow * 100) + '%';
+
+    if (slBacklightOp) slBacklightOp.value = Math.round(vals.backlightOp * 100);
+    if (valBacklightOp) valBacklightOp.textContent = Math.round(vals.backlightOp * 100) + '%';
+    if (slBacklightSize) slBacklightSize.value = vals.backlightSize;
+    if (valBacklightSize) valBacklightSize.textContent = vals.backlightSize + 'px';
+
+    if (slTintOp) slTintOp.value = Math.round(vals.tintOp * 100);
+    if (valTintOp) valTintOp.textContent = Math.round(vals.tintOp * 100) + '%';
+    if (slBlur) slBlur.value = vals.blur;
+    if (valBlur) valBlur.textContent = vals.blur + 'px';
+
+    if (save) {
+      try {
+        localStorage.setItem('spectrum_glass_tune', JSON.stringify(vals));
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+          chrome.storage.local.set({ glassTuneSettings: vals });
+        }
+      } catch(e) {}
+    }
+  }
+
+  // Initial apply
+  applyGlassValues(currentVals, false);
+
+  // Toggle button handlers
+  function toggleStudio() {
+    const isOpen = panel.classList.toggle('is-open');
+    document.querySelectorAll('.btn-glass-tune-trigger').forEach(b => b.classList.toggle('is-active', isOpen));
+  }
+
+  const btnPopup = document.getElementById('btn-glass-tuner-popup');
+  const btnFull = document.getElementById('btn-glass-tuner-fulltab');
+  const btnClose = document.getElementById('btn-close-glass-studio');
+
+  if (btnPopup) btnPopup.addEventListener('click', toggleStudio);
+  if (btnFull) btnFull.addEventListener('click', toggleStudio);
+  if (btnClose) btnClose.addEventListener('click', () => {
+    panel.classList.remove('is-open');
+    document.querySelectorAll('.btn-glass-tune-trigger').forEach(b => b.classList.remove('is-active'));
+  });
+
+  // Slider change listeners
+  const chkEdge = document.getElementById('chk-glass-show-edge');
+  if (chkEdge) {
+    chkEdge.addEventListener('change', () => {
+      currentVals.edgeWidth = chkEdge.checked ? 2 : 0;
+      applyGlassValues(currentVals);
+    });
+  }
+
+  const slEdgeWidth = document.getElementById('slider-glass-edge-width');
+  if (slEdgeWidth) {
+    slEdgeWidth.addEventListener('input', () => {
+      currentVals.edgeWidth = parseFloat(slEdgeWidth.value);
+      applyGlassValues(currentVals);
+    });
+  }
+
+  const slEdgeOp = document.getElementById('slider-glass-edge-op');
+  if (slEdgeOp) {
+    slEdgeOp.addEventListener('input', () => {
+      currentVals.edgeOp = parseFloat(slEdgeOp.value) / 100;
+      applyGlassValues(currentVals);
+    });
+  }
+
+  const slIconOp = document.getElementById('slider-glass-icon-op');
+  if (slIconOp) {
+    slIconOp.addEventListener('input', () => {
+      currentVals.iconOp = parseFloat(slIconOp.value) / 100;
+      applyGlassValues(currentVals);
+    });
+  }
+
+  const slIconBorder = document.getElementById('slider-glass-icon-border-op');
+  if (slIconBorder) {
+    slIconBorder.addEventListener('input', () => {
+      currentVals.iconBorderOp = parseFloat(slIconBorder.value) / 100;
+      applyGlassValues(currentVals);
+    });
+  }
+
+  const slIconGlow = document.getElementById('slider-glass-icon-glow');
+  if (slIconGlow) {
+    slIconGlow.addEventListener('input', () => {
+      currentVals.iconGlow = parseFloat(slIconGlow.value) / 100;
+      applyGlassValues(currentVals);
+    });
+  }
+
+  const slBacklightOp = document.getElementById('slider-glass-backlight-op');
+  if (slBacklightOp) {
+    slBacklightOp.addEventListener('input', () => {
+      currentVals.backlightOp = parseFloat(slBacklightOp.value) / 100;
+      applyGlassValues(currentVals);
+    });
+  }
+
+  const slBacklightSize = document.getElementById('slider-glass-backlight-size');
+  if (slBacklightSize) {
+    slBacklightSize.addEventListener('input', () => {
+      currentVals.backlightSize = parseInt(slBacklightSize.value, 10);
+      applyGlassValues(currentVals);
+    });
+  }
+
+  const slTintOp = document.getElementById('slider-glass-tint-op');
+  if (slTintOp) {
+    slTintOp.addEventListener('input', () => {
+      currentVals.tintOp = parseFloat(slTintOp.value) / 100;
+      applyGlassValues(currentVals);
+    });
+  }
+
+  const slBlur = document.getElementById('slider-glass-blur-panel');
+  if (slBlur) {
+    slBlur.addEventListener('input', () => {
+      currentVals.blur = parseInt(slBlur.value, 10);
+      applyGlassValues(currentVals);
+    });
+  }
+
+  // Presets
+  panel.querySelectorAll('.glass-studio-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pName = btn.dataset.preset;
+      if (PRESETS[pName]) {
+        applyGlassValues(PRESETS[pName]);
+      }
+    });
+  });
+
+  // Reset
+  const btnReset = document.getElementById('btn-glass-studio-reset');
+  if (btnReset) {
+    btnReset.addEventListener('click', () => {
+      applyGlassValues(DEFAULT_GLASS_VALS);
+    });
+  }
+
+  // Copy CSS
+  const btnCopy = document.getElementById('btn-glass-studio-copy');
+  if (btnCopy) {
+    btnCopy.addEventListener('click', () => {
+      const cssText = `:root, [data-theme="glass"] {
+  --glass-edge-width: ${currentVals.edgeWidth}px;
+  --glass-edge-op: ${currentVals.edgeOp};
+  --glass-icon-op: ${currentVals.iconOp};
+  --glass-icon-border-op: ${currentVals.iconBorderOp};
+  --glass-icon-glow: ${currentVals.iconGlow};
+  --glass-backlight-op: ${currentVals.backlightOp};
+  --glass-backlight-size: ${currentVals.backlightSize}px;
+  --glass-tint-op: ${currentVals.tintOp};
+  --glass-blur: ${currentVals.blur}px;
+}`;
+      navigator.clipboard.writeText(cssText).then(() => {
+        const orig = btnCopy.textContent;
+        btnCopy.textContent = '✓ Copied!';
+        setTimeout(() => { btnCopy.textContent = orig; }, 1500);
+      }).catch(() => {});
+    });
+  }
+}
