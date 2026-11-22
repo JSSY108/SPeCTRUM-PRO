@@ -1239,6 +1239,12 @@ function updateHeaderTranslations() {
   document.querySelectorAll('.theme-switch-btn').forEach(btn => {
     btn.title = themeTooltipText || (isThemeDark ? 'Switch to Light Mode' : 'Switch to Dark Mode');
   });
+  document.querySelectorAll('.theme-mode-btn').forEach(btn => {
+    const mode = btn.dataset.themeMode;
+    if (mode === 'light') btn.title = 'Swiss Light Mode';
+    else if (mode === 'dark') btn.title = 'Obsidian Dark Mode';
+    else if (mode === 'glass') btn.title = 'Liquid Glassmorphism Mode';
+  });
 
   const tabActs = document.querySelector('.primary-tab-btn[data-tab="tab-activities"]');
   if (tabActs) tabActs.textContent = t('tooltips', 'activities');
@@ -1433,10 +1439,11 @@ try {
 }
 
 function setAppTheme(theme, broadcast = true) {
-  if (!['light', 'dark'].includes(theme)) theme = 'light';
+  if (!['light', 'dark', 'glass'].includes(theme)) theme = 'light';
   currentTheme = theme;
 
   const isDark = theme === 'dark';
+  const isGlass = theme === 'glass';
 
   // Apply to both documentElement and body for complete CSS compatibility
   if (document.documentElement) {
@@ -1446,12 +1453,62 @@ function setAppTheme(theme, broadcast = true) {
     document.body.setAttribute('data-theme', theme);
   }
 
-  // Update theme switch buttons across popup and fulltab headers
-  const tooltipText = isDark ? t('tooltips', 'switchToLight') : t('tooltips', 'switchToDark');
+  const bgLayer = document.getElementById('custom-bg-layer');
+
+  if (isGlass) {
+    document.documentElement.classList.add('has-custom-bg');
+    if (document.body) document.body.classList.add('has-custom-bg');
+    if (bgLayer) {
+      bgLayer.style.display = '';
+    }
+
+    let savedBg = null;
+    try {
+      savedBg = localStorage.getItem('spectrum_custom_bg');
+    } catch (e) {}
+
+    if (!savedBg && typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get(['customBgImage'], (res) => {
+        if (res && res.customBgImage) {
+          savedBg = res.customBgImage;
+        }
+        if (!savedBg && window.LiquidGlass && typeof window.LiquidGlass.applyCustomWallpaper === 'function') {
+          window.LiquidGlass.applyCustomWallpaper('linear-gradient(135deg, #090d16 0%, #1e1b4b 35%, #064e3b 70%, #090d16 100%)', { save: true, activateTheme: false });
+        } else if (savedBg) {
+          const thumbVal = savedBg.startsWith('linear-gradient') || savedBg.startsWith('radial-gradient') ? savedBg : `url("${savedBg}")`;
+          document.documentElement.style.setProperty('--glass-thumb-bg', thumbVal);
+          if (bgLayer) bgLayer.style.backgroundImage = thumbVal;
+        }
+      });
+    } else if (!savedBg && window.LiquidGlass && typeof window.LiquidGlass.applyCustomWallpaper === 'function') {
+      window.LiquidGlass.applyCustomWallpaper('linear-gradient(135deg, #090d16 0%, #1e1b4b 35%, #064e3b 70%, #090d16 100%)', { save: true, activateTheme: false });
+    } else if (savedBg) {
+      const thumbVal = savedBg.startsWith('linear-gradient') || savedBg.startsWith('radial-gradient') ? savedBg : `url("${savedBg}")`;
+      document.documentElement.style.setProperty('--glass-thumb-bg', thumbVal);
+      if (bgLayer) bgLayer.style.backgroundImage = thumbVal;
+    }
+  } else {
+    document.documentElement.classList.remove('has-custom-bg');
+    if (document.body) {
+      document.body.classList.remove('has-custom-bg');
+    }
+    if (bgLayer) {
+      bgLayer.style.display = 'none';
+    }
+  }
+
+  // Update 3-mode segmented controls
+  document.querySelectorAll('.theme-mode-btn').forEach(btn => {
+    const mode = btn.dataset.themeMode;
+    const isActive = mode === theme;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+
+  // Legacy switch button support
   document.querySelectorAll('.theme-switch-btn').forEach(btn => {
     btn.setAttribute('aria-checked', isDark ? 'true' : 'false');
     btn.classList.toggle('is-dark', isDark);
-    btn.title = tooltipText || (isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode');
   });
 
   // Persist to storage
@@ -3398,27 +3455,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Load Saved Theme & Initialize Header Switches
   function initThemeControls() {
-    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-      chrome.storage.local.get(['appTheme'], (res) => {
-        let savedTheme = res && res.appTheme;
-        if (!savedTheme) {
-          try {
-            savedTheme = localStorage.getItem('spectrum_theme');
-          } catch (e) {}
-        }
-        if (savedTheme && ['light', 'dark'].includes(savedTheme)) {
-          setAppTheme(savedTheme, false);
-        } else {
-          const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-          setAppTheme(prefersDark ? 'dark' : 'light', false);
-        }
-      });
-    } else {
-      let savedTheme;
-      try {
-        savedTheme = localStorage.getItem('spectrum_theme');
-      } catch (e) {}
-      if (savedTheme && ['light', 'dark'].includes(savedTheme)) {
+    function applySavedTheme(savedTheme) {
+      if (!savedTheme) {
+        try {
+          savedTheme = localStorage.getItem('spectrum_theme');
+        } catch (e) {}
+      }
+      if (!savedTheme) {
+        try {
+          if (localStorage.getItem('spectrum_custom_bg')) {
+            savedTheme = 'glass';
+          }
+        } catch (e) {}
+      }
+      if (savedTheme && ['light', 'dark', 'glass'].includes(savedTheme)) {
         setAppTheme(savedTheme, false);
       } else {
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -3426,7 +3476,31 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // Attach click listeners to all theme switch buttons (in popup & fulltab headers)
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get(['appTheme', 'customBgImage'], (res) => {
+        let savedTheme = res && res.appTheme;
+        if (!savedTheme && res && res.customBgImage) {
+          savedTheme = 'glass';
+        }
+        applySavedTheme(savedTheme);
+      });
+    } else {
+      applySavedTheme();
+    }
+
+    // Attach click listeners to segmented control buttons
+    document.querySelectorAll('.theme-mode-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const mode = btn.dataset.themeMode;
+        if (mode && ['light', 'dark', 'glass'].includes(mode)) {
+          setAppTheme(mode, true);
+        }
+      });
+    });
+
+    // Attach click listeners to legacy switch buttons if present
     document.querySelectorAll('.theme-switch-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();

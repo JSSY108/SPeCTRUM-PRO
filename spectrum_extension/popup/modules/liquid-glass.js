@@ -188,17 +188,29 @@
       return;
     }
 
+    const thumbVal = bgValue.startsWith('linear-gradient') || bgValue.startsWith('radial-gradient')
+      ? bgValue
+      : `url("${bgValue}")`;
+    document.documentElement.style.setProperty('--glass-thumb-bg', thumbVal);
+
     const bgLayer = document.getElementById('custom-bg-layer');
     if (bgLayer) {
-      if (bgValue.startsWith('linear-gradient') || bgValue.startsWith('radial-gradient')) {
-        bgLayer.style.backgroundImage = bgValue;
-      } else {
-        bgLayer.style.backgroundImage = `url("${bgValue}")`;
-      }
+      bgLayer.style.backgroundImage = thumbVal;
+      bgLayer.style.display = '';
     }
 
     document.documentElement.classList.add('has-custom-bg');
-    document.body.classList.add('has-custom-bg');
+    if (document.body) {
+      document.body.classList.add('has-custom-bg');
+    }
+
+    // Auto-switch to glass theme if activated interactively
+    if (options.activateTheme !== false && typeof window.setAppTheme === 'function') {
+      const currentMode = document.documentElement.getAttribute('data-theme');
+      if (currentMode !== 'glass') {
+        window.setAppTheme('glass', true);
+      }
+    }
 
     const style = options.style || 'liquid';
     if (style === 'liquid') {
@@ -243,13 +255,20 @@
     const bgLayer = document.getElementById('custom-bg-layer');
     if (bgLayer) {
       bgLayer.style.backgroundImage = '';
+      bgLayer.style.display = 'none';
     }
 
     document.documentElement.classList.remove('has-custom-bg');
-    document.body.classList.remove('has-custom-bg');
-    document.body.classList.remove('is-liquid-glass');
+    if (document.body) {
+      document.body.classList.remove('has-custom-bg');
+      document.body.classList.remove('is-liquid-glass');
+    }
 
     updateWallpaperPrefUi('', {});
+
+    if (typeof window.setAppTheme === 'function' && document.documentElement.getAttribute('data-theme') === 'glass') {
+      window.setAppTheme('dark', true);
+    }
 
     if (save && typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
       chrome.storage.local.set({
@@ -435,21 +454,35 @@
   function loadSavedCustomWallpaper() {
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
       chrome.storage.local.get(
-        ['customBgImage', 'customBgBlur', 'customBgTint', 'customBgStyle'],
+        ['customBgImage', 'customBgBlur', 'customBgTint', 'customBgStyle', 'appTheme'],
         (res) => {
           if (res && res.customBgImage) {
             let savedTint = res.customBgTint !== undefined ? res.customBgTint : 28;
-            // Auto-migrate legacy high opacity (>= 70%) to realistic translucent glass range
             if (savedTint >= 70) {
               savedTint = 28;
               chrome.storage.local.set({ customBgTint: 28 });
             }
-            applyCustomWallpaper(res.customBgImage, {
-              blur: res.customBgBlur || 18,
-              tint: savedTint,
-              style: res.customBgStyle || 'liquid',
-              save: false
-            });
+            const thumbVal = res.customBgImage.startsWith('linear-gradient') || res.customBgImage.startsWith('radial-gradient')
+              ? res.customBgImage
+              : `url("${res.customBgImage}")`;
+            document.documentElement.style.setProperty('--glass-thumb-bg', thumbVal);
+
+            const activeMode = document.documentElement.getAttribute('data-theme') || res.appTheme;
+            if (activeMode === 'glass') {
+              applyCustomWallpaper(res.customBgImage, {
+                blur: res.customBgBlur || 18,
+                tint: savedTint,
+                style: res.customBgStyle || 'liquid',
+                activateTheme: false,
+                save: false
+              });
+            } else {
+              updateWallpaperPrefUi(res.customBgImage, {
+                blur: res.customBgBlur || 18,
+                tint: savedTint,
+                style: res.customBgStyle || 'liquid'
+              });
+            }
           }
         }
       );
@@ -457,7 +490,17 @@
       try {
         const saved = localStorage.getItem('spectrum_custom_bg');
         if (saved) {
-          applyCustomWallpaper(saved, { save: false });
+          const thumbVal = saved.startsWith('linear-gradient') || saved.startsWith('radial-gradient')
+            ? saved
+            : `url("${saved}")`;
+          document.documentElement.style.setProperty('--glass-thumb-bg', thumbVal);
+
+          const activeMode = document.documentElement.getAttribute('data-theme');
+          if (activeMode === 'glass') {
+            applyCustomWallpaper(saved, { activateTheme: false, save: false });
+          } else {
+            updateWallpaperPrefUi(saved, {});
+          }
         }
       } catch (e) {}
     }

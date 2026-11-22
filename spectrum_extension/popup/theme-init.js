@@ -1,26 +1,48 @@
 // Immediate early theme & surface mode application to eliminate light-flash and layout flash (FOUC)
 (function() {
   try {
+    var savedTheme = localStorage.getItem('spectrum_theme');
     var customBg = localStorage.getItem('spectrum_custom_bg');
+
     if (customBg) {
+      var thumbVal = (customBg.indexOf('linear-gradient') === 0 || customBg.indexOf('radial-gradient') === 0)
+        ? customBg
+        : 'url("' + customBg + '")';
+      document.documentElement.style.setProperty('--glass-thumb-bg', thumbVal);
+    }
+
+    if (savedTheme === 'glass' || (!savedTheme && customBg)) {
+      document.documentElement.setAttribute('data-theme', 'glass');
       document.documentElement.classList.add('has-custom-bg');
       var applyBgToBody = function() {
         if (!document.body) return false;
         document.body.classList.add('has-custom-bg');
+        document.body.setAttribute('data-theme', 'glass');
         return true;
       };
       if (!applyBgToBody()) {
         document.addEventListener('DOMContentLoaded', applyBgToBody);
       }
-    }
-  } catch (e) {}
-
-  try {
-    var savedTheme = localStorage.getItem('spectrum_theme');
-    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    } else if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.setAttribute('data-theme', 'dark');
+      var applyDarkToBody = function() {
+        if (!document.body) return false;
+        document.body.setAttribute('data-theme', 'dark');
+        return true;
+      };
+      if (!applyDarkToBody()) {
+        document.addEventListener('DOMContentLoaded', applyDarkToBody);
+      }
     } else {
       document.documentElement.setAttribute('data-theme', 'light');
+      var applyLightToBody = function() {
+        if (!document.body) return false;
+        document.body.setAttribute('data-theme', 'light');
+        return true;
+      };
+      if (!applyLightToBody()) {
+        document.addEventListener('DOMContentLoaded', applyLightToBody);
+      }
     }
   } catch (e) {}
 
@@ -70,5 +92,3 @@
     }
   } catch (e) {}
 })();
-
-
